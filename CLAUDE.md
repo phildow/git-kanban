@@ -380,6 +380,7 @@ The signal that the user is overriding the context is simply the presence of a `
 - Use python as the programming language
 - The name of the root python package is `kanban`
 - When writing python prefer dot notation to `getattr`, especially when the type is known
+- Explicity type object arguments to parameters
 - When a python dependency is required add it to the pyproject files
 - Add documenation when you create types and methods, including for tests
 - When you make changes to CLI subcommands, update the the command line structure in CLAUDE.md if necessary

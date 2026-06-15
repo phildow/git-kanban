@@ -7,6 +7,10 @@ import shlex
 import signal
 from argparse import Namespace
 from contextlib import contextmanager
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from services.kanban_service import KanbanService
 
 try:
     import readline
@@ -56,7 +60,7 @@ def _starts_with(items: list[str], prefix: str) -> list[str]:
     return [item for item in items if item.startswith(prefix)]
 
 
-def _safe_list_boards(svc: object) -> list[str]:
+def _safe_list_boards(svc: KanbanService) -> list[str]:
     """Best-effort board name lookup for completion helpers."""
     try:
         boards = svc.list_boards()
@@ -65,7 +69,7 @@ def _safe_list_boards(svc: object) -> list[str]:
     return [board.name for board in boards]
 
 
-def _safe_list_columns(svc: object, board: str | None) -> list[str]:
+def _safe_list_columns(svc: KanbanService, board: str | None) -> list[str]:
     """Best-effort column name lookup for a board for completion helpers."""
     if not board:
         return []
@@ -76,7 +80,7 @@ def _safe_list_columns(svc: object, board: str | None) -> list[str]:
     return [column.name for column in columns]
 
 
-def _safe_list_task_names(svc: object, board: str | None, column: str | None) -> list[str]:
+def _safe_list_task_names(svc: KanbanService, board: str | None, column: str | None) -> list[str]:
     """Best-effort task-name lookup for a board/column path."""
     if not board or not column:
         return []
@@ -95,7 +99,7 @@ def _safe_list_task_names(svc: object, board: str | None, column: str | None) ->
 
     return sorted(dict.fromkeys(names))
 
-def _prompt(svc: object) -> str:
+def _prompt(svc: KanbanService) -> str:
     """Build a prompt string that reflects the active board/column context."""
     context = svc.get_user_context()
     board = context.board
@@ -108,7 +112,7 @@ def _prompt(svc: object) -> str:
     return "kanban> "
 
 
-def _complete_board_or_column_path(text: str, svc: object) -> list[str]:
+def _complete_board_or_column_path(text: str, svc: KanbanService) -> list[str]:
     """Complete BOARD/COLUMN path values."""
     boards = _safe_list_boards(svc)
     context = svc.get_user_context()
@@ -131,7 +135,7 @@ def _complete_board_or_column_path(text: str, svc: object) -> list[str]:
     return sorted(dict.fromkeys(results))
 
 
-def _complete_board_or_board_column_path(text: str, svc: object) -> list[str]:
+def _complete_board_or_board_column_path(text: str, svc: KanbanService) -> list[str]:
     """Complete BOARD or BOARD/COLUMN path values."""
     boards = _safe_list_boards(svc)
     if "/" in text:
@@ -151,7 +155,7 @@ def _complete_board_or_board_column_path(text: str, svc: object) -> list[str]:
     return sorted(dict.fromkeys(board_paths + column_matches))
 
 
-def _complete_task_list_path(text: str, svc: object) -> list[str]:
+def _complete_task_list_path(text: str, svc: KanbanService) -> list[str]:
     """Complete `task list` path according to active context rules."""
     boards = _safe_list_boards(svc)
     context = svc.get_user_context()
@@ -175,7 +179,7 @@ def _complete_task_list_path(text: str, svc: object) -> list[str]:
     return [f"{board}/" for board in boards if board.startswith(text)]
 
 
-def _complete_task_path(text: str, svc: object) -> list[str]:
+def _complete_task_path(text: str, svc: KanbanService) -> list[str]:
     """Complete task path segments according to active user context."""
     context = svc.get_user_context()
     context_board = context.board
@@ -277,7 +281,7 @@ def _complete_from_buffer(text: str, parser: argparse.ArgumentParser) -> list[st
     return _complete_command_tokens(text, tokens_before, parser)
 
 
-def _complete_path_tokens(text: str, tokens_before: list[str], svc: object) -> list[str]:
+def _complete_path_tokens(text: str, tokens_before: list[str], svc: KanbanService) -> list[str]:
     """Complete path-like positional arguments for REPL commands."""
     if not tokens_before:
         return []
@@ -332,7 +336,7 @@ def _complete_path_tokens(text: str, tokens_before: list[str], svc: object) -> l
     return []
 
 
-def _complete_path_tokens_verb_first(text: str, tokens_before: list[str], svc: object) -> list[str]:
+def _complete_path_tokens_verb_first(text: str, tokens_before: list[str], svc: KanbanService) -> list[str]:
     """Complete path-like positional arguments for verb-first REPL commands."""
     if not tokens_before:
         return []
@@ -386,7 +390,7 @@ def _complete_path_tokens_verb_first(text: str, tokens_before: list[str], svc: o
     return []
 
 
-def _resolve_board_column_path(path: str, svc: object) -> str:
+def _resolve_board_column_path(path: str, svc: KanbanService) -> str:
     """Resolve a possibly relative column path into BOARD/COLUMN form."""
     if "/" in path:
         return path
@@ -398,7 +402,7 @@ def _resolve_board_column_path(path: str, svc: object) -> str:
     return f"{board}/{path}"
 
 
-def _resolve_task_path(path: str, svc: object) -> str:
+def _resolve_task_path(path: str, svc: KanbanService) -> str:
     """Resolve a task path into BOARD/COLUMN/TASK form using active context."""
     parts = path.split("/")
     if len(parts) >= 3:
@@ -425,7 +429,7 @@ def _strip_trailing_slash(path: str) -> str:
     return path.rstrip("/")
 
 
-def _resolve_use_path(path: str, svc: object) -> str:
+def _resolve_use_path(path: str, svc: KanbanService) -> str:
     """Resolve special REPL shortcuts for `use` paths."""
     normalized = _strip_trailing_slash(path)
     if normalized == "..":
@@ -437,7 +441,7 @@ def _resolve_use_path(path: str, svc: object) -> str:
     return normalized
 
 
-def _rewrite_noun_first_relative_paths(tokens: list[str], svc: object) -> list[str]:
+def _rewrite_noun_first_relative_paths(tokens: list[str], svc: KanbanService) -> list[str]:
     """Rewrite noun-first REPL command tokens so relative paths become explicit paths."""
     if not tokens:
         return tokens
@@ -489,7 +493,7 @@ def _rewrite_noun_first_relative_paths(tokens: list[str], svc: object) -> list[s
     return rewritten
 
 
-def _rewrite_verb_first_relative_paths(tokens: list[str], svc: object) -> list[str]:
+def _rewrite_verb_first_relative_paths(tokens: list[str], svc: KanbanService) -> list[str]:
     """Rewrite verb-first REPL command tokens so relative paths become explicit paths."""
     if not tokens:
         return tokens
@@ -576,7 +580,7 @@ def _is_noun_first_parser(parser: argparse.ArgumentParser) -> bool:
     top = set(_top_level_commands(parser))
     return bool({"board", "column", "task"} & top)
 
-def _configure_readline_completion(parser: argparse.ArgumentParser, svc: object) -> None:
+def _configure_readline_completion(parser: argparse.ArgumentParser, svc: KanbanService) -> None:
     """Register the readline completer backed by parser-aware suggestions."""
     if readline is None:
         return
@@ -647,7 +651,7 @@ def _install_exit_signal_handlers():
             signal.signal(sig, handler)
 
 
-def run_repl(*, svc: object, renderer: object, noun_first: bool = False) -> None:
+def run_repl(*, svc: KanbanService, renderer: object, noun_first: bool = False) -> None:
     """Run a simple command loop that reuses the CLI parser/handlers."""
     from cli.noun_first_parser import build_parser as build_noun_first_parser
     from cli.verb_first_parser import build_parser as build_verb_first_parser
