@@ -15,6 +15,7 @@ if str(KANBAN_SRC) not in sys.path:
     sys.path.insert(0, str(KANBAN_SRC))
 
 from services.kanban_service import KanbanService, KanbanRoot
+from services.git_service import GitService
 from services.index_service import IndexService
 from storage.memory_repository import InMemoryRepository
 
@@ -25,7 +26,11 @@ class TestKanbanServiceInit(unittest.TestCase):
     def test_init_creates_main_board_and_marks_initialized(self):
         """First init creates main board, default columns, context, and init flag."""
         repo = InMemoryRepository()
-        svc = KanbanService(repository=repo, index_service=IndexService(repository=repo))
+        svc = KanbanService(
+            repository=repo,
+            index_service=IndexService(repository=repo),
+            git_service=GitService(),
+        )
 
         result = svc.init(Path("."))
 
@@ -49,7 +54,11 @@ class TestKanbanServiceInit(unittest.TestCase):
     def test_init_raises_when_called_twice(self):
         """Second init call raises because repository is already initialized."""
         repo = InMemoryRepository()
-        svc = KanbanService(repository=repo, index_service=IndexService(repository=repo))
+        svc = KanbanService(
+            repository=repo,
+            index_service=IndexService(repository=repo),
+            git_service=GitService(),
+        )
 
         svc.init(Path("."))
         with self.assertRaises(ValueError):
@@ -59,7 +68,11 @@ class TestKanbanServiceInit(unittest.TestCase):
         """Init raises if sentinel board state already indicates bootstrapped repo."""
         repo = InMemoryRepository()
         repo.create_board("main")
-        svc = KanbanService(repository=repo, index_service=IndexService(repository=repo))
+        svc = KanbanService(
+            repository=repo,
+            index_service=IndexService(repository=repo),
+            git_service=GitService(),
+        )
 
         with self.assertRaises(ValueError):
             svc.init(Path("."))

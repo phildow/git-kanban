@@ -13,6 +13,7 @@ if str(KANBAN_SRC) not in sys.path:
 
 from repository import BoardNotFound, ColumnNotFound
 from services.kanban_service import KanbanService
+from services.git_service import GitService
 from services.index_service import IndexService
 from storage.memory_repository import InMemoryRepository
 
@@ -20,7 +21,11 @@ from storage.memory_repository import InMemoryRepository
 class TestKanbanServiceUse(unittest.TestCase):
     def setUp(self) -> None:
         self.repo = InMemoryRepository()
-        self.svc = KanbanService(repository=self.repo, index_service=IndexService(repository=self.repo))
+        self.svc = KanbanService(
+            repository=self.repo,
+            index_service=IndexService(repository=self.repo),
+            git_service=GitService(),
+        )
         self.repo.create_board("alpha")
         self.repo.create_column("alpha", "todo")
 

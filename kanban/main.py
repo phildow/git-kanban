@@ -2,6 +2,7 @@
 
 from cli.noun_first_parser import parse_args
 from cli.renderer import Renderer
+from services.git_service import GitService
 from services.kanban_service import KanbanService
 from services.index_service import IndexService
 from storage.memory_repository import InMemoryRepository
@@ -9,7 +10,8 @@ from storage.memory_repository import InMemoryRepository
 def main() -> None:
     repository = InMemoryRepository()
     index_service = IndexService(repository=repository)
-    svc = KanbanService(repository=repository, index_service=index_service)
+    git_service = GitService()
+    svc = KanbanService(repository=repository, index_service=index_service, git_service=git_service)
     renderer = Renderer()
 
     # Bootstrap the repository during development
