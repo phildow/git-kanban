@@ -110,7 +110,6 @@ def handle_task_show(args: argparse.Namespace, svc: KanbanService, renderer: obj
 	result = svc.get_task(args.path)
 	renderer.render_task_show(args, result)
 
-
 def handle_task_edit(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	updates = TaskUpdateParams(
 		title=getattr(args, "title", None),

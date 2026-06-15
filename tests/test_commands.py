@@ -38,33 +38,47 @@ class TestCommandHandlers(unittest.TestCase):
         self.svc.init.assert_called_once_with()
         self.renderer.render_init.assert_called_once_with(args, result)
 
-    def test_board_handlers(self):
-        """Board handlers dispatch to matching service and renderer methods."""
+    def test_handle_board_list(self):
+        """`board list` forwards sort options and renders list output."""
         args = self._args(sort="title", reverse=True)
         result = object()
         self.svc.list_boards.return_value = result
+
         commands.handle_board_list(args, self.svc, self.renderer)
+
         self.svc.list_boards.assert_called_once_with(sort="title", reverse=True)
         self.renderer.render_board_list.assert_called_once_with(args, result)
 
+    def test_handle_board_create(self):
+        """`board create` forwards board name and renders created board."""
         args = self._args(board="my-board")
         result = object()
         self.svc.create_board.return_value = result
+
         commands.handle_board_create(args, self.svc, self.renderer)
+
         self.svc.create_board.assert_called_once_with("my-board")
         self.renderer.render_board_create.assert_called_once_with(args, result)
 
+    def test_handle_board_rename(self):
+        """`board rename` forwards old/new board names and renders result."""
         args = self._args(board="old", new_name="new")
         result = object()
         self.svc.rename_board.return_value = result
+
         commands.handle_board_rename(args, self.svc, self.renderer)
+
         self.svc.rename_board.assert_called_once_with("old", "new")
         self.renderer.render_board_rename.assert_called_once_with(args, result)
 
+    def test_handle_board_delete(self):
+        """`board delete` forwards board name and renders deletion result."""
         args = self._args(board="my-board")
         result = object()
         self.svc.delete_board.return_value = result
+
         commands.handle_board_delete(args, self.svc, self.renderer)
+
         self.svc.delete_board.assert_called_once_with("my-board")
         self.renderer.render_board_delete.assert_called_once_with(args, result)
 
@@ -127,17 +141,19 @@ class TestCommandHandlers(unittest.TestCase):
         self.svc.delete_column.assert_called_once_with("board-a/todo")
         self.renderer.render_column_delete.assert_called_once_with(args, result)
 
-    def test_task_handlers(self):
-        # TODO: break up the task handler tests into separate methods for each handler, and add more cases for create/edit with different param combinations
-
-        """Task handlers split path fields and invoke expected service methods."""
+    def test_handle_task_list(self):
+        """`task list` handler forwards path/sort options and renders output."""
         args = self._args(path="board-a/todo", sort="title", reverse=True)
         result = object()
         self.svc.list_tasks.return_value = result
+
         commands.handle_task_list(args, self.svc, self.renderer)
+
         self.svc.list_tasks.assert_called_once_with(path="board-a/todo", sort="title", reverse=True)
         self.renderer.render_task_list.assert_called_once_with(args, result)
 
+    def test_handle_task_create_with_all_optional_fields(self):
+        """`task create` maps all optional CLI fields into `TaskCreateParams`."""
         args = self._args(
             path="board-a/todo/fix-parser",
             assignee="philip",
@@ -148,7 +164,9 @@ class TestCommandHandlers(unittest.TestCase):
         )
         result = object()
         self.svc.create_task.return_value = result
+
         commands.handle_task_create(args, self.svc, self.renderer)
+
         self.svc.create_task.assert_called_once_with(
             "board-a/todo/fix-parser",
             TaskCreateParams(
@@ -161,33 +179,72 @@ class TestCommandHandlers(unittest.TestCase):
         )
         self.renderer.render_task_create.assert_called_once_with(args, result)
 
-        # args = self._args(path="board-a/todo/check-no-other-args")
-        # result = object()
-        # self.svc.create_task.return_value = result
-        # commands.handle_task_create(args, self.svc, self.renderer)
-        # self.svc.create_task.assert_called_once_with(
-        #     "board-a/todo/check-no-other-args",
-        #     TaskCreateParams(
-        #         assignee=None,
-        #         priority=None,
-        #         tags=[],
-        #         due_date=None,
-        #         created_by=None,
-        #     ),
-        # )
-        # self.renderer.render_task_create.assert_called_once_with(args, result)
+    def test_handle_task_create_with_default_optional_fields(self):
+        """`task create` defaults missing optional fields and normalizes `tags` to empty list."""
+        args = self._args(path="board-a/todo/check-no-other-args")
+        result = object()
+        self.svc.create_task.return_value = result
 
+        commands.handle_task_create(args, self.svc, self.renderer)
+
+        self.svc.create_task.assert_called_once_with(
+            "board-a/todo/check-no-other-args",
+            TaskCreateParams(
+                assignee=None,
+                priority=None,
+                tags=[],
+                due_date=None,
+                created_by=None,
+            ),
+        )
+        self.renderer.render_task_create.assert_called_once_with(args, result)
+
+    def test_handle_task_create_with_explicit_none_tags(self):
+        """`task create` treats explicit `tags=None` the same as omitted tags."""
+        args = self._args(
+            path="board-a/todo/check-tags-none",
+            assignee="alex",
+            priority=None,
+            tags=None,
+            due_date=None,
+            created_by="alex",
+        )
+        result = object()
+        self.svc.create_task.return_value = result
+
+        commands.handle_task_create(args, self.svc, self.renderer)
+
+        self.svc.create_task.assert_called_once_with(
+            "board-a/todo/check-tags-none",
+            TaskCreateParams(
+                assignee="alex",
+                priority=None,
+                tags=[],
+                due_date=None,
+                created_by="alex",
+            ),
+        )
+        self.renderer.render_task_create.assert_called_once_with(args, result)
+
+    def test_handle_task_show(self):
+        """`task show` fetches a task by path and forwards it to renderer."""
         args = self._args(path="board-a/todo/fix-parser")
         result = object()
         self.svc.get_task.return_value = result
+
         commands.handle_task_show(args, self.svc, self.renderer)
+
         self.svc.get_task.assert_called_once_with("board-a/todo/fix-parser")
         self.renderer.render_task_show.assert_called_once_with(args, result)
 
+    def test_handle_task_edit_with_default_optional_fields(self):
+        """`task edit` defaults unspecified update fields to `None`."""
         args = self._args(path="board-a/todo/fix-parser")
         result = object()
         self.svc.edit_task.return_value = result
+
         commands.handle_task_edit(args, self.svc, self.renderer)
+
         self.svc.edit_task.assert_called_once_with(
             "board-a/todo/fix-parser",
             updates=TaskUpdateParams(
@@ -200,17 +257,72 @@ class TestCommandHandlers(unittest.TestCase):
         )
         self.renderer.render_task_edit.assert_called_once_with(args, result)
 
+    def test_handle_task_edit_with_all_optional_fields(self):
+        """`task edit` maps all provided update fields into `TaskUpdateParams`."""
+        args = self._args(
+            path="board-a/todo/fix-parser",
+            title="fix parser robustly",
+            assignee="philip",
+            priority="medium",
+            tags=["cli", "refactor"],
+            due_date="2026-07-01",
+        )
+        result = object()
+        self.svc.edit_task.return_value = result
+
+        commands.handle_task_edit(args, self.svc, self.renderer)
+
+        self.svc.edit_task.assert_called_once_with(
+            "board-a/todo/fix-parser",
+            updates=TaskUpdateParams(
+                title="fix parser robustly",
+                assignee="philip",
+                priority="medium",
+                tags=["cli", "refactor"],
+                due_date="2026-07-01",
+            ),
+        )
+        self.renderer.render_task_edit.assert_called_once_with(args, result)
+
+    def test_handle_task_edit_with_explicit_empty_tags(self):
+        """`task edit` preserves an explicit empty tags list."""
+        args = self._args(path="board-a/todo/fix-parser", tags=[])
+        result = object()
+        self.svc.edit_task.return_value = result
+
+        commands.handle_task_edit(args, self.svc, self.renderer)
+
+        self.svc.edit_task.assert_called_once_with(
+            "board-a/todo/fix-parser",
+            updates=TaskUpdateParams(
+                title=None,
+                assignee=None,
+                priority=None,
+                tags=[],
+                due_date=None,
+            ),
+        )
+        self.renderer.render_task_edit.assert_called_once_with(args, result)
+
+    def test_handle_task_move(self):
+        """`task move` forwards source and destination paths."""
         args = self._args(path="board-a/todo/fix-parser", dest="board-a/done")
         result = object()
         self.svc.move_task.return_value = result
+
         commands.handle_task_move(args, self.svc, self.renderer)
+
         self.svc.move_task.assert_called_once_with("board-a/todo/fix-parser", "board-a/done")
         self.renderer.render_task_move.assert_called_once_with(args, result)
 
+    def test_handle_task_delete(self):
+        """`task delete` forwards task path and renders deletion result."""
         args = self._args(path="board-a/todo/fix-parser")
         result = object()
         self.svc.delete_task.return_value = result
+
         commands.handle_task_delete(args, self.svc, self.renderer)
+
         self.svc.delete_task.assert_called_once_with("board-a/todo/fix-parser")
         self.renderer.render_task_delete.assert_called_once_with(args, result)
 
