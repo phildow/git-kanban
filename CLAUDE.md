@@ -365,7 +365,7 @@ fix-login-bug
 The completer detects that board (and column) are being supplied explicitly and resolves subsequent segments from what's been typed rather than from context:
 
 ```
-# Active context is my-project/todo, but user is typing a path from ops/
+# User context is my-project/todo, but user is typing a path from ops/
 kanban (my-project/todo)> move task ops/<TAB>
 backlog/   todo/   in-progress/   done/
 
@@ -375,7 +375,7 @@ in-progress/
 kanban (my-project/todo)> move task ops/in-progress/<TAB>
 deploy-staging   update-certs   rotate-keys
 
-# Active context is my-project, user supplies board and column explicitly
+# User context is my-project, user supplies board and column explicitly
 kanban (my-project)> move task ops/todo/<TAB>
 deploy-staging   update-certs   rotate-keys
 ```

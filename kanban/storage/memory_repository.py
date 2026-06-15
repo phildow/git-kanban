@@ -117,7 +117,7 @@ class InMemoryRepository(KanbanRepository):
         if already_initialized or self.board_exists(default_board):
             raise ValueError("Kanban is already initialized")
 
-    # Active context
+    # User context
     def get_user_context(self) -> UserContext:
         return self._user_context
 
@@ -324,7 +324,7 @@ class InMemoryRepository(KanbanRepository):
                 continue
             if column is not None and task_column != column:
                 continue
-                
+
             # Optional metadata filtering
             if filter is not None:
                 if filter.assignee is not None and task.assignee != filter.assignee:

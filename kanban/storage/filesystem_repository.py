@@ -22,7 +22,7 @@ class FilesystemRepository(KanbanRepository):
     def init(self, default_board: str = "main") -> None:
         raise NotImplementedError()
 
-    # Active context
+    # User context
     def get_user_context(self) -> UserContext:
         raise NotImplementedError()
 
