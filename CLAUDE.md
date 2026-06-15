@@ -137,6 +137,7 @@ Metadata is stored in markdown frontmatter with the following fields and format:
 ---  
 id: a3f9c2d1-8b4e-4f2a-9c1d-3e7f8a2b5c6d
 title: Fix login bug
+slug: fix-login-bug
 created_by: mark
 assignee: alice
 priority: high
@@ -215,18 +216,18 @@ kanban config get <key>            # key: name
 #   --quiet
 ```
 
-The `[]` brackets indicate optional path components that are inferred from active context or index search. Path resolution for all commands follows:
+The `[]` brackets indicate optional path components that are inferred from the user context or index search. Path resolution for all commands follows:
 
 1. Explicit path
-2. Active context
+2. User context
 3. Index search (scoped to active board if set)
 4. Error on ambiguity
 
 ## The REPL
 
-The REPL is the Read-Evaulate-Print-Loop that allows the user to interact with the command line application. 
+The REPL is the Read-Evaulate-Print-Loop that runs the command line application in an interactive loop. By default the REPL uses a verb first command strcuture but can be started with the `--noun-first` flag to use the same noun first command structure as the non-interactive CLI.
 
-The REPL shares its command parsing and output formatting code with the CLI — both call the same KanbanService methods and render the same dataclasses. The only new layer is the read-eval-print loop itself and a few REPL-specific meta-commands:
+The REPL shares its command parsing and output formatting code with the non-interactive CLI — both call the same KanbanService methods and render the same dataclasses. The only new layer is the read-eval-print loop itself and a few REPL-specific meta-commands:
 
 ```
 use           - sets the active board/column
@@ -258,14 +259,14 @@ $ kanban repl
 
 kanban> use my-project/todo
 
-kanban (my-project/todo)> task list
+kanban (my-project/todo)> list tasks
   1. Fix login bug         [high]  alice    due 2026-06-20
   2. Write API docs        [med]   bob      due 2026-06-25
 
-kanban (my-project/todo)> task create "Add rate limiting" --priority high --assignee alice
+kanban (my-project/todo)> create task "Add rate limiting" --priority high --assignee alice
 Created: Add rate limiting [a3f9c2d1]
 
-kanban (my-project/todo)> task move "Add rate limiting" in-progress
+kanban (my-project/todo)> move task "Add rate limiting" in-progress
 Moved to: my-project/in-progress
 
 kanban (my-project/todo)> /history
@@ -285,94 +286,94 @@ The REPL supports tab completion for commands, positional arguments, and paths.
 Completion for commands and positional arguments is straightforward and looks like:
 
 ```
-kanban> t<TAB>
-task
-
-kanban> task mo<TABL>
+kanban> m<TAB>
 move
+
+kanban> move ta<TABL>
+task
 ```
 
 #### For Paths
 
-Tab completion for board/column/task paths must take into account user context and the portion of the path so far supplied by the user.
+Tab completion for board/column/task paths must take into account the user context and the portion of the path so far supplied by the user.
 
 Tab completion is resolved in the following manner:
 
-**When there is no active context**
+**When there is no board or column in the user context**
 
 The user must type everything. Completions offer the next segment with a trailing slash to drill in:
 
 ```
-kanban> task move <TAB>
+kanban> move task <TAB>
 my-project/   ops/
 
-kanban> task move my-<TAB>
+kanban> move task my-<TAB>
 my-project/
 
-kanban> task move my-project/<TAB>
+kanban> move task my-project/<TAB>
 todo/   in-progress/   in-review/   done/
 
-kanban> task move my-project/to<TAB>
+kanban> move task my-project/to<TAB>
 todo/
 
-kanban> task move my-project/todo/<TAB>
+kanban> moave task my-project/todo/<TAB>
 fix-login-bug   write-api-docs   add-rate-limiting
 
-kanban> task move my-project/todo/fix<TAB>
+kanban> move task my-project/todo/fix<TAB>
 fix-login-bug
 ```
 
-**When there is an active board but no active column**
+**When there is an board but no column in the user context**
 
 The board segment is skipped. Completion starts at the column, resolved against the active board:
 
 ```
-kanban (my-project)> task move <TAB>
+kanban (my-project)> move task <TAB>
 todo/   in-progress/   in-review/   done/
 
-kanban (my-project)> task move to<TAB>
+kanban (my-project)> move task to<TAB>
 todo/
 
-kanban (my-project)> task move todo/<TAB>
+kanban (my-project)> move task todo/<TAB>
 fix-login-bug   write-api-docs   add-rate-limiting
 
-kanban (my-project)> task move todo/fix<TAB>
+kanban (my-project)> move task todo/fix<TAB>
 fix-login-bug
 ```
 
-**When there is an active board and column**
+**When there is a board and column in the user context**
 
 Both segments are skipped. Completion starts directly at the task title:
 
 ```
-kanban (my-project/todo)> task move <TAB>
+kanban (my-project/todo)> move task <TAB>
 fix-login-bug   write-api-docs   add-rate-limiting
 
-kanban (my-project/todo)> task move fix<TAB>
+kanban (my-project/todo)> move task fix<TAB>
 fix-login-bug
 ```
 
-**In the the mixed case when the user overrides context with an explicit path**
+**In the the mixed case when the user overrides the context with an explicit path**
 
 The completer detects that board (and column) are being supplied explicitly and resolves subsequent segments from what's been typed rather than from context:
 
 ```
 # Active context is my-project/todo, but user is typing a path from ops/
-kanban (my-project/todo)> task move ops/<TAB>
+kanban (my-project/todo)> move task ops/<TAB>
 backlog/   todo/   in-progress/   done/
 
-kanban (my-project/todo)> task move ops/in-pro<TAB>
+kanban (my-project/todo)> move task ops/in-pro<TAB>
 in-progress/
 
-kanban (my-project/todo)> task move ops/in-progress/<TAB>
+kanban (my-project/todo)> move task ops/in-progress/<TAB>
 deploy-staging   update-certs   rotate-keys
 
 # Active context is my-project, user supplies board and column explicitly
-kanban (my-project)> task move ops/todo/<TAB>
+kanban (my-project)> move task ops/todo/<TAB>
 deploy-staging   update-certs   rotate-keys
 ```
 
-The signal that the user is overriding context is simply the presence of a / in the typed text. One slash means they've supplied a board; two slashes means they've supplied both board and column. 
+The signal that the user is overriding the context is simply the presence of a `/` in the typed text. One slash means they've supplied a board; two slashes means they've supplied both a board and column. 
 
 ## Additional Instructions
 
