@@ -9,6 +9,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
+from models import Task
+from repository import KanbanRepository
+
 
 @dataclass(frozen=True)
 class IndexState:
@@ -25,7 +28,7 @@ class IndexState:
 class IndexService:
     """Coordinates index cache rebuild and freshness checks."""
 
-    def __init__(self, repository: object) -> None:
+    def __init__(self, repository: KanbanRepository) -> None:
         """Create the service with an optional repository for future index backends."""
         self.repository = repository
         self._built_at: datetime | None = None
@@ -33,6 +36,14 @@ class IndexService:
     def rebuild(self) -> None:
         """Mark the in-memory index state as rebuilt at the current UTC time."""
         self._built_at = datetime.now(timezone.utc)
+
+    def update(self, task: Task) -> None:
+        """Scaffold for upserting a single task into the index cache."""
+        _ = task
+
+    def delete(self, task: Task) -> None:
+        """Scaffold for removing a single task from the index cache."""
+        _ = task
 
     def get_state(self) -> IndexState:
         """Return index build metadata as an ``IndexState`` value object."""

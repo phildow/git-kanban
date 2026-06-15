@@ -4,10 +4,6 @@ from pathlib import Path
 from typing import Optional
 from uuid import UUID
 
-# TODO: Is there a better way to handle imports from the parent directory
-import sys
-sys.path.append('../kanban')
-
 from models import Task, TaskFilter, Board, Column, UserContext
 from repository import KanbanRepository
 

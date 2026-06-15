@@ -60,6 +60,16 @@ class TestIndexService(unittest.TestCase):
         self.service._built_at = datetime.now(timezone.utc) - timedelta(seconds=120)
         self.assertFalse(self.service.is_fresh(max_age_seconds=60))
 
+    def test_update_is_scaffold_noop(self):
+        """`update()` is a scaffold no-op and accepts a task argument."""
+        task = object()
+        self.service.update(task)
+
+    def test_delete_is_scaffold_noop(self):
+        """`delete()` is a scaffold no-op and accepts a task argument."""
+        task = object()
+        self.service.delete(task)
+
 
 if __name__ == "__main__":
     unittest.main()

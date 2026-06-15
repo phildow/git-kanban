@@ -4,10 +4,6 @@ from datetime import datetime
 import re
 from uuid import UUID, uuid4
 
-# TODO: Is there a better way to handle imports from the parent directory
-import sys
-sys.path.append('../kanban')
-
 from models import Task, TaskFilter, Board, Column, UserContext
 from repository import ColumnNotFound
 from services.git_service import GitService
@@ -397,7 +393,9 @@ class KanbanService:
             created_by=created_by,
         )
         filename = task.slug
-        return self.repository.create_task(task, filename)
+        created_task = self.repository.create_task(task, filename)
+        self.index_service.update(created_task)
+        return created_task
 
     def get_task(
         self,
@@ -468,6 +466,7 @@ class KanbanService:
         """
         task = self.get_task(path)
         self.repository.delete_task(task.id)
+        self.index_service.delete(task)
         return None
 
 
