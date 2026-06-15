@@ -12,13 +12,8 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-KANBAN_SRC = PROJECT_ROOT / "kanban"
-if str(KANBAN_SRC) not in sys.path:
-    sys.path.insert(0, str(KANBAN_SRC))
-
 from models import Task, TaskFilter
-from repository import (
+from storage.kanban_repository import (
     BoardNotFound,
     ColumnNotFound,
     TaskAlreadyExists,

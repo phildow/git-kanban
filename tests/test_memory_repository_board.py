@@ -14,13 +14,8 @@ from datetime import datetime, UTC
 from pathlib import Path
 from uuid import uuid4
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-KANBAN_SRC = PROJECT_ROOT / "kanban"
-if str(KANBAN_SRC) not in sys.path:
-    sys.path.insert(0, str(KANBAN_SRC))
-
 from models import Board, Column, Task
-from repository import BoardAlreadyExists, BoardNotFound
+from storage.kanban_repository import BoardAlreadyExists, BoardNotFound
 from storage.memory_repository import InMemoryRepository
 
 

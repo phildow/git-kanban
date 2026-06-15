@@ -39,6 +39,7 @@ kanban (main)>
 - Treat `use` more like `cd`, and treat paths as relative paths
     - If a board has been set use only tab completes to the available columns
     - Unless the path begins with a leading forward slash `/`, in which case it should tabcomplete to the available boards
+- List tasks still does not work with partial paths
 
 - Error handling
     - Resolve repository errors to service errors and catch most of them in the repl
@@ -51,11 +52,6 @@ CONFIG
     - eg `l` for `list`
 - Allow the user to set a username to use for default createdb_by and assigned_to
 
-
-- Type the svc object that is represented by KanbanService everywhere
-- Push to github
-- Scaffold IndexService ABC -> Memory and SQLite
-- Scaffold GitService
 - FileStorage
 - Use `.kanban` for configuration and caching and `.kanban-store` for the filesystem
 - Once we have file storage `kanban init` this direcory and start storing tasks here (dogfood)
@@ -69,7 +65,7 @@ CONFIG
 TOOD: is this right?
 
 ```
-python -m unittest -q tests/test_commands.py tests/test_kanban_service_init.py
+python3 -m unittest discover -s tests
 ```
 
 ### Installing after changes

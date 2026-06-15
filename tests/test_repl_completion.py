@@ -8,11 +8,6 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-KANBAN_SRC = PROJECT_ROOT / "kanban"
-if str(KANBAN_SRC) not in sys.path:
-    sys.path.insert(0, str(KANBAN_SRC))
-
 from repl.shell import (
     _prompt,
     _rewrite_noun_first_relative_paths,

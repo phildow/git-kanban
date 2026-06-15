@@ -5,21 +5,12 @@ import re
 from uuid import UUID, uuid4
 
 from models import Task, TaskFilter, Board, Column, UserContext
-from repository import ColumnNotFound
+from storage.kanban_repository import KanbanRepository, ColumnNotFound
 from services.git_service import GitService
 from services.index_service import IndexService
 
 
 # ── Params ────────────────────────────────────────────────────────────────────
-
-@dataclass
-class TaskFilters:
-    assignee:   str | None = None
-    priority:   str | None = None          # "low" | "medium" | "high"
-    tag:        str | None = None
-    due_before: datetime | None = None
-    due_after:  datetime | None = None
-    created_by: str | None = None
 
 @dataclass
 class TaskCreateParams:
@@ -85,15 +76,7 @@ class KanbanService:
         
     #     return attr
 
-    # def __init__(
-    #     self,
-    #     board_service:  BoardService,
-    #     task_service:   TaskService,
-    #     search_service: SearchService,
-    #     index_service:  IndexService,
-    #     git_service:    GitService,
-    # ) -> None:
-    def __init__(self, repository, index_service: IndexService, git_service: GitService) -> None:
+    def __init__(self, repository: KanbanRepository, index_service: IndexService, git_service: GitService) -> None:
         """
         Assemble the facade from its domain services.  All services are
         injected rather than instantiated here so that the InMemoryRepository
@@ -294,7 +277,7 @@ class KanbanService:
     def list_tasks(
         self,
         path:    str | None = None,
-        filters: TaskFilters = TaskFilters(),
+        filters: TaskFilter = TaskFilter(),
         sort:    str | None = None,
         reverse: bool = False,
     ) -> list[Task]:
@@ -475,14 +458,14 @@ class KanbanService:
     def search(
         self,
         query:   str,
-        filters: TaskFilters = TaskFilters(),
+        filters: TaskFilter = TaskFilter(),
         board:   str | None = None,
         sort:    str | None = None,
         reverse: bool = False,
     ) -> list[Task]:
         """
         Full-text search across task titles and bodies, narrowed by any
-        TaskFilters provided.  Scoped to a single board if board is given,
+        TaskFilter provided.  Scoped to a single board if board is given,
         otherwise searches the whole repository.  Delegates to SearchService,
         which uses the index when available and falls back to a filesystem scan
         when the index is stale or absent.

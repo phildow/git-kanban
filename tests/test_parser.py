@@ -10,13 +10,6 @@ import sys
 import unittest
 from pathlib import Path
 
-# This project imports CLI modules as top-level "cli.*" from inside the
-# package directory. Add /kanban to sys.path so tests can import the same way.
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-KANBAN_SRC = PROJECT_ROOT / "kanban"
-if str(KANBAN_SRC) not in sys.path:
-    sys.path.insert(0, str(KANBAN_SRC))
-
 from cli import noun_first_parser as cli_parser
 from cli import verb_first_parser as verb_first_cli_parser
 from cli.commands import (

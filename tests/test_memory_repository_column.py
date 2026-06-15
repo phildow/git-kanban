@@ -11,13 +11,8 @@ import unittest
 from pathlib import Path
 from uuid import uuid4
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-KANBAN_SRC = PROJECT_ROOT / "kanban"
-if str(KANBAN_SRC) not in sys.path:
-    sys.path.insert(0, str(KANBAN_SRC))
-
 from models import Column, Task
-from repository import BoardNotFound, ColumnAlreadyExists, ColumnNotFound
+from storage.kanban_repository import BoardNotFound, ColumnAlreadyExists, ColumnNotFound
 from storage.memory_repository import InMemoryRepository
 
 

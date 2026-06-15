@@ -13,12 +13,6 @@ from pathlib import Path
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
-# Match project import style ("from cli...") by adding /kanban to sys.path.
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-KANBAN_SRC = PROJECT_ROOT / "kanban"
-if str(KANBAN_SRC) not in sys.path:
-    sys.path.insert(0, str(KANBAN_SRC))
-
 from cli import commands
 
 

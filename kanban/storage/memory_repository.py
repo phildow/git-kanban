@@ -6,7 +6,7 @@ from typing import Optional
 from uuid import UUID, uuid4
 
 from models import Task, TaskFilter, Board, Column, UserContext
-from repository import (
+from storage.kanban_repository import (
     KanbanRepository,
     BoardNotFound,
     BoardAlreadyExists,
@@ -327,10 +327,6 @@ class InMemoryRepository(KanbanRepository):
 
             # Optional metadata filtering
             if filter is not None:
-                if filter.board is not None and task_board != filter.board:
-                    continue
-                if filter.column is not None and task_column != filter.column:
-                    continue
                 if filter.assignee is not None and task.assignee != filter.assignee:
                     continue
                 if filter.priority is not None and task.priority != filter.priority:

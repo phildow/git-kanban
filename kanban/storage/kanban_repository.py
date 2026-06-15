@@ -27,10 +27,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Optional
 
-try:
-    from .models import UserContext, Board, Column, Task, TaskFilter
-except ImportError:
-    from models import UserContext, Board, Column, Task, TaskFilter
+from models import UserContext, Board, Column, Task, TaskFilter
 
 
 # ---------------------------------------------------------------------------

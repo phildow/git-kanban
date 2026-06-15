@@ -5,7 +5,7 @@ from typing import Optional
 from uuid import UUID
 
 from models import Task, TaskFilter, Board, Column, UserContext
-from repository import KanbanRepository
+from storage.kanban_repository import KanbanRepository
 
 
 class FilesystemRepository(KanbanRepository):
