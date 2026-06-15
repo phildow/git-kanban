@@ -6,10 +6,6 @@ import argparse
 import json
 from functools import wraps
 
-# TODO: Is there a better way to handle imports from the parent directory
-import sys
-sys.path.append('../kanban')
-
 from models import UserContext, Board, Column, Task
 from services.kanban_service import GitCommit, KanbanRoot, KanbanStatus
 
