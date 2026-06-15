@@ -29,7 +29,7 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
 
     def test_create_task_calls_index_update(self):
         """Creating a task should invoke `index_service.update()` with created task."""
-        created = self.svc.create_task("alpha/todo/t1", TaskCreateParams(title="t1"))
+        created = self.svc.create_task("alpha/todo/t1", TaskCreateParams())
 
         self.index_service.update.assert_called_once()
         updated_task = self.index_service.update.call_args.args[0]
@@ -37,7 +37,7 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
 
     def test_delete_task_calls_index_delete(self):
         """Deleting a task should invoke `index_service.delete()` with deleted task."""
-        self.svc.create_task("alpha/todo/t1", TaskCreateParams(title="t1"))
+        self.svc.create_task("alpha/todo/t1", TaskCreateParams())
 
         self.svc.delete_task("alpha/todo/t1")
 

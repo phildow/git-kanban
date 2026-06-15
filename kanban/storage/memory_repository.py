@@ -324,7 +324,7 @@ class InMemoryRepository(KanbanRepository):
                 continue
             if column is not None and task_column != column:
                 continue
-
+                
             # Optional metadata filtering
             if filter is not None:
                 if filter.assignee is not None and task.assignee != filter.assignee:

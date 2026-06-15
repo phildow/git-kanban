@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 import argparse
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-	from services.kanban_service import KanbanService
+from services.kanban_service import KanbanService, TaskCreateParams, TaskUpdateParams
 
 # ---------------------------------------------------------------------------
 # Initialization commands
@@ -96,13 +94,14 @@ def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: obj
 
 
 def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	params = {
-		"assignee": args.assignee,
-		"priority": args.priority,
-		"tags": args.tags or [],
-		"due_date": args.due_date,
-		"created_by": args.created_by,
-	}
+	params = TaskCreateParams(
+		assignee=getattr(args, "assignee", None),
+		priority=getattr(args, "priority", None),
+		tags=getattr(args, "tags", None) or [],
+		due_date=getattr(args, "due_date", None),
+		created_by=getattr(args, "created_by", None),
+	)
+
 	result = svc.create_task(args.path, params)
 	renderer.render_task_create(args, result)
 
@@ -113,13 +112,14 @@ def handle_task_show(args: argparse.Namespace, svc: KanbanService, renderer: obj
 
 
 def handle_task_edit(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	updates = {
-		"title": None,
-		"assignee": None,
-		"priority": None,
-		"tags": None,
-		"due_date": None,
-	}
+	updates = TaskUpdateParams(
+		title=getattr(args, "title", None),
+		assignee=getattr(args, "assignee", None),
+		priority=getattr(args, "priority", None),
+		tags=getattr(args, "tags", None),
+		due_date=getattr(args, "due_date", None),
+	)
+
 	result = svc.edit_task(args.path, updates=updates)
 	renderer.render_task_edit(args, result)
 

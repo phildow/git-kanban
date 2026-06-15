@@ -39,11 +39,14 @@ kanban (main)>
 - Treat `use` more like `cd`, and treat paths as relative paths
     - If a board has been set use only tab completes to the available columns
     - Unless the path begins with a leading forward slash `/`, in which case it should tabcomplete to the available boards
-- List tasks still does not work with partial paths
+- List tasks still does not work with partial paths ahh when it has a trailing slash `/`
+- List flags aren't working in the repl or on the command line, no filter is happening
 
 - Error handling
     - Resolve repository errors to service errors and catch most of them in the repl
     - Handle value errors and missing board/column errors without exiting
+
+- Distinguish between updating a task and editing a task
 
 CONFIG
 

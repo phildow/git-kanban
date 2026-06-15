@@ -14,6 +14,7 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 
 from cli import commands
+from services.kanban_service import TaskCreateParams, TaskUpdateParams
 
 
 class TestCommandHandlers(unittest.TestCase):
@@ -127,6 +128,8 @@ class TestCommandHandlers(unittest.TestCase):
         self.renderer.render_column_delete.assert_called_once_with(args, result)
 
     def test_task_handlers(self):
+        # TODO: break up the task handler tests into separate methods for each handler, and add more cases for create/edit with different param combinations
+
         """Task handlers split path fields and invoke expected service methods."""
         args = self._args(path="board-a/todo", sort="title", reverse=True)
         result = object()
@@ -148,15 +151,31 @@ class TestCommandHandlers(unittest.TestCase):
         commands.handle_task_create(args, self.svc, self.renderer)
         self.svc.create_task.assert_called_once_with(
             "board-a/todo/fix-parser",
-            {
-                "assignee": "philip",
-                "priority": "high",
-                "tags": ["cli", "tests"],
-                "due_date": "2026-06-15",
-                "created_by": "philip",
-            },
+            TaskCreateParams(
+                assignee="philip",
+                priority="high",
+                tags=["cli", "tests"],
+                due_date="2026-06-15",
+                created_by="philip",
+            ),
         )
         self.renderer.render_task_create.assert_called_once_with(args, result)
+
+        # args = self._args(path="board-a/todo/check-no-other-args")
+        # result = object()
+        # self.svc.create_task.return_value = result
+        # commands.handle_task_create(args, self.svc, self.renderer)
+        # self.svc.create_task.assert_called_once_with(
+        #     "board-a/todo/check-no-other-args",
+        #     TaskCreateParams(
+        #         assignee=None,
+        #         priority=None,
+        #         tags=[],
+        #         due_date=None,
+        #         created_by=None,
+        #     ),
+        # )
+        # self.renderer.render_task_create.assert_called_once_with(args, result)
 
         args = self._args(path="board-a/todo/fix-parser")
         result = object()
@@ -171,13 +190,13 @@ class TestCommandHandlers(unittest.TestCase):
         commands.handle_task_edit(args, self.svc, self.renderer)
         self.svc.edit_task.assert_called_once_with(
             "board-a/todo/fix-parser",
-            updates={
-                "title": None,
-                "assignee": None,
-                "priority": None,
-                "tags": None,
-                "due_date": None,
-            },
+            updates=TaskUpdateParams(
+                title=None,
+                assignee=None,
+                priority=None,
+                tags=None,
+                due_date=None,
+            ),
         )
         self.renderer.render_task_edit.assert_called_once_with(args, result)
 

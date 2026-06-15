@@ -14,7 +14,8 @@ from services.index_service import IndexService
 
 @dataclass
 class TaskCreateParams:
-    title:      str
+    # TODO: the title is supplied by the path, but should it be included here
+    # title:      str
     assignee:   str | None = None
     priority:   str | None = None
     tags:       list[str] = field(default_factory=list)
@@ -277,7 +278,7 @@ class KanbanService:
     def list_tasks(
         self,
         path:    str | None = None,
-        filters: TaskFilter = TaskFilter(),
+        filter:  TaskFilter = TaskFilter(),
         sort:    str | None = None,
         reverse: bool = False,
     ) -> list[Task]:
@@ -289,17 +290,7 @@ class KanbanService:
         "created-at", "updated-at", or "created-by".
         """
         board, column = self._resolve_task_list_scope(path)
-
-        repo_filter = TaskFilter(
-            assignee=filters.assignee,
-            priority=filters.priority,
-            tag=filters.tag,
-            due_before=filters.due_before,
-            due_after=filters.due_after,
-            created_by=filters.created_by,
-        )
-
-        tasks = self.repository.list_tasks(board=board, column=column, filter=repo_filter)
+        tasks = self.repository.list_tasks(board=board, column=column, filter=filter)
 
         if not sort:
             return tasks
@@ -342,23 +333,13 @@ class KanbanService:
         due_date: datetime | None
         created_by: str | None
 
-        if isinstance(params, TaskCreateParams):
-            if params.title and params.title != title:
-                raise ValueError("Task title in params does not match task path title")
-            assignee = params.assignee
-            priority = params.priority
-            tags = params.tags or []
-            due_date = params.due_date
-            created_by = params.created_by
-        else:
-            raw_title = params.get("title") if isinstance(params, dict) else None
-            if raw_title and raw_title != title:
-                raise ValueError("Task title in params does not match task path title")
-            assignee = params.get("assignee") if isinstance(params, dict) else None
-            priority = params.get("priority") if isinstance(params, dict) else None
-            tags = list(params.get("tags") or []) if isinstance(params, dict) else []
-            due_date = params.get("due_date") if isinstance(params, dict) else None
-            created_by = params.get("created_by") if isinstance(params, dict) else None
+        # if params.title and params.title != title:
+        #    raise ValueError("Task title in params does not match task path title")
+        assignee = params.assignee
+        priority = params.priority
+        tags = params.tags or []
+        due_date = params.due_date
+        created_by = params.created_by
 
         if isinstance(due_date, str):
             due_date = datetime.fromisoformat(due_date)
@@ -458,7 +439,7 @@ class KanbanService:
     def search(
         self,
         query:   str,
-        filters: TaskFilter = TaskFilter(),
+        filter:  TaskFilter = TaskFilter(),
         board:   str | None = None,
         sort:    str | None = None,
         reverse: bool = False,
