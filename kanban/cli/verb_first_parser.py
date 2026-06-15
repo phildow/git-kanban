@@ -33,6 +33,7 @@ from cli.commands import (
     handle_task_list,
     handle_task_move,
     handle_task_show,
+    handle_task_update,
     handle_use,
 )
 
@@ -72,6 +73,12 @@ def _add_task_create_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--due-date", metavar="DATE", help="Due date (YYYY-MM-DD)")
     parser.add_argument("--created-by", metavar="NAME", help="Creator name")
 
+def _add_task_update_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--assignee", metavar="NAME", help="Assign task to a user")
+    parser.add_argument("--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
+    parser.add_argument("--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
+    parser.add_argument("--due-date", metavar="DATE", help="Due date (YYYY-MM-DD)")
+    parser.add_argument("--created-by", metavar="NAME", help="Creator name")
 
 # ---------------------------------------------------------------------------
 # Verb-first subcommands
@@ -98,7 +105,7 @@ def _add_create_parser(subparsers: argparse._SubParsersAction) -> None:
     # create task
     p = create_sub.add_parser("task", help="Create a new task")
     p.add_argument("path", metavar="BOARD/COLUMN/TITLE", help="Fully qualified task path")
-    _add_task_create_args(p)
+    _add_task_update_args(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_task_create)
 
@@ -178,7 +185,7 @@ def _add_delete_parser(subparsers: argparse._SubParsersAction) -> None:
 
 
 def _add_reorder_parser(subparsers: argparse._SubParsersAction) -> None:
-    reorder_parser = subparsers.add_parser("reorder", help="Reorder entities")
+    reorder_parser = subparsers.add_parser("reorder", help="Reorder columns or tasks")
     _add_global_flags(reorder_parser)
     reorder_sub = reorder_parser.add_subparsers(dest="reorder_subject", metavar="SUBJECT")
     reorder_sub.required = True
@@ -207,7 +214,7 @@ def _add_show_parser(subparsers: argparse._SubParsersAction) -> None:
 
 
 def _add_edit_parser(subparsers: argparse._SubParsersAction) -> None:
-    edit_parser = subparsers.add_parser("edit", help="Edit entities")
+    edit_parser = subparsers.add_parser("edit", help="Edit tasks")
     _add_global_flags(edit_parser)
     edit_sub = edit_parser.add_subparsers(dest="edit_subject", metavar="SUBJECT")
     edit_sub.required = True
@@ -219,8 +226,22 @@ def _add_edit_parser(subparsers: argparse._SubParsersAction) -> None:
     p.set_defaults(func=handle_task_edit)
 
 
+def _add_update_parser(subparsers: argparse._SubParsersAction) -> None:
+    update_parser = subparsers.add_parser("update", help="Update a task")
+    _add_global_flags(update_parser)
+    update_sub = update_parser.add_subparsers(dest="update_subject", metavar="SUBJECT")
+    update_sub.required = True
+
+    # update task
+    p = update_sub.add_parser("task", help="Update task fields")
+    p.add_argument("path", metavar="BOARD/COLUMN/TITLE", help="Fully qualified task path")
+    _add_task_create_args(p)
+    _add_global_flags(p)
+    p.set_defaults(func=handle_task_update)
+
+
 def _add_move_parser(subparsers: argparse._SubParsersAction) -> None:
-    move_parser = subparsers.add_parser("move", help="Move entities")
+    move_parser = subparsers.add_parser("move", help="Move a task to another column or board")
     _add_global_flags(move_parser)
     move_sub = move_parser.add_subparsers(dest="move_subject", metavar="SUBJECT")
     move_sub.required = True
@@ -301,6 +322,7 @@ def build_parser(*, enable_use: bool = False) -> argparse.ArgumentParser:
     _add_reorder_parser(subparsers)
     _add_show_parser(subparsers)
     _add_edit_parser(subparsers)
+    _add_update_parser(subparsers)
     _add_move_parser(subparsers)
     _add_set_parser(subparsers)
     _add_get_parser(subparsers)

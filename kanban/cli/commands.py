@@ -94,6 +94,7 @@ def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: obj
 
 
 def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	# TODO - why can't I use args.assignee directly here? Is it because it's an optional argument on the parser?
 	params = TaskCreateParams(
 		assignee=getattr(args, "assignee", None),
 		priority=getattr(args, "priority", None),

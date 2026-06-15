@@ -189,6 +189,13 @@ kanban task create <board>/<column>/<title>
     [--due-date <date>]
     [--created-by <name>]
 
+kanban task update <board>/<column>/<title>
+    [--assignee <name>]
+    [--priority <low|medium|high>]
+    [--tag <tag>]
+    [--due-date <date>]
+    [--created-by <name>]
+
 kanban task show <board>/<column>/<task> [--format <table|plain|json>]
 kanban task edit <board>/<column>/<task>
 kanban task move <board>/<column>/<task> <dest>

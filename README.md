@@ -46,10 +46,6 @@ kanban (main)>
     - Resolve repository errors to service errors and catch most of them in the repl
     - Handle value errors and missing board/column errors without exiting
 
-- Distinguish between updating a task and editing a task
-    - Updating a task updates it with the provided args
-    - Editing a task opens it in an external editor
-
 CONFIG
 
 - Allow the user to alias repl commands in the config file

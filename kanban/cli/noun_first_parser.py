@@ -69,6 +69,13 @@ def _add_task_create_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--due-date", metavar="DATE", help="Due date (YYYY-MM-DD)")
     parser.add_argument("--created-by", metavar="NAME", help="Creator name")
 
+def _add_task_update_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--assignee", metavar="NAME", help="Assign task to a user")
+    parser.add_argument("--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
+    parser.add_argument("--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
+    parser.add_argument("--due-date", metavar="DATE", help="Due date (YYYY-MM-DD)")
+    parser.add_argument("--created-by", metavar="NAME", help="Creator name")
+
 
 # ---------------------------------------------------------------------------
 # Board subcommands
@@ -155,7 +162,7 @@ def _add_column_parser(subparsers: argparse._SubParsersAction) -> None:
 # ---------------------------------------------------------------------------
 
 def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
-    task_parser = subparsers.add_parser("task", help="Manage tasks")
+    task_parser = subparsers.add_parser("task", aliases=["tasks"], help="Manage tasks")
     _add_global_flags(task_parser)
     task_sub = task_parser.add_subparsers(dest="task_command", metavar="COMMAND")
     task_sub.required = True
@@ -188,6 +195,13 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
     _add_global_flags(p)
     p.set_defaults(func=handle_task_edit)
+
+    # task update
+    p = task_sub.add_parser("update", help="Update task fields")
+    p.add_argument("path", metavar="BOARD/COLUMN/TITLE", help="Fully qualified task path")
+    _add_task_update_args(p)
+    _add_global_flags(p)
+    p.set_defaults(func=handle_task_update)
 
     # task move
     p = task_sub.add_parser("move", help="Move task to another column or board")

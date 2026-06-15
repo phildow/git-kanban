@@ -55,7 +55,7 @@ class TestParserStructure(unittest.TestCase):
         top = self._subparser_choices(parser, "command")
         self.assertEqual(
             set(top.keys()),
-            {"init", "board", "column", "task", "search", "log", "status", "config", "repl"},
+            {"init", "board", "column", "task", "tasks", "search", "log", "status", "config", "repl"},
         )
 
     def test_top_level_subcommands_include_use_when_enabled(self):
@@ -76,7 +76,7 @@ class TestParserStructure(unittest.TestCase):
         self.assertEqual(set(column.keys()), {"list", "create", "rename", "reorder", "delete"})
 
         task = self._subparser_choices(top["task"], "task_command")
-        self.assertEqual(set(task.keys()), {"list", "create", "show", "edit", "move", "delete"})
+        self.assertEqual(set(task.keys()), {"list", "create", "show", "edit", "update", "move", "delete"})
 
         config = self._subparser_choices(top["config"], "config_command")
         self.assertEqual(set(config.keys()), {"set", "get"})
@@ -231,6 +231,33 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         args = cli_parser.parse_args(["task", "edit", "board-a/todo/fix-parser"])
         self.assertIs(args.func, handle_task_edit)
 
+        args = cli_parser.parse_args([
+            "task",
+            "update",
+            "board-a/todo/fix-parser",
+            "--assignee",
+            "philip",
+            "--priority",
+            "medium",
+            "--tag",
+            "cli",
+            "--due-date",
+            "2026-06-16",
+            "--created-by",
+            "philip",
+        ])
+        self.assertEqual(args.path, "board-a/todo/fix-parser")
+        self.assertEqual(args.assignee, "philip")
+        self.assertEqual(args.priority, "medium")
+        self.assertEqual(args.tags, ["cli"])
+        self.assertEqual(args.due_date, "2026-06-16")
+        self.assertEqual(args.created_by, "philip")
+        self.assertIs(args.func, handle_task_update)
+
+        args = cli_parser.parse_args(["tasks", "update", "board-a/todo/fix-parser"])
+        self.assertEqual(args.command, "tasks")
+        self.assertIs(args.func, handle_task_update)
+
         args = cli_parser.parse_args(["task", "move", "board-a/todo/fix-parser", "board-a/done"])
         self.assertEqual(args.dest, "board-a/done")
         self.assertIs(args.func, handle_task_move)
@@ -289,6 +316,33 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
 
 class TestVerbFirstParserAliases(unittest.TestCase):
     """Tests for verb-first parser aliases and wiring."""
+
+    def test_update_task_maps_to_update_handler(self):
+        args = verb_first_cli_parser.parse_args([
+            "update",
+            "task",
+            "main/todo/fix-parser",
+            "--assignee",
+            "philip",
+            "--priority",
+            "medium",
+            "--tag",
+            "cli",
+            "--due-date",
+            "2026-06-20",
+            "--created-by",
+            "philip",
+        ])
+
+        self.assertEqual(args.command, "update")
+        self.assertEqual(args.update_subject, "task")
+        self.assertEqual(args.path, "main/todo/fix-parser")
+        self.assertEqual(args.assignee, "philip")
+        self.assertEqual(args.priority, "medium")
+        self.assertEqual(args.tags, ["cli"])
+        self.assertEqual(args.due_date, "2026-06-20")
+        self.assertEqual(args.created_by, "philip")
+        self.assertIs(args.func, handle_task_update)
 
     def test_list_plural_aliases_map_to_same_handlers(self):
         args = verb_first_cli_parser.parse_args(["list", "boards"])
