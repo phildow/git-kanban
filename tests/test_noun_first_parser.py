@@ -35,6 +35,7 @@ from cli.commands import (
     handle_task_list,
     handle_task_move,
     handle_task_show,
+    handle_task_update,
     handle_use,
 )
 

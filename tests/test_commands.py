@@ -237,15 +237,15 @@ class TestCommandHandlers(unittest.TestCase):
         self.svc.get_task.assert_called_once_with("board-a/todo/fix-parser")
         self.renderer.render_task_show.assert_called_once_with(args, result)
 
-    def test_handle_task_edit_with_default_optional_fields(self):
-        """`task edit` defaults unspecified update fields to `None`."""
+    def test_handle_task_update_with_default_optional_fields(self):
+        """`task update` defaults unspecified update fields to `None`."""
         args = self._args(path="board-a/todo/fix-parser")
         result = object()
-        self.svc.edit_task.return_value = result
+        self.svc.update_task.return_value = result
 
-        commands.handle_task_edit(args, self.svc, self.renderer)
+        commands.handle_task_update(args, self.svc, self.renderer)
 
-        self.svc.edit_task.assert_called_once_with(
+        self.svc.update_task.assert_called_once_with(
             "board-a/todo/fix-parser",
             updates=TaskUpdateParams(
                 title=None,
@@ -257,8 +257,8 @@ class TestCommandHandlers(unittest.TestCase):
         )
         self.renderer.render_task_edit.assert_called_once_with(args, result)
 
-    def test_handle_task_edit_with_all_optional_fields(self):
-        """`task edit` maps all provided update fields into `TaskUpdateParams`."""
+    def test_handle_task_update_with_all_optional_fields(self):
+        """`task update` maps all provided update fields into `TaskUpdateParams`."""
         args = self._args(
             path="board-a/todo/fix-parser",
             title="fix parser robustly",
@@ -268,11 +268,11 @@ class TestCommandHandlers(unittest.TestCase):
             due_date="2026-07-01",
         )
         result = object()
-        self.svc.edit_task.return_value = result
+        self.svc.update_task.return_value = result
 
-        commands.handle_task_edit(args, self.svc, self.renderer)
+        commands.handle_task_update(args, self.svc, self.renderer)
 
-        self.svc.edit_task.assert_called_once_with(
+        self.svc.update_task.assert_called_once_with(
             "board-a/todo/fix-parser",
             updates=TaskUpdateParams(
                 title="fix parser robustly",
@@ -284,15 +284,15 @@ class TestCommandHandlers(unittest.TestCase):
         )
         self.renderer.render_task_edit.assert_called_once_with(args, result)
 
-    def test_handle_task_edit_with_explicit_empty_tags(self):
+    def test_handle_task_update_with_explicit_empty_tags(self):
         """`task edit` preserves an explicit empty tags list."""
         args = self._args(path="board-a/todo/fix-parser", tags=[])
         result = object()
-        self.svc.edit_task.return_value = result
+        self.svc.update_task.return_value = result
 
-        commands.handle_task_edit(args, self.svc, self.renderer)
+        commands.handle_task_update(args, self.svc, self.renderer)
 
-        self.svc.edit_task.assert_called_once_with(
+        self.svc.update_task.assert_called_once_with(
             "board-a/todo/fix-parser",
             updates=TaskUpdateParams(
                 title=None,

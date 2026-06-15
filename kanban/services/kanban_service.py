@@ -390,6 +390,18 @@ class KanbanService:
     def edit_task(
         self,
         path: str,
+    ) -> Task:
+        """Open's the task's .md file in an editor, then reads the updated 
+        content and metadata and applies changes to the task.  Raises 
+        TaskNotFound or AmbiguousTaskReference if the task cannot be resolved.  
+        Updates the index and commits."""
+        board, column, title_or_id = self._resolve_task_path(path)
+        _ = board, column, title_or_id
+        ...
+
+    def update_task(
+        self,
+        path: str,
         updates:     TaskUpdateParams,
     ) -> Task:
         """

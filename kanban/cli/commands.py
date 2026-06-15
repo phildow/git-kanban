@@ -110,7 +110,13 @@ def handle_task_show(args: argparse.Namespace, svc: KanbanService, renderer: obj
 	result = svc.get_task(args.path)
 	renderer.render_task_show(args, result)
 
+
 def handle_task_edit(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	result = svc.edit_task(args.path)
+	renderer.render_task_edit(args, result)
+
+
+def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	updates = TaskUpdateParams(
 		title=getattr(args, "title", None),
 		assignee=getattr(args, "assignee", None),
@@ -119,7 +125,7 @@ def handle_task_edit(args: argparse.Namespace, svc: KanbanService, renderer: obj
 		due_date=getattr(args, "due_date", None),
 	)
 
-	result = svc.edit_task(args.path, updates=updates)
+	result = svc.update_task(args.path, updates=updates)
 	renderer.render_task_edit(args, result)
 
 
