@@ -10,6 +10,7 @@ sys.path.append('../kanban')
 
 from models import Task, TaskFilter, Board, Column, UserContext
 from repository import ColumnNotFound
+from services.index_service import IndexService
 
 
 # ── Params ────────────────────────────────────────────────────────────────────
@@ -95,13 +96,14 @@ class KanbanService:
     #     index_service:  IndexService,
     #     git_service:    GitService,
     # ) -> None:
-    def __init__(self, repository) -> None:
+    def __init__(self, repository, index_service: IndexService) -> None:
         """
         Assemble the facade from its domain services.  All services are
         injected rather than instantiated here so that the InMemoryRepository
         can be swapped in for tests without any other changes.
         """
         self.repository = repository
+        self.index_service = index_service
 
     # ── Bootstrap ─────────────────────────────────────────────────────────────
 
@@ -484,7 +486,7 @@ class KanbanService:
         which uses the index when available and falls back to a filesystem scan
         when the index is stale or absent.
         """
-        ...
+        self.index_service.rebuild()
 
 
     # ── Git ───────────────────────────────────────────────────────────────────

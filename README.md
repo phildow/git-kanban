@@ -28,8 +28,10 @@ Finally install the local copy of `kanban` into your virtual environment and hav
 kanban (main)>
 ```
 
-### TODO 
+### TODO
 
+- User Context handling with tab completions seems overly complicated for what should just be path management.
+    - Treat it like the working directory with a 1:1 mapping to the filesystem: /board/column/task
 - Support tab completion in the repl
     - If the board is available for task list but the column is not, list all tasks in the board
     - Tab completion options include the already implied components of the path, they should only show the part under completion
@@ -42,12 +44,17 @@ kanban (main)>
     - Resolve repository errors to service errors and catch most of them in the repl
     - Handle value errors and missing board/column errors without exiting
 
+CONFIG
+
 - Allow the user to alias repl commands in the config file
     - eg `c` or `n` for `create`
     - eg `l` for `list`
+- Allow the user to set a username to use for default createdb_by and assigned_to
+
+
 - Type the svc object that is represented by KanbanService everywhere
 - Push to github
-- Scaffold IndexingService ABC -> Memory and SQLite
+- Scaffold IndexService ABC -> Memory and SQLite
 - Scaffold GitService
 - FileStorage
 - Use `.kanban` for configuration and caching and `.kanban-store` for the filesystem

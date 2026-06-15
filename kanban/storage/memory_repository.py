@@ -30,7 +30,6 @@ class InMemoryRepository(KanbanRepository):
         self._task_locations: dict[UUID, tuple[str, str]] = {}
         self._task_filenames: dict[UUID, str] = {}
         self._config: dict[str, str] = {}
-        self._index_mtime: datetime | None = None
         self._user_context= UserContext()
 
     @staticmethod
@@ -493,9 +492,3 @@ class InMemoryRepository(KanbanRepository):
     def set_config(self, key: str, value: str) -> None:
         self._config[key] = value
 
-    # Index / cache
-    def rebuild_index(self) -> None:
-        self._index_mtime = datetime.utcnow()
-
-    def get_index_mtime(self) -> Optional[datetime]:
-        return self._index_mtime

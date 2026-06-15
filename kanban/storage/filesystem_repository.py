@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
 from pathlib import Path
 from typing import Optional
 from uuid import UUID
@@ -120,11 +119,4 @@ class FilesystemRepository(KanbanRepository):
         raise NotImplementedError()
 
     def set_config(self, key: str, value: str) -> None:
-        raise NotImplementedError()
-
-    # Index / cache
-    def rebuild_index(self) -> None:
-        raise NotImplementedError()
-
-    def get_index_mtime(self) -> Optional[datetime]:
         raise NotImplementedError()

@@ -426,26 +426,3 @@ class KanbanRepository(ABC):
     def set_config(self, key: str, value: str) -> None:
         """Set a config key to the given value."""
 
-    # ------------------------------------------------------------------
-    # Index / cache management
-    #
-    # Domain services call these via IndexService; they are included on the
-    # repository so the InMemoryRepository can provide no-op implementations
-    # and the FilesystemRepository can delegate to SQLite.
-    # ------------------------------------------------------------------
-
-    @abstractmethod
-    def rebuild_index(self) -> None:
-        """
-        Scan all markdown files and (re)build the search cache from scratch.
-
-        Should be called after external modifications to the filesystem or
-        after index corruption is detected.
-        """
-
-    @abstractmethod
-    def get_index_mtime(self) -> Optional[datetime]:
-        """
-        Return the UTC timestamp of the last successful index build, or
-        None if the index has never been built.
-        """
