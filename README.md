@@ -30,6 +30,13 @@ kanban (main)>
 
 ### TODO
 
+- Remove _safe_list_boards and friends
+- Move resolve path completions to the service layer, treat it like a path
+- Treat paths like file paths and commands within that context
+- Use a forward slash to represent the root directory containing the boards but relative to .kanban-store
+- The User context can construct the relative path and then filesystem resolution is simply ~/...
+- Really emphasize that it is path based - got away from this with the memory repository
+
 - User Context handling with tab completions seems overly complicated for what should just be path management.
     - Treat it like the working directory with a 1:1 mapping to the filesystem: /board/column/task
 - Support tab completion in the repl
@@ -46,12 +53,20 @@ kanban (main)>
     - Resolve repository errors to service errors and catch most of them in the repl
     - Handle value errors and missing board/column errors without exiting
 
+- Private boards:
+    - Just add the directory to the git ignore file
+    - with `board create --private`
+
+- Update the edit render
+- Use view terminology even for the CLI? REPL?
+
 CONFIG
 
 - Allow the user to alias repl commands in the config file
     - eg `c` or `n` for `create`
     - eg `l` for `list`
 - Allow the user to set a username to use for default createdb_by and assigned_to
+- Allow the user to set their preferred editor
 
 - FileStorage
 - Use `.kanban` for configuration and caching and `.kanban-store` for the filesystem
