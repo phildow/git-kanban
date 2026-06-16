@@ -9,6 +9,7 @@ import sys
 import unittest
 from pathlib import Path
 
+from models import UserContext
 from services.kanban_service import KanbanService, KanbanRoot
 from services.git_service import GitService
 from services.index_service import IndexService
@@ -25,6 +26,7 @@ class TestKanbanServiceInit(unittest.TestCase):
             repository=repo,
             index_service=IndexService(repository=repo),
             git_service=GitService(),
+            user_context=UserContext(),
         )
 
         result = svc.init(Path("."))
@@ -42,8 +44,9 @@ class TestKanbanServiceInit(unittest.TestCase):
             [c.position for c in repo.list_columns("main")],
             [0, 1, 2, 3],
         )
-        self.assertEqual(repo.get_user_context().board, "main")
-        self.assertEqual(repo.get_user_context().column, "todo")
+
+        self.assertEqual(svc.user_context.board, "main")
+        self.assertEqual(svc.user_context.column, "todo")
         self.assertEqual(repo.get_config("initialized"), "true")
 
     def test_init_raises_when_called_twice(self):
@@ -53,6 +56,7 @@ class TestKanbanServiceInit(unittest.TestCase):
             repository=repo,
             index_service=IndexService(repository=repo),
             git_service=GitService(),
+            user_context=UserContext(),
         )
 
         svc.init(Path("."))
@@ -67,6 +71,7 @@ class TestKanbanServiceInit(unittest.TestCase):
             repository=repo,
             index_service=IndexService(repository=repo),
             git_service=GitService(),
+            user_context=UserContext(),
         )
 
         with self.assertRaises(ValueError):

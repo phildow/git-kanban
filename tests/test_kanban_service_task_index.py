@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock
 
+from models import UserContext
 from services.git_service import GitService
 from services.kanban_service import KanbanService, TaskCreateParams
 from storage.memory_repository import InMemoryRepository
@@ -22,6 +23,7 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
             repository=self.repo,
             index_service=self.index_service,
             git_service=GitService(),
+            user_context=UserContext(),
         )
 
         self.repo.create_board("alpha")

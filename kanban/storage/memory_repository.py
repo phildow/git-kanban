@@ -30,7 +30,6 @@ class InMemoryRepository(KanbanRepository):
         self._task_locations: dict[UUID, tuple[str, str]] = {}
         self._task_filenames: dict[UUID, str] = {}
         self._config: dict[str, str] = {}
-        self._user_context= UserContext()
 
     @staticmethod
     def _to_kebab_case(text: str) -> str:
@@ -117,17 +116,6 @@ class InMemoryRepository(KanbanRepository):
         if already_initialized or self.board_exists(default_board):
             raise ValueError("Kanban is already initialized")
 
-    # User context
-    def get_user_context(self) -> UserContext:
-        return self._user_context
-
-    def set_user_context(self, board: str | None, column: str | None) -> UserContext:
-        self._user_context = UserContext(board=board, column=column)
-        return self._user_context
-
-    def clear_user_context(self) -> UserContext:
-        self._user_context = UserContext()
-        return self._user_context
 
     # Board operations
     def list_boards(self) -> list[Board]:
@@ -178,10 +166,6 @@ class InMemoryRepository(KanbanRepository):
             if task.board == name:
                 task.board = new_name
 
-        # Keep active context in sync.
-        if self._user_context.board == name:
-            self._user_context.board = new_name
-
         return board
 
     def delete_board(self, name: str) -> None:
@@ -200,10 +184,6 @@ class InMemoryRepository(KanbanRepository):
             del self._tasks_by_id[task_id]
             self._task_locations.pop(task_id, None)
             self._task_filenames.pop(task_id, None)
-
-        # Clear active context if it points to the deleted board.
-        if self._user_context.board == name:
-            self.clear_user_context()
 
     # Column operations
     def list_columns(self, board: str) -> list[Column]:
@@ -251,10 +231,6 @@ class InMemoryRepository(KanbanRepository):
             if task.board == board and task.column == name:
                 task.column = new_name
 
-        # Update active context if it points at the renamed column.
-        if self._user_context.board == board and self._user_context.column == name:
-            self._user_context.column = new_name
-
         return column
 
     def reorder_column(self, board: str, name: str, position: int) -> list[Column]:
@@ -298,10 +274,6 @@ class InMemoryRepository(KanbanRepository):
             del self._tasks_by_id[task_id]
             self._task_locations.pop(task_id, None)
             self._task_filenames.pop(task_id, None)
-
-        # If current context points at this column, clear column only.
-        if self._user_context.board == board and self._user_context.column == name:
-            self._user_context.column = None
 
     # Task operations
     def list_tasks(

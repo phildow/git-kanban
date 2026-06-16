@@ -60,13 +60,12 @@ class TestInMemoryRepositoryColumnOps(unittest.TestCase):
         with self.assertRaises(ColumnAlreadyExists):
             self.repo.create_column("alpha", "todo")
 
-    def test_rename_column_updates_tasks_locations_and_context(self):
-        """Renaming a column updates tasks, location index, and active context."""
+    def test_rename_column_updates_tasks_locations(self):
+        """Renaming a column updates tasks and location index."""
         self.repo.create_column("alpha", "todo")
         task = Task(id=uuid4(), title="task-1", board="alpha", column="todo")
         self.repo._tasks_by_id[task.id] = task
         self.repo._task_locations[task.id] = ("alpha", "todo")
-        self.repo.set_user_context(board="alpha", column="todo")
 
         renamed = self.repo.rename_column("alpha", "todo", "doing")
 
@@ -74,7 +73,6 @@ class TestInMemoryRepositoryColumnOps(unittest.TestCase):
         self.assertEqual(self.repo.get_column("alpha", "doing").position, 0)
         self.assertEqual(self.repo._task_locations[task.id], ("alpha", "doing"))
         self.assertEqual(self.repo._tasks_by_id[task.id].column, "doing")
-        self.assertEqual(self.repo.get_user_context().column, "doing")
 
     def test_rename_column_raises_for_missing_or_duplicate(self):
         """Rename rejects missing sources and duplicate destination names."""
@@ -104,8 +102,8 @@ class TestInMemoryRepositoryColumnOps(unittest.TestCase):
         with self.assertRaises(ColumnNotFound):
             self.repo.reorder_column("alpha", "missing", 0)
 
-    def test_delete_column_removes_tasks_and_updates_context_and_positions(self):
-        """Deleting a column removes scoped tasks and clears active column context."""
+    def test_delete_column_removes_tasks_and_updates_positions(self):
+        """Deleting a column removes scoped tasks and updates positions."""
         self.repo.create_column("alpha", "todo")
         self.repo.create_column("alpha", "doing")
 
@@ -115,7 +113,7 @@ class TestInMemoryRepositoryColumnOps(unittest.TestCase):
         self.repo._tasks_by_id[doing_task.id] = doing_task
         self.repo._task_locations[todo_task.id] = ("alpha", "todo")
         self.repo._task_locations[doing_task.id] = ("alpha", "doing")
-        self.repo.set_user_context(board="alpha", column="todo")
+
 
         self.repo.delete_column("alpha", "todo")
 
@@ -125,8 +123,6 @@ class TestInMemoryRepositoryColumnOps(unittest.TestCase):
         self.assertIn(doing_task.id, self.repo._tasks_by_id)
         self.assertNotIn(todo_task.id, self.repo._task_locations)
         self.assertIn(doing_task.id, self.repo._task_locations)
-        self.assertEqual(self.repo.get_user_context().board, "alpha")
-        self.assertIsNone(self.repo.get_user_context().column)
 
         with self.assertRaises(ColumnNotFound):
             self.repo.delete_column("alpha", "todo")

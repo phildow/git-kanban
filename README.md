@@ -37,6 +37,10 @@ kanban (main)>
 - The User context can construct the relative path and then filesystem resolution is simply ~/...
 - Really emphasize that it is path based - got away from this with the memory repository
 
+- KanbanService maintains the user context not the repo, and the different UIs instantiate it differently
+    - The CLI starts at /
+    - The REPL starts where the user left off
+
 - User Context handling with tab completions seems overly complicated for what should just be path management.
     - Treat it like the working directory with a 1:1 mapping to the filesystem: /board/column/task
 - Support tab completion in the repl
@@ -56,6 +60,8 @@ kanban (main)>
 - Private boards:
     - Just add the directory to the git ignore file
     - with `board create --private`
+    - Init with a private board
+    - Add ignore method to GitService
 
 - Update the edit render
 - Use view terminology even for the CLI? REPL?

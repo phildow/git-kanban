@@ -113,22 +113,6 @@ class KanbanRepository(ABC):
         """
 
     # ------------------------------------------------------------------
-    # User context
-    # ------------------------------------------------------------------
-
-    @abstractmethod
-    def get_user_context(self) -> UserContext:
-        """Return persisted active board/column context."""
-
-    @abstractmethod
-    def set_user_context(self, board: str | None, column: str | None) -> UserContext:
-        """Persist active board/column context and return updated value."""
-
-    @abstractmethod
-    def clear_user_context(self) -> UserContext:
-        """Clear active board/column context and return empty context."""
-
-    # ------------------------------------------------------------------
     # Board operations
     # ------------------------------------------------------------------
 

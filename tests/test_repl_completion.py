@@ -28,13 +28,24 @@ class _FakeSvc:
     def __init__(self):
         self._ctx = SimpleNamespace(board="main", column="todo")
 
+    @property
+    def working_path(self) -> str:
+        board = self._ctx.board
+        column = self._ctx.column
+        if board and column:
+            return f"/{board}/{column}"
+        if board:
+            return f"/{board}"
+        return "/"
+
     def list_boards(self):
         return [
             SimpleNamespace(name="main"),
             SimpleNamespace(name="infra"),
         ]
 
-    def get_user_context(self):
+    @property
+    def user_context(self):
         return self._ctx
 
     def use(self, path=None, clear=False):
@@ -148,9 +159,9 @@ class TestReplCompletion(unittest.TestCase):
         self.assertIn("use", suggestions)
 
     def test_prompt_includes_context(self):
-        self.assertEqual(_prompt(self.svc), "kanban (main/todo)> ")
+        self.assertEqual(_prompt(self.svc), "kanban (/main/todo) > ")
         self.svc.use(path="main")
-        self.assertEqual(_prompt(self.svc), "kanban (main)> ")
+        self.assertEqual(_prompt(self.svc), "kanban (/main) > ")
 
     def test_rewrite_relative_task_path(self):
         tokens = _rewrite_noun_first_relative_paths(["task", "show", "fix-parser"], self.svc)

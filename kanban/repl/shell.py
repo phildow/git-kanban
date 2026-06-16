@@ -80,22 +80,14 @@ def _safe_list_task_names(svc: KanbanService, board: str | None, column: str | N
     return sorted(dict.fromkeys(names))
 
 def _prompt(svc: KanbanService) -> str:
-    """Build a prompt string that reflects the active board/column context."""
-    context = svc.get_user_context()
-    board = context.board
-    column = context.column
-
-    if board and column:
-        return f"kanban ({board}/{column})> "
-    if board:
-        return f"kanban ({board})> "
-    return "kanban> "
+    """Return a prompt string that reflects the board and column context as a path."""
+    return f"kanban ({svc.working_path}) > "
 
 
 def _complete_board_or_column_path(text: str, svc: KanbanService) -> list[str]:
     """Complete BOARD/COLUMN path values."""
     boards = [board.name for board in svc.list_boards()]
-    context = svc.get_user_context()
+    context = svc.user_context
     context_board = context.board
 
     if "/" in text:
@@ -127,7 +119,7 @@ def _complete_board_or_board_column_path(text: str, svc: KanbanService) -> list[
 
     board_paths = [f"{board}/" for board in boards if board.startswith(text)]
 
-    context = svc.get_user_context()
+    context = svc.user_context
     context_board = context.board
     context_columns = [column.name for column in svc.list_columns(board=context_board)] if context_board else []
     column_matches = [column for column in context_columns if column.startswith(text)]
@@ -138,7 +130,7 @@ def _complete_board_or_board_column_path(text: str, svc: KanbanService) -> list[
 def _complete_task_list_path(text: str, svc: KanbanService) -> list[str]:
     """Complete `task list` path according to active context rules."""
     boards = [board.name for board in svc.list_boards()]
-    context = svc.get_user_context()
+    context = svc.user_context
     context_board = context.board
 
     # Explicit override once a slash appears: BOARD/COLUMN resolution.
@@ -161,7 +153,7 @@ def _complete_task_list_path(text: str, svc: KanbanService) -> list[str]:
 
 def _complete_task_path(text: str, svc: KanbanService) -> list[str]:
     """Complete task path segments according to active user context."""
-    context = svc.get_user_context()
+    context = svc.user_context
     context_board = context.board
     context_column = context.column
 
@@ -375,7 +367,7 @@ def _resolve_board_column_path(path: str, svc: KanbanService) -> str:
     if "/" in path:
         return path
 
-    context = svc.get_user_context()
+    context = svc.user_context
     board = context.board
     if not board:
         raise ValueError("Board context is required for relative column paths")
@@ -388,7 +380,7 @@ def _resolve_task_path(path: str, svc: KanbanService) -> str:
     if len(parts) >= 3:
         return path
 
-    context = svc.get_user_context()
+    context = svc.user_context
     board = context.board
     column = context.column
 
@@ -413,7 +405,7 @@ def _resolve_use_path(path: str, svc: KanbanService) -> str:
     """Resolve special REPL shortcuts for `use` paths."""
     normalized = _strip_trailing_slash(path)
     if normalized == "..":
-        context = svc.get_user_context()
+        context = svc.user_context
         if context.board and context.column:
             return context.board
         if (context.board and not context.column) or (not context.board and not context.column):
@@ -436,7 +428,7 @@ def _rewrite_noun_first_relative_paths(tokens: list[str], svc: KanbanService) ->
     if command == "column" and len(rewritten) >= 2:
         sub = rewritten[1]
         if sub == "list" and len(rewritten) == 2:
-            context = svc.get_user_context()
+            context = svc.user_context
             board = context.board
             if not board:
                 raise ValueError("Board context is required for `column list` without BOARD")
@@ -449,7 +441,7 @@ def _rewrite_noun_first_relative_paths(tokens: list[str], svc: KanbanService) ->
         sub = rewritten[1]
         if sub == "list":
             if len(rewritten) == 2:
-                context = svc.get_user_context()
+                context = svc.user_context
                 board = context.board
                 column = context.column
                 if board and column:
@@ -487,7 +479,7 @@ def _rewrite_verb_first_relative_paths(tokens: list[str], svc: KanbanService) ->
         return rewritten
 
     if command in {"list", "ls"} and len(rewritten) == 1:
-        context = svc.get_user_context()
+        context = svc.user_context
         board = context.board
         column = context.column
 
@@ -512,7 +504,7 @@ def _rewrite_verb_first_relative_paths(tokens: list[str], svc: KanbanService) ->
             subject = "task"
         if subject == "column":
             if len(rewritten) == 2:
-                context = svc.get_user_context()
+                context = svc.user_context
                 board = context.board
                 if not board:
                     raise ValueError("Board context is required for `list column` without BOARD")
@@ -521,7 +513,7 @@ def _rewrite_verb_first_relative_paths(tokens: list[str], svc: KanbanService) ->
                 rewritten[2] = _strip_trailing_slash(rewritten[2])
         elif subject == "task":
             if len(rewritten) == 2:
-                context = svc.get_user_context()
+                context = svc.user_context
                 board = context.board
                 column = context.column
                 if board and column:

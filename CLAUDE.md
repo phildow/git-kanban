@@ -265,8 +265,8 @@ kanban>
 The REPL takes advantage of the user contex in the kanban service, allowing the user to set the active board/column. If there is an active board or board/column the REPL shows it in the prompt:
 
 ```
-kanban (my-project)>
-kanban (my-project/todo)>
+kanban (/my-project)>
+kanban (/my-project/todo)>
 ```
 
 An example REPL interaction follows:
@@ -274,24 +274,24 @@ An example REPL interaction follows:
 ```
 $ kanban repl
 
-kanban> use my-project/todo
+kanban> use /my-project/todo
 
-kanban (my-project/todo)> list tasks
+kanban (/my-project/todo)> list tasks
   1. Fix login bug         [high]  alice    due 2026-06-20
   2. Write API docs        [med]   bob      due 2026-06-25
 
-kanban (my-project/todo)> create task "Add rate limiting" --priority high --assignee alice
+kanban (/my-project/todo)> create task "Add rate limiting" --priority high --assignee alice
 Created: Add rate limiting [a3f9c2d1]
 
-kanban (my-project/todo)> move task "Add rate limiting" in-progress
+kanban (/my-project/todo)> move task "Add rate limiting" in-progress
 Moved to: my-project/in-progress
 
-kanban (my-project/todo)> /history
+kanban (/my-project/todo)> /history
   task list
   task create "Add rate limiting" --priority high --assignee alice
   task move "Add rate limiting" in-progress
 
-kanban (my-project/todo)> /quit
+kanban (/my-project/todo)> /quit
 ```
 
 ### Tab Completion
@@ -312,7 +312,7 @@ task
 
 #### For Paths
 
-Tab completion for board/column/task paths must take into account the user context and the portion of the path so far supplied by the user.
+Tab completion for board/column/task paths works like it does on the terminal, with paths relative to the `.kanan-store` directory and beginning with a forward slash `/`, mapped direcly from the folders and files on the filesystem.
 
 Tab completion is resolved in the following manner:
 
@@ -324,19 +324,19 @@ The user must type everything. Completions offer the next segment with a trailin
 kanban> move task <TAB>
 my-project/   ops/
 
-kanban> move task my-<TAB>
+kanban> move task /my-<TAB>
 my-project/
 
-kanban> move task my-project/<TAB>
+kanban> move task /my-project/<TAB>
 todo/   in-progress/   in-review/   done/
 
-kanban> move task my-project/to<TAB>
+kanban> move task /my-project/to<TAB>
 todo/
 
-kanban> moave task my-project/todo/<TAB>
+kanban> moave task /my-project/todo/<TAB>
 fix-login-bug   write-api-docs   add-rate-limiting
 
-kanban> move task my-project/todo/fix<TAB>
+kanban> move task /my-project/todo/fix<TAB>
 fix-login-bug
 ```
 
@@ -345,16 +345,16 @@ fix-login-bug
 The board segment is skipped. Completion starts at the column, resolved against the active board:
 
 ```
-kanban (my-project)> move task <TAB>
+kanban (/my-project)> move task <TAB>
 todo/   in-progress/   in-review/   done/
 
-kanban (my-project)> move task to<TAB>
+kanban (/my-project)> move task to<TAB>
 todo/
 
-kanban (my-project)> move task todo/<TAB>
+kanban (/my-project)> move task todo/<TAB>
 fix-login-bug   write-api-docs   add-rate-limiting
 
-kanban (my-project)> move task todo/fix<TAB>
+kanban (/my-project)> move task todo/fix<TAB>
 fix-login-bug
 ```
 
@@ -363,10 +363,10 @@ fix-login-bug
 Both segments are skipped. Completion starts directly at the task title:
 
 ```
-kanban (my-project/todo)> move task <TAB>
+kanban (/my-project/todo)> move task <TAB>
 fix-login-bug   write-api-docs   add-rate-limiting
 
-kanban (my-project/todo)> move task fix<TAB>
+kanban (/my-project/todo)> move task fix<TAB>
 fix-login-bug
 ```
 
@@ -375,18 +375,18 @@ fix-login-bug
 The completer detects that board (and column) are being supplied explicitly and resolves subsequent segments from what's been typed rather than from context:
 
 ```
-# User context is my-project/todo, but user is typing a path from ops/
-kanban (my-project/todo)> move task ops/<TAB>
+# User context is /my-project/todo, but user is typing a path from ops/
+kanban (/my-project/todo)> move task /ops/<TAB>
 backlog/   todo/   in-progress/   done/
 
-kanban (my-project/todo)> move task ops/in-pro<TAB>
+kanban (/my-project/todo)> move task /ops/in-pro<TAB>
 in-progress/
 
-kanban (my-project/todo)> move task ops/in-progress/<TAB>
+kanban (/my-project/todo)> move task /ops/in-progress/<TAB>
 deploy-staging   update-certs   rotate-keys
 
 # User context is my-project, user supplies board and column explicitly
-kanban (my-project)> move task ops/todo/<TAB>
+kanban (/my-project)> move task /ops/todo/<TAB>
 deploy-staging   update-certs   rotate-keys
 ```
 

@@ -81,7 +81,7 @@ class KanbanService:
         
     #     return attr
 
-    def __init__(self, repository: KanbanRepository, index_service: IndexService, git_service: GitService) -> None:
+    def __init__(self, repository: KanbanRepository, index_service: IndexService, git_service: GitService, user_context: UserContext) -> None:
         """
         Assemble the facade from its domain services.  All services are
         injected rather than instantiated here so that the InMemoryRepository
@@ -90,6 +90,7 @@ class KanbanService:
         self.repository = repository
         self.index_service = index_service
         self.git_service = git_service
+        self._user_context = user_context
 
     # ── Bootstrap ─────────────────────────────────────────────────────────────
 
@@ -108,7 +109,7 @@ class KanbanService:
         self.create_column("main/in-progress")
         self.create_column("main/in-review")
         self.create_column("main/done")
-        self.set_user_context(board="main", column="todo")
+        self.update_user_context(board="main", column="todo")
         self.set_config("initialized", "true")
 
         kanban_root = path / ".kanban"
@@ -119,7 +120,26 @@ class KanbanService:
         )
 
 
-    # ── Active context ────────────────────────────────────────────────────────
+    # ── User context ────────────────────────────────────────────────────────
+
+    @property
+    def user_context(self) -> UserContext:
+        """Return the current user context without modifying it."""
+        return self._user_context
+
+    @property
+    def working_path(self) -> Path:
+        return self.user_context.path
+    
+    def update_user_context(self, board: str | None, column: str | None) -> UserContext:
+        """Set the board/column context"""
+        self._user_context.board = board
+        self._user_context.column = column
+
+    def clear_user_context(self) -> UserContext:
+        """Clear the user context with initial default values."""
+        self._user_context = UserContext()
+        return self._user_context
 
     def use(
         self,
@@ -136,10 +156,10 @@ class KanbanService:
         kanban use --clear          →  use(clear=True)
         """
         if clear:
-            return self.repository.clear_user_context()
+            return self.clear_user_context()
 
         if path is None:
-            return self.repository.get_user_context()
+            return self.user_context
 
         board: str | None = None
         column: str | None = None
@@ -150,7 +170,7 @@ class KanbanService:
                 raise ValueError("Path must be BOARD or BOARD/COLUMN")
         else:
             board = path
-            active_board = self.repository.get_user_context().board
+            active_board = self.user_context.board
             if active_board:
                 try:
                     self.repository.get_column(active_board, path)
@@ -163,16 +183,8 @@ class KanbanService:
         if column is not None:
             self.repository.get_column(board, column)
 
-        return self.repository.set_user_context(board=board, column=column)
-
-    def get_user_context(self) -> UserContext:
-        """Return the current active context without modifying it."""
-        return self.repository.get_user_context()
-
-    def set_user_context(self, board: str | None, column: str | None) -> UserContext:
-        """Set active board/column context by delegating to the repository."""
-        return self.repository.set_user_context(board=board, column=column)
-
+        self.update_user_context(board=board, column=column)
+        return self.user_context
 
     # ── Boards ────────────────────────────────────────────────────────────────
 
@@ -204,7 +216,12 @@ class KanbanService:
         UUIDs; only the directory name (and therefore the board's slug) changes.
         Updates the active context if the renamed board was the active one.
         """
-        return self.repository.rename_board(board, new_name)
+        board = self.repository.rename_board(board, new_name)
+
+        # Keep active context in sync.
+        self._user_context.board = board.name
+
+        return board
 
     def delete_board(self, board: str) -> None:
         """
@@ -213,7 +230,13 @@ class KanbanService:
         index entries for tasks that belonged to the board and clears the active
         context if it pointed at the deleted board.
         """
-        return self.repository.delete_board(board)
+        board = self.repository.delete_board(board)
+        
+        # Clear active context if it points to the deleted board.
+        if self._user_context.board == name:
+            self.clear_user_context()
+
+        return board
 
 
     # ── Columns ───────────────────────────────────────────────────────────────
@@ -252,7 +275,13 @@ class KanbanService:
         context if the renamed column was the active one.
         """
         board, column = self._resolve_column_path(path)
-        return self.repository.rename_column(board, column, new_name)
+        renamed_column = self.repository.rename_column(board, column, new_name)
+
+        # Update active context if it points at the renamed column.
+        if self._user_context.board == board and self._user_context.column == column.name:
+            self._user_context.column = renamed_column.name
+
+        return renamed_column
 
     def reorder_column(self, path: str, position: int) -> list[Column]:
         """
@@ -273,7 +302,12 @@ class KanbanService:
         file, and clears the active context column if it pointed here.
         """
         board, column = self._resolve_column_path(path)
-        return self.repository.delete_column(board, column)
+        self.repository.delete_column(board, column)
+
+        # If current context points at this column, clear column only.
+        if self._user_context.board == board and self._user_context.column == column:
+            self._user_context.column = None
+
         return None
 
 
@@ -562,7 +596,7 @@ class KanbanService:
         if board:
             return board
 
-        context_board = self.get_user_context().board
+        context_board = self.user_context.board
         if context_board:
             return context_board
 
@@ -573,7 +607,7 @@ class KanbanService:
         board: str | None,
         column: str | None,
     ) -> tuple[str, str]:
-        context = self.get_user_context()
+        context = self.user_context
         board = board or context.board
         column = column or context.column
 

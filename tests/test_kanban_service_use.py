@@ -6,6 +6,7 @@ import sys
 import unittest
 from pathlib import Path
 
+from models import UserContext
 from storage.kanban_repository import BoardNotFound, ColumnNotFound
 from services.kanban_service import KanbanService
 from services.git_service import GitService
@@ -20,6 +21,7 @@ class TestKanbanServiceUse(unittest.TestCase):
             repository=self.repo,
             index_service=IndexService(repository=self.repo),
             git_service=GitService(),
+            user_context=UserContext(),
         )
         self.repo.create_board("alpha")
         self.repo.create_column("alpha", "todo")

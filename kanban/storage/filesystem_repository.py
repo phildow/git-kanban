@@ -22,16 +22,6 @@ class FilesystemRepository(KanbanRepository):
     def init(self, default_board: str = "main") -> None:
         raise NotImplementedError()
 
-    # User context
-    def get_user_context(self) -> UserContext:
-        raise NotImplementedError()
-
-    def set_user_context(self, board: str | None, column: str | None) -> UserContext:
-        raise NotImplementedError()
-
-    def clear_user_context(self) -> UserContext:
-        raise NotImplementedError()
-
     # Board operations
     def list_boards(self) -> list[Board]:
         raise NotImplementedError()

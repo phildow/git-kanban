@@ -11,7 +11,10 @@ def main() -> None:
     repository = InMemoryRepository()
     index_service = IndexService(repository=repository)
     git_service = GitService()
-    svc = KanbanService(repository=repository, index_service=index_service, git_service=git_service)
+
+    # TODO: acquire user context from environment or config
+    user_context = UserContext()
+    svc = KanbanService(repository=repository, index_service=index_service, git_service=git_service, user_context=user_context)
     renderer = Renderer()
 
     # Bootstrap the repository during development

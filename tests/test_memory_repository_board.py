@@ -47,8 +47,8 @@ class TestInMemoryRepositoryBoardOps(unittest.TestCase):
         with self.assertRaises(BoardNotFound):
             self.repo.get_board("missing")
 
-    def test_rename_board_updates_board_columns_tasks_and_context(self):
-        """Renaming a board updates dependent columns, tasks, and active context."""
+    def test_rename_board_updates_board_columns_tasks(self):
+        """Renaming a board updates dependent columns and tasks."""
         board = self.repo.create_board("alpha")
         board.columns.append(Column(name="todo", board="alpha", position=0))
 
@@ -62,7 +62,6 @@ class TestInMemoryRepositoryBoardOps(unittest.TestCase):
         )
         self.repo._tasks_by_id[task.id] = task
         self.repo._task_locations[task.id] = ("alpha", "todo")
-        self.repo.set_user_context(board="alpha", column="todo")
 
         renamed = self.repo.rename_board("alpha", "beta")
 
@@ -72,8 +71,6 @@ class TestInMemoryRepositoryBoardOps(unittest.TestCase):
         self.assertEqual(self.repo.get_board("beta").columns[0].board, "beta")
         self.assertEqual(self.repo._task_locations[task.id], ("beta", "todo"))
         self.assertEqual(self.repo._tasks_by_id[task.id].board, "beta")
-        self.assertEqual(self.repo.get_user_context().board, "beta")
-        self.assertEqual(self.repo.get_user_context().column, "todo")
 
     def test_rename_board_raises_when_source_missing(self):
         """Renaming a non-existent board raises `BoardNotFound`."""
@@ -87,8 +84,8 @@ class TestInMemoryRepositoryBoardOps(unittest.TestCase):
         with self.assertRaises(BoardAlreadyExists):
             self.repo.rename_board("alpha", "beta")
 
-    def test_delete_board_removes_board_tasks_and_user_context(self):
-        """Deleting a board removes its tasks and clears matching active context."""
+    def test_delete_board_removes_board_tasks(self):
+        """Deleting a board removes its tasks."""
         self.repo.create_board("alpha")
         self.repo.create_board("beta")
 
@@ -99,7 +96,6 @@ class TestInMemoryRepositoryBoardOps(unittest.TestCase):
         self.repo._task_locations[task_on_alpha.id] = ("alpha", "todo")
         self.repo._task_locations[task_on_beta.id] = ("beta", "todo")
 
-        self.repo.set_user_context(board="alpha", column="todo")
         self.repo.delete_board("alpha")
 
         self.assertFalse(self.repo.board_exists("alpha"))
@@ -108,7 +104,6 @@ class TestInMemoryRepositoryBoardOps(unittest.TestCase):
         self.assertIn(task_on_beta.id, self.repo._tasks_by_id)
         self.assertNotIn(task_on_alpha.id, self.repo._task_locations)
         self.assertIn(task_on_beta.id, self.repo._task_locations)
-        self.assertTrue(self.repo.get_user_context().is_empty)
 
     def test_delete_board_raises_when_missing(self):
         """Deleting a missing board raises `BoardNotFound`."""
