@@ -92,9 +92,8 @@ class Renderer:
 		new_name = result.name or getattr(args, "new_name", None)
 		self._emit(args, f"Board renamed: {old_name} -> {new_name}")
 
-	@_requires_verbose
-	def render_board_delete(self, args: argparse.Namespace, result: None) -> None:
-		_ = result
+	# @_requires_verbose
+	def render_board_delete(self, args: argparse.Namespace) -> None:
 		board_name = getattr(args, "board", None)
 		self._emit(args, f"Board deleted: {board_name}")
 
@@ -164,9 +163,8 @@ class Renderer:
 			return
 		self._emit(args, f"Column reordered: {target}")
 
-	@_requires_verbose
-	def render_column_delete(self, args: argparse.Namespace, result: None) -> None:
-		_ = result
+	# @_requires_verbose
+	def render_column_delete(self, args: argparse.Namespace) -> None:
 		path = getattr(args, "path", "") or ""
 		column_name = path.split("/", 1)[1] if "/" in path else path
 		board_name = path.split("/", 1)[0] if "/" in path else None
@@ -269,9 +267,8 @@ class Renderer:
 	def render_task_move(self, args: argparse.Namespace, result: Task) -> None:
 		self._emit(args, result)
 
-	@_requires_verbose
-	def render_task_delete(self, args: argparse.Namespace, result: None) -> None:
-		_ = result
+	# @_requires_verbose
+	def render_task_delete(self, args: argparse.Namespace) -> None:
 		path = getattr(args, "path", None)
 		if path:
 			self._emit(args, f"Task deleted: {path}")

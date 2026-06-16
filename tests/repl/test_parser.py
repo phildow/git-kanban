@@ -14,14 +14,12 @@ from pathlib import Path
 from repl import parser as repl_parser
 from repl.commands import (
     handle_board_create,
-    handle_board_delete,
     handle_board_rename,
     handle_column_create,
-    handle_column_delete,
     handle_column_rename,
+    handle_delete,
     handle_list,
     handle_task_create,
-    handle_task_delete,
     handle_task_update,
     handle_use,
 )

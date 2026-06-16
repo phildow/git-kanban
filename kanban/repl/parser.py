@@ -14,11 +14,10 @@ import argparse
 
 from repl.commands import (
     handle_board_create,
-    handle_board_delete,
     handle_board_rename,
     handle_list,
+    handle_delete,
     handle_column_create,
-    handle_column_delete,
     handle_column_rename,
     handle_column_reorder,
     handle_config_get,
@@ -29,7 +28,6 @@ from repl.commands import (
     handle_search,
     handle_status,
     handle_task_create,
-    handle_task_delete,
     handle_task_edit,
     handle_task_move,
     handle_task_show,
@@ -115,10 +113,21 @@ def _add_list_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("list", aliases=["ls"], help="List entities in the active context")
     group = p.add_mutually_exclusive_group(required=False)
     group.add_argument("path", metavar="BOARD[/COLUMN]", nargs="?", help="Board or board/column to list (optional)")
+    # p.add_subparsers(dest="path", metavar="BOARD[/COLUMN]", help="Board or board/column to list (optional)")
     _add_list_format_args(p, SORT_TASK_CHOICES)
     _add_task_filter_args(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_list)
+
+
+def _add_delete_parser(subparsers: argparse._SubParsersAction) -> None:
+    p = subparsers.add_parser("delete", aliases=["rm"], help="Delete a board, column, or task")
+    _add_global_flags(p)
+    # delete_sub = p.add_subparsers(dest="path", metavar="BOARD[/COLUMN][/TASK]", help="Board, column, or task to delete")
+    group = p.add_mutually_exclusive_group(required=True)
+    group.add_argument("path", metavar="BOARD[/COLUMN][/TASK]", nargs="?", help="Board, column, or task to delete")
+    # group.required = True
+    p.set_defaults(func=handle_delete)
 
 
 def _add_rename_parser(subparsers: argparse._SubParsersAction) -> None:
@@ -140,31 +149,6 @@ def _add_rename_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("new_name", metavar="NEW-NAME", help="New column name")
     _add_global_flags(p)
     p.set_defaults(func=handle_column_rename)
-
-
-def _add_delete_parser(subparsers: argparse._SubParsersAction) -> None:
-    delete_parser = subparsers.add_parser("delete", help="Delete a board, column, or task")
-    _add_global_flags(delete_parser)
-    delete_sub = delete_parser.add_subparsers(dest="delete_subject", metavar="SUBJECT")
-    delete_sub.required = True
-
-    # delete board
-    p = delete_sub.add_parser("board", help="Delete a board")
-    p.add_argument("board", metavar="BOARD", help="Board name")
-    _add_global_flags(p)
-    p.set_defaults(func=handle_board_delete)
-
-    # delete column
-    p = delete_sub.add_parser("column", help="Delete a column")
-    p.add_argument("path", metavar="BOARD/COLUMN", help="Column path")
-    _add_global_flags(p)
-    p.set_defaults(func=handle_column_delete)
-
-    # delete task
-    p = delete_sub.add_parser("task", help="Delete a task")
-    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
-    _add_global_flags(p)
-    p.set_defaults(func=handle_task_delete)
 
 
 def _add_reorder_parser(subparsers: argparse._SubParsersAction) -> None:

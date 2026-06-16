@@ -6,7 +6,8 @@ import argparse
 
 from models import Board, Column, Task
 from services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
-from services.repl import handle_list as handle_repl_list
+from services.repl import handle_list as repl_handle_list
+from services.repl import handle_delete as repl_handle_delete
 
 # ---------------------------------------------------------------------------
 # Initialization commands
@@ -27,8 +28,12 @@ def handle_use(args: argparse.Namespace, svc: KanbanService, renderer: object) -
 	result = svc.use(path=args.path)
 	renderer.render_use(args, result)
 
+# ---------------------------------------------------------------------------
+# Common commands (list, delete)
+# ---------------------------------------------------------------------------
+
 def handle_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	result, list_type = handle_repl_list(args, svc)
+	result, list_type = repl_handle_list(args, svc)
 	
 	if list_type is Board:
 		renderer.render_board_list(args, result)
@@ -38,6 +43,18 @@ def handle_list(args: argparse.Namespace, svc: KanbanService, renderer: object) 
 		renderer.render_task_list(args, result)
 	else:
 		raise ValueError("Unexpected result type from handle_list: {}".format(type(result)))
+
+def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	delete_type = repl_handle_delete(args, svc)
+
+	if delete_type is Board:
+		renderer.render_board_delete(args)
+	elif delete_type is Column:
+		renderer.render_column_delete(args)
+	elif delete_type is Task:
+		renderer.render_task_delete(args)
+	else:
+		raise ValueError("Unexpected result type from handle_delete: {}".format(delete_type))
 
 # ---------------------------------------------------------------------------
 # Board subcommands
@@ -51,11 +68,6 @@ def handle_board_create(args: argparse.Namespace, svc: KanbanService, renderer: 
 def handle_board_rename(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	result = svc.rename_board(args.board, args.new_name)
 	renderer.render_board_rename(args, result)
-
-
-def handle_board_delete(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	result = svc.delete_board(args.board)
-	renderer.render_board_delete(args, result)
 
 # ---------------------------------------------------------------------------
 # Column subcommands
@@ -74,11 +86,6 @@ def handle_column_rename(args: argparse.Namespace, svc: KanbanService, renderer:
 def handle_column_reorder(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	result = svc.reorder_column(args.path, args.position)
 	renderer.render_column_reorder(args, result)
-
-
-def handle_column_delete(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	result = svc.delete_column(args.path)
-	renderer.render_column_delete(args, result)
 
 # ---------------------------------------------------------------------------
 # Task subcommands
@@ -124,11 +131,6 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: o
 def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	result = svc.move_task(args.path, args.dest)
 	renderer.render_task_move(args, result)
-
-
-def handle_task_delete(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	result = svc.delete_task(args.path)
-	renderer.render_task_delete(args, result)
 
 
 # ---------------------------------------------------------------------------
