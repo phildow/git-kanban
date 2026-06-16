@@ -172,14 +172,14 @@ class KanbanService:
         if board and column and title_or_id:
             completions = [f"{t.title}" for t in self.repository.list_tasks(board=board, column=column) if t.title.startswith(title_or_id)]
         elif board and column:
-            # check if column is complete or partial, and if partial, only return columns that match the partial
+            # check if column is complete or partial. if partial, only return columns that match the partial
             # otherwise return all tasks in the column
             if self._column_exists(board, column):
                 completions = [f"{t.title}" for t in self.repository.list_tasks(board=board, column=column) if t.title.startswith(column or "")]
             else:
                 completions = [f"{c.name}/" for c in self.repository.list_columns(board) if c.name.startswith(column or "")]
         elif board:
-            # check if board is complete or partial, and if partial, only return boards that match the partial
+            # check if board is complete or partial. if partial, only return boards that match the partial
             # otherwise return all columns in the board
             if self._board_exists(board):
                 completions = [f"{c.name}/" for c in self.repository.list_columns(board) if c.name.startswith(column or "")]

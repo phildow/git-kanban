@@ -165,14 +165,17 @@ def _complete_path_tokens_verb_first(text: str, tokens_before: list[str], svc: K
     # defer to completions_for in all cases
     # and it is the responsibility of the service to sort -- just alpha-complete the raw completions_for_path results and return those, without filtering by prefix again here.
 
-    if command in {"use", "cd"}:
+    # print(f"\nCompleting path tokens for command: {command}, tokens_before: {tokens_before}, text: '{text}'\n")
+
+    if len(tokens_before) < 1:
+        return []
+    else:
         return svc.completions_for_path(text)
 
-    if len(tokens_before) < 2:
-        return []
+    
 
     # print(f"Completing path tokens for command: {command}, tokens_before: {tokens_before}, text: '{text}'")
-    return svc.completions_for_path(text)
+    # return svc.completions_for_path(text)
 
 
 def _resolve_board_column_path(path: str, svc: KanbanService) -> str:
@@ -294,8 +297,6 @@ def _rewrite_verb_first_relative_paths(tokens: list[str], svc: KanbanService) ->
         return rewritten
 
     if command in {"list", "ls"}:
-        if len(rewritten) >= 2:
-            rewritten[1] = _resolve_use_path(rewritten[1], svc)
         return rewritten
 
     if command in {"create", "rename", "reorder", "delete"} and len(rewritten) >= 2:
@@ -341,6 +342,8 @@ def _configure_readline_completion(parser: argparse.ArgumentParser, svc: KanbanS
         line = readline.get_line_buffer()
         begin = readline.get_begidx()
         before = line[:begin]
+
+        # print(f"\nCompleter invoked. text: '{text}', state: {state}, line: '{line}', before: '{before}'")
 
         try:
             tokens_before = shlex.split(before)
