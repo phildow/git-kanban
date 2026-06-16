@@ -1,15 +1,12 @@
 """
-Verb-first command line argument parser for the kanban application.
-
-This parser mirrors the behavior of `cli.noun_first_parser` but flips command ordering
-for board/column/task/config operations, e.g. `create board` instead of
-`board create`.
+Command line argument parser for the kanban application.
 
 Path arguments are explicit and fully specified by the caller.
 """
 
 import argparse
 
+from repl.renderer import Renderer as REPLRenderer
 from cli.commands import (
     handle_board_create,
     handle_board_delete,
@@ -80,205 +77,145 @@ def _add_task_update_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--due-date", metavar="DATE", help="Due date (YYYY-MM-DD)")
     parser.add_argument("--created-by", metavar="NAME", help="Creator name")
 
+
 # ---------------------------------------------------------------------------
-# Verb-first subcommands
+# Board subcommands
 # ---------------------------------------------------------------------------
 
-def _add_create_parser(subparsers: argparse._SubParsersAction) -> None:
-    create_parser = subparsers.add_parser("create", help="Create a board, column, or task")
-    _add_global_flags(create_parser)
-    create_sub = create_parser.add_subparsers(dest="create_subject", metavar="SUBJECT")
-    create_sub.required = True
+def _add_board_parser(subparsers: argparse._SubParsersAction) -> None:
+    board_parser = subparsers.add_parser("board", help="Manage boards")
+    _add_global_flags(board_parser)
+    board_sub = board_parser.add_subparsers(dest="board_command", metavar="COMMAND")
+    board_sub.required = True
 
-    # create board
-    p = create_sub.add_parser("board", help="Create a new board")
-    p.add_argument("board", metavar="BOARD", help="Board name")
-    _add_global_flags(p)
-    p.set_defaults(func=handle_board_create)
-
-    # create column
-    p = create_sub.add_parser("column", help="Create a new column")
-    p.add_argument("path", metavar="BOARD/COLUMN", help="Column path")
-    _add_global_flags(p)
-    p.set_defaults(func=handle_column_create)
-
-    # create task
-    p = create_sub.add_parser("task", help="Create a new task")
-    p.add_argument("path", metavar="BOARD/COLUMN/TITLE", help="Fully qualified task path")
-    _add_task_update_args(p)
-    _add_global_flags(p)
-    p.set_defaults(func=handle_task_create)
-
-
-def _add_list_parser(subparsers: argparse._SubParsersAction) -> None:
-    list_parser = subparsers.add_parser("list", aliases=["ls"], help="List boards, columns, or tasks")
-    _add_global_flags(list_parser)
-    list_sub = list_parser.add_subparsers(dest="list_subject", metavar="SUBJECT")
-    list_sub.required = True
-
-    # list board
-    p = list_sub.add_parser("board", aliases=["boards"], help="List all boards")
+    # board list
+    p = board_sub.add_parser("list", help="List all boards")
     _add_list_format_args(p, SORT_BOARD_COLUMN_CHOICES)
     _add_global_flags(p)
     p.set_defaults(func=handle_board_list)
 
-    # list column
-    p = list_sub.add_parser("column", aliases=["columns"], help="List columns")
+    # board create
+    p = board_sub.add_parser("create", help="Create a new board")
+    p.add_argument("board", metavar="BOARD", help="Board name")
+    _add_global_flags(p)
+    p.set_defaults(func=handle_board_create)
+
+    # board rename
+    p = board_sub.add_parser("rename", help="Rename a board")
+    p.add_argument("board", metavar="BOARD", help="Current board name")
+    p.add_argument("new_name", metavar="NEW-NAME", help="New board name")
+    _add_global_flags(p)
+    p.set_defaults(func=handle_board_rename)
+
+    # board delete
+    p = board_sub.add_parser("delete", help="Delete a board")
+    p.add_argument("board", metavar="BOARD", help="Board name")
+    _add_global_flags(p)
+    p.set_defaults(func=handle_board_delete)
+
+
+# ---------------------------------------------------------------------------
+# Column subcommands
+# ---------------------------------------------------------------------------
+
+def _add_column_parser(subparsers: argparse._SubParsersAction) -> None:
+    col_parser = subparsers.add_parser("column", help="Manage columns")
+    _add_global_flags(col_parser)
+    col_sub = col_parser.add_subparsers(dest="column_command", metavar="COMMAND")
+    col_sub.required = True
+
+    # column list
+    p = col_sub.add_parser("list", help="List columns")
     p.add_argument("board", metavar="BOARD", help="Board name")
     _add_list_format_args(p, SORT_BOARD_COLUMN_CHOICES)
     _add_global_flags(p)
     p.set_defaults(func=handle_column_list)
 
-    # list task
-    p = list_sub.add_parser("task", aliases=["tasks"], help="List tasks")
+    # column create
+    p = col_sub.add_parser("create", help="Create a new column")
+    p.add_argument("path", metavar="BOARD/COLUMN", help="Column path")
+    _add_global_flags(p)
+    p.set_defaults(func=handle_column_create)
+
+    # column rename
+    p = col_sub.add_parser("rename", help="Rename a column")
+    p.add_argument("path", metavar="BOARD/COLUMN", help="Column path")
+    p.add_argument("new_name", metavar="NEW-NAME", help="New column name")
+    _add_global_flags(p)
+    p.set_defaults(func=handle_column_rename)
+
+    # column reorder
+    p = col_sub.add_parser("reorder", help="Move a column to a position")
+    p.add_argument("path", metavar="BOARD/COLUMN", help="Column path")
+    p.add_argument("position", metavar="POSITION", type=int, help="1-based target position")
+    _add_global_flags(p)
+    p.set_defaults(func=handle_column_reorder)
+
+    # column delete
+    p = col_sub.add_parser("delete", help="Delete a column")
+    p.add_argument("path", metavar="BOARD/COLUMN", help="Column path")
+    _add_global_flags(p)
+    p.set_defaults(func=handle_column_delete)
+
+
+# ---------------------------------------------------------------------------
+# Task subcommands
+# ---------------------------------------------------------------------------
+
+def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
+    task_parser = subparsers.add_parser("task", aliases=["tasks"], help="Manage tasks")
+    _add_global_flags(task_parser)
+    task_sub = task_parser.add_subparsers(dest="task_command", metavar="COMMAND")
+    task_sub.required = True
+
+    # task list
+    p = task_sub.add_parser("list", help="List tasks")
     p.add_argument("path", metavar="BOARD[/COLUMN]", help="Board/column path")
     _add_list_format_args(p, SORT_TASK_CHOICES)
     _add_task_filter_args(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_task_list)
 
-
-def _add_rename_parser(subparsers: argparse._SubParsersAction) -> None:
-    rename_parser = subparsers.add_parser("rename", help="Rename a board or column")
-    _add_global_flags(rename_parser)
-    rename_sub = rename_parser.add_subparsers(dest="rename_subject", metavar="SUBJECT")
-    rename_sub.required = True
-
-    # rename board
-    p = rename_sub.add_parser("board", help="Rename a board")
-    p.add_argument("board", metavar="BOARD", help="Current board name")
-    p.add_argument("new_name", metavar="NEW-NAME", help="New board name")
+    # task create
+    p = task_sub.add_parser("create", help="Create a new task")
+    p.add_argument("path", metavar="BOARD/COLUMN/TITLE", help="Fully qualified task path")
+    _add_task_create_args(p)
     _add_global_flags(p)
-    p.set_defaults(func=handle_board_rename)
+    p.set_defaults(func=handle_task_create)
 
-    # rename column
-    p = rename_sub.add_parser("column", help="Rename a column")
-    p.add_argument("path", metavar="BOARD/COLUMN", help="Column path")
-    p.add_argument("new_name", metavar="NEW-NAME", help="New column name")
-    _add_global_flags(p)
-    p.set_defaults(func=handle_column_rename)
-
-
-def _add_delete_parser(subparsers: argparse._SubParsersAction) -> None:
-    delete_parser = subparsers.add_parser("delete", help="Delete a board, column, or task")
-    _add_global_flags(delete_parser)
-    delete_sub = delete_parser.add_subparsers(dest="delete_subject", metavar="SUBJECT")
-    delete_sub.required = True
-
-    # delete board
-    p = delete_sub.add_parser("board", help="Delete a board")
-    p.add_argument("board", metavar="BOARD", help="Board name")
-    _add_global_flags(p)
-    p.set_defaults(func=handle_board_delete)
-
-    # delete column
-    p = delete_sub.add_parser("column", help="Delete a column")
-    p.add_argument("path", metavar="BOARD/COLUMN", help="Column path")
-    _add_global_flags(p)
-    p.set_defaults(func=handle_column_delete)
-
-    # delete task
-    p = delete_sub.add_parser("task", help="Delete a task")
-    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
-    _add_global_flags(p)
-    p.set_defaults(func=handle_task_delete)
-
-
-def _add_reorder_parser(subparsers: argparse._SubParsersAction) -> None:
-    reorder_parser = subparsers.add_parser("reorder", help="Reorder columns or tasks")
-    _add_global_flags(reorder_parser)
-    reorder_sub = reorder_parser.add_subparsers(dest="reorder_subject", metavar="SUBJECT")
-    reorder_sub.required = True
-
-    # reorder column
-    p = reorder_sub.add_parser("column", help="Move a column to a position")
-    p.add_argument("path", metavar="BOARD/COLUMN", help="Column path")
-    p.add_argument("position", metavar="POSITION", type=int, help="1-based target position")
-    _add_global_flags(p)
-    p.set_defaults(func=handle_column_reorder)
-
-
-def _add_show_parser(subparsers: argparse._SubParsersAction) -> None:
-    show_parser = subparsers.add_parser("show", help="Show entity details")
-    _add_global_flags(show_parser)
-    show_sub = show_parser.add_subparsers(dest="show_subject", metavar="SUBJECT")
-    show_sub.required = True
-
-    # show task
-    p = show_sub.add_parser("task", help="Show task details")
+    # task show
+    p = task_sub.add_parser("show", help="Show task details")
     p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
     p.add_argument("--format", choices=FORMAT_CHOICES, default="plain", metavar="FORMAT",
                    help="Output format: table, plain, or json")
     _add_global_flags(p)
     p.set_defaults(func=handle_task_show)
 
-
-def _add_edit_parser(subparsers: argparse._SubParsersAction) -> None:
-    edit_parser = subparsers.add_parser("edit", help="Edit tasks")
-    _add_global_flags(edit_parser)
-    edit_sub = edit_parser.add_subparsers(dest="edit_subject", metavar="SUBJECT")
-    edit_sub.required = True
-
-    # edit task
-    p = edit_sub.add_parser("task", help="Open task in editor")
+    # task edit
+    p = task_sub.add_parser("edit", help="Open task in editor")
     p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
     _add_global_flags(p)
     p.set_defaults(func=handle_task_edit)
 
-
-def _add_update_parser(subparsers: argparse._SubParsersAction) -> None:
-    update_parser = subparsers.add_parser("update", help="Update a task")
-    _add_global_flags(update_parser)
-    update_sub = update_parser.add_subparsers(dest="update_subject", metavar="SUBJECT")
-    update_sub.required = True
-
-    # update task
-    p = update_sub.add_parser("task", help="Update task fields")
+    # task update
+    p = task_sub.add_parser("update", help="Update task fields")
     p.add_argument("path", metavar="BOARD/COLUMN/TITLE", help="Fully qualified task path")
-    _add_task_create_args(p)
+    _add_task_update_args(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_task_update)
 
-
-def _add_move_parser(subparsers: argparse._SubParsersAction) -> None:
-    move_parser = subparsers.add_parser("move", help="Move a task to another column or board")
-    _add_global_flags(move_parser)
-    move_sub = move_parser.add_subparsers(dest="move_subject", metavar="SUBJECT")
-    move_sub.required = True
-
-    # move task
-    p = move_sub.add_parser("task", help="Move task to another column or board")
+    # task move
+    p = task_sub.add_parser("move", help="Move task to another column or board")
     p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
     p.add_argument("dest", metavar="BOARD/COLUMN", help="Destination board/column path")
     _add_global_flags(p)
     p.set_defaults(func=handle_task_move)
 
-
-def _add_set_parser(subparsers: argparse._SubParsersAction) -> None:
-    set_parser = subparsers.add_parser("set", help="Set values")
-    _add_global_flags(set_parser)
-    set_sub = set_parser.add_subparsers(dest="set_subject", metavar="SUBJECT")
-    set_sub.required = True
-
-    # set config
-    p = set_sub.add_parser("config", help="Set a configuration value")
-    p.add_argument("key", metavar="KEY", help="Configuration key (e.g. name)")
-    p.add_argument("value", metavar="VALUE", help="Configuration value")
+    # task delete
+    p = task_sub.add_parser("delete", help="Delete a task")
+    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
     _add_global_flags(p)
-    p.set_defaults(func=handle_config_set)
-
-
-def _add_get_parser(subparsers: argparse._SubParsersAction) -> None:
-    get_parser = subparsers.add_parser("get", help="Get values")
-    _add_global_flags(get_parser)
-    get_sub = get_parser.add_subparsers(dest="get_subject", metavar="SUBJECT")
-    get_sub.required = True
-
-    # get config
-    p = get_sub.add_parser("config", help="Get a configuration value")
-    p.add_argument("key", metavar="KEY", help="Configuration key (e.g. name)")
-    _add_global_flags(p)
-    p.set_defaults(func=handle_config_get)
+    p.set_defaults(func=handle_task_delete)
 
 
 # ---------------------------------------------------------------------------
@@ -295,11 +232,11 @@ def _add_use_parser(subparsers: argparse._SubParsersAction) -> None:
 
 
 def build_parser(*, enable_use: bool = False) -> argparse.ArgumentParser:
-    """Return the fully configured top-level verb-first argument parser."""
+    """Return the fully configured top-level argument parser."""
     parser = argparse.ArgumentParser(
         prog="kanban",
         description="A filesystem-backed, git-tracked kanban task manager.",
-        color=False,
+        color=False
     )
     _add_global_flags(parser)
 
@@ -314,18 +251,10 @@ def build_parser(*, enable_use: bool = False) -> argparse.ArgumentParser:
     if enable_use:
         _add_use_parser(subparsers)
 
-    # verb-first operations
-    _add_create_parser(subparsers)
-    _add_list_parser(subparsers)
-    _add_rename_parser(subparsers)
-    _add_delete_parser(subparsers)
-    _add_reorder_parser(subparsers)
-    _add_show_parser(subparsers)
-    _add_edit_parser(subparsers)
-    _add_update_parser(subparsers)
-    _add_move_parser(subparsers)
-    _add_set_parser(subparsers)
-    _add_get_parser(subparsers)
+    # board / column / task
+    _add_board_parser(subparsers)
+    _add_column_parser(subparsers)
+    _add_task_parser(subparsers)
 
     # search
     p = subparsers.add_parser("search", help="Full-text search across tasks")
@@ -351,8 +280,27 @@ def build_parser(*, enable_use: bool = False) -> argparse.ArgumentParser:
     _add_global_flags(p)
     p.set_defaults(func=handle_status)
 
+    # config
+    config_parser = subparsers.add_parser("config", help="Get or set configuration values")
+    _add_global_flags(config_parser)
+    config_sub = config_parser.add_subparsers(dest="config_command", metavar="COMMAND")
+    config_sub.required = True
+
+    p = config_sub.add_parser("set", help="Set a configuration value")
+    p.add_argument("key", metavar="KEY", help="Configuration key (e.g. name)")
+    p.add_argument("value", metavar="VALUE", help="Configuration value")
+    _add_global_flags(p)
+    p.set_defaults(func=handle_config_set)
+
+    p = config_sub.add_parser("get", help="Get a configuration value")
+    p.add_argument("key", metavar="KEY", help="Configuration key (e.g. name)")
+    _add_global_flags(p)
+    p.set_defaults(func=handle_config_get)
+
     # repl
     p = subparsers.add_parser("repl", help="Start an interactive kanban shell")
+    p.add_argument("--noun-first", action="store_true", default=False,
+                   help="Use noun-first command style in the REPL (e.g. `board create`)")
     _add_global_flags(p)
     p.set_defaults(func=handle_repl)
 

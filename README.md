@@ -40,10 +40,12 @@ kanban (main)>
         - ls (list)
         - mv (rename or move)
 
-- Simplify repl commands, they mostly take 
-- List only takes a path not a noun object - the whole noun first cli got me
+- REPL
+    - Simplify repl commands, they mostly take 
+    - Most only takes a path not a noun object - the whole noun first cli got me its a terminal emulator
+    - Tab tab to cycle through completions
 
-- KanbanService maintains the user context not the repo, and the different UIs instantiate it differently
+- KanbanService maintains the user context and the different UIs instantiate it differently
     - The CLI starts at /
     - The REPL starts where the user left off
     - But the way readline works it seems that whatever you provide to be shown as options also becomes the completion

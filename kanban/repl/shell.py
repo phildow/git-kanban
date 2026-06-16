@@ -7,10 +7,8 @@ import shlex
 import signal
 from argparse import Namespace
 from contextlib import contextmanager
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from services.kanban import KanbanService
+from services.kanban import KanbanService
 
 try:
     import readline
@@ -442,11 +440,11 @@ def _install_exit_signal_handlers():
 
 def run_repl(*, svc: KanbanService, renderer: object, noun_first: bool = False) -> None:
     """Run a simple command loop that reuses the CLI parser/handlers."""
-    from cli.noun_first_parser import build_parser as build_noun_first_parser
-    from cli.verb_first_parser import build_parser as build_verb_first_parser
+    from cli.parser import build_parser as build_cli_parser
+    from repl.parser import build_parser as build_repl_parser
     
     try:
-        parser = build_noun_first_parser(enable_use=True) if noun_first else build_verb_first_parser(enable_use=True)
+        parser = build_cli_parser(enable_use=True) if noun_first else build_repl_parser(enable_use=True)
         rewrite = _rewrite_noun_first_relative_paths if noun_first else _rewrite_verb_first_relative_paths
         _configure_readline_shortcuts()
         _configure_readline_completion(parser, svc)

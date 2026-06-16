@@ -1,6 +1,6 @@
 """Entry point for the kanban CLI."""
 
-from cli.noun_first_parser import parse_args
+from cli.parser import parse_args
 from cli.renderer import Renderer
 
 from models import UserContext

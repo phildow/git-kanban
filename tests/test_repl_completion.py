@@ -8,6 +8,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+from cli.parser import build_parser
 from repl.shell import (
     _prompt,
     _rewrite_noun_first_relative_paths,
@@ -16,13 +17,12 @@ from repl.shell import (
     _complete_path_tokens,
     run_repl,
 )
+from repl.parser import build_parser as build_verb_first_parser
 from models import UserContext
 from services import KanbanService
 from services.index import IndexService
 from services.git import GitService 
 from storage import InMemoryRepository
-from cli.noun_first_parser import build_parser
-from cli.verb_first_parser import build_parser as build_verb_first_parser
 
 
 class _FakeSvc:
@@ -144,8 +144,8 @@ class TestReplInterruptBehavior(unittest.TestCase):
         svc = _FakeSvc()
         renderer = MagicMock()
 
-        with patch("cli.verb_first_parser.build_parser") as build_verb:
-            with patch("cli.noun_first_parser.build_parser") as build_noun:
+        with patch("repl.parser.build_parser") as build_verb:
+            with patch("cli.parser.build_parser") as build_noun:
                 with patch("builtins.input", side_effect=["quit"]):
                     build_verb.return_value = build_parser(enable_use=True)
                     run_repl(svc=svc, renderer=renderer)
@@ -157,8 +157,8 @@ class TestReplInterruptBehavior(unittest.TestCase):
         svc = _FakeSvc()
         renderer = MagicMock()
 
-        with patch("cli.verb_first_parser.build_parser") as build_verb:
-            with patch("cli.noun_first_parser.build_parser") as build_noun:
+        with patch("repl.parser.build_parser") as build_verb:
+            with patch("cli.parser.build_parser") as build_noun:
                 with patch("builtins.input", side_effect=["quit"]):
                     build_noun.return_value = build_parser(enable_use=True)
                     run_repl(svc=svc, renderer=renderer, noun_first=True)

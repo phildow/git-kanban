@@ -10,8 +10,7 @@ import sys
 import unittest
 from pathlib import Path
 
-from cli import noun_first_parser as cli_parser
-from cli import verb_first_parser as verb_first_cli_parser
+from cli import parser as cli_parser
 from cli.commands import (
     handle_board_create,
     handle_board_delete,
@@ -38,7 +37,6 @@ from cli.commands import (
     handle_task_update,
     handle_use,
 )
-
 
 class TestParserStructure(unittest.TestCase):
     """Tests that subparser trees and command groups are registered."""
@@ -312,81 +310,6 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
             cli_parser.parse_args(["task"])
         with self.assertRaises(SystemExit):
             cli_parser.parse_args(["config"])
-
-
-class TestVerbFirstParserAliases(unittest.TestCase):
-    """Tests for verb-first parser aliases and wiring."""
-
-    def test_update_task_maps_to_update_handler(self):
-        args = verb_first_cli_parser.parse_args([
-            "update",
-            "task",
-            "main/todo/fix-parser",
-            "--assignee",
-            "philip",
-            "--priority",
-            "medium",
-            "--tag",
-            "cli",
-            "--due-date",
-            "2026-06-20",
-            "--created-by",
-            "philip",
-        ])
-
-        self.assertEqual(args.command, "update")
-        self.assertEqual(args.update_subject, "task")
-        self.assertEqual(args.path, "main/todo/fix-parser")
-        self.assertEqual(args.assignee, "philip")
-        self.assertEqual(args.priority, "medium")
-        self.assertEqual(args.tags, ["cli"])
-        self.assertEqual(args.due_date, "2026-06-20")
-        self.assertEqual(args.created_by, "philip")
-        self.assertIs(args.func, handle_task_update)
-
-    def test_list_plural_aliases_map_to_same_handlers(self):
-        args = verb_first_cli_parser.parse_args(["list", "boards"])
-        self.assertEqual(args.command, "list")
-        self.assertEqual(args.list_subject, "boards")
-        self.assertIs(args.func, handle_board_list)
-
-        args = verb_first_cli_parser.parse_args(["list", "columns", "main"])
-        self.assertEqual(args.command, "list")
-        self.assertEqual(args.list_subject, "columns")
-        self.assertEqual(args.board, "main")
-        self.assertIs(args.func, handle_column_list)
-
-        args = verb_first_cli_parser.parse_args(["list", "tasks", "main/todo"])
-        self.assertEqual(args.command, "list")
-        self.assertEqual(args.list_subject, "tasks")
-        self.assertEqual(args.path, "main/todo")
-        self.assertIs(args.func, handle_task_list)
-
-        args = verb_first_cli_parser.parse_args(["ls", "board"])
-        self.assertEqual(args.command, "ls")
-        self.assertEqual(args.list_subject, "board")
-        self.assertIs(args.func, handle_board_list)
-
-    def test_cd_alias_maps_to_use_handler(self):
-        parser = verb_first_cli_parser.build_parser(enable_use=True)
-
-        args = parser.parse_args(["cd"])
-        self.assertEqual(args.command, "cd")
-        self.assertIsNone(args.path)
-        self.assertFalse(args.clear)
-        self.assertIs(args.func, handle_use)
-
-        args = parser.parse_args(["cd", "main/todo"])
-        self.assertEqual(args.command, "cd")
-        self.assertEqual(args.path, "main/todo")
-        self.assertFalse(args.clear)
-        self.assertIs(args.func, handle_use)
-
-        args = parser.parse_args(["cd", "--clear"])
-        self.assertTrue(args.clear)
-        self.assertIsNone(args.path)
-        self.assertIs(args.func, handle_use)
-
 
 if __name__ == "__main__":
     unittest.main()
