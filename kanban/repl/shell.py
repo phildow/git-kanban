@@ -84,105 +84,6 @@ def _prompt(svc: KanbanService) -> str:
     return f"kanban ({svc.working_path}) > "
 
 
-def _complete_board_or_column_path(text: str, svc: KanbanService) -> list[str]:
-    """Complete BOARD/COLUMN path values."""
-    boards = [board.name for board in svc.list_boards()]
-    context = svc.user_context
-    context_board = context.board
-
-    if "/" in text:
-        board_prefix, column_prefix = text.split("/", 1)
-        matching_boards = _starts_with(boards, board_prefix)
-        if board_prefix in boards:
-            columns = [column.name for column in svc.list_columns(board=board_prefix)]
-            return [f"{board_prefix}/{column}" for column in columns if column.startswith(column_prefix)]
-        return [f"{board}/" for board in matching_boards]
-
-    results: list[str] = []
-    if context_board:
-        context_columns = [column.name for column in svc.list_columns(board=context_board)]
-        results.extend(column for column in context_columns if column.startswith(text))
-
-    results.extend(f"{board}/" for board in boards if board.startswith(text))
-    return sorted(dict.fromkeys(results))
-
-
-def _complete_board_or_board_column_path(text: str, svc: KanbanService) -> list[str]:
-    """Complete BOARD or BOARD/COLUMN path values."""
-    boards = [board.name for board in svc.list_boards()]
-    if "/" in text:
-        board_prefix, column_prefix = text.split("/", 1)
-        if board_prefix in boards:
-            columns = [column.name for column in svc.list_columns(board=board_prefix)]
-            return [f"{board_prefix}/{column}" for column in columns if column.startswith(column_prefix)]
-        return [f"{board}/" for board in boards if board.startswith(board_prefix)]
-
-    board_paths = [f"{board}/" for board in boards if board.startswith(text)]
-
-    context = svc.user_context
-    context_board = context.board
-    context_columns = [column.name for column in svc.list_columns(board=context_board)] if context_board else []
-    column_matches = [column for column in context_columns if column.startswith(text)]
-
-    return sorted(dict.fromkeys(board_paths + column_matches))
-
-
-def _complete_task_list_path(text: str, svc: KanbanService) -> list[str]:
-    """Complete `task list` path according to active context rules."""
-    boards = [board.name for board in svc.list_boards()]
-    context = svc.user_context
-    context_board = context.board
-
-    # Explicit override once a slash appears: BOARD/COLUMN resolution.
-    if "/" in text:
-        board_prefix, column_prefix = text.split("/", 1)
-        if board_prefix in boards:
-            columns = [column.name for column in svc.list_columns(board=board_prefix)]
-            return [f"{board_prefix}/{column}/" for column in columns if column.startswith(column_prefix)]
-            # return [f"{column}/" for column in columns if column.startswith(column_prefix)]
-        return [f"{board}/" for board in boards if board.startswith(board_prefix)]
-
-    # With active board, only columns are suggested.
-    if context_board:
-        columns = [column.name for column in svc.list_columns(board=context_board)]
-        return [f"{column}/" for column in columns if column.startswith(text)]
-
-    # Without context, user must start with board.
-    return [f"{board}/" for board in boards if board.startswith(text)]
-
-
-def _complete_task_path(text: str, svc: KanbanService) -> list[str]:
-    """Complete task path segments according to active user context."""
-    context = svc.user_context
-    context_board = context.board
-    context_column = context.column
-
-    slash_count = text.count("/")
-
-    # Explicit override path handling.
-    if slash_count >= 2:
-        board, column, task_prefix = text.split("/", 2)
-        tasks = _safe_list_task_names(svc, board, column)
-        return [f"{board}/{column}/{task}" for task in tasks if task.startswith(task_prefix)]
-
-    if slash_count == 1:
-        board, column_prefix = text.split("/", 1)
-        columns = [column.name for column in svc.list_columns(board=board)]
-        return [f"{board}/{column}/" for column in columns if column.startswith(column_prefix)]
-
-    # Context-based completion when no explicit slash is present.
-    if context_board and context_column:
-        tasks = _safe_list_task_names(svc, context_board, context_column)
-        return [task for task in tasks if task.startswith(text)]
-
-    if context_board:
-        columns = [column.name for column in svc.list_columns(board=context_board)]
-        return [f"{column}/" for column in columns if column.startswith(text)]
-
-    boards = [board.name for board in svc.list_boards()]
-    return [f"{board}/" for board in boards if board.startswith(text)]
-
-
 def _find_subparser_action(parser: argparse.ArgumentParser):
     """Return the first subparser action for a parser, if present."""
     for action in parser._actions:
@@ -236,130 +137,44 @@ def _complete_command_tokens(
     return _starts_with(choices, text)
 
 
-def _complete_from_buffer(text: str, parser: argparse.ArgumentParser) -> list[str]:
-    """Compute command completion candidates using the readline buffer state."""
-    if readline is None:
-        return []
-
-    line = readline.get_line_buffer()
-    begin = readline.get_begidx()
-    before = line[:begin]
-
-    try:
-        tokens_before = shlex.split(before)
-    except ValueError:
-        tokens_before = before.strip().split()
-
-    return _complete_command_tokens(text, tokens_before, parser)
-
-
 def _complete_path_tokens(text: str, tokens_before: list[str], svc: KanbanService) -> list[str]:
     """Complete path-like positional arguments for REPL commands."""
     if not tokens_before:
         return []
 
     command = tokens_before[0]
+
     if command in {"use", "cd"}:
-        return _complete_board_or_board_column_path(text, svc)
+        return svc.completions_for_path(text)
 
     if len(tokens_before) < 2:
         return []
 
-    sub = tokens_before[1]
+    # defer to completions_for in all cases
+    # and it is the responsibility of the service to sort -- just alpha-complete the raw completions_for_path results and return those, without filtering by prefix again here.
 
-    if command == "column":
-        if sub == "list" and len(tokens_before) == 2:
-            boards = [board.name for board in svc.list_boards()]
-            return [board for board in boards if board.startswith(text)]
-        if sub in {"create", "rename", "reorder", "delete"} and len(tokens_before) == 2:
-            return _complete_board_or_column_path(text, svc)
-
-    if command == "task":
-        if sub == "list" and len(tokens_before) == 2:
-            return _complete_task_list_path(text, svc)
-
-        # Compatibility path for readline setups that still split on '/':
-        # e.g. "task list main/t" may arrive as tokens_before=["task", "list", "main/"]
-        # and text="t". Return suffixes so replacement keeps the existing board prefix.
-        if sub == "list" and len(tokens_before) >= 3 and tokens_before[2].endswith("/"):
-            prefix = tokens_before[2]
-            full_matches = _complete_task_list_path(f"{prefix}{text}", svc)
-            suffix_matches = [match[len(prefix):] for match in full_matches if match.startswith(prefix)]
-            return sorted(dict.fromkeys(suffix_matches))
-
-        if sub in {"create", "show", "edit", "delete"} and len(tokens_before) == 2:
-            return _complete_task_path(text, svc)
-
-        # Compatibility path for readline setups that still split on '/':
-        # e.g. "task create main/t" may arrive as tokens_before=["task", "create", "main/"]
-        # and text="t". Return suffixes so replacement keeps the existing board prefix.
-        if sub in {"create", "show", "edit", "delete"} and len(tokens_before) >= 3 and tokens_before[2].endswith("/"):
-            prefix = tokens_before[2]
-            full_matches = _complete_task_path(f"{prefix}{text}", svc)
-            suffix_matches = [match[len(prefix):] for match in full_matches if match.startswith(prefix)]
-            return sorted(dict.fromkeys(suffix_matches))
-
-        if sub == "move":
-            if len(tokens_before) == 2:
-                return _complete_task_path(text, svc)
-            if len(tokens_before) == 3:
-                return _complete_board_or_column_path(text, svc)
-
-    return []
+    # print(f"Completing path tokens for command: {command}, tokens_before: {tokens_before}, text: '{text}'")
+    return svc.completions_for_path(text) 
 
 
-def _complete_path_tokens_verb_first(text: str, tokens_before: list[str], svc: KanbanService) -> list[str]:
+def _complete_path_tokens_verb_first(text: str, tokens_before: list[str], svc: KanbanService) -> list[str]:    
     """Complete path-like positional arguments for verb-first REPL commands."""
     if not tokens_before:
         return []
 
     command = tokens_before[0]
+
+    # defer to completions_for in all cases
+    # and it is the responsibility of the service to sort -- just alpha-complete the raw completions_for_path results and return those, without filtering by prefix again here.
+
     if command in {"use", "cd"}:
-        return _complete_board_or_board_column_path(text, svc)
+        return svc.completions_for_path(text)
 
     if len(tokens_before) < 2:
         return []
 
-    subject = tokens_before[1]
-    if subject == "boards":
-        subject = "board"
-    elif subject == "columns":
-        subject = "column"
-    elif subject == "tasks":
-        subject = "task"
-
-    if command in {"list", "ls"}:
-        if subject == "column" and len(tokens_before) == 2:
-            boards = [board.name for board in svc.list_boards()]
-            return [board for board in boards if board.startswith(text)]
-        if subject == "task" and len(tokens_before) == 2:
-            return _complete_task_list_path(text, svc)
-        if subject == "task" and len(tokens_before) >= 3 and tokens_before[2].endswith("/"):
-            prefix = tokens_before[2]
-            full_matches = _complete_task_list_path(f"{prefix}{text}", svc)
-            suffix_matches = [match[len(prefix):] for match in full_matches if match.startswith(prefix)]
-            return sorted(dict.fromkeys(suffix_matches))
-
-    if command in {"create", "rename", "reorder", "delete"} and subject == "column":
-        if len(tokens_before) == 2:
-            return _complete_board_or_column_path(text, svc)
-
-    if command in {"create", "show", "edit", "delete"} and subject == "task":
-        if len(tokens_before) == 2:
-            return _complete_task_path(text, svc)
-        if len(tokens_before) >= 3 and tokens_before[2].endswith("/"):
-            prefix = tokens_before[2]
-            full_matches = _complete_task_path(f"{prefix}{text}", svc)
-            suffix_matches = [match[len(prefix):] for match in full_matches if match.startswith(prefix)]
-            return sorted(dict.fromkeys(suffix_matches))
-
-    if command == "move" and subject == "task":
-        if len(tokens_before) == 2:
-            return _complete_task_path(text, svc)
-        if len(tokens_before) == 3:
-            return _complete_board_or_column_path(text, svc)
-
-    return []
+    # print(f"Completing path tokens for command: {command}, tokens_before: {tokens_before}, text: '{text}'")
+    return svc.completions_for_path(text)
 
 
 def _resolve_board_column_path(path: str, svc: KanbanService) -> str:
@@ -413,6 +228,7 @@ def _resolve_use_path(path: str, svc: KanbanService) -> str:
     return normalized
 
 
+# TODO: WTF does this even do?
 def _rewrite_noun_first_relative_paths(tokens: list[str], svc: KanbanService) -> list[str]:
     """Rewrite noun-first REPL command tokens so relative paths become explicit paths."""
     if not tokens:
@@ -465,6 +281,7 @@ def _rewrite_noun_first_relative_paths(tokens: list[str], svc: KanbanService) ->
     return rewritten
 
 
+# TODO: WTF does this even do?
 def _rewrite_verb_first_relative_paths(tokens: list[str], svc: KanbanService) -> list[str]:
     """Rewrite verb-first REPL command tokens so relative paths become explicit paths."""
     if not tokens:
@@ -667,6 +484,7 @@ def run_repl(*, svc: KanbanService, renderer: object, noun_first: bool = False) 
                 try:
                     tokens = shlex.split(raw)
                     args: Namespace = parser.parse_args(rewrite(tokens, svc))
+                    # args: Namespace = parser.parse_args(tokens)
                 except SystemExit:
                     # argparse already emitted a helpful message.
                     continue

@@ -46,5 +46,46 @@ class TestKanbanServiceUse(unittest.TestCase):
         self.assertEqual(ctx.column, "todo")
 
 
+class TestKanbanServiceResolvePath(unittest.TestCase):
+    def setUp(self) -> None:
+        self.repo = InMemoryRepository()
+        self.svc = KanbanService(
+            repository=self.repo,
+            index_service=IndexService(repository=self.repo),
+            git_service=GitService(),
+            user_context=UserContext(),
+        )
+
+    def test_resolve_path_relative_with_board_and_column_context(self):
+        self.svc.update_user_context(board="alpha", column="todo")
+        result = self.svc.resolve_path("task-one")
+        self.assertEqual(result, Path("/alpha/todo/task-one"))
+
+    def test_resolve_path_absolute_with_board_and_column_context(self):
+        self.svc.update_user_context(board="alpha", column="todo")
+        result = self.svc.resolve_path("/infra/backlog/task-two")
+        self.assertEqual(result, Path("/infra/backlog/task-two"))
+
+    def test_resolve_path_relative_with_board_only_context(self):
+        self.svc.update_user_context(board="alpha", column=None)
+        result = self.svc.resolve_path("todo/task-one")
+        self.assertEqual(result, Path("/alpha/todo/task-one"))
+
+    def test_resolve_path_absolute_with_board_only_context(self):
+        self.svc.update_user_context(board="alpha", column=None)
+        result = self.svc.resolve_path("/infra/backlog/task-two")
+        self.assertEqual(result, Path("/infra/backlog/task-two"))
+
+    def test_resolve_path_relative_with_empty_context(self):
+        self.svc.update_user_context(board=None, column=None)
+        result = self.svc.resolve_path("alpha/todo/task-one")
+        self.assertEqual(result, Path("/alpha/todo/task-one"))
+
+    def test_resolve_path_absolute_with_empty_context(self):
+        self.svc.update_user_context(board=None, column=None)
+        result = self.svc.resolve_path("/infra/backlog/task-two")
+        self.assertEqual(result, Path("/infra/backlog/task-two"))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -9,7 +9,7 @@ import tempfile
 from uuid import UUID, uuid4
 
 from models import Task, TaskFilter, Board, Column, UserContext
-from storage.kanban_repository import KanbanRepository, ColumnNotFound
+from storage.kanban_repository import KanbanRepository, ColumnNotFound, BoardNotFound
 from services.git_service import GitService
 from services.index_service import IndexService
 
@@ -104,11 +104,13 @@ class KanbanService:
         """
         self.repository.init(default_board="main")
 
+        # TODO: Not intuitive at all. more like a create from path
         self.create_board("main")
         self.create_column("main/todo")
         self.create_column("main/in-progress")
         self.create_column("main/in-review")
         self.create_column("main/done")
+        
         self.update_user_context(board="main", column="todo")
         self.set_config("initialized", "true")
 
@@ -141,6 +143,70 @@ class KanbanService:
         self._user_context = UserContext()
         return self._user_context
 
+    def resolve_path(self, path: str | None = None) -> Path:
+        """
+        Resolve a user-provided path into an absolute Path object.  
+        The path may be absolute (starting with "/") or relative to the current user context.
+        """
+        # print(f"Resolving path: '{path}' with working path: '{self.working_path}'")
+        if path.startswith("/"):
+            return Path(path)
+        else:
+            return Path(self.working_path) / (path or "")
+
+    def _resolve_path_into_components(self, path: str | None = None) -> tuple[str | None, str | None, str | None]:
+        """Resolve a [BOARD/][COLUMN/]TITLE_OR_ID path into its components."""
+        path = self.resolve_path(path)
+        # print(f"Resolved path: {path}")
+        parts = path.parts # ["/", board|None, column|None, title-or-id|None]
+        return parts[1] if len(parts) > 1 else None, \
+               parts[2] if len(parts) > 2 else None, \
+               parts[3] if len(parts) > 3 else None
+
+    # TODO: this will end up replacing the path in the promt
+    def completions_for_path(self, text: str) -> list[str]:
+        """Return a list of valid path completions for the given partial text."""
+        
+        board, column, title_or_id = self._resolve_path_into_components(text)
+
+        if board and column and title_or_id:
+            completions = [f"{t.title}" for t in self.repository.list_tasks(board=board, column=column) if t.title.startswith(title_or_id)]
+        elif board and column:
+            # check if column is complete or partial, and if partial, only return columns that match the partial
+            # otherwise return all tasks in the column
+            if self._column_exists(board, column):
+                completions = [f"{t.title}" for t in self.repository.list_tasks(board=board, column=column) if t.title.startswith(column or "")]
+            else:
+                completions = [f"{c.name}/" for c in self.repository.list_columns(board) if c.name.startswith(column or "")]
+        elif board:
+            # check if board is complete or partial, and if partial, only return boards that match the partial
+            # otherwise return all columns in the board
+            if self._board_exists(board):
+                completions = [f"{c.name}/" for c in self.repository.list_columns(board) if c.name.startswith(column or "")]
+            else:
+                completions = [f"{b.name}/" for b in self.repository.list_boards() if b.name.startswith(board or "")]
+        else:
+            completions = [f"{b.name}/" for b in self.repository.list_boards() if b.name.startswith(board or "")]
+
+        return completions
+
+    def _board_exists(self, board: str) -> bool:
+        """Return True if the given board exists in the repository."""
+        try:
+            self.repository.get_board(board)
+            return True
+        except BoardNotFound:
+            return False
+
+    def _column_exists(self, board: str, column: str) -> bool:
+        """Return True if the given column exists in the repository."""
+        try:
+            self.repository.get_column(board, column)
+            return True
+        except (BoardNotFound, ColumnNotFound):
+            return False
+
+    # TODO: rename to change_dir, because that's what it's doing
     def use(
         self,
         path: str | None = None,
@@ -253,7 +319,7 @@ class KanbanService:
         set.  sort accepts "title"; omitting it preserves the order in the
         board's .order file.
         """
-        board = self._resolve_board(board)
+        board, _, _ = self._resolve_path_into_components(board)
         return self.repository.list_columns(board)
 
     def create_column(self, path: str) -> Column:
@@ -263,7 +329,7 @@ class KanbanService:
         the column name is already taken within that board.  Appends the new
         column to the board's .order file and commits.
         """
-        board, column = self._resolve_column_path(path)
+        board, column, _ = self._resolve_path_into_components(path)
         return self.repository.create_column(board, column)
 
     def rename_column(self, path: str, new_name: str) -> Column:
@@ -274,7 +340,7 @@ class KanbanService:
         update implicitly via the directory rename.  Updates the active
         context if the renamed column was the active one.
         """
-        board, column = self._resolve_column_path(path)
+        board, column, _ = self._resolve_path_into_components(path)
         renamed_column = self.repository.rename_column(board, column, new_name)
 
         # Update active context if it points at the renamed column.
@@ -291,7 +357,7 @@ class KanbanService:
         out-of-bounds values.  Returns the full updated column list so the
         CLI can confirm the new order.
         """
-        board, column = self._resolve_column_path(path)
+        board, column, _ = self._resolve_path_into_components(path)
         return self.repository.reorder_column(board, column, position)  
 
     def delete_column(self, path: str) -> None:
@@ -301,7 +367,7 @@ class KanbanService:
         all index entries for tasks in the column, updates the board's .order
         file, and clears the active context column if it pointed here.
         """
-        board, column = self._resolve_column_path(path)
+        board, column, _ = self._resolve_path_into_components(path)
         self.repository.delete_column(board, column)
 
         # If current context points at this column, clear column only.
@@ -327,7 +393,7 @@ class KanbanService:
         all columns of the board.  sort accepts "title", "priority", "due-date",
         "created-at", "updated-at", or "created-by".
         """
-        board, column = self._resolve_task_list_scope(path)
+        board, column, _ = self._resolve_path_into_components(path)
         tasks = self.repository.list_tasks(board=board, column=column, filter=filter)
 
         if not sort:
@@ -363,7 +429,7 @@ class KanbanService:
         with the same title slug is already present in that column.  Updates the
         index and commits.
         """
-        board, column, title = self._resolve_task_path(path)
+        board, column, title = self._resolve_path_into_components(path)
 
         assignee: str | None
         priority: str | None
@@ -405,11 +471,11 @@ class KanbanService:
     ) -> Task:
         """
         Resolve and return a single task by title slug or UUID.  Delegates
-        location resolution to _resolve_task_path, which applies the
+        location resolution to resolve_path, which applies the
         explicit → context → index-search chain and raises TaskNotFound or
         AmbiguousTaskReference if resolution fails.
         """
-        board, column, title_or_id = self._resolve_task_path(path)
+        board, column, title_or_id = self._resolve_path_into_components(path)
         task_id: UUID | None = None
         try:
             task_id = UUID(title_or_id)
@@ -476,10 +542,10 @@ class KanbanService:
         Apply TaskUpdateParams to an existing task's frontmatter and body,
         updating updated_at automatically.  If updates.title differs from the
         current title, the file is renamed to match the new slug.  Raises
-        TaskNotFound or AmbiguousTaskReference via _resolve_task_path.
+        TaskNotFound or AmbiguousTaskReference via _resolve_path_into_components.
         Updates the index entry and commits.
         """
-        board, column, title_or_id = self._resolve_task_path(path)
+        board, column, title_or_id = self._resolve_path_into_components(path)
         _ = board, column, title_or_id, updates
         ...
 
@@ -495,7 +561,7 @@ class KanbanService:
         Raises TaskNotFound, AmbiguousTaskReference, BoardNotFound, or
         ColumnNotFound as appropriate.  Updates the index and commits.
         """
-        board, column, title_or_id = self._resolve_task_path(path)
+        board, column, title_or_id = self._resolve_path_into_components(path)
         _ = board, column, title_or_id, dest
         ...
 
@@ -505,7 +571,7 @@ class KanbanService:
     ) -> None:
         """
         Delete a task's .md file from disk.  Raises TaskNotFound or
-        AmbiguousTaskReference via _resolve_task_path.  Removes the task's
+        AmbiguousTaskReference via _resolve_path_into_components.  Removes the task's
         index entry and commits.
         """
         task = self.get_task(path)
@@ -546,7 +612,7 @@ class KanbanService:
         """
         Return structured commit history, optionally scoped to a board, column,
         or specific task by UUID.  When title_or_id is provided, resolves the
-        task first via _resolve_task_path so that history follows the file
+        task first via _resolve_path_into_parts so that history follows the file
         through any renames.  Delegates path filtering to GitService.
         """
         ...
@@ -590,85 +656,6 @@ class KanbanService:
 
 
     # ── Internal helpers ──────────────────────────────────────────────────────
-
-    def _resolve_board(self, board: str | None) -> str:
-        """Return explicit board or fall back to active context board."""
-        if board:
-            return board
-
-        context_board = self.user_context.board
-        if context_board:
-            return context_board
-
-        raise ValueError("Board is required and no active board is set")
-
-    def _resolve_board_and_column(
-        self,
-        board: str | None,
-        column: str | None,
-    ) -> tuple[str, str]:
-        context = self.user_context
-        board = board or context.board
-        column = column or context.column
-
-        if not board:
-            raise ValueError("Board is required and no active board is set")
-        if not column:
-            raise ValueError("Column is required and no active column is set")
-
-        return board, column
-
-    def _resolve_column_path(self, path: str) -> tuple[str, str]:
-        """Resolve [BOARD/]COLUMN path using explicit board or active context."""
-        if not path:
-            raise ValueError("Column path is required")
-
-        if "/" in path:
-            board, column = path.split("/", 1)
-        else:
-            board, column = None, path
-
-        board = self._resolve_board(board)
-        if not column:
-            raise ValueError("Column is required")
-
-        return board, column
-
-    def _resolve_task_list_scope(self, path: str | None) -> tuple[str, str | None]:
-        """Resolve optional [BOARD/COLUMN] scope for task listing."""
-        if not path:
-            return self._resolve_board(None), None
-
-        if "/" in path:
-            board, column = path.split("/", 1)
-            return self._resolve_board(board), column
-
-        return self._resolve_board(path), None
-
-    def _resolve_task_path(self, path: str) -> tuple[str, str, str]:
-        """Resolve [BOARD/COLUMN/]TASK path using explicit values and user context."""
-        if not path:
-            raise ValueError("Task path is required")
-
-        parts = path.split("/")
-        if len(parts) == 1:
-            board = None
-            column = None
-            title_or_id = parts[0]
-        elif len(parts) == 2:
-            board = None
-            column = parts[0]
-            title_or_id = parts[1]
-        else:
-            board = parts[0]
-            column = parts[1]
-            title_or_id = "/".join(parts[2:])
-
-        board, column = self._resolve_board_and_column(board, column)
-        if not title_or_id:
-            raise ValueError("Task title or id is required")
-
-        return board, column, title_or_id
 
     def _to_kebab_case(self, text: str) -> str:
         """Convert free-form title text into a kebab-case filename slug."""

@@ -44,7 +44,8 @@ class InMemoryRepository(KanbanRepository):
         for column in default_columns:
             if not self.column_exists(board, column):
                 self.create_column(board, column)
-
+    
+    # DEBUG ONLY
     def _bootstrap_board_tasks(
         self,
         *,
@@ -74,6 +75,7 @@ class InMemoryRepository(KanbanRepository):
 
         return created
 
+    # DEBUG ONLY
     def bootstrap(self, board: str = "main", tasks_per_column: int = 3) -> list[Task]:
         """Seed sample tasks across all columns for local development.
 
