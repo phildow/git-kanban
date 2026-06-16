@@ -10,14 +10,6 @@ from services.kanban_service import KanbanService, TaskCreateParams, TaskUpdateP
 # Initialization commands
 # ---------------------------------------------------------------------------
 
-def _split_board_column(path: str | None) -> tuple[str | None, str | None]:
-	if not path:
-		return None, None
-	if "/" not in path:
-		return path, None
-	board, column = path.split("/", 1)
-	return board, column
-
 def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	_ = args
 	result = svc.init()

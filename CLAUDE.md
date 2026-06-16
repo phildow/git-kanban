@@ -9,7 +9,6 @@ Prefer asking for more information over nudging the user to a specific course of
 Do not praise or patronize. Avoid comments like “great idea” or “good suggestion."
 
 Be succinct.
-
 ## Python
 
 - Use python as the programming language
@@ -22,9 +21,12 @@ Be succinct.
 
 ## Project
 
-We are building a kanban style task manager in python that uses the filesystem for storage and git for change tracking. Tasks are stored as markdown documents in directories that correspond to boards with subdirectories for columns. The task's filename is its title. Metadata is stored as frontmatter in the markdown documents and includes a UUID to uniquely identify a task. A tasks's title (and so filename) may change but its UUID will not. The application uses a caching index for faster searching and for discovering when files have changed on disk outside of the application. The initial interface to the application is a CLI, but we will also support an TUI in the future.
+We are building a kanban style task manager in python that uses the filesystem for storage and git for change tracking. Tasks are stored as markdown documents in directories that correspond to boards with subdirectories for columns. The task's filename is its title.
+Metadata is stored as frontmatter in the markdown documents and includes a UUID to uniquely identify a task. A tasks's title (and so filename) may change but its UUID will not. The application uses a caching index for faster searching and for discovering when files have changed on disk outside of the application. The initial interface to the application is a CLI, but we will also support an TUI in the future.
 
-A description of the layered architecture follows. Each layer interacts only with the layer below it.
+You could just use the shell and your text editor of choice, but we’re adding metadata, automatic commits, an index for fast searching, and a TUI. 
+
+A description of the architecture follows. Each layer interacts only with the layer below it.
 
 ```
 CLI
@@ -124,7 +126,7 @@ The kanban store is set up as a git worktree, created when the kanban project is
  
 ```
 git worktree add .kanban-store kanban
- ```
+```
 
 The kanban-store worktree shares the same object store as the root directory but otherwise has:
 
@@ -242,31 +244,50 @@ The `[]` brackets indicate optional path components that are inferred from the u
 
 ## The REPL
 
-The REPL is the Read-Evaulate-Print-Loop that runs the command line application in an interactive loop. By default the REPL uses a verb first command strcuture but can be started with the `--noun-first` flag to use the same noun first command structure as the non-interactive CLI.
+The REPL is the Read-Evaulate-Print-Loop that runs the command line application in an interactive loop. By default the REPL uses a verb first command structure with a more limited vocabulary, but it can be started with the `--noun-first` flag to behave same way as the non-interactive CLI.
 
-The REPL shares its command parsing and output formatting code with the non-interactive CLI — both call the same KanbanService methods and render the same dataclasses. The only new layer is the read-eval-print loop itself and a few REPL-specific meta-commands:
+The REPL sits at the same level in the architecture as the CLI and it consumes the same KanbanService. It has a dedicated renderer, and if adds a user context which keeps track of the current board and colum, modeled as the current working directory.
+
+The REPL commands follow.
 
 ```
-use           - sets the active board/column
+create        - creates a new board, column, or task
+cd            - set the board/column
+list          - list contents of a board or column
+move          - move a column or board 
+delete        - delete a board, column, or task
 help          — list commands
 history       — show command history
 clear         — clear screen
+squash        - combine the latest commits
+sync          - rebases and pushes commits
 quit or exit  — exit
 ```
 
+The following aliases are added by default. The user may remove them or define their own:
+
+```
+new=create
+n=create
+ls=list
+mv=move
+rm=delete
+:q=exit
+```
+``
 The REPL prints it prompt as:
 
 ```
-kanban>
+kanban >
 ```
 
 ### The User Context
 
-The REPL takes advantage of the user contex in the kanban service, allowing the user to set the active board/column. If there is an active board or board/column the REPL shows it in the prompt:
+The REPL takes advantage of the user contex in the kanban service, allowing the user to set what is effectively the current working directory. If there is an active board or board/column, the REPL shows it in the prompt:
 
 ```
-kanban (/my-project)>
-kanban (/my-project/todo)>
+kanban (/my-project) >
+kanban (/my-project/todo) >
 ```
 
 An example REPL interaction follows:
@@ -274,24 +295,24 @@ An example REPL interaction follows:
 ```
 $ kanban repl
 
-kanban> use /my-project/todo
+kanban> cd /my-project/todo
 
-kanban (/my-project/todo)> list tasks
+kanban (/my-project/todo)> ls tasks
   1. Fix login bug         [high]  alice    due 2026-06-20
   2. Write API docs        [med]   bob      due 2026-06-25
 
-kanban (/my-project/todo)> create task "Add rate limiting" --priority high --assignee alice
+kanban (/my-project/todo)> new task "Add rate limiting" --priority high --assignee alice
 Created: Add rate limiting [a3f9c2d1]
 
-kanban (/my-project/todo)> move task "Add rate limiting" in-progress
+kanban (/my-project/todo)> mv "Add rate limiting" in-progress
 Moved to: my-project/in-progress
 
-kanban (/my-project/todo)> /history
+kanban (/my-project/todo)> history
   task list
   task create "Add rate limiting" --priority high --assignee alice
   task move "Add rate limiting" in-progress
 
-kanban (/my-project/todo)> /quit
+kanban (/my-project/todo)> quit
 ```
 
 ### Tab Completion
@@ -306,7 +327,7 @@ Completion for commands and positional arguments is straightforward and looks li
 kanban> m<TAB>
 move
 
-kanban> move ta<TABL>
+kanban> new ta<TABL>
 task
 ```
 
@@ -333,7 +354,7 @@ todo/   in-progress/   in-review/   done/
 kanban> move task /my-project/to<TAB>
 todo/
 
-kanban> moave task /my-project/todo/<TAB>
+kanban> move task /my-project/todo/<TAB>
 fix-login-bug   write-api-docs   add-rate-limiting
 
 kanban> move task /my-project/todo/fix<TAB>
@@ -390,7 +411,7 @@ kanban (/my-project)> move task /ops/todo/<TAB>
 deploy-staging   update-certs   rotate-keys
 ```
 
-The signal that the user is overriding the context is simply the presence of a `/` in the typed text. One slash means they've supplied a board; two slashes means they've supplied both a board and column. 
+The signal that the user is overriding the context (current working directory) is simply the presence of a forward slash `/` in the path.
 
 ## Additional Project Instructions
 

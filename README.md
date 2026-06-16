@@ -1,3 +1,4 @@
+
 # Git Kanban
 
 The repository uses pyenv and virtualenv. Run `.venv/bin/activate` to activate the virtual environment.
@@ -30,28 +31,22 @@ kanban (main)>
 
 ### TODO
 
-- Remove _safe_list_boards and friends
-- Move resolve path completions to the service layer, treat it like a path
-- Treat paths like file paths and commands within that context
-- Use a forward slash to represent the root directory containing the boards but relative to .kanban-store
-- The User context can construct the relative path and then filesystem resolution is simply ~/...
-- Really emphasize that it is path based - got away from this with the memory repository
+- REPL != CLI
+    - The repl does not support the same commands as the CLI
+    - The repl has its own commands, parser, and renderer
+    - It is not a verb first or noun first difference, it is interactive
+    - It has its own dedicated parser with a more limited set of commands, mirroring those of the terminal:
+        - cd (use)
+        - ls (list)
+        - mv (rename or move)
+
+- Simplify repl commands, they mostly take 
+- List only takes a path not a noun object - the whole noun first cli got me
 
 - KanbanService maintains the user context not the repo, and the different UIs instantiate it differently
     - The CLI starts at /
     - The REPL starts where the user left off
-
-- User Context handling with tab completions seems overly complicated for what should just be path management.
-    - Treat it like the working directory with a 1:1 mapping to the filesystem: /board/column/task
-- Support tab completion in the repl
-    - If the board is available for task list but the column is not, list all tasks in the board
-    - Tab completion options include the already implied components of the path, they should only show the part under completion
     - But the way readline works it seems that whatever you provide to be shown as options also becomes the completion
-- Treat `use` more like `cd`, and treat paths as relative paths
-    - If a board has been set use only tab completes to the available columns
-    - Unless the path begins with a leading forward slash `/`, in which case it should tabcomplete to the available boards
-- List tasks still does not work with partial paths ahh when it has a trailing slash `/`
-- List flags aren't working in the repl or on the command line, no filter is happening
 
 - Error handling
     - Resolve repository errors to service errors and catch most of them in the repl
