@@ -10,19 +10,18 @@ import sys
 import unittest
 from pathlib import Path
 
+# TODO: add handle_list tests
 from repl import parser as repl_parser
 from repl.commands import (
     handle_board_create,
     handle_board_delete,
-    handle_board_list,
     handle_board_rename,
     handle_column_create,
     handle_column_delete,
-    handle_column_list,
     handle_column_rename,
+    handle_list,
     handle_task_create,
     handle_task_delete,
-    handle_task_list,
     handle_task_update,
     handle_use,
 )
@@ -57,28 +56,14 @@ class TestVerbFirstParserAliases(unittest.TestCase):
         self.assertEqual(args.created_by, "philip")
         self.assertIs(args.func, handle_task_update)
 
-    def test_list_plural_aliases_map_to_same_handlers(self):
-        args = repl_parser.parse_args(["list", "boards"])
+    def test_list_and_ls_alias_map_to_list_handler(self):
+        args = repl_parser.parse_args(["list"])
         self.assertEqual(args.command, "list")
-        self.assertEqual(args.list_subject, "boards")
-        self.assertIs(args.func, handle_board_list)
+        self.assertIs(args.func, handle_list)
 
-        args = repl_parser.parse_args(["list", "columns", "main"])
-        self.assertEqual(args.command, "list")
-        self.assertEqual(args.list_subject, "columns")
-        self.assertEqual(args.board, "main")
-        self.assertIs(args.func, handle_column_list)
-
-        args = repl_parser.parse_args(["list", "tasks", "main/todo"])
-        self.assertEqual(args.command, "list")
-        self.assertEqual(args.list_subject, "tasks")
-        self.assertEqual(args.path, "main/todo")
-        self.assertIs(args.func, handle_task_list)
-
-        args = repl_parser.parse_args(["ls", "board"])
+        args = repl_parser.parse_args(["ls"])
         self.assertEqual(args.command, "ls")
-        self.assertEqual(args.list_subject, "board")
-        self.assertIs(args.func, handle_board_list)
+        self.assertIs(args.func, handle_list)
 
     def test_cd_alias_maps_to_use_handler(self):
         parser = repl_parser.build_parser(enable_use=True)

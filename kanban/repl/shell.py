@@ -293,53 +293,10 @@ def _rewrite_verb_first_relative_paths(tokens: list[str], svc: KanbanService) ->
             rewritten[1] = _resolve_use_path(rewritten[1], svc)
         return rewritten
 
-    if command in {"list", "ls"} and len(rewritten) == 1:
-        context = svc.user_context
-        board = context.board
-        column = context.column
-
-        if board and column:
-            rewritten.extend(["task", f"{board}/{column}"])
-        elif board:
-            rewritten.extend(["column", board])
-        else:
-            rewritten.append("board")
+    if command in {"list", "ls"}:
+        if len(rewritten) >= 2:
+            rewritten[1] = _resolve_use_path(rewritten[1], svc)
         return rewritten
-
-    if command in {"list", "ls"} and len(rewritten) >= 2:
-        subject = rewritten[1]
-        if subject == "boards":
-            rewritten[1] = "board"
-            subject = "board"
-        elif subject == "columns":
-            rewritten[1] = "column"
-            subject = "column"
-        elif subject == "tasks":
-            rewritten[1] = "task"
-            subject = "task"
-        if subject == "column":
-            if len(rewritten) == 2:
-                context = svc.user_context
-                board = context.board
-                if not board:
-                    raise ValueError("Board context is required for `list column` without BOARD")
-                rewritten.append(board)
-            elif len(rewritten) >= 3:
-                rewritten[2] = _strip_trailing_slash(rewritten[2])
-        elif subject == "task":
-            if len(rewritten) == 2:
-                context = svc.user_context
-                board = context.board
-                column = context.column
-                if board and column:
-                    rewritten.append(f"{board}/{column}")
-                elif board:
-                    rewritten.append(board)
-                else:
-                    raise ValueError("Board context is required for `list task` without PATH")
-            elif len(rewritten) >= 3:
-                rewritten[2] = _strip_trailing_slash(rewritten[2])
-                rewritten[2] = _resolve_board_column_path(rewritten[2], svc)
 
     if command in {"create", "rename", "reorder", "delete"} and len(rewritten) >= 2:
         subject = rewritten[1]

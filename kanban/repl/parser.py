@@ -6,6 +6,7 @@ It has a smaller command vocabulary than the noun-first parser and is designed f
 where users may prefer a more concise and discoverable command structure. 
 The noun-first parser is more verbose but may be better suited for scripting and users familiar with the domain model.
 
+
 Path arguments are explicit and fully specified by the caller.
 """
 
@@ -14,11 +15,10 @@ import argparse
 from repl.commands import (
     handle_board_create,
     handle_board_delete,
-    handle_board_list,
     handle_board_rename,
+    handle_list,
     handle_column_create,
     handle_column_delete,
-    handle_column_list,
     handle_column_rename,
     handle_column_reorder,
     handle_config_get,
@@ -31,7 +31,6 @@ from repl.commands import (
     handle_task_create,
     handle_task_delete,
     handle_task_edit,
-    handle_task_list,
     handle_task_move,
     handle_task_show,
     handle_task_update,
@@ -51,6 +50,7 @@ def _add_global_flags(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--verbose", action="store_true", default=False, help="Enable verbose output")
 
 
+# TODO: remove
 def _add_list_format_args(parser: argparse.ArgumentParser, sort_choices: list[str]) -> None:
     parser.add_argument("--format", choices=FORMAT_CHOICES, default="plain", metavar="FORMAT",
                         help="Output format: table, plain, or json")
@@ -112,31 +112,13 @@ def _add_create_parser(subparsers: argparse._SubParsersAction) -> None:
 
 
 def _add_list_parser(subparsers: argparse._SubParsersAction) -> None:
-    list_parser = subparsers.add_parser("list", aliases=["ls"], help="List boards, columns, or tasks")
-    _add_global_flags(list_parser)
-    list_sub = list_parser.add_subparsers(dest="list_subject", metavar="SUBJECT")
-    list_sub.required = True
-
-    # list board
-    p = list_sub.add_parser("board", aliases=["boards"], help="List all boards")
-    _add_list_format_args(p, SORT_BOARD_COLUMN_CHOICES)
-    _add_global_flags(p)
-    p.set_defaults(func=handle_board_list)
-
-    # list column
-    p = list_sub.add_parser("column", aliases=["columns"], help="List columns")
-    p.add_argument("board", metavar="BOARD", help="Board name")
-    _add_list_format_args(p, SORT_BOARD_COLUMN_CHOICES)
-    _add_global_flags(p)
-    p.set_defaults(func=handle_column_list)
-
-    # list task
-    p = list_sub.add_parser("task", aliases=["tasks"], help="List tasks")
-    p.add_argument("path", metavar="BOARD[/COLUMN]", help="Board/column path")
+    p = subparsers.add_parser("list", aliases=["ls"], help="List entities in the active context")
+    group = p.add_mutually_exclusive_group(required=False)
+    group.add_argument("path", metavar="BOARD[/COLUMN]", nargs="?", help="Board or board/column to list (optional)")
     _add_list_format_args(p, SORT_TASK_CHOICES)
     _add_task_filter_args(p)
     _add_global_flags(p)
-    p.set_defaults(func=handle_task_list)
+    p.set_defaults(func=handle_list)
 
 
 def _add_rename_parser(subparsers: argparse._SubParsersAction) -> None:

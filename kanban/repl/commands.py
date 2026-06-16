@@ -1,10 +1,12 @@
-"""Subcommand handlers for the kanban CLI."""
+"""Subcommand handlers for the kanban REPL."""
 
 from __future__ import annotations
 
 import argparse
 
+from models import Board, Column, Task
 from services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
+from services.repl import handle_list as handle_repl_list
 
 # ---------------------------------------------------------------------------
 # Initialization commands
@@ -25,14 +27,21 @@ def handle_use(args: argparse.Namespace, svc: KanbanService, renderer: object) -
 	result = svc.use(path=args.path)
 	renderer.render_use(args, result)
 
+def handle_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	result, list_type = handle_repl_list(args, svc)
+	
+	if list_type is Board:
+		renderer.render_board_list(args, result)
+	elif list_type is Column:
+		renderer.render_column_list(args, result)
+	elif list_type is Task:
+		renderer.render_task_list(args, result)
+	else:
+		raise ValueError("Unexpected result type from handle_list: {}".format(type(result)))
+
 # ---------------------------------------------------------------------------
 # Board subcommands
 # ---------------------------------------------------------------------------
-
-def handle_board_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	result = svc.list_boards(sort=args.sort, reverse=args.reverse)
-	renderer.render_board_list(args, result)
-
 
 def handle_board_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	result = svc.create_board(args.board)
@@ -51,11 +60,6 @@ def handle_board_delete(args: argparse.Namespace, svc: KanbanService, renderer: 
 # ---------------------------------------------------------------------------
 # Column subcommands
 # ---------------------------------------------------------------------------
-
-def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	result = svc.list_columns(board=args.board, sort=args.sort, reverse=args.reverse)
-	renderer.render_column_list(args, result)
-
 
 def handle_column_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	result = svc.create_column(args.path)
@@ -79,11 +83,6 @@ def handle_column_delete(args: argparse.Namespace, svc: KanbanService, renderer:
 # ---------------------------------------------------------------------------
 # Task subcommands
 # ---------------------------------------------------------------------------
-
-def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	result = svc.list_tasks(path=args.path, sort=args.sort, reverse=args.reverse)
-	renderer.render_task_list(args, result)
-
 
 def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	# TODO - why can't I use args.assignee directly here? Is it because it's an optional argument on the parser?
