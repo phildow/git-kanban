@@ -41,13 +41,9 @@ kanban (main)>
         - mv (rename or move)
 
 - REPL
-    - Simplify repl commands, they mostly take 
+    - Simplify repl commands, they mostly take a path
     - Most only takes a path not a noun object - the whole noun first cli got me its a terminal emulator
-    - Tab tab to cycle through completions
-
-- KanbanService maintains the user context and the different UIs instantiate it differently
-    - The CLI starts at /
-    - The REPL starts where the user left off
+    - Double tab to cycle through completions
     - But the way readline works it seems that whatever you provide to be shown as options also becomes the completion
 
 - Error handling
@@ -59,9 +55,6 @@ kanban (main)>
     - with `board create --private`
     - Init with a private board
     - Add ignore method to GitService
-
-- Update the edit render
-- Use view terminology even for the CLI? REPL?
 
 CONFIG
 

@@ -19,10 +19,10 @@ from repl.shell import (
 )
 from repl.parser import build_parser as build_verb_first_parser
 from models import UserContext
-from services import KanbanService
+from services.kanban import KanbanService
 from services.index import IndexService
 from services.git import GitService 
-from storage import InMemoryRepository
+from storage.memory import InMemoryRepository
 
 
 class _FakeSvc:
