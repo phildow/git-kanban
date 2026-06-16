@@ -10,6 +10,16 @@ Do not praise or patronize. Avoid comments like “great idea” or “good sugg
 
 Be succinct.
 
+## Python
+
+- Use python as the programming language
+- The name of the root python package is `kanban`
+- When writing python prefer dot notation to `getattr`, especially when the type is known
+- Prefer explicit types to `object` and add type whenever possible
+- When a python dependency is required add it to the pyproject files
+- Add documenation when you create types and methods, including for tests
+- Break up tests, keep unit tests small
+
 ## Project
 
 We are building a kanban style task manager in python that uses the filesystem for storage and git for change tracking. Tasks are stored as markdown documents in directories that correspond to boards with subdirectories for columns. The task's filename is its title. Metadata is stored as frontmatter in the markdown documents and includes a UUID to uniquely identify a task. A tasks's title (and so filename) may change but its UUID will not. The application uses a caching index for faster searching and for discovering when files have changed on disk outside of the application. The initial interface to the application is a CLI, but we will also support an TUI in the future.
@@ -382,13 +392,7 @@ deploy-staging   update-certs   rotate-keys
 
 The signal that the user is overriding the context is simply the presence of a `/` in the typed text. One slash means they've supplied a board; two slashes means they've supplied both a board and column. 
 
-## Additional Instructions
+## Additional Project Instructions
 
-- Use python as the programming language
-- The name of the root python package is `kanban`
-- When writing python prefer dot notation to `getattr`, especially when the type is known
-- Explicity type object arguments to parameters
-- When a python dependency is required add it to the pyproject files
-- Add documenation when you create types and methods, including for tests
 - When you make changes to CLI subcommands, update the the command line structure in CLAUDE.md if necessary
 - When you make changes to REPL commands, update the REPL structure if necessary
