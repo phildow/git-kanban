@@ -7,7 +7,7 @@ import json
 from functools import wraps
 
 from models import UserContext, Board, Column, Task
-from services.kanban_service import GitCommit, KanbanRoot, KanbanStatus
+from services.kanban import GitCommit, KanbanRoot, KanbanStatus
 
 
 def _requires_verbose(method):

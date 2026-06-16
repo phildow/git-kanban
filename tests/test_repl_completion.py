@@ -18,8 +18,8 @@ from repl.shell import (
 )
 from models import UserContext
 from services import KanbanService
-from services.index_service import IndexService
-from services.git_service import GitService 
+from services.index import IndexService
+from services.git import GitService 
 from storage import InMemoryRepository
 from cli.noun_first_parser import build_parser
 from cli.verb_first_parser import build_parser as build_verb_first_parser

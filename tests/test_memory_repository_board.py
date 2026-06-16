@@ -15,8 +15,8 @@ from pathlib import Path
 from uuid import uuid4
 
 from models import Board, Column, Task
-from storage.kanban_repository import BoardAlreadyExists, BoardNotFound
-from storage.memory_repository import InMemoryRepository
+from storage.kanban import BoardAlreadyExists, BoardNotFound
+from storage.memory import InMemoryRepository
 
 
 class TestInMemoryRepositoryBoardOps(unittest.TestCase):

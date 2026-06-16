@@ -1,5 +1,5 @@
-from .filesystem_repository import FilesystemRepository
-from .memory_repository import InMemoryRepository
-from .kanban_repository import KanbanRepository
+from .filesystem import FilesystemRepository
+from .memory import InMemoryRepository
+from .kanban import KanbanRepository
 
 __all__ = ["FilesystemRepository", "InMemoryRepository", "KanbanRepository"]

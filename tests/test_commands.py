@@ -14,7 +14,7 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 
 from cli import commands
-from services.kanban_service import TaskCreateParams, TaskUpdateParams
+from services.kanban import TaskCreateParams, TaskUpdateParams
 
 
 class TestCommandHandlers(unittest.TestCase):

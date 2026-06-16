@@ -6,7 +6,7 @@ from typing import Optional
 from uuid import UUID, uuid4
 
 from models import Task, TaskFilter, Board, Column, UserContext
-from storage.kanban_repository import (
+from storage.kanban import (
     KanbanRepository,
     BoardNotFound,
     BoardAlreadyExists,

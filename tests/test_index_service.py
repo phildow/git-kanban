@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from services.index_service import IndexService
+from services.index import IndexService
 
 
 class TestIndexService(unittest.TestCase):

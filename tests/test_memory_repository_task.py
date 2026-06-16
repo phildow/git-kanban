@@ -13,13 +13,13 @@ from pathlib import Path
 from uuid import uuid4
 
 from models import Task, TaskFilter
-from storage.kanban_repository import (
+from storage.kanban import (
     BoardNotFound,
     ColumnNotFound,
     TaskAlreadyExists,
     TaskNotFound,
 )
-from storage.memory_repository import InMemoryRepository
+from storage.memory import InMemoryRepository
 
 
 class TestInMemoryRepositoryTaskOps(unittest.TestCase):

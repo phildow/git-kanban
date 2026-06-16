@@ -10,7 +10,7 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from services.kanban_service import KanbanService
+    from services.kanban import KanbanService
 
 try:
     import readline

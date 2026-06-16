@@ -12,8 +12,8 @@ from pathlib import Path
 from uuid import uuid4
 
 from models import Column, Task
-from storage.kanban_repository import BoardNotFound, ColumnAlreadyExists, ColumnNotFound
-from storage.memory_repository import InMemoryRepository
+from storage.kanban import BoardNotFound, ColumnAlreadyExists, ColumnNotFound
+from storage.memory import InMemoryRepository
 
 
 class TestInMemoryRepositoryColumnOps(unittest.TestCase):

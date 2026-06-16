@@ -10,10 +10,10 @@ import unittest
 from pathlib import Path
 
 from models import UserContext
-from services.kanban_service import KanbanService, KanbanRoot
-from services.git_service import GitService
-from services.index_service import IndexService
-from storage.memory_repository import InMemoryRepository
+from services.kanban import KanbanService, KanbanRoot
+from services.git import GitService
+from services.index import IndexService
+from storage.memory import InMemoryRepository
 
 
 class TestKanbanServiceInit(unittest.TestCase):

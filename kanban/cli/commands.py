@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 
-from services.kanban_service import KanbanService, TaskCreateParams, TaskUpdateParams
+from services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
 
 # ---------------------------------------------------------------------------
 # Initialization commands

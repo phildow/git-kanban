@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from services.git_service import GitCommit, GitService
+from services.git import GitCommit, GitService
 
 
 class TestGitService(unittest.TestCase):

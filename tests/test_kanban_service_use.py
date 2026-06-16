@@ -7,11 +7,11 @@ import unittest
 from pathlib import Path
 
 from models import UserContext
-from storage.kanban_repository import BoardNotFound, ColumnNotFound
-from services.kanban_service import KanbanService
-from services.git_service import GitService
-from services.index_service import IndexService
-from storage.memory_repository import InMemoryRepository
+from storage.kanban import BoardNotFound, ColumnNotFound
+from services.kanban import KanbanService
+from services.git import GitService
+from services.index import IndexService
+from storage.memory import InMemoryRepository
 
 
 class TestKanbanServiceUse(unittest.TestCase):

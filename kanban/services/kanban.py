@@ -9,9 +9,9 @@ import tempfile
 from uuid import UUID, uuid4
 
 from models import Task, TaskFilter, Board, Column, UserContext
-from storage.kanban_repository import KanbanRepository, ColumnNotFound, BoardNotFound
-from services.git_service import GitService
-from services.index_service import IndexService
+from storage.kanban import KanbanRepository, ColumnNotFound, BoardNotFound
+from services.git import GitService
+from services.index import IndexService
 
 
 # ── Params ────────────────────────────────────────────────────────────────────

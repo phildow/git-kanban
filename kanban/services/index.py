@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from models import Task
-from storage.kanban_repository import KanbanRepository
+from storage.kanban import KanbanRepository
 
 
 @dataclass(frozen=True)
