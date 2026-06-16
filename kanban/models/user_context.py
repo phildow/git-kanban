@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 from uuid import UUID
 
@@ -17,3 +18,13 @@ class UserContext:
     def is_empty(self) -> bool:
         """Return `True` when neither board nor column is set."""
         return self.board is None and self.column is None
+
+    @property
+    def path(self) -> Path:
+        """Return the current context as a path string (e.g. "/board/column")."""
+        root = Path("/")
+        if self.board and self.column:
+            return root / self.board / self.column
+        if self.board:
+            return root / self.board
+        return root
