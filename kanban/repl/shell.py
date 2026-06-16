@@ -60,26 +60,6 @@ def _starts_with(items: list[str], prefix: str) -> list[str]:
     return [item for item in items if item.startswith(prefix)]
 
 
-def _safe_list_boards(svc: KanbanService) -> list[str]:
-    """Best-effort board name lookup for completion helpers."""
-    try:
-        boards = svc.list_boards()
-    except Exception:
-        return []
-    return [board.name for board in boards]
-
-
-def _safe_list_columns(svc: KanbanService, board: str | None) -> list[str]:
-    """Best-effort column name lookup for a board for completion helpers."""
-    if not board:
-        return []
-    try:
-        columns = svc.list_columns(board=board)
-    except Exception:
-        return []
-    return [column.name for column in columns]
-
-
 def _safe_list_task_names(svc: KanbanService, board: str | None, column: str | None) -> list[str]:
     """Best-effort task-name lookup for a board/column path."""
     if not board or not column:
@@ -114,7 +94,7 @@ def _prompt(svc: KanbanService) -> str:
 
 def _complete_board_or_column_path(text: str, svc: KanbanService) -> list[str]:
     """Complete BOARD/COLUMN path values."""
-    boards = _safe_list_boards(svc)
+    boards = [board.name for board in svc.list_boards()]
     context = svc.get_user_context()
     context_board = context.board
 
@@ -122,13 +102,13 @@ def _complete_board_or_column_path(text: str, svc: KanbanService) -> list[str]:
         board_prefix, column_prefix = text.split("/", 1)
         matching_boards = _starts_with(boards, board_prefix)
         if board_prefix in boards:
-            columns = _safe_list_columns(svc, board_prefix)
+            columns = [column.name for column in svc.list_columns(board=board_prefix)]
             return [f"{board_prefix}/{column}" for column in columns if column.startswith(column_prefix)]
         return [f"{board}/" for board in matching_boards]
 
     results: list[str] = []
     if context_board:
-        context_columns = _safe_list_columns(svc, context_board)
+        context_columns = [column.name for column in svc.list_columns(board=context_board)]
         results.extend(column for column in context_columns if column.startswith(text))
 
     results.extend(f"{board}/" for board in boards if board.startswith(text))
@@ -137,11 +117,11 @@ def _complete_board_or_column_path(text: str, svc: KanbanService) -> list[str]:
 
 def _complete_board_or_board_column_path(text: str, svc: KanbanService) -> list[str]:
     """Complete BOARD or BOARD/COLUMN path values."""
-    boards = _safe_list_boards(svc)
+    boards = [board.name for board in svc.list_boards()]
     if "/" in text:
         board_prefix, column_prefix = text.split("/", 1)
         if board_prefix in boards:
-            columns = _safe_list_columns(svc, board_prefix)
+            columns = [column.name for column in svc.list_columns(board=board_prefix)]
             return [f"{board_prefix}/{column}" for column in columns if column.startswith(column_prefix)]
         return [f"{board}/" for board in boards if board.startswith(board_prefix)]
 
@@ -149,7 +129,7 @@ def _complete_board_or_board_column_path(text: str, svc: KanbanService) -> list[
 
     context = svc.get_user_context()
     context_board = context.board
-    context_columns = _safe_list_columns(svc, context_board)
+    context_columns = [column.name for column in svc.list_columns(board=context_board)] if context_board else []
     column_matches = [column for column in context_columns if column.startswith(text)]
 
     return sorted(dict.fromkeys(board_paths + column_matches))
@@ -157,7 +137,7 @@ def _complete_board_or_board_column_path(text: str, svc: KanbanService) -> list[
 
 def _complete_task_list_path(text: str, svc: KanbanService) -> list[str]:
     """Complete `task list` path according to active context rules."""
-    boards = _safe_list_boards(svc)
+    boards = [board.name for board in svc.list_boards()]
     context = svc.get_user_context()
     context_board = context.board
 
@@ -165,14 +145,14 @@ def _complete_task_list_path(text: str, svc: KanbanService) -> list[str]:
     if "/" in text:
         board_prefix, column_prefix = text.split("/", 1)
         if board_prefix in boards:
-            columns = _safe_list_columns(svc, board_prefix)
+            columns = [column.name for column in svc.list_columns(board=board_prefix)]
             return [f"{board_prefix}/{column}/" for column in columns if column.startswith(column_prefix)]
             # return [f"{column}/" for column in columns if column.startswith(column_prefix)]
         return [f"{board}/" for board in boards if board.startswith(board_prefix)]
 
     # With active board, only columns are suggested.
     if context_board:
-        columns = _safe_list_columns(svc, context_board)
+        columns = [column.name for column in svc.list_columns(board=context_board)]
         return [f"{column}/" for column in columns if column.startswith(text)]
 
     # Without context, user must start with board.
@@ -195,7 +175,7 @@ def _complete_task_path(text: str, svc: KanbanService) -> list[str]:
 
     if slash_count == 1:
         board, column_prefix = text.split("/", 1)
-        columns = _safe_list_columns(svc, board)
+        columns = [column.name for column in svc.list_columns(board=board)]
         return [f"{board}/{column}/" for column in columns if column.startswith(column_prefix)]
 
     # Context-based completion when no explicit slash is present.
@@ -204,10 +184,10 @@ def _complete_task_path(text: str, svc: KanbanService) -> list[str]:
         return [task for task in tasks if task.startswith(text)]
 
     if context_board:
-        columns = _safe_list_columns(svc, context_board)
+        columns = [column.name for column in svc.list_columns(board=context_board)]
         return [f"{column}/" for column in columns if column.startswith(text)]
 
-    boards = _safe_list_boards(svc)
+    boards = [board.name for board in svc.list_boards()]
     return [f"{board}/" for board in boards if board.startswith(text)]
 
 
@@ -297,7 +277,7 @@ def _complete_path_tokens(text: str, tokens_before: list[str], svc: KanbanServic
 
     if command == "column":
         if sub == "list" and len(tokens_before) == 2:
-            boards = _safe_list_boards(svc)
+            boards = [board.name for board in svc.list_boards()]
             return [board for board in boards if board.startswith(text)]
         if sub in {"create", "rename", "reorder", "delete"} and len(tokens_before) == 2:
             return _complete_board_or_column_path(text, svc)
@@ -358,7 +338,7 @@ def _complete_path_tokens_verb_first(text: str, tokens_before: list[str], svc: K
 
     if command in {"list", "ls"}:
         if subject == "column" and len(tokens_before) == 2:
-            boards = _safe_list_boards(svc)
+            boards = [board.name for board in svc.list_boards()]
             return [board for board in boards if board.startswith(text)]
         if subject == "task" and len(tokens_before) == 2:
             return _complete_task_list_path(text, svc)

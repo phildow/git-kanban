@@ -1,7 +1,11 @@
 from dataclasses import dataclass, field
 from pathlib import Path
 from datetime import datetime
+import os
 import re
+import shlex
+import subprocess
+import tempfile
 from uuid import UUID, uuid4
 
 from models import Task, TaskFilter, Board, Column, UserContext
@@ -395,9 +399,39 @@ class KanbanService:
         content and metadata and applies changes to the task.  Raises 
         TaskNotFound or AmbiguousTaskReference if the task cannot be resolved.  
         Updates the index and commits."""
-        board, column, title_or_id = self._resolve_task_path(path)
-        _ = board, column, title_or_id
-        ...
+        task = self.get_task(path)
+        markdown = self._task_to_markdown(task)
+
+        tmp_path: str | None = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w",
+                encoding="utf-8",
+                suffix=".md",
+                prefix="kanban-task-",
+                delete=False,
+            ) as tmp:
+                tmp.write(markdown)
+                tmp.flush()
+                tmp_path = tmp.name
+
+            editor = os.environ.get("EDITOR") or os.environ.get("VISUAL") or "vi"
+            editor_cmd = shlex.split(editor)
+            subprocess.run([*editor_cmd, tmp_path], check=True)
+
+            with open(tmp_path, "r", encoding="utf-8") as f:
+                edited_text = f.read()
+
+            edited_task = self._task_from_markdown(edited_text, original=task)
+            updated = self.repository.update_task(edited_task)
+            self.index_service.update(updated)
+            return updated
+        finally:
+            if tmp_path:
+                try:
+                    os.unlink(tmp_path)
+                except FileNotFoundError:
+                    pass
 
     def update_task(
         self,
@@ -608,6 +642,83 @@ class KanbanService:
         if not slug:
             raise ValueError("Task title must contain at least one alphanumeric character")
         return slug
+
+    def _task_to_markdown(self, task: Task) -> str:
+        """Serialize a task to editable markdown with YAML-like frontmatter."""
+        tags = ", ".join(task.tags or [])
+        due_date = task.due_date.isoformat() if task.due_date else ""
+        created_at = task.created_at.isoformat() if task.created_at else ""
+        updated_at = task.updated_at.isoformat() if task.updated_at else ""
+
+        lines = [
+            "---",
+            f"id: {task.id}",
+            f"title: {task.title}",
+            f"board: {task.board or ''}",
+            f"column: {task.column or ''}",
+            f"assignee: {task.assignee or ''}",
+            f"priority: {task.priority or ''}",
+            f"due_date: {due_date}",
+            f"tags: {tags}",
+            f"created_by: {task.created_by or ''}",
+            f"created_at: {created_at}",
+            f"updated_at: {updated_at}",
+            "---",
+            task.body or "",
+        ]
+        return "\n".join(lines)
+
+    def _task_from_markdown(self, content: str, *, original: Task) -> Task:
+        """Parse editable markdown frontmatter/body back into a Task."""
+        lines = content.splitlines()
+        if len(lines) < 3 or lines[0].strip() != "---":
+            raise ValueError("Edited task markdown must start with frontmatter delimiter '---'")
+
+        end_idx: int | None = None
+        for i in range(1, len(lines)):
+            if lines[i].strip() == "---":
+                end_idx = i
+                break
+        if end_idx is None:
+            raise ValueError("Edited task markdown frontmatter is missing closing delimiter '---'")
+
+        frontmatter: dict[str, str] = {}
+        for line in lines[1:end_idx]:
+            if not line.strip() or ":" not in line:
+                continue
+            key, value = line.split(":", 1)
+            frontmatter[key.strip()] = value.strip()
+
+        body = "\n".join(lines[end_idx + 1:]).strip("\n")
+
+        title = frontmatter.get("title", original.title).strip() or original.title
+        assignee = frontmatter.get("assignee", "") or None
+        priority = frontmatter.get("priority", "") or None
+        created_by = frontmatter.get("created_by", "") or None
+
+        due_date_raw = frontmatter.get("due_date", "").strip()
+        due_date: datetime | None = None
+        if due_date_raw:
+            due_date = datetime.fromisoformat(due_date_raw)
+
+        tags_raw = frontmatter.get("tags", "")
+        tags = [tag.strip() for tag in tags_raw.split(",") if tag.strip()]
+
+        return Task(
+            id=original.id,
+            title=title,
+            slug=original.slug,
+            board=original.board,
+            column=original.column,
+            created_by=created_by,
+            assignee=assignee,
+            priority=priority,
+            due_date=due_date,
+            tags=tags,
+            created_at=original.created_at,
+            updated_at=original.updated_at,
+            body=body,
+        )
 
     def _commit(self, type: str, scope: str, description: str) -> None:
         """Compose a structured commit message and delegate to GitService."""
