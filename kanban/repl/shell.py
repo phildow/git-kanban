@@ -230,60 +230,7 @@ def _resolve_use_path(path: str, svc: KanbanService) -> str:
 
 
 # TODO: WTF does this even do?
-def _rewrite_noun_first_relative_paths(tokens: list[str], svc: KanbanService) -> list[str]:
-    """Rewrite noun-first REPL command tokens so relative paths become explicit paths."""
-    if not tokens:
-        return tokens
-
-    command = tokens[0]
-    rewritten = list(tokens)
-    if command in {"use", "cd"}:
-        if len(rewritten) >= 2:
-            rewritten[1] = _resolve_use_path(rewritten[1], svc)
-        return rewritten
-
-    if command == "column" and len(rewritten) >= 2:
-        sub = rewritten[1]
-        if sub == "list" and len(rewritten) == 2:
-            context = svc.user_context
-            board = context.board
-            if not board:
-                raise ValueError("Board context is required for `column list` without BOARD")
-            rewritten.append(board)
-        elif sub in {"create", "rename", "reorder", "delete"} and len(rewritten) >= 3:
-            rewritten[2] = _strip_trailing_slash(rewritten[2])
-            rewritten[2] = _resolve_board_column_path(rewritten[2], svc)
-
-    if command == "task" and len(rewritten) >= 2:
-        sub = rewritten[1]
-        if sub == "list":
-            if len(rewritten) == 2:
-                context = svc.user_context
-                board = context.board
-                column = context.column
-                if board and column:
-                    rewritten.append(f"{board}/{column}")
-                elif board:
-                    rewritten.append(board)
-                else:
-                    raise ValueError("Board context is required for `task list` without PATH")
-            elif len(rewritten) >= 3:
-                rewritten[2] = _strip_trailing_slash(rewritten[2])
-                rewritten[2] = _resolve_board_column_path(rewritten[2], svc)
-        elif sub in {"create", "show", "edit", "delete"} and len(rewritten) >= 3:
-            rewritten[2] = _strip_trailing_slash(rewritten[2])
-            rewritten[2] = _resolve_task_path(rewritten[2], svc)
-        elif sub == "move" and len(rewritten) >= 4:
-            rewritten[2] = _strip_trailing_slash(rewritten[2])
-            rewritten[3] = _strip_trailing_slash(rewritten[3])
-            rewritten[2] = _resolve_task_path(rewritten[2], svc)
-            rewritten[3] = _resolve_board_column_path(rewritten[3], svc)
-
-    return rewritten
-
-
-# TODO: WTF does this even do?
-def _rewrite_verb_first_relative_paths(tokens: list[str], svc: KanbanService) -> list[str]:
+def _rewrite_relative_paths(tokens: list[str], svc: KanbanService) -> list[str]:
     """Rewrite verb-first REPL command tokens so relative paths become explicit paths."""
     if not tokens:
         return tokens
@@ -320,11 +267,6 @@ def _rewrite_verb_first_relative_paths(tokens: list[str], svc: KanbanService) ->
     return rewritten
 
 
-def _is_noun_first_parser(parser: argparse.ArgumentParser) -> bool:
-    """Return True when parser top-level commands use noun-first structure."""
-    top = set(_top_level_commands(parser))
-    return bool({"board", "column", "task"} & top)
-
 def _configure_readline_completion(parser: argparse.ArgumentParser, svc: KanbanService) -> None:
     """Register the readline completer backed by parser-aware suggestions."""
     if readline is None:
@@ -335,8 +277,6 @@ def _configure_readline_completion(parser: argparse.ArgumentParser, svc: KanbanS
         readline.set_completer_delims(delimiters)
     except Exception:
         pass
-
-    noun_first = _is_noun_first_parser(parser)
 
     def _completer(text: str, state: int):
         line = readline.get_line_buffer()
@@ -352,10 +292,7 @@ def _configure_readline_completion(parser: argparse.ArgumentParser, svc: KanbanS
 
         matches = _complete_command_tokens(text, tokens_before, parser)
         if not matches:
-            if noun_first:
-                matches = _complete_path_tokens(text, tokens_before, svc)
-            else:
-                matches = _complete_path_tokens_verb_first(text, tokens_before, svc)
+            matches = _complete_path_tokens_verb_first(text, tokens_before, svc)
 
         if state < len(matches):
             return matches[state]
@@ -398,14 +335,13 @@ def _install_exit_signal_handlers():
             signal.signal(sig, handler)
 
 
-def run_repl(*, svc: KanbanService, renderer: object, noun_first: bool = False) -> None:
+def run_repl(*, svc: KanbanService, renderer: object) -> None:
     """Run a simple command loop that reuses the CLI parser/handlers."""
-    from cli.parser import build_parser as build_cli_parser
-    from repl.parser import build_parser as build_repl_parser
+    from repl.parser import build_parser
     
     try:
-        parser = build_cli_parser(enable_use=True) if noun_first else build_repl_parser(enable_use=True)
-        rewrite = _rewrite_noun_first_relative_paths if noun_first else _rewrite_verb_first_relative_paths
+        parser = build_parser()
+        rewrite = _rewrite_relative_paths
         _configure_readline_shortcuts()
         _configure_readline_completion(parser, svc)
     except ValueError as exc:

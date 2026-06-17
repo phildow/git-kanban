@@ -25,7 +25,6 @@ from cli.commands import (
     handle_config_set,
     handle_init,
     handle_log,
-    handle_repl,
     handle_search,
     handle_status,
     handle_task_create,
@@ -56,11 +55,11 @@ class TestParserStructure(unittest.TestCase):
             {"init", "board", "column", "task", "tasks", "search", "log", "status", "config", "repl"},
         )
 
-    def test_top_level_subcommands_include_use_when_enabled(self):
+    def test_top_level_subcommands_do_not_include_use(self):
         """Optional `use` command is available only when explicitly enabled."""
-        parser = cli_parser.build_parser(enable_use=True)
+        parser = cli_parser.build_parser()
         top = self._subparser_choices(parser, "command")
-        self.assertIn("use", set(top.keys()))
+        self.assertNotIn("use", set(top.keys()))
 
     def test_nested_subcommands_exist(self):
         """Nested command groups expose expected child subcommands."""
@@ -113,38 +112,6 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         args = cli_parser.parse_args(["board", "delete", "my-board"])
         self.assertEqual(args.board, "my-board")
         self.assertIs(args.func, handle_board_delete)
-
-    def test_use_command_available_when_enabled(self):
-        """`use` parses only on parser instances that enable it."""
-        parser = cli_parser.build_parser(enable_use=True)
-
-        args = parser.parse_args(["use"])
-        self.assertEqual(args.command, "use")
-        self.assertIsNone(args.path)
-        self.assertFalse(args.clear)
-        self.assertIs(args.func, handle_use)
-
-        args = parser.parse_args(["use", "board-a/todo"])
-        self.assertEqual(args.command, "use")
-        self.assertEqual(args.path, "board-a/todo")
-        self.assertFalse(args.clear)
-        self.assertIs(args.func, handle_use)
-
-        args = parser.parse_args(["use", "--clear"])
-        self.assertTrue(args.clear)
-        self.assertIsNone(args.path)
-        self.assertIs(args.func, handle_use)
-
-        args = parser.parse_args(["cd", "board-a/todo"])
-        self.assertEqual(args.command, "cd")
-        self.assertEqual(args.path, "board-a/todo")
-        self.assertFalse(args.clear)
-        self.assertIs(args.func, handle_use)
-
-        args = parser.parse_args(["cd", "--clear"])
-        self.assertTrue(args.clear)
-        self.assertIsNone(args.path)
-        self.assertIs(args.func, handle_use)
 
     def test_column_commands(self):
         """Column subcommands parse arguments and bind the correct handlers."""
@@ -289,14 +256,6 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         self.assertEqual(args.key, "name")
         self.assertIs(args.func, handle_config_get)
 
-        args = cli_parser.parse_args(["repl"])
-        self.assertEqual(args.command, "repl")
-        self.assertFalse(args.noun_first)
-        self.assertIs(args.func, handle_repl)
-
-        args = cli_parser.parse_args(["repl", "--noun-first"])
-        self.assertTrue(args.noun_first)
-        self.assertIs(args.func, handle_repl)
 
     def test_required_subparsers_raise(self):
         """Missing required subcommands trigger parser exit errors."""

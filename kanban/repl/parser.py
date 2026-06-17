@@ -6,7 +6,6 @@ It has a smaller command vocabulary than the noun-first parser and is designed f
 where users may prefer a more concise and discoverable command structure. 
 The noun-first parser is more verbose but may be better suited for scripting and users familiar with the domain model.
 
-
 Path arguments are explicit and fully specified by the caller.
 """
 
@@ -24,7 +23,6 @@ from repl.commands import (
     handle_config_set,
     handle_init,
     handle_log,
-    handle_repl,
     handle_search,
     handle_status,
     handle_task_create,
@@ -208,17 +206,21 @@ def _add_update_parser(subparsers: argparse._SubParsersAction) -> None:
 
 
 def _add_move_parser(subparsers: argparse._SubParsersAction) -> None:
-    move_parser = subparsers.add_parser("move", help="Move a task to another column or board")
-    _add_global_flags(move_parser)
-    move_sub = move_parser.add_subparsers(dest="move_subject", metavar="SUBJECT")
-    move_sub.required = True
-
-    # move task
-    p = move_sub.add_parser("task", help="Move task to another column or board")
-    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
-    p.add_argument("dest", metavar="BOARD/COLUMN", help="Destination board/column path")
+    p = subparsers.add_parser("move", aliases=["mv"], help="Move a task to another column or board")
+    p.add_argument('path', type=str, help='The task to move')
+    p.add_argument('dest', type=str, help='The destination (column, board, or new title)')
     _add_global_flags(p)
     p.set_defaults(func=handle_task_move)
+
+    # move_sub = move_parser.add_subparsers(dest="move_subject", metavar="SUBJECT")
+    # move_sub.required = True
+    
+    # # move task
+    # p = move_sub.add_parser("task", help="Move task to another column on the same board")
+    # p.add_argument("path", metavar="TASK", help="The task to move, specified by its title or a fully qualified path relative to the current context")
+    # p.add_argument("dest", metavar="[BOARD/]COLUMN", help="Destination board/column path")
+    # _add_global_flags(p)
+    # p.set_defaults(func=handle_task_move)
 
 
 def _add_set_parser(subparsers: argparse._SubParsersAction) -> None:
@@ -261,7 +263,7 @@ def _add_use_parser(subparsers: argparse._SubParsersAction) -> None:
     p.set_defaults(func=handle_use)
 
 
-def build_parser(*, enable_use: bool = False) -> argparse.ArgumentParser:
+def build_parser() -> argparse.ArgumentParser:
     """Return the fully configured top-level verb-first argument parser."""
     parser = argparse.ArgumentParser(
         prog="kanban",
@@ -278,8 +280,7 @@ def build_parser(*, enable_use: bool = False) -> argparse.ArgumentParser:
     _add_global_flags(p)
     p.set_defaults(func=handle_init)
 
-    if enable_use:
-        _add_use_parser(subparsers)
+    _add_use_parser(subparsers)
 
     # verb-first operations
     _add_create_parser(subparsers)
@@ -318,14 +319,9 @@ def build_parser(*, enable_use: bool = False) -> argparse.ArgumentParser:
     _add_global_flags(p)
     p.set_defaults(func=handle_status)
 
-    # repl
-    p = subparsers.add_parser("repl", help="Start an interactive kanban shell")
-    _add_global_flags(p)
-    p.set_defaults(func=handle_repl)
-
     return parser
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     """Parse command line arguments and return the populated Namespace."""
-    return build_parser(enable_use=False).parse_args(argv)
+    return build_parser().parse_args(argv)

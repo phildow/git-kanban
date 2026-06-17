@@ -170,7 +170,7 @@ The command line structure follows:
 
 ```
 kanban init
-kanban repl [--noun-first]
+kanban repl
 
 kanban board list [--format <table|plain|json>] [--sort <title>] [--reverse]
 kanban board create <board>
@@ -244,13 +244,15 @@ The `[]` brackets indicate optional path components that are inferred from the u
 
 ## The REPL
 
-The REPL is the Read-Evaulate-Print-Loop that runs the command line application in an interactive loop. By default the REPL uses a verb first command structure with a more limited vocabulary, but it can be started with the `--noun-first` flag to behave same way as the non-interactive CLI.
+The REPL is the Read-Evaulate-Print-Loop that runs the command line application in an interactive loop. By default the REPL uses a verb first command structure with a more limited vocabulary.
 
 The REPL sits at the same level in the architecture as the CLI and it consumes the same KanbanService. It has a dedicated renderer, and if adds a user context which keeps track of the current board and colum, modeled as the current working directory.
 
 The REPL commands follow.
 
 ```
+board         - sets the board
+column        - sets the column
 create        - creates a new board, column, or task
 cd            - set the board/column
 list          - list contents of a board or column
@@ -267,14 +269,24 @@ quit or exit  — exit
 The following aliases are added by default. The user may remove them or define their own:
 
 ```
-new=create
-n=create
-ls=list
-mv=move
-rm=delete
-:q=exit
+new = create
+  n = create
+ ls = list
+ mv = move
+ rm = delete
+ :q = exit
 ```
-``
+
+The REPL supports command control commands and tab completion:
+
+```
+Ctrl+C        - interrupt or cancel the current command
+Ctrl+L        - clear the screen
+Ctrl+D        - exit
+Ctrl+Z        - exit
+Tab           - automcomplete commands or files
+```
+
 The REPL prints it prompt as:
 
 ```
@@ -297,7 +309,7 @@ $ kanban repl
 
 kanban> cd /my-project/todo
 
-kanban (/my-project/todo)> ls tasks
+kanban (/my-project/todo)> ls
   1. Fix login bug         [high]  alice    due 2026-06-20
   2. Write API docs        [med]   bob      due 2026-06-25
 
@@ -342,22 +354,22 @@ Tab completion is resolved in the following manner:
 The user must type everything. Completions offer the next segment with a trailing slash to drill in:
 
 ```
-kanban> move task <TAB>
+kanban> move <TAB>
 my-project/   ops/
 
-kanban> move task /my-<TAB>
+kanban> move /my-<TAB>
 my-project/
 
-kanban> move task /my-project/<TAB>
+kanban> move /my-project/<TAB>
 todo/   in-progress/   in-review/   done/
 
-kanban> move task /my-project/to<TAB>
+kanban> move /my-project/to<TAB>
 todo/
 
-kanban> move task /my-project/todo/<TAB>
+kanban> move /my-project/todo/<TAB>
 fix-login-bug   write-api-docs   add-rate-limiting
 
-kanban> move task /my-project/todo/fix<TAB>
+kanban> move /my-project/todo/fix<TAB>
 fix-login-bug
 ```
 
@@ -366,16 +378,16 @@ fix-login-bug
 The board segment is skipped. Completion starts at the column, resolved against the active board:
 
 ```
-kanban (/my-project)> move task <TAB>
+kanban (/my-project)> move <TAB>
 todo/   in-progress/   in-review/   done/
 
-kanban (/my-project)> move task to<TAB>
+kanban (/my-project)> move to<TAB>
 todo/
 
-kanban (/my-project)> move task todo/<TAB>
+kanban (/my-project)> move todo/<TAB>
 fix-login-bug   write-api-docs   add-rate-limiting
 
-kanban (/my-project)> move task todo/fix<TAB>
+kanban (/my-project)> move todo/fix<TAB>
 fix-login-bug
 ```
 
@@ -384,10 +396,10 @@ fix-login-bug
 Both segments are skipped. Completion starts directly at the task title:
 
 ```
-kanban (/my-project/todo)> move task <TAB>
+kanban (/my-project/todo)> move <TAB>
 fix-login-bug   write-api-docs   add-rate-limiting
 
-kanban (/my-project/todo)> move task fix<TAB>
+kanban (/my-project/todo)> move fix<TAB>
 fix-login-bug
 ```
 
@@ -397,21 +409,21 @@ The completer detects that board (and column) are being supplied explicitly and 
 
 ```
 # User context is /my-project/todo, but user is typing a path from ops/
-kanban (/my-project/todo)> move task /ops/<TAB>
+kanban (/my-project/todo)> move /ops/<TAB>
 backlog/   todo/   in-progress/   done/
 
-kanban (/my-project/todo)> move task /ops/in-pro<TAB>
+kanban (/my-project/todo)> move /ops/in-pro<TAB>
 in-progress/
 
-kanban (/my-project/todo)> move task /ops/in-progress/<TAB>
+kanban (/my-project/todo)> move /ops/in-progress/<TAB>
 deploy-staging   update-certs   rotate-keys
 
 # User context is my-project, user supplies board and column explicitly
-kanban (/my-project)> move task /ops/todo/<TAB>
+kanban (/my-project)> move /ops/todo/<TAB>
 deploy-staging   update-certs   rotate-keys
 ```
 
-The signal that the user is overriding the context (current working directory) is simply the presence of a forward slash `/` in the path.
+The signal that the user is overriding the context (current working directory) is the presence of a forward slash `/` at the beginning of the path.
 
 ## Additional Project Instructions
 

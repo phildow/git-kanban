@@ -222,16 +222,8 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
 # Top-level parser
 # ---------------------------------------------------------------------------
 
-def _add_use_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser("use", aliases=["cd"], help="Set or clear the active board/column context")
-    group = p.add_mutually_exclusive_group(required=False)
-    group.add_argument("path", metavar="BOARD[/COLUMN]", nargs="?", help="Board or board/column to set active")
-    group.add_argument("--clear", action="store_true", default=False, help="Clear the active context")
-    _add_global_flags(p)
-    p.set_defaults(func=handle_use)
 
-
-def build_parser(*, enable_use: bool = False) -> argparse.ArgumentParser:
+def build_parser() -> argparse.ArgumentParser:
     """Return the fully configured top-level argument parser."""
     parser = argparse.ArgumentParser(
         prog="kanban",
@@ -247,9 +239,6 @@ def build_parser(*, enable_use: bool = False) -> argparse.ArgumentParser:
     p = subparsers.add_parser("init", help="Initialise a new kanban repository in the current directory")
     _add_global_flags(p)
     p.set_defaults(func=handle_init)
-
-    if enable_use:
-        _add_use_parser(subparsers)
 
     # board / column / task
     _add_board_parser(subparsers)
@@ -299,8 +288,6 @@ def build_parser(*, enable_use: bool = False) -> argparse.ArgumentParser:
 
     # repl
     p = subparsers.add_parser("repl", help="Start an interactive kanban shell")
-    p.add_argument("--noun-first", action="store_true", default=False,
-                   help="Use noun-first command style in the REPL (e.g. `board create`)")
     _add_global_flags(p)
     p.set_defaults(func=handle_repl)
 
@@ -309,4 +296,4 @@ def build_parser(*, enable_use: bool = False) -> argparse.ArgumentParser:
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     """Parse command line arguments and return the populated Namespace."""
-    return build_parser(enable_use=False).parse_args(argv)
+    return build_parser().parse_args(argv)

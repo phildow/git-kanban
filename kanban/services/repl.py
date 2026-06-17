@@ -46,3 +46,26 @@ def handle_delete(args: argparse.Namespace, svc: KanbanService) -> type:
         return Board
     elif not board and not column:
         raise ValueError("Cannot delete without a board name: {}".format(path))
+
+def repl_handle_move_task(args: argparse.Namespace, svc: KanbanService) -> None:
+    """
+    Move the entity at the given path to a new location.  This is the main
+    entry point for all move commands in the REPL, which pass a user-provided
+    path that may be absolute or relative to the active context.
+
+    It is only possible to move a task to another column on the current board.
+    
+    """
+    path = getattr(args, "path", "") or ""
+    dest = getattr(args, "dest", "") or ""
+    board, column, task = svc.resolve_path_into_components(path)
+    dest_board, dest_column, dest_task = svc.resolve_path_into_components(dest)
+
+    if board and column and task:
+        svc.move_task(path=f"/{board}/{column}/{task}", dest_board=dest_board, dest_column=dest_column)
+    elif board and column and not task:
+        svc.move_column(path=f"/{board}/{column}", dest_board=dest_board)
+    elif board and not column and not task:
+        svc.move_task(path=f"{task}", dest_board=dest_board)
+    elif not board and not column and not task:
+        raise ValueError("Cannot move without a board name: {}".format(path))

@@ -405,26 +405,6 @@ class TestCommandHandlers(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             commands.handle_config_get(args_get, self.svc, self.renderer)
 
-    # TODO: add tests for `handle_repl` dispatching to the REPL runner with correct arguments.
-    
-    # def test_handle_repl_dispatches_to_runner(self):
-    #     """`repl` handler starts the interactive repl runner."""
-    #     args = self._args(noun_first=False)
-
-    #     with patch("repl.run_repl") as repl_runner:
-    #         commands.handle_repl(args, self.svc, self.repl_renderer)
-
-    #     repl_runner.assert_called_once_with(svc=self.svc, renderer=self.repl_renderer, noun_first=False)
-
-    # def test_handle_repl_dispatches_noun_first_flag(self):
-    #     """`repl` handler forwards `--noun-first` preference to repl runner."""
-    #     args = self._args(noun_first=True)
-
-    #     with patch("repl.run_repl") as repl_runner:
-    #         commands.handle_repl(args, self.svc, self.renderer)
-
-    #     repl_runner.assert_called_once_with(svc=self.svc, renderer=self.renderer, noun_first=True)
-
 
 if __name__ == "__main__":
     unittest.main()

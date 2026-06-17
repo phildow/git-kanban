@@ -64,7 +64,7 @@ class TestVerbFirstParserAliases(unittest.TestCase):
         self.assertIs(args.func, handle_list)
 
     def test_cd_alias_maps_to_use_handler(self):
-        parser = repl_parser.build_parser(enable_use=True)
+        parser = repl_parser.build_parser()
 
         args = parser.parse_args(["cd"])
         self.assertEqual(args.command, "cd")

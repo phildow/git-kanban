@@ -8,7 +8,7 @@ from pathlib import Path
 
 from models import UserContext
 from storage.kanban import BoardNotFound, ColumnNotFound
-from services.kanban import KanbanService
+from services.kanban import KanbanService, TaskCreateParams
 from services.git import GitService
 from services.index import IndexService
 from storage.memory import InMemoryRepository
@@ -75,6 +75,16 @@ class TestKanbanServiceCompletions(unittest.TestCase):
         self.assertCountEqual(completions, expected_completions)
         for completion in expected_completions:
             self.assertIn(completion, completions)
+
+    def test_completions_for_task_prefix_returns_slugs_not_titles(self):
+        self.svc.create_task("alpha/todo/Fix Parser", TaskCreateParams())
+        self.svc.create_task("alpha/todo/Fix Tests", TaskCreateParams())
+
+        completions = self.svc.completions_for_path("/alpha/todo/Fix")
+
+        self.assertCountEqual(completions, ["fix-parser", "fix-tests"])
+        self.assertNotIn("Fix Parser", completions)
+        self.assertNotIn("Fix Tests", completions)
 
     def test_completions_for_nonexistent_board(self):
         completions = self.svc.completions_for_path("/missing/")

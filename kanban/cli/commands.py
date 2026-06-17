@@ -172,7 +172,5 @@ def handle_config_get(args: argparse.Namespace, svc: KanbanService, renderer: ob
 def handle_repl(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	from repl.renderer import Renderer as REPLRenderer
 	from repl import run_repl
-	
-	noun_first = getattr(args, "noun_first", False)
-	renderer = renderer if noun_first else REPLRenderer()
-	run_repl(svc=svc, renderer=renderer, noun_first=noun_first)
+	renderer = REPLRenderer()
+	run_repl(svc=svc, renderer=renderer)

@@ -154,7 +154,9 @@ class KanbanService:
         else:
             return Path(self.working_path) / (path or "")
 
-    def resolve_path_into_components(self, path: str | None = None) -> tuple[str | None, str | None, str | None]:
+        
+
+    def path_components(self, path: str | None = None) -> tuple[str | None, str | None, str | None]:
         """Resolve a [BOARD/][COLUMN/]TITLE_OR_ID path into its components."""
         path = self.resolve_path(path)
         # print(f"Resolved path: {path}")
@@ -163,11 +165,13 @@ class KanbanService:
                parts[2] if len(parts) > 2 else None, \
                parts[3] if len(parts) > 3 else None
 
+        
+
     # TODO: this will end up replacing the path in the promt
     def completions_for_path(self, text: str) -> list[str]:
         """Return a list of valid path completions for the given partial text."""
         
-        board, column, title_or_id = self.resolve_path_into_components(text)
+        board, column, title_or_id = self.path_components(text)
 
         if board and column and title_or_id:
             completions = [f"{t.slug}" for t in self.repository.list_tasks(board=board, column=column) if t.title.startswith(title_or_id)]
@@ -319,7 +323,7 @@ class KanbanService:
         set.  sort accepts "title"; omitting it preserves the order in the
         board's .order file.
         """
-        board, _, _ = self.resolve_path_into_components(board)
+        board, _, _ = self.path_components(board)
         return self.repository.list_columns(board)
 
     def create_column(self, path: str) -> Column:
@@ -329,7 +333,7 @@ class KanbanService:
         the column name is already taken within that board.  Appends the new
         column to the board's .order file and commits.
         """
-        board, column, _ = self.resolve_path_into_components(path)
+        board, column, _ = self.path_components(path)
         return self.repository.create_column(board, column)
 
     def rename_column(self, path: str, new_name: str) -> Column:
@@ -340,7 +344,7 @@ class KanbanService:
         update implicitly via the directory rename.  Updates the active
         context if the renamed column was the active one.
         """
-        board, column, _ = self.resolve_path_into_components(path)
+        board, column, _ = self.path_components(path)
         renamed_column = self.repository.rename_column(board, column, new_name)
 
         # Update active context if it points at the renamed column.
@@ -357,7 +361,7 @@ class KanbanService:
         out-of-bounds values.  Returns the full updated column list so the
         CLI can confirm the new order.
         """
-        board, column, _ = self.resolve_path_into_components(path)
+        board, column, _ = self.path_components(path)
         return self.repository.reorder_column(board, column, position)  
 
     def delete_column(self, path: str) -> None:
@@ -367,7 +371,7 @@ class KanbanService:
         all index entries for tasks in the column, updates the board's .order
         file, and clears the active context column if it pointed here.
         """
-        board, column, _ = self.resolve_path_into_components(path)
+        board, column, _ = self.path_components(path)
         self.repository.delete_column(board, column)
 
         # If current context points at this column, clear column only.
@@ -393,7 +397,7 @@ class KanbanService:
         all columns of the board.  sort accepts "title", "priority", "due-date",
         "created-at", "updated-at", or "created-by".
         """
-        board, column, _ = self.resolve_path_into_components(path)
+        board, column, _ = self.path_components(path)
         tasks = self.repository.list_tasks(board=board, column=column, filter=filter)
 
         if not sort:
@@ -429,7 +433,7 @@ class KanbanService:
         with the same title slug is already present in that column.  Updates the
         index and commits.
         """
-        board, column, title = self.resolve_path_into_components(path)
+        board, column, title = self.path_components(path)
 
         assignee: str | None
         priority: str | None
@@ -475,7 +479,7 @@ class KanbanService:
         explicit → context → index-search chain and raises TaskNotFound or
         AmbiguousTaskReference if resolution fails.
         """
-        board, column, title_or_id = self.resolve_path_into_components(path)
+        board, column, title_or_id = self.path_components(path)
         task_id: UUID | None = None
         try:
             task_id = UUID(title_or_id)
@@ -542,10 +546,10 @@ class KanbanService:
         Apply TaskUpdateParams to an existing task's frontmatter and body,
         updating updated_at automatically.  If updates.title differs from the
         current title, the file is renamed to match the new slug.  Raises
-        TaskNotFound or AmbiguousTaskReference via resolve_path_into_components.
+        TaskNotFound or AmbiguousTaskReference via path_components.
         Updates the index entry and commits.
         """
-        board, column, title_or_id = self.resolve_path_into_components(path)
+        board, column, title_or_id = self.path_components(path)
         _ = board, column, title_or_id, updates
         ...
 
@@ -561,7 +565,7 @@ class KanbanService:
         Raises TaskNotFound, AmbiguousTaskReference, BoardNotFound, or
         ColumnNotFound as appropriate.  Updates the index and commits.
         """
-        board, column, title_or_id = self.resolve_path_into_components(path)
+        board, column, title_or_id = self.path_components(path)
         _ = board, column, title_or_id, dest
         ...
 
@@ -571,7 +575,7 @@ class KanbanService:
     ) -> None:
         """
         Delete a task's .md file from disk.  Raises TaskNotFound or
-        AmbiguousTaskReference via resolve_path_into_components.  Removes the task's
+        AmbiguousTaskReference via path_components.  Removes the task's
         index entry and commits.
         """
         task = self.get_task(path)

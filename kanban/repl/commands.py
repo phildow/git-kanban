@@ -56,6 +56,10 @@ def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: object
 	else:
 		raise ValueError("Unexpected result type from handle_delete: {}".format(delete_type))
 
+def handle_move(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	move_type = repl_handle_move_task(args, svc)
+
+
 # ---------------------------------------------------------------------------
 # Board subcommands
 # ---------------------------------------------------------------------------
@@ -169,8 +173,3 @@ def handle_config_get(args: argparse.Namespace, svc: KanbanService, renderer: ob
 	result = svc.config_get(args.key)
 	renderer.render_config_get(args, result)
 
-
-def handle_repl(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	noun_first = getattr(args, "noun_first", False)
-	from repl import run_repl
-	run_repl(svc=svc, renderer=renderer, noun_first=noun_first)

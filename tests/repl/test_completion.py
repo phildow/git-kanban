@@ -8,17 +8,16 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from cli.parser import build_parser
+from cli.parser import build_parser as build_cli_parser
+from models import UserContext
+from repl.parser import build_parser as build_repl_parser
 from repl.shell import (
     _prompt,
-    _rewrite_noun_first_relative_paths,
-    _rewrite_verb_first_relative_paths,
+    _rewrite_relative_paths,
     _complete_command_tokens,
     _complete_path_tokens,
     run_repl,
 )
-from repl.parser import build_parser as build_verb_first_parser
-from models import UserContext
 from services.kanban import KanbanService
 from services.index import IndexService
 from services.git import GitService 
@@ -138,34 +137,8 @@ class TestReplInterruptBehavior(unittest.TestCase):
                 run_repl(svc=svc, renderer=renderer)
 
         self.assertEqual(input_mock.call_count, 2)
-        print_mock.assert_any_call("bye")
-
-    def test_run_repl_uses_verb_first_parser_by_default(self):
-        svc = _FakeSvc()
-        renderer = MagicMock()
-
-        with patch("repl.parser.build_parser") as build_verb:
-            with patch("cli.parser.build_parser") as build_noun:
-                with patch("builtins.input", side_effect=["quit"]):
-                    build_verb.return_value = build_parser(enable_use=True)
-                    run_repl(svc=svc, renderer=renderer)
-
-        build_verb.assert_called_once_with(enable_use=True)
-        build_noun.assert_not_called()
-
-    def test_run_repl_uses_noun_first_parser_when_requested(self):
-        svc = _FakeSvc()
-        renderer = MagicMock()
-
-        with patch("repl.parser.build_parser") as build_verb:
-            with patch("cli.parser.build_parser") as build_noun:
-                with patch("builtins.input", side_effect=["quit"]):
-                    build_noun.return_value = build_parser(enable_use=True)
-                    run_repl(svc=svc, renderer=renderer, noun_first=True)
-
-        build_noun.assert_called_once_with(enable_use=True)
-        build_verb.assert_not_called()
-
+        print_mock.assert_any_call("bye")       
+        
 
 if __name__ == "__main__":
     unittest.main()
