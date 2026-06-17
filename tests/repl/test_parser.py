@@ -24,8 +24,27 @@ from repl.commands import (
     handle_use,
 )
 
-class TestVerbFirstParserAliases(unittest.TestCase):
+class TestParserAliases(unittest.TestCase):
     """Tests for verb-first parser aliases and wiring."""
+
+    def test_create_aliases_map_to_create_handlers(self):
+        args = repl_parser.parse_args(["new", "board", "main"])
+        self.assertEqual(args.command, "new")
+        self.assertEqual(args.create_subject, "board")
+        self.assertEqual(args.board, "main")
+        self.assertIs(args.func, handle_board_create)
+
+        args = repl_parser.parse_args(["new", "column", "main/todo"])
+        self.assertEqual(args.command, "new")
+        self.assertEqual(args.create_subject, "column")
+        self.assertEqual(args.path, "main/todo")
+        self.assertIs(args.func, handle_column_create)
+
+        args = repl_parser.parse_args(["n", "task", "main/todo/fix-parser"])
+        self.assertEqual(args.command, "n")
+        self.assertEqual(args.create_subject, "task")
+        self.assertEqual(args.path, "main/todo/fix-parser")
+        self.assertIs(args.func, handle_task_create)
 
     def test_update_task_maps_to_update_handler(self):
         args = repl_parser.parse_args([

@@ -82,7 +82,7 @@ def _add_task_update_args(parser: argparse.ArgumentParser) -> None:
 # ---------------------------------------------------------------------------
 
 def _add_create_parser(subparsers: argparse._SubParsersAction) -> None:
-    create_parser = subparsers.add_parser("create", help="Create a board, column, or task")
+    create_parser = subparsers.add_parser("create", aliases=["new", "n"], help="Create a board, column, or task")
     _add_global_flags(create_parser)
     create_sub = create_parser.add_subparsers(dest="create_subject", metavar="SUBJECT")
     create_sub.required = True
