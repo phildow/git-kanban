@@ -16,6 +16,7 @@ from repl.commands import (
     handle_board_change,
     handle_board_create,
     handle_board_rename,
+    handle_column_change,
     handle_column_create,
     handle_column_rename,
     handle_delete,
@@ -37,6 +38,16 @@ class TestParserAliases(unittest.TestCase):
     def test_board_command_requires_name(self):
         with self.assertRaises(SystemExit):
             repl_parser.parse_args(["board"])
+
+    def test_column_command_maps_to_column_handler(self):
+        args = repl_parser.parse_args(["column", "todo"])
+        self.assertEqual(args.command, "column")
+        self.assertEqual(args.column, "todo")
+        self.assertIs(args.func, handle_column_change)
+
+    def test_column_command_requires_name(self):
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["column"])
 
     def test_create_aliases_map_to_create_handlers(self):
         args = repl_parser.parse_args(["new", "board", "main"])

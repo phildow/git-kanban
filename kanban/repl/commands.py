@@ -8,7 +8,6 @@ from models import Board, Column, Task
 from services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
 from services.repl import handle_list as repl_handle_list
 from services.repl import handle_delete as repl_handle_delete
-from services.repl import handle_board_change as repl_handle_board_change
 
 # ---------------------------------------------------------------------------
 # Initialization commands
@@ -39,8 +38,17 @@ def handle_board_change(args: argparse.Namespace, svc: KanbanService, renderer: 
 
 	Relies on `svc.use()` for validation and raises if the board does not exist.
 	"""
-	result = repl_handle_board_change(args, svc)
-	renderer.render_use(args, result)
+	result = svc.set_board(board=args.board)
+	renderer.render_change_board(args, result)
+
+
+def handle_column_change(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	"""Set active context to the provided column name.
+
+	Relies on `svc.use()` for validation and raises if the column does not exist.
+	"""
+	result = svc.set_column(column=args.column)
+	renderer.render_change_column(args, result)
 
 
 # ---------------------------------------------------------------------------

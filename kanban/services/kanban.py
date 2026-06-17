@@ -250,6 +250,33 @@ class KanbanService:
         self.update_user_context(board=board, column=column)
         return self.user_context
 
+    def set_board(self, board: str) -> UserContext:
+        """Set the active context to the given board, validating that it exists."""
+        board = board.strip("/")
+        board = self.repository.get_board(board)
+
+        if not board:
+            raise BoardNotFound(f"Board not found: {board}")
+
+        self.update_user_context(board=board.name, column=None)
+        return self.user_context
+
+    def set_column(self, column: str) -> UserContext:
+        """Set the active context to the given column, validating that it exists."""
+        board = self.user_context.board
+
+        if not board:
+            raise ValueError("Active board has not been set; cannot change column")
+
+        column = column.strip("/")
+        column = self.repository.get_column(board, column)
+
+        if not column:
+            raise ColumnNotFound(f"Column not found: {board}/{column}")
+
+        self.update_user_context(board=board, column=column.name)
+        return self.user_context
+
     # ── Boards ────────────────────────────────────────────────────────────────
 
     def list_boards(

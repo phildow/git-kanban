@@ -135,51 +135,38 @@ def _complete_command_tokens(
     return _starts_with(choices, text)
 
 
-def _complete_path_tokens(text: str, tokens_before: list[str], svc: KanbanService) -> list[str]:
-    """Complete path-like positional arguments for REPL commands."""
-    if not tokens_before:
-        return []
-
-    command = tokens_before[0]
-
-    if command in {"use", "cd"}:
-        return svc.completions_for_path(text)
-
-    if command in {"board"}:
-        # add a forward slash to the start of text if it doesn't already have one, 
-        # so that completions_for_path returns board names
-        if not text.startswith("/"):
-            text = "/" + text
-        return svc.completions_for_path(text)
-
-    if len(tokens_before) < 2:
-        return []
-
-    # defer to completions_for in all cases
-    # and it is the responsibility of the service to sort -- just alpha-complete the raw completions_for_path results and return those, without filtering by prefix again here.
-
-    # print(f"Completing path tokens for command: {command}, tokens_before: {tokens_before}, text: '{text}'")
-    return svc.completions_for_path(text) 
-
-
-def _complete_path_tokens_verb_first(text: str, tokens_before: list[str], svc: KanbanService) -> list[str]:    
+def _complete_path_tokens(text: str, tokens_before: list[str], svc: KanbanService) -> list[str]:    
     """Complete path-like positional arguments for verb-first REPL commands."""
     if not tokens_before:
         return []
 
     command = tokens_before[0]
 
+    # TODO: Move this path parsing logic to the service with completions_for_board and completions_for_column 
+    # methods that understand the current context and can return appropriate suggestions for each level of the path
+
+    if command in {"board"}:
+        # Defer to completions_for_path, but add a leading slash to complete board names at the root.
+        if not text.startswith("/"):
+            text = "/" + text
+        return svc.completions_for_path(text)
+
+    if command in {"column"}:
+        # Defer to completions_for_path, but add a leading slash to complete column names relative to the current board.
+        board = svc.user_context.board
+        if not text.startswith(board):
+            text = f"/{board}/" + text
+        if not text.startswith("/"):
+            text = "/" + text
+        return svc.completions_for_path(text)
+
     # defer to completions_for in all cases
     # and it is the responsibility of the service to sort -- just alpha-complete the raw completions_for_path results and return those, without filtering by prefix again here.
-
-    # print(f"\nCompleting path tokens for command: {command}, tokens_before: {tokens_before}, text: '{text}'\n")
 
     if len(tokens_before) < 1:
         return []
     else:
         return svc.completions_for_path(text)
-
-    
 
     # print(f"Completing path tokens for command: {command}, tokens_before: {tokens_before}, text: '{text}'")
     # return svc.completions_for_path(text)
@@ -299,7 +286,7 @@ def _configure_readline_completion(parser: argparse.ArgumentParser, svc: KanbanS
 
         matches = _complete_command_tokens(text, tokens_before, parser)
         if not matches:
-            matches = _complete_path_tokens_verb_first(text, tokens_before, svc)
+            matches = _complete_path_tokens(text, tokens_before, svc)
 
         if state < len(matches):
             return matches[state]

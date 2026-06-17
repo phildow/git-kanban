@@ -13,6 +13,7 @@ import argparse
 
 from repl.commands import (
     handle_board_change,
+    handle_column_change,
     handle_board_create,
     handle_board_rename,
     handle_list,
@@ -267,6 +268,13 @@ def _add_board_parser(subparsers: argparse._SubParsersAction) -> None:
     p.set_defaults(func=handle_board_change)
 
 
+def _add_column_parser(subparsers: argparse._SubParsersAction) -> None:
+    p = subparsers.add_parser("column", help="Set the active column")
+    p.add_argument("column", metavar="COLUMN", help="Name of column to go to")
+    _add_global_flags(p)
+    p.set_defaults(func=handle_column_change)
+
+
 # ---------------------------------------------------------------------------
 # Top-level parser
 # ---------------------------------------------------------------------------
@@ -291,6 +299,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     _add_use_parser(subparsers)
     _add_board_parser(subparsers)
+    _add_column_parser(subparsers)
 
     # verb-first operations
     _add_create_parser(subparsers)

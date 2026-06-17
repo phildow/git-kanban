@@ -1,16 +1,10 @@
 
 # TODO: add comment
 
+import argparse
+
 from models import Board, Column, Task
 from services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
-
-def handle_board_change(args: argparse.Namespace, svc: KanbanService) -> None:
-    """Set active context to the provided board name.
-
-    Relies on `svc.use()` for validation and raises if the board does not exist.
-    """
-    result = svc.use(path=args.board)
-    return result
 
 def handle_list(args: argparse.Namespace, svc: KanbanService) -> tuple[list[Board | Column | Task], type]:
     """
