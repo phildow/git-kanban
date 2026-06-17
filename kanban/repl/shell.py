@@ -145,6 +145,13 @@ def _complete_path_tokens(text: str, tokens_before: list[str], svc: KanbanServic
     if command in {"use", "cd"}:
         return svc.completions_for_path(text)
 
+    if command in {"board"}:
+        # add a forward slash to the start of text if it doesn't already have one, 
+        # so that completions_for_path returns board names
+        if not text.startswith("/"):
+            text = "/" + text
+        return svc.completions_for_path(text)
+
     if len(tokens_before) < 2:
         return []
 

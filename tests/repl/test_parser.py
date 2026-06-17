@@ -13,6 +13,7 @@ from pathlib import Path
 # TODO: add handle_list tests
 from repl import parser as repl_parser
 from repl.commands import (
+    handle_board_change,
     handle_board_create,
     handle_board_rename,
     handle_column_create,
@@ -26,6 +27,16 @@ from repl.commands import (
 
 class TestParserAliases(unittest.TestCase):
     """Tests for verb-first parser aliases and wiring."""
+
+    def test_board_command_maps_to_board_handler(self):
+        args = repl_parser.parse_args(["board", "main"])
+        self.assertEqual(args.command, "board")
+        self.assertEqual(args.board, "main")
+        self.assertIs(args.func, handle_board_change)
+
+    def test_board_command_requires_name(self):
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["board"])
 
     def test_create_aliases_map_to_create_handlers(self):
         args = repl_parser.parse_args(["new", "board", "main"])

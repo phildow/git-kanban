@@ -8,6 +8,7 @@ from models import Board, Column, Task
 from services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
 from services.repl import handle_list as repl_handle_list
 from services.repl import handle_delete as repl_handle_delete
+from services.repl import handle_board_change as repl_handle_board_change
 
 # ---------------------------------------------------------------------------
 # Initialization commands
@@ -19,6 +20,10 @@ def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: object) 
 	renderer.render_init(args, result)
 
 
+# ---------------------------------------------------------------------------
+# Working context commands (use, board, column)
+# ---------------------------------------------------------------------------
+
 def handle_use(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	if args.clear or getattr(args, "path", None) is None:
 		result = svc.use(clear=True)
@@ -27,6 +32,16 @@ def handle_use(args: argparse.Namespace, svc: KanbanService, renderer: object) -
 
 	result = svc.use(path=args.path)
 	renderer.render_use(args, result)
+
+
+def handle_board_change(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	"""Set active context to the provided board name.
+
+	Relies on `svc.use()` for validation and raises if the board does not exist.
+	"""
+	result = repl_handle_board_change(args, svc)
+	renderer.render_use(args, result)
+
 
 # ---------------------------------------------------------------------------
 # Common commands (list, delete)

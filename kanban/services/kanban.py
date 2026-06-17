@@ -148,24 +148,18 @@ class KanbanService:
         Resolve a user-provided path into an absolute Path object.  
         The path may be absolute (starting with "/") or relative to the current user context.
         """
-        # print(f"Resolving path: '{path}' with working path: '{self.working_path}'")
         if path.startswith("/"):
             return Path(path)
         else:
             return Path(self.working_path) / (path or "")
-
         
-
     def path_components(self, path: str | None = None) -> tuple[str | None, str | None, str | None]:
         """Resolve a [BOARD/][COLUMN/]TITLE_OR_ID path into its components."""
         path = self.resolve_path(path)
-        # print(f"Resolved path: {path}")
         parts = path.parts # ["/", board|None, column|None, title-or-id|None]
         return parts[1] if len(parts) > 1 else None, \
                parts[2] if len(parts) > 2 else None, \
                parts[3] if len(parts) > 3 else None
-
-        
 
     # TODO: this will end up replacing the path in the promt
     def completions_for_path(self, text: str) -> list[str]:

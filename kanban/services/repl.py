@@ -4,6 +4,14 @@
 from models import Board, Column, Task
 from services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
 
+def handle_board_change(args: argparse.Namespace, svc: KanbanService) -> None:
+    """Set active context to the provided board name.
+
+    Relies on `svc.use()` for validation and raises if the board does not exist.
+    """
+    result = svc.use(path=args.board)
+    return result
+
 def handle_list(args: argparse.Namespace, svc: KanbanService) -> tuple[list[Board | Column | Task], type]:
     """
     List the contents at the path applying filters and sort.  This is
@@ -12,7 +20,7 @@ def handle_list(args: argparse.Namespace, svc: KanbanService) -> tuple[list[Boar
     context.
     """
     path = getattr(args, "path", "") or ""
-    board, column, _ = svc.resolve_path_into_components(path)
+    board, column, _ = svc.path_components(path)
 
     filter = getattr(args, "filter", None)
     sort = getattr(args, "sort", None)
@@ -33,7 +41,7 @@ def handle_delete(args: argparse.Namespace, svc: KanbanService) -> type:
     may be absolute or relative to the active context.
     """
     path = getattr(args, "path", "") or ""
-    board, column, task = svc.resolve_path_into_components(path)
+    board, column, task = svc.path_components(path)
 
     if board and column and task:
         svc.delete_task(path=f"/{board}/{column}/{task}")
@@ -58,8 +66,8 @@ def repl_handle_move_task(args: argparse.Namespace, svc: KanbanService) -> None:
     """
     path = getattr(args, "path", "") or ""
     dest = getattr(args, "dest", "") or ""
-    board, column, task = svc.resolve_path_into_components(path)
-    dest_board, dest_column, dest_task = svc.resolve_path_into_components(dest)
+    board, column, task = svc.path_components(path)
+    dest_board, dest_column, dest_task = svc.path_components(dest)
 
     if board and column and task:
         svc.move_task(path=f"/{board}/{column}/{task}", dest_board=dest_board, dest_column=dest_column)

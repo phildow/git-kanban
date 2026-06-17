@@ -12,6 +12,7 @@ Path arguments are explicit and fully specified by the caller.
 import argparse
 
 from repl.commands import (
+    handle_board_change,
     handle_board_create,
     handle_board_rename,
     handle_list,
@@ -250,10 +251,6 @@ def _add_get_parser(subparsers: argparse._SubParsersAction) -> None:
     p.set_defaults(func=handle_config_get)
 
 
-# ---------------------------------------------------------------------------
-# Top-level parser
-# ---------------------------------------------------------------------------
-
 def _add_use_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("use", aliases=["cd"], help="Set or clear the active board/column context")
     group = p.add_mutually_exclusive_group(required=False)
@@ -261,6 +258,18 @@ def _add_use_parser(subparsers: argparse._SubParsersAction) -> None:
     group.add_argument("--clear", action="store_true", default=False, help="Clear the active context")
     _add_global_flags(p)
     p.set_defaults(func=handle_use)
+
+
+def _add_board_parser(subparsers: argparse._SubParsersAction) -> None:
+    p = subparsers.add_parser("board", help="Set the active board")
+    p.add_argument("board", metavar="BOARD", help="Name of board to go to")
+    _add_global_flags(p)
+    p.set_defaults(func=handle_board_change)
+
+
+# ---------------------------------------------------------------------------
+# Top-level parser
+# ---------------------------------------------------------------------------
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -281,6 +290,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=handle_init)
 
     _add_use_parser(subparsers)
+    _add_board_parser(subparsers)
 
     # verb-first operations
     _add_create_parser(subparsers)

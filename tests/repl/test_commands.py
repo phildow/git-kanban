@@ -65,6 +65,23 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.use.assert_called_once_with(path="alpha/todo")
         self.renderer.render_use.assert_called_once_with(args, result)
 
+    def test_handle_board_sets_context_to_board(self):
+        args = self._args(board="alpha")
+        result = object()
+        self.svc.use.return_value = result
+
+        commands.handle_board_change(args, self.svc, self.renderer)
+
+        self.svc.use.assert_called_once_with(path="alpha")
+        self.renderer.render_use.assert_called_once_with(args, result)
+
+    def test_handle_board_raises_when_board_missing(self):
+        args = self._args(board="missing")
+        self.svc.use.side_effect = ValueError("Board not found: missing")
+
+        with self.assertRaises(ValueError):
+            commands.handle_board_change(args, self.svc, self.renderer)
+
     def test_handle_list_renders_board_list(self):
         args = self._args(path=None)
         result = object()
