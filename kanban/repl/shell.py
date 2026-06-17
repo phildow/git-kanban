@@ -9,6 +9,7 @@ from argparse import Namespace
 from contextlib import contextmanager
 
 from services.kanban import KanbanService
+from storage.kanban import BoardNotFound, ColumnNotFound, TaskNotFound
 
 try:
     import readline
@@ -387,6 +388,12 @@ def run_repl(*, svc: KanbanService, renderer: object) -> None:
 
                 try:
                     args.func(args, svc, renderer)
+                except BoardNotFound as exc:
+                    print(f"Board not found: {exc.name}")
+                except ColumnNotFound as exc:
+                    print(f"Column not found: {exc.board}/{exc.name}")
+                except TaskNotFound as exc:
+                    print(f"Task not found: {exc.identifier}")
                 except ValueError as exc:
                     print(f"Value error: {exc}")
                 except KeyboardInterrupt:
