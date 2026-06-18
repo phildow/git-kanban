@@ -275,6 +275,7 @@ new = create
  mv = move
  rm = delete
  :q = exit
+  ? = help
 ```
 
 The REPL supports command control commands and tab completion:

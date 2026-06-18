@@ -233,6 +233,8 @@ def _rewrite_relative_paths(tokens: list[str], svc: KanbanService) -> list[str]:
     command = tokens[0]
     rewritten = list(tokens)
 
+
+
     if command in {"cd"}:
         if len(rewritten) >= 2:
             rewritten[1] = resolve_set_path(rewritten[1], svc)
@@ -376,10 +378,6 @@ def run_repl(*, svc: KanbanService, renderer: object) -> None:
                     # args: Namespace = parser.parse_args(tokens)
                 except SystemExit:
                     # argparse already emitted a helpful message.
-                    continue
-
-                if getattr(args, "command", None) == "repl":
-                    print("already in repl")
                     continue
 
                 if not hasattr(args, "func"):

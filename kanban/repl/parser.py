@@ -225,28 +225,20 @@ def _add_move_parser(subparsers: argparse._SubParsersAction) -> None:
     # p.set_defaults(func=handle_task_move)
 
 
-def _add_set_parser(subparsers: argparse._SubParsersAction) -> None:
-    set_parser = subparsers.add_parser("set", help="Set values")
-    _add_global_flags(set_parser)
-    set_sub = set_parser.add_subparsers(dest="set_subject", metavar="SUBJECT")
-    set_sub.required = True
+def _add_config_parser(subparsers: argparse._SubParsersAction) -> None:
+    config_parser = subparsers.add_parser("config", help="List, get, or set configuration values")
+    _add_global_flags(config_parser)
+    
+    config_sub = config_parser.add_subparsers(dest="config_command", metavar="COMMAND")
+    config_sub.required = False  # allow `config` with no subcommand to list all config values
 
-    # set config
-    p = set_sub.add_parser("config", help="Set a configuration value")
+    p = config_sub.add_parser("set", help="Set a configuration value")
     p.add_argument("key", metavar="KEY", help="Configuration key (e.g. name)")
     p.add_argument("value", metavar="VALUE", help="Configuration value")
     _add_global_flags(p)
     p.set_defaults(func=handle_config_set)
 
-
-def _add_get_parser(subparsers: argparse._SubParsersAction) -> None:
-    get_parser = subparsers.add_parser("get", help="Get values")
-    _add_global_flags(get_parser)
-    get_sub = get_parser.add_subparsers(dest="get_subject", metavar="SUBJECT")
-    get_sub.required = True
-
-    # get config
-    p = get_sub.add_parser("config", help="Get a configuration value")
+    p = config_sub.add_parser("get", help="Get a configuration value")
     p.add_argument("key", metavar="KEY", help="Configuration key (e.g. name)")
     _add_global_flags(p)
     p.set_defaults(func=handle_config_get)
@@ -311,8 +303,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_edit_parser(subparsers)
     _add_update_parser(subparsers)
     _add_move_parser(subparsers)
-    _add_set_parser(subparsers)
-    _add_get_parser(subparsers)
+    _add_config_parser(subparsers)
 
     # search
     p = subparsers.add_parser("search", help="Full-text search across tasks")
