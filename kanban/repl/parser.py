@@ -77,8 +77,8 @@ def _add_global_flags(parser: argparse.ArgumentParser) -> None:
 
 def _add_task_filter_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--assignee", metavar="NAME", help="Filter by assignee")
-    parser.add_argument("--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Filter by priority")
-    parser.add_argument("--tag", metavar="TAG", action="append", dest="tags", help="Filter by tag (repeatable)")
+    parser.add_argument("-p", "--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Filter by priority")
+    parser.add_argument("-t", "--tag", metavar="TAG", action="append", dest="tags", help="Filter by tag (repeatable)")
     parser.add_argument("--due-before", metavar="DATE", help="Filter tasks due before date (YYYY-MM-DD)")
     parser.add_argument("--due-after", metavar="DATE", help="Filter tasks due after date (YYYY-MM-DD)")
     parser.add_argument("--created-by", metavar="NAME", help="Filter by creator")
@@ -91,16 +91,16 @@ def _add_list_flag_arg(parser: argparse.ArgumentParser) -> None:
 
 def _add_task_create_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--assignee", metavar="NAME", help="Assign task to a user")
-    parser.add_argument("--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
-    parser.add_argument("--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
+    parser.add_argument("-p", "--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
+    parser.add_argument("-t", "--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
     parser.add_argument("--due-date", metavar="DATE", help="Due date (YYYY-MM-DD)")
     parser.add_argument("--created-by", metavar="NAME", help="Creator name")
 
 
 def _add_task_update_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--assignee", metavar="NAME", help="Assign task to a user")
-    parser.add_argument("--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
-    parser.add_argument("--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
+    parser.add_argument("-p", "--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
+    parser.add_argument("-t", "--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
     parser.add_argument("--due-date", metavar="DATE", help="Due date (YYYY-MM-DD)")
     parser.add_argument("--created-by", metavar="NAME", help="Creator name")
 
@@ -144,7 +144,6 @@ def _add_list_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("list", aliases=["ls"], help="List all boards, columns, or tasks in the current context or at a specified path")
     group = p.add_mutually_exclusive_group(required=False)
     group.add_argument("path", metavar="BOARD[/COLUMN]", nargs="?", help="Board or board/column to list (optional)")
-    # p.add_subparsers(dest="path", metavar="BOARD[/COLUMN]", help="Board or board/column to list (optional)")
     _add_list_flag_arg(p)
     _add_task_filter_args(p)
     _add_global_flags(p)
@@ -197,18 +196,9 @@ def _add_reorder_parser(subparsers: argparse._SubParsersAction) -> None:
 
 
 def _add_show_parser(subparsers: argparse._SubParsersAction) -> None:
-    show_parser = subparsers.add_parser("show", aliases=["read"], help="Show task details")
-    _add_global_flags(show_parser)
-    show_sub = show_parser.add_subparsers(dest="show_subject", metavar="SUBJECT")
-    show_sub.required = True
-
-    # show task
-    p = show_sub.add_parser("task", help="Show task details")
-    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
-    p.add_argument("--format", choices=FORMAT_CHOICES, default="plain", metavar="FORMAT",
-                   help="Output format: table, plain, or json")
-    _add_global_flags(p)
-    p.set_defaults(func=handle_task_show)
+    show_parser = subparsers.add_parser("show", aliases=["read", "r", "s"], help="Show task details")
+    show_parser.add_argument("path", metavar="BOARD/COLUMN/TASK", help="The task to show")
+    show_parser.set_defaults(func=handle_task_show)
 
 
 def _add_edit_parser(subparsers: argparse._SubParsersAction) -> None:
@@ -309,7 +299,7 @@ def build_parser() -> argparse.ArgumentParser:
         add_help=False,
         prog="",
         formatter_class=CustomFormatter,
-        description="Git Kanban: the backed by the filesystem, tracked by git task manager",
+        description="Git Kanban: the backed-by-the-filesystem, tracked-by-git task manager",
         color=False,
     )
     
@@ -352,10 +342,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     # status
     p = subparsers.add_parser("status", help="Show repository status summary")
-    p.add_argument("--format", choices=FORMAT_CHOICES, default="plain", metavar="FORMAT",
-                   help="Output format: table, plain, or json")
     _add_global_flags(p)
     p.set_defaults(func=handle_status)
+
+    # exit
+    p = subparsers.add_parser("exit", aliases=["quit", ":q"], help="Exit the REPL")
+    p.set_defaults(func=lambda args: None)
 
     return parser
 

@@ -55,8 +55,8 @@ def _add_list_format_args(parser: argparse.ArgumentParser, sort_choices: list[st
 
 def _add_task_filter_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--assignee", metavar="NAME", help="Filter by assignee")
-    parser.add_argument("--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Filter by priority")
-    parser.add_argument("--tag", metavar="TAG", action="append", dest="tags", help="Filter by tag (repeatable)")
+    parser.add_argument("-p", "--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Filter by priority")
+    parser.add_argument("-t","--tag", metavar="TAG", action="append", dest="tags", help="Filter by tag (repeatable)")
     parser.add_argument("--due-before", metavar="DATE", help="Filter tasks due before date (YYYY-MM-DD)")
     parser.add_argument("--due-after", metavar="DATE", help="Filter tasks due after date (YYYY-MM-DD)")
     parser.add_argument("--created-by", metavar="NAME", help="Filter by creator")
@@ -69,15 +69,15 @@ def _add_list_flag_arg(parser: argparse.ArgumentParser) -> None:
 
 def _add_task_create_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--assignee", metavar="NAME", help="Assign task to a user")
-    parser.add_argument("--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
-    parser.add_argument("--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
+    parser.add_argument("-p", "--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
+    parser.add_argument("-t", "--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
     parser.add_argument("--due-date", metavar="DATE", help="Due date (YYYY-MM-DD)")
     parser.add_argument("--created-by", metavar="NAME", help="Creator name")
 
 def _add_task_update_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--assignee", metavar="NAME", help="Assign task to a user")
-    parser.add_argument("--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
-    parser.add_argument("--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
+    parser.add_argument("-p", "--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
+    parser.add_argument("-t", "--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
     parser.add_argument("--due-date", metavar="DATE", help="Due date (YYYY-MM-DD)")
     parser.add_argument("--created-by", metavar="NAME", help="Creator name")
 
@@ -234,7 +234,7 @@ def build_parser() -> argparse.ArgumentParser:
     """Return the fully configured top-level argument parser."""
     parser = argparse.ArgumentParser(
         prog="kanban",
-        description="Git Kanban: the backed by the filesystem, tracked by git task manager",
+        description="Git Kanban: the backed-by-the-filesystem, tracked-by-git task manager",
         color=False
     )
     _add_global_flags(parser)

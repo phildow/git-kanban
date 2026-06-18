@@ -26,6 +26,10 @@ def _is_exit_command(line: str) -> bool:
     return line in {"quit", "exit", ":q"}
 
 
+def _is_help_command(line: str) -> bool:
+    """Return True when input matches a REPL help command."""
+    return line in {"help", "h", "?"}
+
 def _is_clear_screen_command(line: str) -> bool:
     """Return True when input represents a clear-screen control sequence."""
     # Ctrl+L emits ASCII form-feed in readline-backed terminals.
@@ -417,7 +421,7 @@ def run_repl(*, svc: KanbanService, renderer: object) -> None:
                 if _is_exit_command(raw):
                     break
 
-                if raw in {"help", "h", "?"}:
+                if _is_help_command(raw):
                     _print_help_message(parser)
                     continue
 
