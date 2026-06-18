@@ -245,6 +245,8 @@ def _strip_trailing_slash(path: str) -> str:
 def resolve_set_path(path: str, svc: KanbanService) -> str:
     """Resolve special REPL shortcuts for `set-path`"""
     normalized = _strip_trailing_slash(path)
+    if normalized == "../..":
+        return "--clear"
     if normalized == "..":
         context = svc.user_context
         if context.board and context.column:

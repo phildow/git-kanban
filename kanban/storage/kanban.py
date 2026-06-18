@@ -104,12 +104,20 @@ class KanbanRepository(ABC):
 
     @abstractmethod
     def init_storage(self, default_board: str = "main") -> None:
-        """Initialize repository state for first use.
+        """
+        Initialize repository state for first use.
 
         Implementations should create the default board and any other necessary bootstrap state. 
         This is called by the KanbanService during its initialization.
 
         Raises ValueError when already initialized.
+        """
+
+    @abstractmethod
+    def bootstrap(self) -> list[Task]:
+        """
+        Helper to seed a default set of boards, columns, and tasks.
+        Returns the list of created tasks for verification in tests.
         """
 
     @abstractmethod

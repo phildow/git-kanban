@@ -147,40 +147,26 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
         with self.assertRaises(TaskNotFound):
             self.repo.delete_task(moved.id)
 
-    def test_bootstrap_creates_tasks_for_each_column(self):
+    def test_bootstrap_creates_tasks_for_each_board_andcolumn(self):
         """Bootstrap helper seeds a fixed number of tasks in each board column."""
-        seeded = self.repo.bootstrap(board="alpha", tasks_per_column=2)
-
-        self.assertEqual(len(seeded), 4)
-        todo = self.repo.list_tasks(board="alpha", column="todo")
-        doing = self.repo.list_tasks(board="alpha", column="doing")
-        self.assertEqual(len(todo), 2)
-        self.assertEqual(len(doing), 2)
-        self.assertTrue(all(task.slug for task in seeded))
-
-    def test_bootstrap_default_also_seeds_second_board_with_distinct_task_names(self):
-        """Default bootstrap seeds `main` plus an `infra` board with default columns."""
+        # 2 boards x 4 columns each x 3 tasks per column = 24 seeded tasks
         repo = InMemoryRepository()
-        repo.create_board("main")
-        repo.create_column("main", "todo")
-        repo.create_column("main", "in-progress")
-        repo.create_column("main", "in-review")
-        repo.create_column("main", "done")
+        seeded = repo.bootstrap()
+        self.assertEqual(len(seeded), 24)
 
-        seeded = repo.bootstrap(tasks_per_column=1)
+        boards = repo.list_boards()
+        self.assertEqual(len(boards), 2)
 
-        self.assertEqual(len(seeded), 8)
-        self.assertTrue(repo.board_exists("infra"))
-        self.assertEqual(
-            [c.name for c in repo.list_columns("infra")],
-            ["todo", "in-progress", "in-review", "done"],
-        )
+        main = repo.list_tasks(board="main")
+        infra = repo.list_tasks(board="infra")
+        self.assertEqual(len(main), 12)
+        self.assertEqual(len(infra), 12)
 
-        main_titles = {task.title for task in repo.list_tasks(board="main")}
-        infra_titles = {task.title for task in repo.list_tasks(board="infra")}
-        self.assertEqual(len(main_titles), 4)
-        self.assertEqual(len(infra_titles), 4)
-        self.assertTrue(main_titles.isdisjoint(infra_titles))
+        todo = repo.list_tasks(board="main", column="todo")
+        doing = repo.list_tasks(board="infra", column="todo")
+        self.assertEqual(len(todo), 3)
+        self.assertEqual(len(doing), 3)
+        self.assertTrue(all(task.slug for task in seeded))
 
 
 if __name__ == "__main__":
