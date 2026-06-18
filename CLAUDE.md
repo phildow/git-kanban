@@ -20,6 +20,7 @@ Be succinct.
 - When a python dependency is required add it to the pyproject files
 - Add documenation when you create types and methods, including for tests
 - Break up tests, keep unit tests small
+- Run tests from the current working directory with the bash command `python -m unittest discover -s tests`
 
 ## Project
 

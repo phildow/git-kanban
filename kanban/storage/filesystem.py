@@ -22,6 +22,9 @@ class FilesystemRepository(KanbanRepository):
     def init_storage(self, default_board: str = "main") -> None:
         raise NotImplementedError()
 
+    def bootstrap(self) -> list[Task]:
+        raise NotImplementedError()
+
     def is_initialized(self) -> bool:
         raise NotImplementedError()
 
