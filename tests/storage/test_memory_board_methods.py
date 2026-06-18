@@ -2,7 +2,7 @@
 
 These tests document expected board CRUD semantics, including:
 - uniqueness and lookup errors
-- rename side effects on columns, tasks, and active context
+- rename side effects on columns, tasks, and current context
 - delete side effects on tasks and context
 """
 

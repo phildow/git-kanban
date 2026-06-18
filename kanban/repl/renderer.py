@@ -42,27 +42,27 @@ class Renderer:
 		column = result.column
 		
 		if board and column:
-			self._emit(args, f"Active context: {board}/{column}")
+			self._emit(args, f"Current context: {board}/{column}")
 			return
 		if board:
-			self._emit(args, f"Active context: {board}")
+			self._emit(args, f"Current context: {board}")
 			return
 
-		self._emit(args, "Active context cleared")
+		self._emit(args, "Current context cleared")
 	
 	def render_change_board(self, args: argparse.Namespace, result: UserContext) -> None:
 		board = result.board
 		if board:
 			self._emit(args, f"Changed board to: {board}")
 		else:
-			self._emit(args, "Active board cleared")
+			self._emit(args, "Bboard cleared")
 
 	def render_change_column(self, args: argparse.Namespace, result: UserContext) -> None:
 		column = result.column
 		if column:
 			self._emit(args, f"Changed column to: {column}")
 		else:
-			self._emit(args, "Active column cleared")
+			self._emit(args, "Column cleared")
 
 # ---------------------------------------------------------------------------
 # Board rendering

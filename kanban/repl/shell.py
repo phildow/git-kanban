@@ -186,7 +186,7 @@ def _resolve_board_column_path(path: str, svc: KanbanService) -> str:
 
 
 def _resolve_task_path(path: str, svc: KanbanService) -> str:
-    """Resolve a task path into BOARD/COLUMN/TASK form using active context."""
+    """Resolve a task path into BOARD/COLUMN/TASK form using current context."""
     parts = path.split("/")
     if len(parts) >= 3:
         return path

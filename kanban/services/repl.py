@@ -10,7 +10,7 @@ def handle_list(args: argparse.Namespace, svc: KanbanService) -> tuple[list[Boar
     """
     List the contents at the path applying filters and sort.  This is
     the main entry point for all list/ls commands in the REPL, which pass a
-    user-provided path that may be absolute or relative to the active
+    user-provided path that may be absolute or relative to the current
     context.
     """
     path = getattr(args, "path", "") or ""
@@ -32,7 +32,7 @@ def handle_delete(args: argparse.Namespace, svc: KanbanService) -> type:
     """
     Delete the entity at the given path.  This is the main entry point for
     all delete/rm commands in the REPL, which pass a user-provided path that
-    may be absolute or relative to the active context.
+    may be absolute or relative to the current context.
     """
     path = getattr(args, "path", "") or ""
     board, column, task = svc.path_components(path)
@@ -53,7 +53,7 @@ def repl_handle_move_task(args: argparse.Namespace, svc: KanbanService) -> None:
     """
     Move the entity at the given path to a new location.  This is the main
     entry point for all move commands in the REPL, which pass a user-provided
-    path that may be absolute or relative to the active context.
+    path that may be absolute or relative to the current context.
 
     It is only possible to move a task to another column on the current board.
     

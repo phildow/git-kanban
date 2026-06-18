@@ -211,7 +211,7 @@ class KanbanService:
         clear:  bool = False,
     ) -> UserContext:
         """
-        Set or clear the active board/column context stored in .kanban/.config.
+        Set or clear the current board/column context stored in .kanban/.config.
         Validates that the referenced board (and column, if given) exist before
         writing.  No git commit — context is local working state.
 
@@ -234,11 +234,11 @@ class KanbanService:
                 raise ValueError("Path must be BOARD or BOARD/COLUMN")
         else:
             board = path
-            active_board = self.user_context.board
-            if active_board:
+            current_board = self.user_context.board
+            if current_board:
                 try:
-                    self.repository.get_column(active_board, path)
-                    board = active_board
+                    self.repository.get_column(current_board, path)
+                    board = current_board
                     column = path
                 except ColumnNotFound:
                     column = None
@@ -251,7 +251,7 @@ class KanbanService:
         return self.user_context
 
     def set_board(self, board: str) -> UserContext:
-        """Set the active context to the given board, validating that it exists."""
+        """Set the current context to the given board, validating that it exists."""
         board = board.strip("/")
         board = self.repository.get_board(board)
 
@@ -262,12 +262,11 @@ class KanbanService:
         return self.user_context
 
     def set_column(self, column: str) -> UserContext:
-        """Set the active context to the given column, validating that it exists."""
+        """Set the current context to the given column, validating that it exists."""
         board = self.user_context.board
 
         if not board:
-            raise ValueError("Active board has not been set; cannot change column")
-
+            raise ValueError("Current board has not been set; cannot change column")
         column = column.strip("/")
         column = self.repository.get_column(board, column)
 
@@ -305,11 +304,11 @@ class KanbanService:
         BoardNotFound if the source board does not exist, and BoardAlreadyExists
         if new_name is already taken.  All tasks within the board retain their
         UUIDs; only the directory name (and therefore the board's slug) changes.
-        Updates the active context if the renamed board was the active one.
+        Updates the current context if the renamed board was the current one.
         """
         board = self.repository.rename_board(board, new_name)
 
-        # Keep active context in sync.
+        # Keep current context in sync.
         self._user_context.board = board.name
 
         return board
@@ -318,12 +317,12 @@ class KanbanService:
         """
         Recursively delete a board directory and remove it from .kanban/.order.
         Raises BoardNotFound if the board does not exist.  Also removes all
-        index entries for tasks that belonged to the board and clears the active
+        index entries for tasks that belonged to the board and clears the current
         context if it pointed at the deleted board.
         """
         board = self.repository.delete_board(board)
         
-        # Clear active context if it points to the deleted board.
+        # Clear current context if it points to the deleted board.
         if self._user_context.board == name:
             self.clear_user_context()
 
@@ -339,7 +338,7 @@ class KanbanService:
         reverse: bool = False,
     ) -> list[Column]:
         """
-        Return all columns for the given board.  Falls back to the active
+        Return all columns for the given board.  Falls back to the current
         context board if board is None; raises NoBoardInContext if neither is
         set.  sort accepts "title"; omitting it preserves the order in the
         board's .order file.
@@ -362,13 +361,13 @@ class KanbanService:
         Rename a column subdirectory and update the board's .order file.
         Raises BoardNotFound, ColumnNotFound, or ColumnAlreadyExists as
         appropriate.  Tasks inside the column are untouched; their paths
-        update implicitly via the directory rename.  Updates the active
-        context if the renamed column was the active one.
+        update implicitly via the directory rename.  Updates the current
+        context if the renamed column was the current one.
         """
         board, column, _ = self.path_components(path)
         renamed_column = self.repository.rename_column(board, column, new_name)
 
-        # Update active context if it points at the renamed column.
+        # Update current context if it points at the renamed column.
         if self._user_context.board == board and self._user_context.column == column.name:
             self._user_context.column = renamed_column.name
 
@@ -390,7 +389,7 @@ class KanbanService:
         Delete a column subdirectory and all tasks it contains.  Raises
         BoardNotFound or ColumnNotFound if either does not exist.  Removes
         all index entries for tasks in the column, updates the board's .order
-        file, and clears the active context column if it pointed here.
+        file, and clears the current context column if it pointed here.
         """
         board, column, _ = self.path_components(path)
         self.repository.delete_column(board, column)
@@ -414,7 +413,7 @@ class KanbanService:
         """
         Return tasks for the given board/column, applying filters and sort in
         the service layer rather than in the repository.  board and column both
-        fall back to the active context; omitting column returns tasks across
+        fall back to the current context; omitting column returns tasks across
         all columns of the board.  sort accepts "title", "priority", "due-date",
         "created-at", "updated-at", or "created-by".
         """
@@ -656,7 +655,7 @@ class KanbanService:
         """
         Persist a configuration value to .kanban/.config under the given key.
         Raises InvalidConfigKey if the key is not in the supported set.  No
-        git commit — config is local working state, like active context.
+        git commit — config is local working state, like current context.
         """
         self.repository.set_config(key, value)
 
@@ -674,7 +673,7 @@ class KanbanService:
 
     def status(self) -> KanbanStatus:
         """
-        Snapshot of the repository: active context, board/column/task counts,
+        Snapshot of the repository: current context, board/column/task counts,
         index freshness, and whether there are uncommitted changes in git.
         """
         ...

@@ -110,7 +110,7 @@ def _add_create_parser(subparsers: argparse._SubParsersAction) -> None:
 
 
 def _add_list_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser("list", aliases=["ls"], help="List entities in the active context")
+    p = subparsers.add_parser("list", aliases=["ls"], help="List all boards, columns, or tasks in the current context or at a specified path")
     group = p.add_mutually_exclusive_group(required=False)
     group.add_argument("path", metavar="BOARD[/COLUMN]", nargs="?", help="Board or board/column to list (optional)")
     # p.add_subparsers(dest="path", metavar="BOARD[/COLUMN]", help="Board or board/column to list (optional)")
@@ -248,7 +248,7 @@ def _add_cd_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("cd", help="Set or clear the active board and column")
     group = p.add_mutually_exclusive_group(required=False)
     group.add_argument("path", metavar="BOARD[/COLUMN]", nargs="?", help="Board or board/column to set active")
-    group.add_argument("--clear", action="store_true", default=False, help="Clear the active context")
+    group.add_argument("--clear", action="store_true", default=False, help="Clear the current context")
     _add_global_flags(p)
     p.set_defaults(func=handle_set_path)
 

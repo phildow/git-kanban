@@ -34,7 +34,7 @@ def handle_set_path(args: argparse.Namespace, svc: KanbanService, renderer: obje
 
 
 def handle_board_change(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	"""Set active context to the provided board name.
+	"""Update current context with the provided board name.
 
 	Relies on `svc.set_board()` for validation and raises if the board does not exist.
 	"""
@@ -43,7 +43,7 @@ def handle_board_change(args: argparse.Namespace, svc: KanbanService, renderer: 
 
 
 def handle_column_change(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	"""Set active context to the provided column name.
+	"""Update current context with the provided column name.
 
 	Relies on `svc.set_column()` for validation and raises if the column does not exist.
 	"""

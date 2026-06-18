@@ -36,20 +36,6 @@ class Renderer:
 	def render_init(self, args: argparse.Namespace, result: KanbanRoot) -> None:
 		self._emit(args, result)
 
-	@_requires_verbose
-	def render_set_path(self, args: argparse.Namespace, result: UserContext) -> None:
-		board = result.board
-		column = result.column
-		
-		if board and column:
-			self._emit(args, f"Active context: {board}/{column}")
-			return
-		if board:
-			self._emit(args, f"Active context: {board}")
-			return
-
-		self._emit(args, "Active context cleared")
-
 # ---------------------------------------------------------------------------
 # Board rendering
 # ---------------------------------------------------------------------------

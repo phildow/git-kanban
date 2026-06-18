@@ -106,7 +106,7 @@ class KanbanRepository(ABC):
     def init(self, default_board: str = "main") -> None:
         """Initialize repository state for first use.
 
-        Implementations should create the default board, set active context,
+        Implementations should create the default board, set current context,
         and persist any internal initialized sentinel.
 
         Raises ValueError when already initialized.

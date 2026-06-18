@@ -83,28 +83,6 @@ class TestCommandHandlers(unittest.TestCase):
         self.svc.delete_board.assert_called_once_with("my-board")
         self.renderer.render_board_delete.assert_called_once_with(args, result)
 
-    def test_handle_set_path_defaults_to_clear_without_path(self):
-        """`use` without PATH behaves like `--clear`."""
-        args = self._args(path=None, clear=False)
-        result = object()
-        self.svc.set_path.return_value = result
-
-        commands.handle_set_path(args, self.svc, self.renderer)
-
-        self.svc.set_path.assert_called_once_with(clear=True)
-        self.renderer.render_set_path.assert_called_once_with(args, result)
-
-    def test_handle_set_path_clear_flag(self):
-        """`use --clear` clears context explicitly."""
-        args = self._args(path="board-a/todo", clear=True)
-        result = object()
-        self.svc.set_path.return_value = result
-
-        commands.handle_set_path(args, self.svc, self.renderer)
-
-        self.svc.set_path.assert_called_once_with(clear=True)
-        self.renderer.render_set_path.assert_called_once_with(args, result)
-
     def test_column_handlers(self):
         """Column handlers parse path arguments and dispatch correctly."""
         args = self._args(board="board-a", sort="title", reverse=False)

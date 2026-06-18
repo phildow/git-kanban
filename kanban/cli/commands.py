@@ -15,16 +15,6 @@ def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: object) 
 	result = svc.init()
 	renderer.render_init(args, result)
 
-
-def handle_set_path(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	if args.clear or getattr(args, "path", None) is None:
-		result = svc.set_path(clear=True)
-		renderer.render_set_path(args, result)
-		return
-
-	result = svc.set_path(path=args.path)
-	renderer.render_set_path(args, result)
-
 # ---------------------------------------------------------------------------
 # Board subcommands
 # ---------------------------------------------------------------------------
