@@ -17,14 +17,14 @@ Clone the repo cd into the git-kanban/kanban directory. That should activate the
 
 ```
 $ git clone ...
-$ cd git-kanban/kanban
+$ cd git-kanban
 (.venv) $ 
 ```
 
 Finally install the local copy of `kanban` into your virtual environment and have a look at the local kanban boards:
 
 ```
-(.venv) $ pip install -e . -q && which kanban && kanban --help
+(.venv) $ pip install -e kanban -q && which kanban && kanban repl
 (.venv) $ kanban repl
 kanban (main)>
 ```
@@ -36,6 +36,15 @@ kanban (main)>
 - Replace "../.." with clear, beep if backing up too far
 - List all tasks on a board, show the location board/column
 - Double tab to cycle through completions
+
+TAB COMPLETION
+    
+- Commands
+- Paths relative and absolute
+- Flags?
+- Assignees
+- Priority
+- Tags
 
 CONFIG
 
