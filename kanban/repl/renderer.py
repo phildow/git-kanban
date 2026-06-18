@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 from functools import wraps
 
 from models import UserContext, Board, Column, Task
@@ -28,16 +29,24 @@ class Renderer:
 			return
 		print(value)
 
+
+	def _clamped(self, s: str, max_len: int, suffix: str = "...") -> str:
+		if len(s) <= max_len:
+			return s
+		return s[:max_len - len(suffix)] + suffix
+
 # ---------------------------------------------------------------------------
 # Initialization and context rendering
 # ---------------------------------------------------------------------------
 
 	@_requires_verbose
 	def render_init(self, args: argparse.Namespace, result: KanbanRoot) -> None:
+		"""Render a message indicating that the Kanban system has been initialized."""
 		self._emit(args, result)
 
 	@_requires_verbose
 	def render_set_path(self, args: argparse.Namespace, result: UserContext) -> None:
+		"""Render a message indicating the new current context path, or that the context was cleared."""
 		board = result.board
 		column = result.column
 		
@@ -51,6 +60,7 @@ class Renderer:
 		self._emit(args, "Current context cleared")
 	
 	def render_change_board(self, args: argparse.Namespace, result: UserContext) -> None:
+		"""Render a message indicating the new current board, or that the board context was cleared."""
 		board = result.board
 		if board:
 			self._emit(args, f"Changed board to: {board}")
@@ -58,6 +68,7 @@ class Renderer:
 			self._emit(args, "Bboard cleared")
 
 	def render_change_column(self, args: argparse.Namespace, result: UserContext) -> None:
+		"""Render a message indicating the new current column, or that the column context was cleared."""
 		column = result.column
 		if column:
 			self._emit(args, f"Changed column to: {column}")
@@ -69,26 +80,13 @@ class Renderer:
 # ---------------------------------------------------------------------------
 
 	def render_board_list(self, args: argparse.Namespace, result: list[Board]) -> None:
-		fmt = getattr(args, "format", "plain")
-
-		# if fmt == "json":
-		# 	payload = [
-		# 		{
-		# 			"name": board.name,
-		# 			"column_count": len(board.columns),
-		# 		}
-		# 		for board in result
-		# 	]
-		# 	self._emit(args, json.dumps(payload, indent=2))
-		# 	return
-
+		"""Render a list of boards, optionally with their column counts"""
 		if not result:
 			self._emit(args, "No boards")
 			return
 
-		if fmt == "plain":
-			self._emit(args, "\n".join(board.name for board in result))
-			return
+		self._emit(args, "\n".join(board.name for board in result))
+		return
 
 		lines = ["Boards", "------"]
 		for board in result:
@@ -97,17 +95,20 @@ class Renderer:
 
 	@_requires_verbose
 	def render_board_create(self, args: argparse.Namespace, result: Board) -> None:
+		"""Render a message indicating that a board was created, including its name."""
 		board_name = result.name or getattr(args, "board", None)
 		self._emit(args, f"Board created: {board_name}")
 
 	@_requires_verbose
 	def render_board_rename(self, args: argparse.Namespace, result: Board) -> None:
+		"""Render a message indicating that a board was renamed, including the old and new names."""
 		old_name = getattr(args, "board", None)
 		new_name = result.name or getattr(args, "new_name", None)
 		self._emit(args, f"Board renamed: {old_name} -> {new_name}")
 
 	# @_requires_verbose
 	def render_board_delete(self, args: argparse.Namespace) -> None:
+		"""Render a message indicating that a board was deleted, including its name."""
 		board_name = getattr(args, "board", None)
 		self._emit(args, f"Board deleted: {board_name}")
 
@@ -116,27 +117,13 @@ class Renderer:
 # ---------------------------------------------------------------------------
 
 	def render_column_list(self, args: argparse.Namespace, result: list[Column]) -> None:
-		fmt = getattr(args, "format", "plain")
-
-		if fmt == "json":
-			payload = [
-				{
-					"name": column.name,
-					"board": column.board,
-					"position": column.position,
-				}
-				for column in result
-			]
-			self._emit(args, json.dumps(payload, indent=2))
-			return
-
+		"""Render a list of columns, optionally with their board names and positions"""
 		if not result:
 			self._emit(args, "No columns")
 			return
 
-		if fmt == "plain":
-			self._emit(args, "\n".join(column.name for column in result))
-			return
+		self._emit(args, "\n".join(column.name for column in result))
+		return
 
 		lines = ["Columns", "-------"]
 		for column in result:
@@ -145,6 +132,10 @@ class Renderer:
 
 	@_requires_verbose
 	def render_column_create(self, args: argparse.Namespace, result: Column) -> None:
+		"""
+		Render a message indicating that a column was created, 
+		including its name and optionally its board if available.
+		"""
 		board_name = result.board
 		column_name = result.name
 		if board_name and column_name:
@@ -154,6 +145,10 @@ class Renderer:
 
 	@_requires_verbose
 	def render_column_rename(self, args: argparse.Namespace, result: Column) -> None:
+		"""
+		Render a message indicating that a column was renamed, including the old and new names,
+		and optionally the board if available.
+		"""
 		path = getattr(args, "path", "") or ""
 		old_name = path.split("/", 1)[1] if "/" in path else path
 		board_name = result.board or (path.split("/", 1)[0] if "/" in path else None)
@@ -166,6 +161,10 @@ class Renderer:
 
 	@_requires_verbose
 	def render_column_reorder(self, args: argparse.Namespace, result: list[Column]) -> None:
+		"""
+		Render a message indicating that a column was reordered, including its name and new position,
+		and optionally the board if available.
+		"""
 		path = getattr(args, "path", "") or ""
 		column_name = path.split("/", 1)[1] if "/" in path else path
 		board_name = path.split("/", 1)[0] if "/" in path else None
@@ -179,6 +178,10 @@ class Renderer:
 
 	# @_requires_verbose
 	def render_column_delete(self, args: argparse.Namespace) -> None:
+		"""
+		Render a message indicating that a column was deleted, 
+		including its name and optionally its board if available.
+		"""
 		path = getattr(args, "path", "") or ""
 		column_name = path.split("/", 1)[1] if "/" in path else path
 		board_name = path.split("/", 1)[0] if "/" in path else None
@@ -192,22 +195,86 @@ class Renderer:
 # ---------------------------------------------------------------------------
 
 	def render_task_list(self, args: argparse.Namespace, result: list[Task]) -> None:
+		"""Render a list of tasks, optionally with their slugs, titles, and locations."""
+		list = getattr(args, "list", False)
 		if args.list == True:
-			lines = ["Tasks", "---------------------"]
+			self.render_task_list_verbose(args, result)
 		else:
-			lines = []
-		
-		for task in result:
-			location = ""
-			if task.board and task.column:
-				location = f" ({task.board}/{task.column})"
-			elif task.board:
-				location = f" ({task.board})"
-			lines.append(f"- {task.slug}{location}")
+			self.render_task_list_slug_only(args, result)
+
+
+	def render_task_list_slug_only(self, args: argparse.Namespace, result: list[Task]) -> None:
+		"""
+		Render a simple list of task slugs, without additional details. 
+		If any slugs are longer than 16 characters, render one per line. 
+		Otherwise, render in a compact multi-column format.
+		"""
+		slugs = [task.slug for task in result]
+
+		if any(len(slug) > 16 for slug in slugs):
+			self._emit(args, "\n".join(slugs))
+			return
+
+		term_width, _ = shutil.get_terminal_size(fallback=(80, 24))
+		col_width = 16
+		gap = 1
+		cols = max(1, (term_width + gap) // (col_width + gap))
+
+		formatted = [f"{self._clamped(slug, col_width):<{col_width}}" for slug in slugs]
+		lines = []
+		for i in range(0, len(formatted), cols):
+			row = formatted[i:i + cols]
+			lines.append(" ".join(row).rstrip())
+
 		self._emit(args, "\n".join(lines))
+
+
+	def render_task_list_verbose(self, args: argparse.Namespace, result: list[Task]) -> None:
+		"""Render a detailed list of tasks, including their slugs, titles, and locations."""
+		items = []
+
+		# date_format = "%Y-%m-%d"
+        # date_format = "%B %d"
+		# isoformat()
+
+		width, height = shutil.get_terminal_size(fallback=(80, 24))
+		include_tags = width > 80
+		include_board = width > 96
+
+		heading =  [f"{'Title':<32}", f"{'Assigned To':<16}", f"{'Priority':<16}", f"{'Due':<16}"]
+		uderline = [f"{'-----':<32}", f"{'-----------':<16}", f"{'--------':<16}", f"{'---':<16}"]
+
+		if include_tags:
+			heading.insert(3,  f"{'Tags':<16}")
+			uderline.insert(3, f"{'----':<16}")
+		if include_board:
+			heading.insert(1,  f"{'Column':<16}")
+			uderline.insert(1, f"{'-----':<16}")
+
+		items.append("".join(heading))
+		items.append("".join(uderline))
+
+		for task in result:	
+			tags = ", ".join(task.tags) if task.tags else None
+			elems = [
+				f"{self._clamped(task.title, 32-1):<32}", 
+				*(f"{self._clamped(task.column or '-', 16-1):<16}" if include_board else []), 
+				f"{self._clamped(task.assignee or '-', 16-1):<16}", 
+				f"{self._clamped(task.priority or '-', 16-1):<16}", 
+				*(f"{self._clamped(tags or '-', 16-1):<16}" if include_tags else []),
+				f"{self._clamped(task.due_date.isoformat() if task.due_date else '-', 16-1):<16}"
+				]
+			items.append("".join(elems))
+		
+		self._emit(args, "\n".join(items))
+
 
 	@_requires_verbose
 	def render_task_create(self, args: argparse.Namespace, result: Task) -> None:
+		"""
+		Render a message indicating that a task was created, 
+		including its slug and optionally its board/column if available.
+		"""
 		# TODO: Consider more detailed output for verbose mode, and a more concise message for non-verbose
 		# TODO: Reconsider whether board/column should be Optional
 		if result.board and result.column:
@@ -216,6 +283,7 @@ class Renderer:
 			self._emit(args, f"Task created: {result.slug}")
 
 	def render_task_show(self, args: argparse.Namespace, result: Task) -> None:
+		"""Render detailed information about a single task, including all metadata and the body/description."""
 		
 		lines = [
 			"---------------------",

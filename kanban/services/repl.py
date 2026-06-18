@@ -13,19 +13,27 @@ def handle_list(args: argparse.Namespace, svc: KanbanService) -> tuple[list[Boar
     user-provided path that may be absolute or relative to the current
     context.
     """
+    all_tasks = getattr(args, "all_tasks", False)
     path = getattr(args, "path", "") or ""
+
     board, column, _ = svc.path_components(path)
 
     filter = getattr(args, "filter", None)
     sort = getattr(args, "sort", None)
     reverse = getattr(args, "reverse", False)
     
+    if all_tasks and board:
+        return Task, svc.list_tasks(path=f"/{board}", filter=filter, sort=sort, reverse=reverse)
+    elif all_tasks and not board:
+        raise ValueError("Cannot list all tasks without a board name: {}".format(path))
     if board and column:
-        return svc.list_tasks(path=f"/{board}/{column}", filter=filter, sort=sort, reverse=reverse), Task
-    elif board and not column:
-        return svc.list_columns(board=board, sort=sort, reverse=reverse), Column
+        return Task, svc.list_tasks(path=f"/{board}/{column}", filter=filter, sort=sort, reverse=reverse)
+    elif board and not column and all_tasks:
+        return Task, svc.list_tasks(path=f"/{board}", filter=filter, sort=sort, reverse=reverse)
+    elif board and not column and not all_tasks:
+        return Column, svc.list_columns(board=board, sort=sort, reverse=reverse)
     elif not board and not column:
-        return svc.list_boards(sort=sort, reverse=reverse), Board
+        return Board, svc.list_boards(sort=sort, reverse=reverse)
        
 
 def handle_delete(args: argparse.Namespace, svc: KanbanService) -> type:

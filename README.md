@@ -31,39 +31,23 @@ kanban (main)>
 
 ### TODO
 
-- add --list flag to ls to provide more details
-- Is the show command not working?
-- Swing back around to path completion in svc._rewrite_relative_paths
-
-- REPL != CLI
-    - The repl does not support the same commands as the CLI
-    - The repl has its own commands, parser, and renderer
-    - It is not a verb first or noun first difference, it is interactive
-    - It has its own dedicated parser with a more limited set of commands, mirroring those of the terminal:
-        - cd (use)
-        - ls (list)
-        - mv (rename or move)
-
-- REPL
-    - Remove init (check that we're in a kanban directort at init and ask user if they'd like to init if not)
-    - Simplify repl commands, they mostly take a path
-    - Most only takes a path not a noun object - the whole noun first cli got me its a terminal emulator
-    - Double tab to cycle through completions
-    - But the way readline works it seems that whatever you provide to be shown as options also becomes the completion
-
-- REPL Additional commands
-    - some way to set metadata
-    - assign {task} {person}
+- Swing back around to path completion in svc._rewrite_relative_paths (eg cd, ls)
+- Add comments to a task which are just appended to the body
+- Replace "../.." with clear, beep if backing up too far
+- List all tasks on a board, show the location board/column
+- Double tab to cycle through completions
 
 CONFIG
 
+- Tabcomplete config keys?
 - Allow the user to alias repl commands in the config file
-    - eg `c` or `n` for `create`
-    - eg `l` for `list`
+    - eg `c=create`
 - Allow the user to set a username to use for default createdb_by and assigned_to
-- Allow the user to set their preferred editor
-
-- Add comments to a task which are just appended to the body
+    - eg `username=philip`
+- Allow the user to set their preferred editor?
+- Allow the user to decide what columns are shown for a given terminal size when listing tasks
+    - eg `task-cols:80=title,assignee,tags`
+    - eg `task-cols:96=title,assignee,tags,due`
 
 - FileStorage
 - Use `.kanban` for configuration and caching and `.kanban-store` for the filesystem

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, UTC
+from datetime import date, datetime, timedelta, UTC
+import random
 import re
 from typing import Optional
 from uuid import UUID, uuid4
@@ -56,10 +57,15 @@ class InMemoryRepository(KanbanRepository):
         """Seed tasks for each column in a board using a title template."""
         columns = self.list_columns(board)
         created: list[Task] = []
+        
+        assignees = ["alice", "bob", "carol", "dave"]
+        priorities = ["low", "medium", "high"]
+        tags = ["bug", "feature", "chore"]
+        dates = [date.today() + timedelta(days=i) for i in range(1, 14)]
 
         for column in columns:
             for i in range(1, tasks_per_column + 1):
-                title = title_template.format(column=column.name, i=i, board=board)
+                title = title_template.format(column=column.name.capitalize(), i=i, board=board.capitalize)
                 slug = self._to_kebab_case(title)
                 task = Task(
                     id=uuid4(),
@@ -67,9 +73,11 @@ class InMemoryRepository(KanbanRepository):
                     slug=slug,
                     board=board,
                     column=column.name,
-                    created_by="seed",
-                    priority="medium",
-                    tags=["sample"],
+                    created_by=random.choice(assignees),
+                    assignee=random.choice(assignees),
+                    priority=random.choice(priorities),
+                    due_date=random.choice(dates),
+                    tags=[random.choice(tags)],
                 )
                 created.append(self.create_task(task, slug))
 
@@ -91,7 +99,7 @@ class InMemoryRepository(KanbanRepository):
         created = self._bootstrap_board_tasks(
             board=board,
             tasks_per_column=tasks_per_column,
-            title_template="{column} task {i}",
+            title_template="{column} Task {i}",
         )
 
         if board != "main":
@@ -106,7 +114,7 @@ class InMemoryRepository(KanbanRepository):
             self._bootstrap_board_tasks(
                 board=secondary_board,
                 tasks_per_column=tasks_per_column,
-                title_template="infra {column} work item {i}",
+                title_template="Infra {column} Work Item {i}",
             )
         )
 

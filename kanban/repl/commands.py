@@ -46,28 +46,29 @@ def handle_column_change(args: argparse.Namespace, svc: KanbanService, renderer:
 # ---------------------------------------------------------------------------
 
 def handle_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	result, list_type = repl_handle_list(args, svc)
+	typ, results = repl_handle_list(args, svc)
 	
-	if list_type is Board:
-		renderer.render_board_list(args, result)
-	elif list_type is Column:
-		renderer.render_column_list(args, result)
-	elif list_type is Task:
-		renderer.render_task_list(args, result)
+	if typ is Board:
+		renderer.render_board_list(args, results)
+	elif typ is Column:
+		renderer.render_column_list(args, results)
+	elif typ is Task:
+		renderer.render_task_list(args, results)
 	else:
-		raise ValueError("Unexpected result type from handle_list: {}".format(type(result)))
+		raise ValueError("Unexpected result type from handle_list: {}".format(typ))
+
 
 def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	delete_type = repl_handle_delete(args, svc)
+	typ = repl_handle_delete(args, svc)
 
-	if delete_type is Board:
+	if typ is Board:
 		renderer.render_board_delete(args)
-	elif delete_type is Column:
+	elif typ is Column:
 		renderer.render_column_delete(args)
-	elif delete_type is Task:
+	elif typ is Task:
 		renderer.render_task_delete(args)
 	else:
-		raise ValueError("Unexpected result type from handle_delete: {}".format(delete_type))
+		raise ValueError("Unexpected result type from handle_delete: {}".format(typ))
 
 def handle_move(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	move_type = repl_handle_move_task(args, svc)

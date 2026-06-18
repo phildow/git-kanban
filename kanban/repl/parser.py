@@ -84,11 +84,6 @@ def _add_task_filter_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--created-by", metavar="NAME", help="Filter by creator")
 
 
-def _add_list_flag_arg(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("-l", "--list", action="store_true", default=False,
-                        help="Enable list-mode output")
-
-
 def _add_task_create_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--assignee", metavar="NAME", help="Assign task to a user")
     parser.add_argument("-p", "--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
@@ -142,9 +137,10 @@ def _add_create_parser(subparsers: argparse._SubParsersAction) -> None:
 
 def _add_list_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("list", aliases=["ls"], help="List all boards, columns, or tasks in the current context or at a specified path")
+    p.add_argument("-l", "--list", action="store_true", default=False, help="Enable list-mode output")
     group = p.add_mutually_exclusive_group(required=False)
     group.add_argument("path", metavar="BOARD[/COLUMN]", nargs="?", help="Board or board/column to list (optional)")
-    _add_list_flag_arg(p)
+    group.add_argument("-a", "--tasks", dest="all_tasks", action="store_true", default=False, help="List all tasks on the current board")
     _add_task_filter_args(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_list)
@@ -196,7 +192,7 @@ def _add_reorder_parser(subparsers: argparse._SubParsersAction) -> None:
 
 
 def _add_show_parser(subparsers: argparse._SubParsersAction) -> None:
-    show_parser = subparsers.add_parser("show", aliases=["read", "r", "s"], help="Show task details")
+    show_parser = subparsers.add_parser("show", aliases=["view", "v", "s"], help="Show task details")
     show_parser.add_argument("path", metavar="BOARD/COLUMN/TASK", help="The task to show")
     show_parser.set_defaults(func=handle_task_show)
 

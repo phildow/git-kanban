@@ -92,7 +92,7 @@ class TestReplCommandHandlers(unittest.TestCase):
     def test_handle_list_renders_board_list(self):
         args = self._args(path=None)
         result = object()
-        with patch("repl.commands.repl_handle_list", return_value=(result, Board)):
+        with patch("repl.commands.repl_handle_list", return_value=(Board, result)):
             commands.handle_list(args, self.svc, self.renderer)
 
         self.renderer.render_board_list.assert_called_once_with(args, result)
@@ -100,7 +100,7 @@ class TestReplCommandHandlers(unittest.TestCase):
     def test_handle_list_renders_column_list(self):
         args = self._args(path="alpha")
         result = object()
-        with patch("repl.commands.repl_handle_list", return_value=(result, Column)):
+        with patch("repl.commands.repl_handle_list", return_value=(Column, result)):
             commands.handle_list(args, self.svc, self.renderer)
 
         self.renderer.render_column_list.assert_called_once_with(args, result)
@@ -108,7 +108,7 @@ class TestReplCommandHandlers(unittest.TestCase):
     def test_handle_list_renders_task_list(self):
         args = self._args(path="alpha/todo")
         result = object()
-        with patch("repl.commands.repl_handle_list", return_value=(result, Task)):
+        with patch("repl.commands.repl_handle_list", return_value=(Task, result)):
             commands.handle_list(args, self.svc, self.renderer)
 
         self.renderer.render_task_list.assert_called_once_with(args, result)
