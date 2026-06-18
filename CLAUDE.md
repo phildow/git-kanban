@@ -251,19 +251,26 @@ The REPL sits at the same level in the architecture as the CLI and it consumes t
 The REPL commands follow.
 
 ```
-board         - sets the board
-column        - sets the column
-create        - creates a new board, column, or task
-cd            - set the board/column
-list          - list contents of a board or column
-move          - move a column or board 
-delete        - delete a board, column, or task
-help          — list commands
-history       — show command history
-clear         — clear screen
-squash        - combine the latest commits
-sync          - rebases and pushes commits
-quit or exit  — exit
+COMMAND
+  cd               Set or clear the active board and column
+  board            Set the active board
+  column           Set the active column
+  create (new, n)  Create a board, column, or task
+  list (ls)        List all boards, columns, or tasks in the current context or at a specified path
+  rename           Rename a board or column
+  delete (rm)      Delete a board, column, or task
+  reorder          Reorder columns or tasks
+  show (read)      Show task details
+  edit             Edit a task in the default editor
+  update           Update a task
+  move (mv)        Move a task to another column or board
+  config           List, get, or set configuration values
+  search           Full-text search across tasks
+  log              Show git log for a task or scope
+  status           Show repository status summary
+
+options:
+  -h, --help         Show this help message
 ```
 
 The following aliases are added by default. The user may remove them or define their own:

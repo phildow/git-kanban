@@ -10,16 +10,6 @@ from services.repl import handle_list as repl_handle_list
 from services.repl import handle_delete as repl_handle_delete
 
 # ---------------------------------------------------------------------------
-# Initialization commands
-# ---------------------------------------------------------------------------
-
-def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	_ = args
-	result = svc.init()
-	renderer.render_init(args, result)
-
-
-# ---------------------------------------------------------------------------
 # Working context commands (use, board, column)
 # ---------------------------------------------------------------------------
 

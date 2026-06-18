@@ -62,6 +62,11 @@ def _add_task_filter_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--created-by", metavar="NAME", help="Filter by creator")
 
 
+def _add_list_flag_arg(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("-l", "--list", action="store_true", default=False,
+                        help="Enable list-mode output")
+
+
 def _add_task_create_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--assignee", metavar="NAME", help="Assign task to a user")
     parser.add_argument("--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
@@ -89,6 +94,7 @@ def _add_board_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # board list
     p = board_sub.add_parser("list", help="List all boards")
+    _add_list_flag_arg(p)
     _add_list_format_args(p, SORT_BOARD_COLUMN_CHOICES)
     _add_global_flags(p)
     p.set_defaults(func=handle_board_list)
@@ -96,6 +102,7 @@ def _add_board_parser(subparsers: argparse._SubParsersAction) -> None:
     # board create
     p = board_sub.add_parser("create", help="Create a new board")
     p.add_argument("board", metavar="BOARD", help="Board name")
+    p.add_argument("--private", metavar="NAME", help="Add the board to .gitignore")
     _add_global_flags(p)
     p.set_defaults(func=handle_board_create)
 
@@ -126,6 +133,7 @@ def _add_column_parser(subparsers: argparse._SubParsersAction) -> None:
     # column list
     p = col_sub.add_parser("list", help="List columns")
     p.add_argument("board", metavar="BOARD", help="Board name")
+    _add_list_flag_arg(p)
     _add_list_format_args(p, SORT_BOARD_COLUMN_CHOICES)
     _add_global_flags(p)
     p.set_defaults(func=handle_column_list)
@@ -170,6 +178,7 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     # task list
     p = task_sub.add_parser("list", help="List tasks")
     p.add_argument("path", metavar="BOARD[/COLUMN]", help="Board/column path")
+    _add_list_flag_arg(p)
     _add_list_format_args(p, SORT_TASK_CHOICES)
     _add_task_filter_args(p)
     _add_global_flags(p)
@@ -226,7 +235,7 @@ def build_parser() -> argparse.ArgumentParser:
     """Return the fully configured top-level argument parser."""
     parser = argparse.ArgumentParser(
         prog="kanban",
-        description="A filesystem-backed, git-tracked kanban task manager.",
+        description="Git Kanban: the backed by the filesystem, tracked by git task manager",
         color=False
     )
     _add_global_flags(parser)

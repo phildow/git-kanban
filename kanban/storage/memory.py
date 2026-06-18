@@ -118,6 +118,9 @@ class InMemoryRepository(KanbanRepository):
         if already_initialized or self.board_exists(default_board):
             raise ValueError("Kanban is already initialized")
 
+    def is_initialized(self) -> bool:
+        """Return True if the repository is already initialized at the current path."""
+        return self.get_config("initialized") == "true"
 
     # Board operations
     def list_boards(self) -> list[Board]:

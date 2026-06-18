@@ -99,10 +99,18 @@ class TestParserAliases(unittest.TestCase):
         args = repl_parser.parse_args(["list"])
         self.assertEqual(args.command, "list")
         self.assertIs(args.func, handle_list)
+        self.assertFalse(args.list)
 
         args = repl_parser.parse_args(["ls"])
         self.assertEqual(args.command, "ls")
         self.assertIs(args.func, handle_list)
+        self.assertFalse(args.list)
+
+        args = repl_parser.parse_args(["list", "-l"])
+        self.assertTrue(args.list)
+
+        args = repl_parser.parse_args(["list", "--list"])
+        self.assertTrue(args.list)
 
     def test_cd_alias_maps_to_set_path_handler(self):
         parser = repl_parser.build_parser()

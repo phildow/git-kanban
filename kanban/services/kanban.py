@@ -121,6 +121,9 @@ class KanbanService:
             boards_dir=kanban_root / "boards",
         )
 
+    def is_initialized(self) -> bool:
+        """Return True if the repository is already initialized at the current path."""
+        return self.repository.is_initialized()
 
     # ── User context ────────────────────────────────────────────────────────
 

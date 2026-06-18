@@ -25,16 +25,6 @@ class TestReplCommandHandlers(unittest.TestCase):
     def _args(self, **kwargs) -> Namespace:
         return Namespace(**kwargs)
 
-    def test_handle_init_calls_service_and_renderer(self):
-        args = self._args()
-        result = object()
-        self.svc.init.return_value = result
-
-        commands.handle_init(args, self.svc, self.renderer)
-
-        self.svc.init.assert_called_once_with()
-        self.renderer.render_init.assert_called_once_with(args, result)
-
     def test_handle_set_path_defaults_to_clear_without_path(self):
         args = self._args(path=None, clear=False)
         result = object()

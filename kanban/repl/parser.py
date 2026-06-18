@@ -23,7 +23,6 @@ from repl.commands import (
     handle_column_reorder,
     handle_config_get,
     handle_config_set,
-    handle_init,
     handle_log,
     handle_search,
     handle_status,
@@ -41,19 +40,39 @@ SORT_TASK_CHOICES = ["title", "priority", "due-date", "created-at", "updated-at"
 SORT_BOARD_COLUMN_CHOICES = ["title"]
 PRIORITY_CHOICES = ["low", "medium", "high"]
 
+class CustomFormatter(argparse.RawDescriptionHelpFormatter):
+    @staticmethod
+    def _customize_help_text(text: str | None) -> str:
+        """Normalize help text before it is rendered."""
+        if not text:
+            return ""
+        return " ".join(text.split())
+
+    def _get_help_string(self, action: argparse.Action) -> str:
+        """Return customized help text for each parser action."""
+        text =self._customize_help_text(super()._get_help_string(action))
+        text = text.replace("show this help message and exit", "Show this help message")
+        return text
+
+    def _format_usage(self, usage, actions, groups, prefix):
+        """Return a customized usage string for the parser."""
+        # Unfortunately not called for subparsers, so we have to customize the help text for each subparser individually.
+
+        if prefix is None:
+            prefix = 'usage: '
+        # Custom logic to avoid double space if prog is empty
+        if not prefix.endswith(' ') and usage and not usage.startswith(' '):
+            prefix = prefix[:-1]
+        return super()._format_usage(usage, actions, groups, prefix)
+
 
 def _add_global_flags(parser: argparse.ArgumentParser) -> None:
+    ...
+    # note:: These flags are not currently used, but they are defined here for possible future use.
+    #
     # parser.add_argument("--color", action="store_true", default=False, help="Enable colored output")
-    parser.add_argument("--quiet", action="store_true", default=False, help="Suppress non-essential output")
-    parser.add_argument("--verbose", action="store_true", default=False, help="Enable verbose output")
-
-
-# TODO: remove
-def _add_list_format_args(parser: argparse.ArgumentParser, sort_choices: list[str]) -> None:
-    parser.add_argument("--format", choices=FORMAT_CHOICES, default="plain", metavar="FORMAT",
-                        help="Output format: table, plain, or json")
-    parser.add_argument("--sort", choices=sort_choices, metavar="FIELD", help="Field to sort by")
-    parser.add_argument("--reverse", action="store_true", default=False, help="Reverse the sort order")
+    # parser.add_argument("--quiet", action="store_true", default=False, help="Suppress non-essential output")
+    # parser.add_argument("--verbose", action="store_true", default=False, help="Enable verbose output")
 
 
 def _add_task_filter_args(parser: argparse.ArgumentParser) -> None:
@@ -65,12 +84,18 @@ def _add_task_filter_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--created-by", metavar="NAME", help="Filter by creator")
 
 
+def _add_list_flag_arg(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("-l", "--list", action="store_true", default=False,
+                        help="Enable list-mode output")
+
+
 def _add_task_create_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--assignee", metavar="NAME", help="Assign task to a user")
     parser.add_argument("--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
     parser.add_argument("--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
     parser.add_argument("--due-date", metavar="DATE", help="Due date (YYYY-MM-DD)")
     parser.add_argument("--created-by", metavar="NAME", help="Creator name")
+
 
 def _add_task_update_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--assignee", metavar="NAME", help="Assign task to a user")
@@ -79,12 +104,19 @@ def _add_task_update_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--due-date", metavar="DATE", help="Due date (YYYY-MM-DD)")
     parser.add_argument("--created-by", metavar="NAME", help="Creator name")
 
+
+# UNUSED
+def _add_help_message(parser: argparse.ArgumentParser) -> None:
+    """Print the help message for the REPL."""
+    parser.add_argument("--h", action="help", default=argparse.SUPPRESS, help="Display this custom help message and exit.")
+
 # ---------------------------------------------------------------------------
 # Verb-first subcommands
 # ---------------------------------------------------------------------------
 
 def _add_create_parser(subparsers: argparse._SubParsersAction) -> None:
     create_parser = subparsers.add_parser("create", aliases=["new", "n"], help="Create a board, column, or task")
+    create_parser.add_argument("--private", metavar="NAME", help="If creating a board, add it to .gitignore")
     _add_global_flags(create_parser)
     create_sub = create_parser.add_subparsers(dest="create_subject", metavar="SUBJECT")
     create_sub.required = True
@@ -114,7 +146,7 @@ def _add_list_parser(subparsers: argparse._SubParsersAction) -> None:
     group = p.add_mutually_exclusive_group(required=False)
     group.add_argument("path", metavar="BOARD[/COLUMN]", nargs="?", help="Board or board/column to list (optional)")
     # p.add_subparsers(dest="path", metavar="BOARD[/COLUMN]", help="Board or board/column to list (optional)")
-    _add_list_format_args(p, SORT_TASK_CHOICES)
+    _add_list_flag_arg(p)
     _add_task_filter_args(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_list)
@@ -166,7 +198,7 @@ def _add_reorder_parser(subparsers: argparse._SubParsersAction) -> None:
 
 
 def _add_show_parser(subparsers: argparse._SubParsersAction) -> None:
-    show_parser = subparsers.add_parser("show", help="Show entity details")
+    show_parser = subparsers.add_parser("show", aliases=["read"], help="Show task details")
     _add_global_flags(show_parser)
     show_sub = show_parser.add_subparsers(dest="show_subject", metavar="SUBJECT")
     show_sub.required = True
@@ -181,7 +213,7 @@ def _add_show_parser(subparsers: argparse._SubParsersAction) -> None:
 
 
 def _add_edit_parser(subparsers: argparse._SubParsersAction) -> None:
-    edit_parser = subparsers.add_parser("edit", help="Edit tasks")
+    edit_parser = subparsers.add_parser("edit", help="Edit a task in the default editor")
     _add_global_flags(edit_parser)
     edit_sub = edit_parser.add_subparsers(dest="edit_subject", metavar="SUBJECT")
     edit_sub.required = True
@@ -275,19 +307,17 @@ def _add_column_parser(subparsers: argparse._SubParsersAction) -> None:
 def build_parser() -> argparse.ArgumentParser:
     """Return the fully configured top-level verb-first argument parser."""
     parser = argparse.ArgumentParser(
-        prog="kanban",
-        description="A filesystem-backed, git-tracked kanban task manager.",
+        add_help=False,
+        prog="",
+        formatter_class=CustomFormatter,
+        description="Git Kanban: the backed by the filesystem, tracked by git task manager",
         color=False,
     )
+    
     _add_global_flags(parser)
 
     subparsers = parser.add_subparsers(dest="command", metavar="COMMAND")
     subparsers.required = True
-
-    # init
-    p = subparsers.add_parser("init", help="Initialise a new kanban repository in the current directory")
-    _add_global_flags(p)
-    p.set_defaults(func=handle_init)
 
     _add_cd_parser(subparsers)
     _add_board_parser(subparsers)
@@ -308,7 +338,6 @@ def build_parser() -> argparse.ArgumentParser:
     # search
     p = subparsers.add_parser("search", help="Full-text search across tasks")
     p.add_argument("query", metavar="QUERY", help="Search query")
-    _add_list_format_args(p, SORT_TASK_CHOICES)
     _add_task_filter_args(p)
     p.add_argument("--board", metavar="BOARD", help="Restrict search to a specific board")
     _add_global_flags(p)

@@ -17,6 +17,10 @@ except ImportError:  # pragma: no cover
     readline = None
 
 
+class _ReplExit(Exception):
+    """Internal sentinel exception used to terminate the REPL loop."""
+
+
 def _is_exit_command(line: str) -> bool:
     """Return True when input matches a REPL exit command."""
     return line in {"quit", "exit", ":q"}
@@ -97,6 +101,24 @@ def _top_level_commands(parser: argparse.ArgumentParser) -> list[str]:
     if subparsers is None:
         return []
     return sorted(subparsers.choices.keys())
+
+
+def _initialize_kanban(svc: KanbanService) -> bool:
+    """Prompt the user to initialize a kanban repository if not already initialized."""
+    if svc.is_initialized():
+        return True
+
+    print("No kanban repository found in the current directory.")
+    should_init = input("Would you like to initialize a kanban repository here? (y/n) ").strip().lower()
+    if should_init in {"y", "yes"}:
+        try:
+            svc.init()
+            print("Repository initialized successfully. You're on the 'main' board, todo column. Type 'help' for usage.")
+            return True
+        except Exception as exc:
+            print(f"Failed to initialize repository: {exc}")
+            return False
+    return False
 
 
 def _complete_command_tokens(
@@ -227,13 +249,17 @@ def resolve_set_path(path: str, svc: KanbanService) -> str:
 # TODO: WTF does this even do?
 def _rewrite_relative_paths(tokens: list[str], svc: KanbanService) -> list[str]:
     """Rewrite verb-first REPL command tokens so relative paths become explicit paths."""
+    
+    # TODO: I think this is where we keep the path parsing logic for commands that take paths, 
+    # but it is getting pretty gnarly and I am not sure it's worth the complexity of trying to 
+    # rewrite tokens like this instead of just having the command handlers call 
+    # resolve_board_column_path and resolve_task_path directly on the raw user input.
+    
     if not tokens:
         return tokens
 
     command = tokens[0]
     rewritten = list(tokens)
-
-
 
     if command in {"cd"}:
         if len(rewritten) >= 2:
@@ -301,14 +327,12 @@ def _configure_readline_completion(parser: argparse.ArgumentParser, svc: KanbanS
         return
 
 
-class _ReplExit(Exception):
-    """Internal sentinel exception used to terminate the REPL loop."""
-
-
 @contextmanager
 def _install_exit_signal_handlers():
-    """Temporarily map common terminal exit key-signals to clean REPL shutdown."""
-    # Keep Ctrl-C (`SIGINT`) for line cancellation/re-prompt behavior.
+    """
+    Temporarily map common terminal exit key-signals to clean REPL shutdown.
+    Keep Ctrl-C (`SIGINT`) for line cancellation/re-prompt behavior.
+    """
     managed_signals = [signal.SIGTERM]
 
     if hasattr(signal, "SIGQUIT"):
@@ -332,9 +356,34 @@ def _install_exit_signal_handlers():
             signal.signal(sig, handler)
 
 
+def _print_welcome_message(svc: KanbanService) -> None:
+    """Print a welcome message when the REPL starts."""
+    if not svc.is_initialized():
+        print("No kanban repository found in the current directory.")
+        return
+
+    context = svc.user_context
+    board = context.board or "no board"
+    column = context.column or "no column"
+
+    context_str = f"/{board}/{column}" if board and column else f"/{board}" if board else "/"
+    print(f"Welcome to the kanban REPL. Current context: {context_str}\nType 'help (h)' for usage, 'quit (:q)' to exit")
+
+
+def _print_help_message(parser: argparse.ArgumentParser) -> None:
+    """Print the help message for the REPL."""
+    help_text = parser.format_help()
+    help_text = help_text.replace("show this help message and exit", "Show this help message")
+    help_text = help_text.replace("usage: COMMAND ...\n", "")
+    print(help_text)
+
+
 def run_repl(*, svc: KanbanService, renderer: object) -> None:
     """Run a simple command loop that reuses the CLI parser/handlers."""
     from repl.parser import build_parser
+
+    if not svc.is_initialized() and not _initialize_kanban(svc):
+        exit(1)
     
     try:
         parser = build_parser()
@@ -344,7 +393,7 @@ def run_repl(*, svc: KanbanService, renderer: object) -> None:
     except ValueError as exc:
         print(f"Value error: {exc}")
 
-    print("kanban repl started. type 'help' for usage, 'quit' to exit.")
+    _print_welcome_message(svc)
 
     try:
         with _install_exit_signal_handlers():
@@ -368,8 +417,8 @@ def run_repl(*, svc: KanbanService, renderer: object) -> None:
                 if _is_exit_command(raw):
                     break
 
-                if raw in {"help", "?"}:
-                    parser.print_help()
+                if raw in {"help", "h", "?"}:
+                    _print_help_message(parser)
                     continue
 
                 try:

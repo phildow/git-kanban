@@ -22,6 +22,9 @@ class FilesystemRepository(KanbanRepository):
     def init(self, default_board: str = "main") -> None:
         raise NotImplementedError()
 
+    def is_initialized(self) -> bool:
+        raise NotImplementedError()
+
     # Board operations
     def list_boards(self) -> list[Board]:
         raise NotImplementedError()

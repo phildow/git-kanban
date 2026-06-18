@@ -31,6 +31,10 @@ kanban (main)>
 
 ### TODO
 
+- Create private boards
+- add --list flag to ls to provide more details
+- Swing back around to path completion in svc._rewrite_relative_paths
+
 - REPL != CLI
     - The repl does not support the same commands as the CLI
     - The repl has its own commands, parser, and renderer
@@ -41,14 +45,15 @@ kanban (main)>
         - mv (rename or move)
 
 - REPL
+    - Remove init (check that we're in a kanban directort at init and ask user if they'd like to init if not)
     - Simplify repl commands, they mostly take a path
     - Most only takes a path not a noun object - the whole noun first cli got me its a terminal emulator
     - Double tab to cycle through completions
     - But the way readline works it seems that whatever you provide to be shown as options also becomes the completion
 
-- Error handling
-    - Resolve repository errors to service errors and catch most of them in the repl
-    - Handle value errors and missing board/column errors without exiting
+- REPL Additional commands
+    - some way to set metadata
+    - assign {task} {person}
 
 - Private boards:
     - Just add the directory to the git ignore file

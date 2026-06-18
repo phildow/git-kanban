@@ -71,16 +71,16 @@ class Renderer:
 	def render_board_list(self, args: argparse.Namespace, result: list[Board]) -> None:
 		fmt = getattr(args, "format", "plain")
 
-		if fmt == "json":
-			payload = [
-				{
-					"name": board.name,
-					"column_count": len(board.columns),
-				}
-				for board in result
-			]
-			self._emit(args, json.dumps(payload, indent=2))
-			return
+		# if fmt == "json":
+		# 	payload = [
+		# 		{
+		# 			"name": board.name,
+		# 			"column_count": len(board.columns),
+		# 		}
+		# 		for board in result
+		# 	]
+		# 	self._emit(args, json.dumps(payload, indent=2))
+		# 	return
 
 		if not result:
 			self._emit(args, "No boards")

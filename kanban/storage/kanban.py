@@ -15,11 +15,11 @@ Conventions
 - Raise Duplicate* exceptions on create/rename collisions.
 - Callers are responsible for sequencing calls that must be atomic. The
   repository makes no transactional guarantees across calls.
-- `board_name` and `column_name` are the human-readable slug used as the
+- `board-name` and `column-name` are the human-readable slug used as the
   directory name (e.g. "my-project", "in-progress"). They are the stable
   address within a board; renaming a column changes its slug.
-- Task identity across renames is the UUID stored in frontmatter. Titles
-  (and thus filenames) may change; UUIDs do not.
+- Tasks preserve their UUID across renames and moves. The filename is derived from the
+  title but is not the source of truth for identity.
 """
 
 from __future__ import annotations
@@ -111,6 +111,11 @@ class KanbanRepository(ABC):
 
         Raises ValueError when already initialized.
         """
+
+    @abstractmethod
+    def is_initialized(self) -> bool:
+        """Return True if the repository is already initialized at the current path."""
+        return False
 
     # ------------------------------------------------------------------
     # Board operations

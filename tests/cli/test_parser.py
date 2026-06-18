@@ -33,8 +33,7 @@ from cli.commands import (
     handle_task_list,
     handle_task_move,
     handle_task_show,
-    handle_task_update,
-    handle_set_path,
+    handle_task_update
 )
 
 class TestParserStructure(unittest.TestCase):
@@ -95,10 +94,14 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         args = cli_parser.parse_args(["board", "list", "--sort", "title", "--reverse"])
         self.assertEqual(args.command, "board")
         self.assertEqual(args.board_command, "list")
+        self.assertFalse(args.list)
         self.assertEqual(args.sort, "title")
         self.assertTrue(args.reverse)
         self.assertEqual(args.format, "plain")
         self.assertIs(args.func, handle_board_list)
+
+        args = cli_parser.parse_args(["board", "list", "-l"])
+        self.assertTrue(args.list)
 
         args = cli_parser.parse_args(["board", "create", "my-board"])
         self.assertEqual(args.board, "my-board")
@@ -117,10 +120,14 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         """Column subcommands parse arguments and bind the correct handlers."""
         args = cli_parser.parse_args(["column", "list", "board-a"])
         self.assertEqual(args.board, "board-a")
+        self.assertFalse(args.list)
         self.assertEqual(args.format, "plain")
         self.assertEqual(args.sort, None)
         self.assertFalse(args.reverse)
         self.assertIs(args.func, handle_column_list)
+
+        args = cli_parser.parse_args(["column", "list", "board-a", "--list"])
+        self.assertTrue(args.list)
 
         args = cli_parser.parse_args(["column", "create", "board-a/todo"])
         self.assertEqual(args.path, "board-a/todo")
@@ -159,12 +166,16 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
             "--reverse",
         ])
         self.assertEqual(args.path, "board-a/todo")
+        self.assertFalse(args.list)
         self.assertEqual(args.assignee, "philip")
         self.assertEqual(args.priority, "high")
         self.assertEqual(args.tags, ["bug", "urgent"])
         self.assertEqual(args.sort, "created-at")
         self.assertTrue(args.reverse)
         self.assertIs(args.func, handle_task_list)
+
+        args = cli_parser.parse_args(["task", "list", "board-a/todo", "-l"])
+        self.assertTrue(args.list)
 
         args = cli_parser.parse_args([
             "task",
