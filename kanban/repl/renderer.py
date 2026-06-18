@@ -192,36 +192,11 @@ class Renderer:
 # ---------------------------------------------------------------------------
 
 	def render_task_list(self, args: argparse.Namespace, result: list[Task]) -> None:
-		fmt = getattr(args, "format", "plain")
-
-		if fmt == "json":
-			payload = [
-				{
-					"id": str(task.id),
-					"title": task.title,
-					"slug": task.slug,
-					"board": task.board,
-					"column": task.column,
-					"assignee": task.assignee,
-					"priority": task.priority,
-					"due_date": task.due_date.isoformat() if task.due_date else None,
-					"tags": task.tags,
-					"created_by": task.created_by,
-				}
-				for task in result
-			]
-			self._emit(args, json.dumps(payload, indent=2))
-			return
-
-		if not result:
-			self._emit(args, "No tasks")
-			return
-
-		if fmt == "plain":
-			self._emit(args, "\n".join(task.slug for task in result))
-			return
-
-		lines = ["Tasks", "-----"]
+		if args.list == True:
+			lines = ["Tasks", "---------------------"]
+		else:
+			lines = []
+		
 		for task in result:
 			location = ""
 			if task.board and task.column:
@@ -241,36 +216,24 @@ class Renderer:
 			self._emit(args, f"Task created: {result.slug}")
 
 	def render_task_show(self, args: argparse.Namespace, result: Task) -> None:
-		fmt = getattr(args, "format", "plain")
-
-		if fmt == "json":
-			payload = {
-				"id": str(result.id),
-				"title": result.title,
-				"slug": result.slug,
-				"board": result.board,
-				"column": result.column,
-				"assignee": result.assignee,
-				"priority": result.priority,
-				"due_date": result.due_date.isoformat() if result.due_date else None,
-				"tags": result.tags,
-				"created_by": result.created_by,
-				"created_at": result.created_at.isoformat() if result.created_at else None,
-				"updated_at": result.updated_at.isoformat() if result.updated_at else None,
-				"body": result.body,
-			}
-			self._emit(args, json.dumps(payload, indent=2))
-			return
-
+		
 		lines = [
+			"---------------------",
+			result.title,
+			"---------------------"
+			"",
 			f"Slug: {result.slug}",
 			f"ID: {result.id}",
-			f"Location: {result.board}/{result.column}" if result.board and result.column else "Location: (unscoped)",
+			f"Location: /{result.board}/{result.column}" if result.board and result.column else "Location: (unscoped)",
 			f"Assignee: {result.assignee or '-'}",
 			f"Priority: {result.priority or '-'}",
 			f"Due: {result.due_date.isoformat() if result.due_date else '-'}",
 			f"Tags: {', '.join(result.tags) if result.tags else '-'}",
 			f"Created by: {result.created_by or '-'}",
+			"---------------------"
+			"",
+			result.body,
+			"---------------------",
 		]
 		self._emit(args, "\n".join(lines))
 

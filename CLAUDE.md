@@ -260,7 +260,7 @@ COMMAND
   rename           Rename a board or column
   delete (rm)      Delete a board, column, or task
   reorder          Reorder columns or tasks
-  show (read)      Show task details
+  show (view)      Show task details
   edit             Edit a task in the default editor
   update           Update a task
   move (mv)        Move a task to another column or board
@@ -278,6 +278,8 @@ The following aliases are added by default. The user may remove them or define t
 ```
 new = create
   n = create
+  s = show
+  r = show
  ls = list
  mv = move
  rm = delete

@@ -32,6 +32,7 @@ kanban (main)>
 ### TODO
 
 - add --list flag to ls to provide more details
+- Is the show command not working?
 - Swing back around to path completion in svc._rewrite_relative_paths
 
 - REPL != CLI
@@ -61,6 +62,8 @@ CONFIG
     - eg `l` for `list`
 - Allow the user to set a username to use for default createdb_by and assigned_to
 - Allow the user to set their preferred editor
+
+- Add comments to a task which are just appended to the body
 
 - FileStorage
 - Use `.kanban` for configuration and caching and `.kanban-store` for the filesystem
