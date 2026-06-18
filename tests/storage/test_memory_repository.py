@@ -7,7 +7,10 @@ enforcement, and no abstract methods left unimplemented.
 from __future__ import annotations
 
 import inspect
+import tempfile
 import unittest
+
+from pathlib import Path
 
 from storage.kanban import KanbanRepository
 from storage.memory import InMemoryRepository
@@ -22,7 +25,8 @@ class TestInMemoryRepositoryInterface(unittest.TestCase):
 
     def test_can_be_instantiated(self) -> None:
         """ABC enforcement: TypeError if any abstract method is unimplemented."""
-        repo = InMemoryRepository()
+        temp_dir = tempfile.gettempdir()
+        repo = InMemoryRepository(root=Path(temp_dir))
         self.assertIsInstance(repo, KanbanRepository)
 
     def test_all_abstract_methods_are_overridden(self) -> None:

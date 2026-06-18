@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import sys
+import tempfile
 import unittest
+
 from pathlib import Path
 
 from models import UserContext
@@ -15,7 +17,8 @@ from storage.memory import InMemoryRepository
 
 class TestKanbanServiceCompletions(unittest.TestCase):
     def setUp(self) -> None:
-        self.repo = InMemoryRepository()
+        temp_dir = tempfile.gettempdir()
+        self.repo = InMemoryRepository(root=Path(temp_dir))
         self.svc = KanbanService(
             repository=self.repo,
             index_service=IndexService(repository=self.repo),

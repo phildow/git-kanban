@@ -15,8 +15,8 @@ class FilesystemRepository(KanbanRepository):
     with the final interface and can be incrementally implemented.
     """
 
-    def __init__(self, root: Path = Path(".")) -> None:
-        self.root = root
+    def __init__(self, root: Path) -> None:
+        super().__init__(root)
 
     # Bootstrap
     def init_storage(self, default_board: str = "main") -> None:

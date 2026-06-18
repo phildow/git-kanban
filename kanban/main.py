@@ -1,5 +1,7 @@
 """Entry point for the kanban CLI."""
 
+from pathlib import Path
+
 from cli.parser import parse_args
 from cli.renderer import Renderer
 
@@ -10,7 +12,8 @@ from services.index import IndexService
 from storage.memory import InMemoryRepository
 
 def main() -> None:
-    repository = InMemoryRepository()
+    cwd = Path.cwd()
+    repository = InMemoryRepository(root=cwd)
     index_service = IndexService(repository=repository)
     git_service = GitService()
 

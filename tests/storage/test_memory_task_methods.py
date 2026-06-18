@@ -7,6 +7,7 @@ constraints, and move behavior.
 from __future__ import annotations
 
 import sys
+import tempfile
 import unittest
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -26,7 +27,8 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
     """Task operation contract tests for the in-memory repository."""
 
     def setUp(self) -> None:
-        self.repo = InMemoryRepository()
+        temp_dir = tempfile.gettempdir()
+        self.repo = InMemoryRepository(root=Path(temp_dir))
         self.repo.create_board("alpha")
         self.repo.create_board("beta")
         self.repo.create_column("alpha", "todo")
@@ -150,7 +152,8 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
     def test_bootstrap_creates_tasks_for_each_board_andcolumn(self):
         """Bootstrap helper seeds a fixed number of tasks in each board column."""
         # 2 boards x 4 columns each x 3 tasks per column = 24 seeded tasks
-        repo = InMemoryRepository()
+        temp_dir = tempfile.gettempdir()
+        repo = InMemoryRepository(root=Path(temp_dir))
         seeded = repo.bootstrap()
         self.assertEqual(len(seeded), 24)
 
