@@ -33,7 +33,6 @@ kanban (main)>
 
 - Cleanup: Define some getter methods as properties
 - Add comments to a task which are just appended to the body
-- Replace "../.." with clear, beep if backing up too far
 
 TAB COMPLETION
 
