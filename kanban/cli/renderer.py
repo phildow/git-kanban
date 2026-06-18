@@ -37,7 +37,7 @@ class Renderer:
 		self._emit(args, result)
 
 	@_requires_verbose
-	def render_use(self, args: argparse.Namespace, result: UserContext) -> None:
+	def render_set_path(self, args: argparse.Namespace, result: UserContext) -> None:
 		board = result.board
 		column = result.column
 		

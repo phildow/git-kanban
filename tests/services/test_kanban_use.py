@@ -1,4 +1,4 @@
-"""Behavior tests for `KanbanService.use()` context validation."""
+"""Behavior tests for `KanbanService.set_path()` context validation."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from services.index import IndexService
 from storage.memory import InMemoryRepository
 
 
-class TestKanbanServiceUse(unittest.TestCase):
+class TestKanbanServiceSetPath(unittest.TestCase):
     def setUp(self) -> None:
         self.repo = InMemoryRepository()
         self.svc = KanbanService(
@@ -26,22 +26,22 @@ class TestKanbanServiceUse(unittest.TestCase):
         self.repo.create_board("alpha")
         self.repo.create_column("alpha", "todo")
 
-    def test_use_sets_existing_board_and_column(self):
-        ctx = self.svc.use(path="alpha/todo")
+    def test_set_path_sets_existing_board_and_column(self):
+        ctx = self.svc.set_path(path="alpha/todo")
         self.assertEqual(ctx.board, "alpha")
         self.assertEqual(ctx.column, "todo")
 
-    def test_use_raises_for_missing_board(self):
+    def test_set_path_raises_for_missing_board(self):
         with self.assertRaises(BoardNotFound):
-            self.svc.use(path="missing")
+            self.svc.set_path(path="missing")
 
-    def test_use_raises_for_missing_column(self):
+    def test_set_path_raises_for_missing_column(self):
         with self.assertRaises(ColumnNotFound):
-            self.svc.use(path="alpha/missing")
+            self.svc.set_path(path="alpha/missing")
 
-    def test_use_relative_column_uses_active_board(self):
-        self.svc.use(path="alpha")
-        ctx = self.svc.use(path="todo")
+    def test_set_path_relative_column_uses_active_board(self):
+        self.svc.set_path(path="alpha")
+        ctx = self.svc.set_path(path="todo")
         self.assertEqual(ctx.board, "alpha")
         self.assertEqual(ctx.column, "todo")
 

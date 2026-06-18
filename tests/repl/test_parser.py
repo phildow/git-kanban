@@ -21,9 +21,9 @@ from repl.commands import (
     handle_column_rename,
     handle_delete,
     handle_list,
+    handle_set_path,
     handle_task_create,
     handle_task_update,
-    handle_use,
 )
 
 class TestParserAliases(unittest.TestCase):
@@ -104,25 +104,25 @@ class TestParserAliases(unittest.TestCase):
         self.assertEqual(args.command, "ls")
         self.assertIs(args.func, handle_list)
 
-    def test_cd_alias_maps_to_use_handler(self):
+    def test_cd_alias_maps_to_set_path_handler(self):
         parser = repl_parser.build_parser()
 
         args = parser.parse_args(["cd"])
         self.assertEqual(args.command, "cd")
         self.assertIsNone(args.path)
         self.assertFalse(args.clear)
-        self.assertIs(args.func, handle_use)
+        self.assertIs(args.func, handle_set_path)
 
         args = parser.parse_args(["cd", "main/todo"])
         self.assertEqual(args.command, "cd")
         self.assertEqual(args.path, "main/todo")
         self.assertFalse(args.clear)
-        self.assertIs(args.func, handle_use)
+        self.assertIs(args.func, handle_set_path)
 
         args = parser.parse_args(["cd", "--clear"])
         self.assertTrue(args.clear)
         self.assertIsNone(args.path)
-        self.assertIs(args.func, handle_use)
+        self.assertIs(args.func, handle_set_path)
 
 
 if __name__ == "__main__":

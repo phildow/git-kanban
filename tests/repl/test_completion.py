@@ -42,7 +42,7 @@ class _FakeSvc:
     def user_context(self):
         return self._ctx
 
-    def use(self, path=None, clear=False):
+    def set_path(self, path=None, clear=False):
         if clear:
             self._ctx = SimpleNamespace(board=None, column=None)
             return self._ctx

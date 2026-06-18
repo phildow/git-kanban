@@ -23,20 +23,20 @@ def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: object) 
 # Working context commands (use, board, column)
 # ---------------------------------------------------------------------------
 
-def handle_use(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_set_path(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	if args.clear or getattr(args, "path", None) is None:
-		result = svc.use(clear=True)
-		renderer.render_use(args, result)
+		result = svc.set_path(clear=True)
+		renderer.render_set_path(args, result)
 		return
 
-	result = svc.use(path=args.path)
-	renderer.render_use(args, result)
+	result = svc.set_path(path=args.path)
+	renderer.render_set_path(args, result)
 
 
 def handle_board_change(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	"""Set active context to the provided board name.
 
-	Relies on `svc.use()` for validation and raises if the board does not exist.
+	Relies on `svc.set_board()` for validation and raises if the board does not exist.
 	"""
 	result = svc.set_board(board=args.board)
 	renderer.render_change_board(args, result)
@@ -45,7 +45,7 @@ def handle_board_change(args: argparse.Namespace, svc: KanbanService, renderer: 
 def handle_column_change(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	"""Set active context to the provided column name.
 
-	Relies on `svc.use()` for validation and raises if the column does not exist.
+	Relies on `svc.set_column()` for validation and raises if the column does not exist.
 	"""
 	result = svc.set_column(column=args.column)
 	renderer.render_change_column(args, result)

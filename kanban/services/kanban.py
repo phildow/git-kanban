@@ -205,7 +205,7 @@ class KanbanService:
             return False
 
     # TODO: rename to change_dir, because that's what it's doing
-    def use(
+    def set_path(
         self,
         path: str | None = None,
         clear:  bool = False,
@@ -215,9 +215,9 @@ class KanbanService:
         Validates that the referenced board (and column, if given) exist before
         writing.  No git commit — context is local working state.
 
-        kanban use my-project/todo  →  use(path="my-project/todo")
-        kanban use my-project       →  use(path="my-project")
-        kanban use --clear          →  use(clear=True)
+        kanban use my-project/todo  →  set_path(path="my-project/todo")
+        kanban use my-project       →  set_path(path="my-project")
+        kanban use --clear          →  set_path(clear=True)
         """
         if clear:
             return self.clear_user_context()

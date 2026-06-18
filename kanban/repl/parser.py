@@ -32,7 +32,7 @@ from repl.commands import (
     handle_task_move,
     handle_task_show,
     handle_task_update,
-    handle_use,
+    handle_set_path,
 )
 
 
@@ -252,13 +252,13 @@ def _add_get_parser(subparsers: argparse._SubParsersAction) -> None:
     p.set_defaults(func=handle_config_get)
 
 
-def _add_use_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser("use", aliases=["cd"], help="Set or clear the active board/column context")
+def _add_cd_parser(subparsers: argparse._SubParsersAction) -> None:
+    p = subparsers.add_parser("cd", help="Set or clear the active board and column")
     group = p.add_mutually_exclusive_group(required=False)
     group.add_argument("path", metavar="BOARD[/COLUMN]", nargs="?", help="Board or board/column to set active")
     group.add_argument("--clear", action="store_true", default=False, help="Clear the active context")
     _add_global_flags(p)
-    p.set_defaults(func=handle_use)
+    p.set_defaults(func=handle_set_path)
 
 
 def _add_board_parser(subparsers: argparse._SubParsersAction) -> None:
@@ -297,7 +297,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_global_flags(p)
     p.set_defaults(func=handle_init)
 
-    _add_use_parser(subparsers)
+    _add_cd_parser(subparsers)
     _add_board_parser(subparsers)
     _add_column_parser(subparsers)
 

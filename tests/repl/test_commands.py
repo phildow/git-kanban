@@ -35,35 +35,35 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.init.assert_called_once_with()
         self.renderer.render_init.assert_called_once_with(args, result)
 
-    def test_handle_use_defaults_to_clear_without_path(self):
+    def test_handle_set_path_defaults_to_clear_without_path(self):
         args = self._args(path=None, clear=False)
         result = object()
-        self.svc.use.return_value = result
+        self.svc.set_path.return_value = result
 
-        commands.handle_use(args, self.svc, self.renderer)
+        commands.handle_set_path(args, self.svc, self.renderer)
 
-        self.svc.use.assert_called_once_with(clear=True)
-        self.renderer.render_use.assert_called_once_with(args, result)
+        self.svc.set_path.assert_called_once_with(clear=True)
+        self.renderer.render_set_path.assert_called_once_with(args, result)
 
-    def test_handle_use_clear_flag(self):
+    def test_handle_set_path_clear_flag(self):
         args = self._args(path="alpha/todo", clear=True)
         result = object()
-        self.svc.use.return_value = result
+        self.svc.set_path.return_value = result
 
-        commands.handle_use(args, self.svc, self.renderer)
+        commands.handle_set_path(args, self.svc, self.renderer)
 
-        self.svc.use.assert_called_once_with(clear=True)
-        self.renderer.render_use.assert_called_once_with(args, result)
+        self.svc.set_path.assert_called_once_with(clear=True)
+        self.renderer.render_set_path.assert_called_once_with(args, result)
 
-    def test_handle_use_with_path(self):
+    def test_handle_set_path_with_path(self):
         args = self._args(path="alpha/todo", clear=False)
         result = object()
-        self.svc.use.return_value = result
+        self.svc.set_path.return_value = result
 
-        commands.handle_use(args, self.svc, self.renderer)
+        commands.handle_set_path(args, self.svc, self.renderer)
 
-        self.svc.use.assert_called_once_with(path="alpha/todo")
-        self.renderer.render_use.assert_called_once_with(args, result)
+        self.svc.set_path.assert_called_once_with(path="alpha/todo")
+        self.renderer.render_set_path.assert_called_once_with(args, result)
 
     def test_handle_board_sets_context_to_board(self):
         args = self._args(board="alpha")

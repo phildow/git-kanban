@@ -108,7 +108,7 @@ def _complete_command_tokens(
     if not tokens_before:
         return _starts_with(_top_level_commands(parser), text)
 
-    if tokens_before[0] in {"use", "cd"}:
+    if tokens_before[0] in {"cd"}:
         return []
 
     command_chain = list(tokens_before)
@@ -212,8 +212,8 @@ def _strip_trailing_slash(path: str) -> str:
     return path.rstrip("/")
 
 
-def _resolve_use_path(path: str, svc: KanbanService) -> str:
-    """Resolve special REPL shortcuts for `use` paths."""
+def resolve_set_path(path: str, svc: KanbanService) -> str:
+    """Resolve special REPL shortcuts for `set-path`"""
     normalized = _strip_trailing_slash(path)
     if normalized == "..":
         context = svc.user_context
@@ -233,9 +233,9 @@ def _rewrite_relative_paths(tokens: list[str], svc: KanbanService) -> list[str]:
     command = tokens[0]
     rewritten = list(tokens)
 
-    if command in {"use", "cd"}:
+    if command in {"cd"}:
         if len(rewritten) >= 2:
-            rewritten[1] = _resolve_use_path(rewritten[1], svc)
+            rewritten[1] = resolve_set_path(rewritten[1], svc)
         return rewritten
 
     if command in {"list", "ls"}:

@@ -34,7 +34,7 @@ from cli.commands import (
     handle_task_move,
     handle_task_show,
     handle_task_update,
-    handle_use,
+    handle_set_path,
 )
 
 class TestParserStructure(unittest.TestCase):
@@ -55,11 +55,11 @@ class TestParserStructure(unittest.TestCase):
             {"init", "board", "column", "task", "tasks", "search", "log", "status", "config", "repl"},
         )
 
-    def test_top_level_subcommands_do_not_include_use(self):
-        """Optional `use` command is available only when explicitly enabled."""
+    def test_top_level_subcommands_do_not_include_cd(self):
+        """Optional `cd` command is available only when explicitly enabled."""
         parser = cli_parser.build_parser()
         top = self._subparser_choices(parser, "command")
-        self.assertNotIn("use", set(top.keys()))
+        self.assertNotIn("cd", set(top.keys()))
 
     def test_nested_subcommands_exist(self):
         """Nested command groups expose expected child subcommands."""
