@@ -139,11 +139,11 @@ class KanbanService:
         """
 
         # TODO: Not intuitive at all. more like a create from path
-        self.create_board("main")
-        self.create_column("main/todo")
-        self.create_column("main/in-progress")
-        self.create_column("main/in-review")
-        self.create_column("main/done")
+        self.create_board("/main")
+        self.create_column("/main/todo")
+        self.create_column("/main/in-progress")
+        self.create_column("/main/in-review")
+        self.create_column("/main/done")
         
         self.update_user_context(board="main", column="todo")
         self.set_config("initialized", "true")
@@ -322,15 +322,16 @@ class KanbanService:
         """
         return self.repository.list_boards()
 
-    def create_board(self, name: str, ) -> Board:
+    def create_board(self, path: str, ) -> Board:
         """
         Create a new board directory under .kanban/boards/.  Raises
         BoardAlreadyExists if a board with that name is already present.
         Appends the new board to .kanban/.order and commits.
         """
-        return self.repository.create_board(name)
+        board, _, _ = self.path_components(path)
+        return self.repository.create_board(board)
 
-    def rename_board(self, board: str, new_name: str) -> Board:
+    def rename_board(self, path: str, new_name: str) -> Board:
         """
         Rename a board directory and update .kanban/.order in place.  Raises
         BoardNotFound if the source board does not exist, and BoardAlreadyExists
@@ -338,6 +339,7 @@ class KanbanService:
         UUIDs; only the directory name (and therefore the board's slug) changes.
         Updates the current context if the renamed board was the current one.
         """
+        board, _, _ = self.path_components(path)
         board = self.repository.rename_board(board, new_name)
 
         # Keep current context in sync.
@@ -345,17 +347,18 @@ class KanbanService:
 
         return board
 
-    def delete_board(self, board: str) -> None:
+    def delete_board(self, path: str) -> None:
         """
         Recursively delete a board directory and remove it from .kanban/.order.
         Raises BoardNotFound if the board does not exist.  Also removes all
         index entries for tasks that belonged to the board and clears the current
         context if it pointed at the deleted board.
         """
+        board, _, _ = self.path_components(path)
         board = self.repository.delete_board(board)
         
         # Clear current context if it points to the deleted board.
-        if self._user_context.board == name:
+        if self._user_context.board == board.name:
             self.clear_user_context()
 
         return board
