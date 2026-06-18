@@ -9,12 +9,14 @@ Prefer asking for more information over nudging the user to a specific course of
 Do not praise or patronize. Avoid comments like “great idea” or “good suggestion."
 
 Be succinct.
+
 ## Python
 
 - Use python as the programming language
 - The name of the root python package is `kanban`
-- When writing python prefer dot notation to `getattr`, especially when the type is known
-- Prefer explicit types to `object` and add type whenever possible
+- When writing python prefer dot notation over `getattr`, especially when the type is known
+- Prefer explicit types over `object` and add type whenever possible
+- Use double quotes `"..."` for strings
 - When a python dependency is required add it to the pyproject files
 - Add documenation when you create types and methods, including for tests
 - Break up tests, keep unit tests small
@@ -99,9 +101,9 @@ root-directory/
     index.db
   .kanban-store/
     boards/
-      .order
+      .metadata
       my-project/
-        .order
+        .metadata
         todo/
           complete-this-task.md
           also-thistask.md
@@ -109,7 +111,7 @@ root-directory/
         in-review/
         done/
       ops/
-        .order
+        .metadata
         backlog/
         todo/
         in-progress/
@@ -118,7 +120,7 @@ root-directory/
   ...
 ```
 
-`.kanban/` contains local machine state (config, cache) that should probably never be committed at all, while  `.kanban-store/` contains the shared board state that git is tracking.
+`.kanban/` contains local machine state (config, cache) that should probably never be committed at all, while  `.kanban-store/` contains the shared board state that git is tracking. Information about boards and columnts that is not stored in the files themselves, such as the sort order, is kept in a `.metadata` file local to each folder.
 
 ### Git
 
@@ -143,7 +145,7 @@ git -C .kanban-store pull
 
 ### Metadata
 
-Metadata is stored in markdown frontmatter with the following fields and format:
+Taks metadata is stored in the task's markdown file as frontmatter with the following fields and format:
 
 ```
 ---  
