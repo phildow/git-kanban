@@ -31,7 +31,6 @@ kanban (main)>
 
 ### TODO
 
-- Create private boards
 - add --list flag to ls to provide more details
 - Swing back around to path completion in svc._rewrite_relative_paths
 
@@ -54,12 +53,6 @@ kanban (main)>
 - REPL Additional commands
     - some way to set metadata
     - assign {task} {person}
-
-- Private boards:
-    - Just add the directory to the git ignore file
-    - with `board create --private`
-    - Init with a private board
-    - Add ignore method to GitService
 
 CONFIG
 

@@ -293,7 +293,7 @@ class KanbanService:
         """
         return self.repository.list_boards()
 
-    def create_board(self, name: str) -> Board:
+    def create_board(self, name: str, ) -> Board:
         """
         Create a new board directory under .kanban/boards/.  Raises
         BoardAlreadyExists if a board with that name is already present.

@@ -116,7 +116,6 @@ def _add_help_message(parser: argparse.ArgumentParser) -> None:
 
 def _add_create_parser(subparsers: argparse._SubParsersAction) -> None:
     create_parser = subparsers.add_parser("create", aliases=["new", "n"], help="Create a board, column, or task")
-    create_parser.add_argument("--private", metavar="NAME", help="If creating a board, add it to .gitignore")
     _add_global_flags(create_parser)
     create_sub = create_parser.add_subparsers(dest="create_subject", metavar="SUBJECT")
     create_sub.required = True

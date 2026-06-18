@@ -145,7 +145,7 @@ class KanbanRepository(ABC):
     def create_board(self, name: str) -> Board:
         """
         Create and return an empty board (no columns).
-
+        
         Raises BoardAlreadyExists if the name is taken.
         """
 

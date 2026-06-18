@@ -102,7 +102,6 @@ def _add_board_parser(subparsers: argparse._SubParsersAction) -> None:
     # board create
     p = board_sub.add_parser("create", help="Create a new board")
     p.add_argument("board", metavar="BOARD", help="Board name")
-    p.add_argument("--private", metavar="NAME", help="Add the board to .gitignore")
     _add_global_flags(p)
     p.set_defaults(func=handle_board_create)
 
