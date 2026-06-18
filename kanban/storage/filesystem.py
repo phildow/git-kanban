@@ -18,15 +18,34 @@ class FilesystemRepository(KanbanRepository):
     def __init__(self, root: Path) -> None:
         super().__init__(root)
 
+    @property
+    def kanban_dir(self) -> Path:
+        return self.root / ".kanban"
+
+    @property
+    def kanban_store_dir(self) -> Path:
+        return self.root / ".kanban-store"
+
     # Bootstrap
     def init_storage(self, default_board: str = "main") -> None:
-        raise NotImplementedError()
+        if self.is_initialized():
+            raise ValueError("Kanban is already initialized")
+
+        kanban_dir = self.kanban_dir
+        kanban_dir.mkdir()
+        (kanban_dir / "config").touch()
+        (kanban_dir / "index.db").touch()
+
+        store_dir = self.kanban_store_dir
+        boards_dir = store_dir / "boards"
+        boards_dir.mkdir(parents=True)
+        (boards_dir / ".metadata").touch()
 
     def bootstrap(self) -> list[Task]:
         raise NotImplementedError()
 
     def is_initialized(self) -> bool:
-        raise NotImplementedError()
+        return self.kanban_dir.exists() and self.kanban_store_dir.exists()
 
     # Board operations
     def list_boards(self) -> list[Board]:
