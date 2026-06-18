@@ -5,8 +5,10 @@ from __future__ import annotations
 import argparse
 import shlex
 import signal
+
 from argparse import Namespace
 from contextlib import contextmanager
+from pathlib import Path
 
 from services.kanban import KanbanService
 from storage.kanban import BoardNotFound, ColumnNotFound, TaskNotFound
@@ -112,11 +114,14 @@ def _initialize_kanban(svc: KanbanService) -> bool:
     if svc.is_initialized():
         return True
 
-    print("No kanban repository found in the current directory.")
-    should_init = input("Would you like to initialize a kanban repository here? (y/n) ").strip().lower()
+    cwd = Path.cwd()
+    directory = cwd.name
+
+    print(f"No kanban repository found in {cwd}.")
+    should_init = input(f"Would you like to initialize kanban at {directory}? (y/N)) ").strip().lower()
     if should_init in {"y", "yes"}:
         try:
-            svc.init()
+            svc.init_kanban()
             print("Repository initialized successfully. You're on the 'main' board, todo column. Type 'help' for usage.")
             return True
         except Exception as exc:
@@ -386,7 +391,8 @@ def run_repl(*, svc: KanbanService, renderer: object) -> None:
     """Run a simple command loop that reuses the CLI parser/handlers."""
     from repl.parser import build_parser
 
-    if not svc.is_initialized() and not _initialize_kanban(svc):
+    if not _initialize_kanban(svc):
+        print("Kanban repository not initialized. Exiting.")
         exit(1)
     
     try:

@@ -19,7 +19,7 @@ class FilesystemRepository(KanbanRepository):
         self.root = root
 
     # Bootstrap
-    def init(self, default_board: str = "main") -> None:
+    def init_storage(self, default_board: str = "main") -> None:
         raise NotImplementedError()
 
     def is_initialized(self) -> bool:

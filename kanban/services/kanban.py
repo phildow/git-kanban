@@ -39,7 +39,7 @@ class TaskUpdateParams:
 
 @dataclass
 class KanbanRoot:
-    path:       Path           # .kanban/ directory
+    path:       Path           # .kanban-store/ directory
     git_init:   bool           # True if git repo was freshly created
     boards_dir: Path
 
@@ -91,18 +91,52 @@ class KanbanService:
         self.index_service = index_service
         self.git_service = git_service
         self._user_context = user_context
+        self._kanban_root = None
+    
+    # ------------------------------------------------------------------
+    # Initialization
+    # ------------------------------------------------------------------
 
-    # ── Bootstrap ─────────────────────────────────────────────────────────────
+    def is_initialized(self) -> bool:
+        """Return True if the repository is already initialized at the current path."""
+        # return self._kanban_root is not None and self._kanban_root.path.exists() and self.repository.is_initialized()
+        # Move path.exists() check to repository
+        return self._kanban_root is not None and self.repository.is_initialized()
 
-    def init(self, path: Path = Path(".")) -> KanbanRoot:
+    def init_kanban(self, path: Path = Path(".")) -> KanbanRoot:
         """
-        Create the .kanban/ directory skeleton, initialize git, and write the
-        first commit.  Raises AlreadyInitialized if .kanban/ already exists at
+        Create the .kanban/ and .kanban-store/ directory skeleton, initialize git, and write the
+        first commit.  Raises AlreadyInitialized if .kanban/ or .kanban-store/ already exists at
         path.  This is the only method that runs before the services are fully
         operational, so it orchestrates creation order directly: filesystem
         first, index second, git last.
         """
-        self.repository.init(default_board="main")
+        self.repository.init_storage(default_board="main")
+        
+        self.bootstrap()
+        self.repository.bootstrap()
+
+        # TODO: this should probably just be path
+        kanban_root = path / ".kanban-store"
+
+        self._kanban_root = KanbanRoot(
+            path=kanban_root,
+            git_init=False,
+            boards_dir=kanban_root / "boards",
+        )
+
+        return self._kanban_root
+
+    # ------------------------------------------------------------------
+    # Bootstrap (development only)
+    # ------------------------------------------------------------------
+
+    # DEBUG ONLY
+    def bootstrap(self):
+        """
+        Bootstrap the repository with a default board and columns if it is not already initialized.  
+        Returns the new KanbanRoot info if initialization was performed, or None if the repository was already initialized.
+        """
 
         # TODO: Not intuitive at all. more like a create from path
         self.create_board("main")
@@ -114,18 +148,9 @@ class KanbanService:
         self.update_user_context(board="main", column="todo")
         self.set_config("initialized", "true")
 
-        kanban_root = path / ".kanban"
-        return KanbanRoot(
-            path=kanban_root,
-            git_init=False,
-            boards_dir=kanban_root / "boards",
-        )
-
-    def is_initialized(self) -> bool:
-        """Return True if the repository is already initialized at the current path."""
-        return self.repository.is_initialized()
-
-    # ── User context ────────────────────────────────────────────────────────
+    # ------------------------------------------------------------------
+    # User Context
+    # ------------------------------------------------------------------
 
     @property
     def user_context(self) -> UserContext:
@@ -145,6 +170,26 @@ class KanbanService:
         """Clear the user context with initial default values."""
         self._user_context = UserContext()
         return self._user_context
+
+    # ------------------------------------------------------------------
+    # Path Resolution and Completions
+    # ------------------------------------------------------------------
+
+    def _board_exists(self, board: str) -> bool:
+        """Return True if the given board exists in the repository, False if not."""
+        try:
+            self.repository.get_board(board)
+            return True
+        except BoardNotFound:
+            return False
+
+    def _column_exists(self, board: str, column: str) -> bool:
+        """Return True if the given column exists in the repository, False if not."""
+        try:
+            self.repository.get_column(board, column)
+            return True
+        except (BoardNotFound, ColumnNotFound):
+            return False
 
     def resolve_path(self, path: str | None = None) -> Path:
         """
@@ -190,22 +235,6 @@ class KanbanService:
             completions = [f"{b.name}/" for b in self.repository.list_boards() if b.name.startswith(board or "")]
 
         return completions
-
-    def _board_exists(self, board: str) -> bool:
-        """Return True if the given board exists in the repository."""
-        try:
-            self.repository.get_board(board)
-            return True
-        except BoardNotFound:
-            return False
-
-    def _column_exists(self, board: str, column: str) -> bool:
-        """Return True if the given column exists in the repository."""
-        try:
-            self.repository.get_column(board, column)
-            return True
-        except (BoardNotFound, ColumnNotFound):
-            return False
 
     # TODO: rename to change_dir, because that's what it's doing
     def set_path(

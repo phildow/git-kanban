@@ -29,14 +29,14 @@ class TestCommandHandlers(unittest.TestCase):
         return Namespace(**kwargs)
 
     def test_handle_init_calls_service_and_renderer(self):
-        """`init` handler calls service `init()` and forwards result to renderer."""
+        """`init` handler calls service `init_kanban()` and forwards result to renderer."""
         args = self._args()
         result = object()
         self.svc.init.return_value = result
 
         commands.handle_init(args, self.svc, self.renderer)
 
-        self.svc.init.assert_called_once_with()
+        self.svc.init_kanban.assert_called_once_with()
         self.renderer.render_init.assert_called_once_with(args, result)
 
     def test_handle_board_list(self):

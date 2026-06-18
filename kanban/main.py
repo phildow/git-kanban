@@ -19,12 +19,7 @@ def main() -> None:
     user_context = UserContext()
     svc = KanbanService(repository=repository, index_service=index_service, git_service=git_service, user_context=user_context)
     renderer = Renderer()
-
-    # Bootstrap the repository during development
-    if isinstance(repository, InMemoryRepository):
-        svc.init() # calls repository.init
-        repository.bootstrap()
-
+    
     args = parse_args()
 
     if not hasattr(args, "func"):

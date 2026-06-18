@@ -12,7 +12,7 @@ from services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
 
 def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	_ = args
-	result = svc.init()
+	result = svc.init_kanban()
 	renderer.render_init(args, result)
 
 # ---------------------------------------------------------------------------

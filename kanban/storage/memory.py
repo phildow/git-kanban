@@ -46,6 +46,25 @@ class InMemoryRepository(KanbanRepository):
             if not self.column_exists(board, column):
                 self.create_column(board, column)
     
+    
+    # ---------------------------------------------------------------------------
+    # Iniialization
+    # ---------------------------------------------------------------------------
+
+    
+    def init_storage(self, default_board: str = "main") -> None:
+        already_initialized = self.get_config("initialized") == "true"
+        if already_initialized or self.board_exists(default_board):
+           raise ValueError("Kanban is already initialized")
+
+    def is_initialized(self) -> bool:
+        """Return True if the repository is already initialized at the current path."""
+        return self.get_config("initialized") == "true"
+
+    # ---------------------------------------------------------------------------
+    # Bootstrap (development-only)
+    # ---------------------------------------------------------------------------
+
     # DEBUG ONLY
     def _bootstrap_board_tasks(
         self,
@@ -82,17 +101,21 @@ class InMemoryRepository(KanbanRepository):
                 created.append(self.create_task(task, slug))
 
         return created
-
-    # DEBUG ONLY
+        
     def bootstrap(self, board: str = "main", tasks_per_column: int = 3) -> list[Task]:
-        """Seed sample tasks across all columns for local development.
-
+        """
+        Bootstrap the repository with a default board and columns if it is not already initialized.
+        Returns the new KanbanRoot info if initialization was performed, or None if the repository was already initialized.
+        
+        Seed sample tasks across all columns for local development.
+        
         Returns created tasks in creation order. Raises `BoardNotFound` when
         the requested board does not exist.
-
+        
         When bootstrapping the default `main` board, also creates and seeds an
         `infra` board with the standard column set and distinct task names.
         """
+        
         if tasks_per_column < 1:
             raise ValueError("tasks_per_column must be >= 1")
 
@@ -120,15 +143,8 @@ class InMemoryRepository(KanbanRepository):
 
         return created
 
-    # Bootstrap
-    def init(self, default_board: str = "main") -> None:
-        already_initialized = self.get_config("initialized") == "true"
-        if already_initialized or self.board_exists(default_board):
-            raise ValueError("Kanban is already initialized")
 
-    def is_initialized(self) -> bool:
-        """Return True if the repository is already initialized at the current path."""
-        return self.get_config("initialized") == "true"
+
 
     # Board operations
     def list_boards(self) -> list[Board]:

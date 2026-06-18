@@ -103,11 +103,11 @@ class KanbanRepository(ABC):
     # ------------------------------------------------------------------
 
     @abstractmethod
-    def init(self, default_board: str = "main") -> None:
+    def init_storage(self, default_board: str = "main") -> None:
         """Initialize repository state for first use.
 
-        Implementations should create the default board, set current context,
-        and persist any internal initialized sentinel.
+        Implementations should create the default board and any other necessary bootstrap state. 
+        This is called by the KanbanService during its initialization.
 
         Raises ValueError when already initialized.
         """

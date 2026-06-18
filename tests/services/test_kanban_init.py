@@ -16,7 +16,7 @@ from services.index import IndexService
 from storage.memory import InMemoryRepository
 
 
-class TestKanbanServiceInit(unittest.TestCase):
+class TestKanbanServiceInitKanban(unittest.TestCase):
     """Tests for one-time repository bootstrap behavior."""
 
     def test_init_creates_main_board_and_marks_initialized(self):
@@ -29,11 +29,11 @@ class TestKanbanServiceInit(unittest.TestCase):
             user_context=UserContext(),
         )
 
-        result = svc.init(Path("."))
+        result = svc.init_kanban(Path("."))
 
         self.assertIsInstance(result, KanbanRoot)
-        self.assertEqual(result.path, Path(".kanban"))
-        self.assertEqual(result.boards_dir, Path(".kanban/boards"))
+        self.assertEqual(result.path, Path(".kanban-store"))
+        self.assertEqual(result.boards_dir, Path(".kanban-store/boards"))
         self.assertFalse(result.git_init)
         self.assertTrue(repo.board_exists("main"))
         self.assertEqual(
@@ -59,9 +59,9 @@ class TestKanbanServiceInit(unittest.TestCase):
             user_context=UserContext(),
         )
 
-        svc.init(Path("."))
+        svc.init_kanban(Path("."))
         with self.assertRaises(ValueError):
-            svc.init(Path("."))
+            svc.init_kanban(Path("."))
 
     def test_init_raises_when_main_board_already_exists(self):
         """Init raises if sentinel board state already indicates bootstrapped repo."""
@@ -75,7 +75,7 @@ class TestKanbanServiceInit(unittest.TestCase):
         )
 
         with self.assertRaises(ValueError):
-            svc.init(Path("."))
+            svc.init_kanban(Path("."))
 
 
 if __name__ == "__main__":
