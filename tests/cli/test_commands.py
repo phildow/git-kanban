@@ -32,7 +32,7 @@ class TestCommandHandlers(unittest.TestCase):
         """`init` handler calls service `init_kanban()` and forwards result to renderer."""
         args = self._args()
         result = object()
-        self.svc.init.return_value = result
+        self.svc.init_kanban.return_value = result
 
         commands.handle_init(args, self.svc, self.renderer)
 
