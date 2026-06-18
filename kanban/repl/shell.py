@@ -122,7 +122,6 @@ def _initialize_kanban(svc: KanbanService) -> bool:
     if should_init in {"y", "yes"}:
         try:
             svc.init_kanban()
-            print("Repository initialized successfully. You're on the 'main' board, todo column. Type 'help' for usage.")
             return True
         except Exception as exc:
             print(f"Failed to initialize repository: {exc}")

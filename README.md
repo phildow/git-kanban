@@ -31,20 +31,23 @@ kanban (main)>
 
 ### TODO
 
-- Swing back around to path completion in svc._rewrite_relative_paths (eg cd, ls)
+- Resolve path into components in service before calling repository
 - Add comments to a task which are just appended to the body
 - Replace "../.." with clear, beep if backing up too far
-- List all tasks on a board, show the location board/column
-- Double tab to cycle through completions
 
 TAB COMPLETION
-    
+
+- Swing back around to path completion in svc._rewrite_relative_paths (eg cd, ls)
+- Assignees, priorities, and tags are cached in the index
+- Double tab to cycle through completions
+
 - Commands
 - Paths relative and absolute
 - Flags?
 - Assignees
 - Priority
 - Tags
+
 
 CONFIG
 
