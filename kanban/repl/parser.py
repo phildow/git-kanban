@@ -59,9 +59,9 @@ class CustomFormatter(argparse.RawDescriptionHelpFormatter):
         # Unfortunately not called for subparsers, so we have to customize the help text for each subparser individually.
 
         if prefix is None:
-            prefix = 'usage: '
+            prefix = "usage: "
         # Custom logic to avoid double space if prog is empty
-        if not prefix.endswith(' ') and usage and not usage.startswith(' '):
+        if not prefix.endswith(" ") and usage and not usage.startswith(" "):
             prefix = prefix[:-1]
         return super()._format_usage(usage, actions, groups, prefix)
 
@@ -226,8 +226,8 @@ def _add_update_parser(subparsers: argparse._SubParsersAction) -> None:
 
 def _add_move_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("move", aliases=["mv"], help="Move a task to another column or board")
-    p.add_argument('path', type=str, help='The task to move')
-    p.add_argument('dest', type=str, help='The destination (column, board, or new title)')
+    p.add_argument("path", type=str, help="The task to move")
+    p.add_argument("dest", type=str, help="The destination (column, board, or new title)")
     _add_global_flags(p)
     p.set_defaults(func=handle_task_move)
 

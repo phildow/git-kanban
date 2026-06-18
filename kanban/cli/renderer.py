@@ -240,11 +240,11 @@ class Renderer:
 			f"Slug: {result.slug}",
 			f"ID: {result.id}",
 			f"Location: {result.board}/{result.column}" if result.board and result.column else "Location: (unscoped)",
-			f"Assignee: {result.assignee or '-'}",
-			f"Priority: {result.priority or '-'}",
-			f"Due: {result.due_date.isoformat() if result.due_date else '-'}",
-			f"Tags: {', '.join(result.tags) if result.tags else '-'}",
-			f"Created by: {result.created_by or '-'}",
+			f"Assignee: {result.assignee or "-"}",
+			f"Priority: {result.priority or "-"}",
+			f"Due: {result.due_date.isoformat() if result.due_date else "-"}",
+			f"Tags: {", ".join(result.tags) if result.tags else "-"}",
+			f"Created by: {result.created_by or "-"}",
 		]
 		self._emit(args, "\n".join(lines))
 

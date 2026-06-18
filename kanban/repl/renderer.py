@@ -241,15 +241,15 @@ class Renderer:
 		include_tags = width > 80
 		include_board = width > 96
 
-		heading =  [f"{'Title':<32}", f"{'Assigned To':<16}", f"{'Priority':<16}", f"{'Due':<16}"]
-		uderline = [f"{'-----':<32}", f"{'-----------':<16}", f"{'--------':<16}", f"{'---':<16}"]
+		heading =  [f"{"Title":<32}", f"{"Assigned To":<16}", f"{"Priority":<16}", f"{"Due":<16}"]
+		uderline = [f"{"-----":<32}", f"{"-----------":<16}", f"{"--------":<16}", f"{"---":<16}"]
 
 		if include_tags:
-			heading.insert(3,  f"{'Tags':<16}")
-			uderline.insert(3, f"{'----':<16}")
+			heading.insert(3,  f"{"Tags":<16}")
+			uderline.insert(3, f"{"----":<16}")
 		if include_board:
-			heading.insert(1,  f"{'Column':<16}")
-			uderline.insert(1, f"{'-----':<16}")
+			heading.insert(1,  f"{"Column":<16}")
+			uderline.insert(1, f"{"-----":<16}")
 
 		items.append("".join(heading))
 		items.append("".join(uderline))
@@ -258,11 +258,11 @@ class Renderer:
 			tags = ", ".join(task.tags) if task.tags else None
 			elems = [
 				f"{self._clamped(task.title, 32-1):<32}", 
-				*(f"{self._clamped(task.column or '-', 16-1):<16}" if include_board else []), 
-				f"{self._clamped(task.assignee or '-', 16-1):<16}", 
-				f"{self._clamped(task.priority or '-', 16-1):<16}", 
-				*(f"{self._clamped(tags or '-', 16-1):<16}" if include_tags else []),
-				f"{self._clamped(task.due_date.isoformat() if task.due_date else '-', 16-1):<16}"
+				*(f"{self._clamped(task.column or "-", 16-1):<16}" if include_board else []), 
+				f"{self._clamped(task.assignee or "-", 16-1):<16}", 
+				f"{self._clamped(task.priority or "-", 16-1):<16}", 
+				*(f"{self._clamped(tags or "-", 16-1):<16}" if include_tags else []),
+				f"{self._clamped(task.due_date.isoformat() if task.due_date else "-", 16-1):<16}"
 				]
 			items.append("".join(elems))
 		
@@ -293,11 +293,11 @@ class Renderer:
 			f"Slug: {result.slug}",
 			f"ID: {result.id}",
 			f"Location: /{result.board}/{result.column}" if result.board and result.column else "Location: (unscoped)",
-			f"Assignee: {result.assignee or '-'}",
-			f"Priority: {result.priority or '-'}",
-			f"Due: {result.due_date.isoformat() if result.due_date else '-'}",
-			f"Tags: {', '.join(result.tags) if result.tags else '-'}",
-			f"Created by: {result.created_by or '-'}",
+			f"Assignee: {result.assignee or "-"}",
+			f"Priority: {result.priority or "-"}",
+			f"Due: {result.due_date.isoformat() if result.due_date else "-"}",
+			f"Tags: {", ".join(result.tags) if result.tags else "-"}",
+			f"Created by: {result.created_by or "-"}",
 			"---------------------"
 			"",
 			result.body,
