@@ -112,9 +112,10 @@ class KanbanService:
         first, index second, git last.
         """
         self.repository.init_storage(default_board="main")
-        
-        self.bootstrap()
         self.repository.bootstrap()
+        
+        self.update_user_context(board="main", column="todo")
+        self.set_config("initialized", "true")
 
         # TODO: this should probably just be path
         kanban_root = path / ".kanban-store"
@@ -126,27 +127,6 @@ class KanbanService:
         )
 
         return self._kanban_root
-
-    # ------------------------------------------------------------------
-    # Bootstrap (development only)
-    # ------------------------------------------------------------------
-
-    # DEBUG ONLY
-    def bootstrap(self):
-        """
-        Bootstrap the repository with a default board and columns if it is not already initialized.  
-        Returns the new KanbanRoot info if initialization was performed, or None if the repository was already initialized.
-        """
-
-        # TODO: Not intuitive at all. more like a create from path
-        self.create_board("/main")
-        self.create_column("/main/todo")
-        self.create_column("/main/in-progress")
-        self.create_column("/main/in-review")
-        self.create_column("/main/done")
-        
-        self.update_user_context(board="main", column="todo")
-        self.set_config("initialized", "true")
 
     # ------------------------------------------------------------------
     # User Context

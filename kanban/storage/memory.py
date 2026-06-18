@@ -38,17 +38,10 @@ class InMemoryRepository(KanbanRepository):
         if not slug:
             raise ValueError("Task title must contain at least one alphanumeric character")
         return slug
-
-    def _ensure_default_columns(self, board: str) -> None:
-        """Ensure the standard column set exists for the target board."""
-        default_columns = ["todo", "in-progress", "in-review", "done"]
-        for column in default_columns:
-            if not self.column_exists(board, column):
-                self.create_column(board, column)
     
     
     # ---------------------------------------------------------------------------
-    # Iniialization
+    # Initialization
     # ---------------------------------------------------------------------------
 
     
@@ -57,16 +50,65 @@ class InMemoryRepository(KanbanRepository):
         if already_initialized or self.board_exists(default_board):
            raise ValueError("Kanban is already initialized")
 
+    def bootstrap(self) -> list[Task]:
+        """
+        Bootstrap the repository with a default board and columns if it is not already initialized.
+        Returns the new KanbanRoot info if initialization was performed, or None if the repository was already initialized.
+
+        Seed sample tasks across all columns for local development.
+
+        Returns created tasks in creation order. Raises `BoardNotFound` when
+        the requested board does not exist.
+        
+        When bootstrapping the default `main` board, also creates and seeds an
+        `infra` board with the standard column set and distinct task names.
+        """
+        assert self.is_initialized() == False, "Repository is already initialized"
+
+        tasks_per_column = 3
+
+        first_board = "main"
+        second_board = "infra"
+        created: list[Task] = []
+
+        if not self.board_exists(first_board):
+            self.create_board(first_board)
+            self._bootstrap_columns(first_board)
+
+        created.extend(
+            self._bootstrap_tasks(
+                board=first_board,
+                tasks_per_column=tasks_per_column,
+                title_template="{column} Task {i}",
+            )
+        )
+
+        if not self.board_exists(second_board):
+            self.create_board(second_board)
+            self._bootstrap_columns(second_board)
+
+        created.extend(
+            self._bootstrap_tasks(
+                board=second_board,
+                tasks_per_column=tasks_per_column,
+                title_template="Infra {column} Work Item {i}",
+            )
+        )
+
+        return created
+
     def is_initialized(self) -> bool:
         """Return True if the repository is already initialized at the current path."""
         return self.get_config("initialized") == "true"
 
-    # ---------------------------------------------------------------------------
-    # Bootstrap (development-only)
-    # ---------------------------------------------------------------------------
+    def _bootstrap_columns(self, board: str) -> None:
+        """Ensure the standard column set exists for the target board."""
+        default_columns = ["todo", "in-progress", "in-review", "done"]
+        for column in default_columns:
+            if not self.column_exists(board, column):
+                self.create_column(board, column)
 
-    # DEBUG ONLY
-    def _bootstrap_board_tasks(
+    def _bootstrap_tasks(
         self,
         *,
         board: str,
@@ -101,49 +143,6 @@ class InMemoryRepository(KanbanRepository):
                 created.append(self.create_task(task, slug))
 
         return created
-        
-    def bootstrap(self, board: str = "main", tasks_per_column: int = 3) -> list[Task]:
-        """
-        Bootstrap the repository with a default board and columns if it is not already initialized.
-        Returns the new KanbanRoot info if initialization was performed, or None if the repository was already initialized.
-        
-        Seed sample tasks across all columns for local development.
-        
-        Returns created tasks in creation order. Raises `BoardNotFound` when
-        the requested board does not exist.
-        
-        When bootstrapping the default `main` board, also creates and seeds an
-        `infra` board with the standard column set and distinct task names.
-        """
-        
-        if tasks_per_column < 1:
-            raise ValueError("tasks_per_column must be >= 1")
-
-        created = self._bootstrap_board_tasks(
-            board=board,
-            tasks_per_column=tasks_per_column,
-            title_template="{column} Task {i}",
-        )
-
-        if board != "main":
-            return created
-
-        secondary_board = "infra"
-        if not self.board_exists(secondary_board):
-            self.create_board(secondary_board)
-        self._ensure_default_columns(secondary_board)
-
-        created.extend(
-            self._bootstrap_board_tasks(
-                board=secondary_board,
-                tasks_per_column=tasks_per_column,
-                title_template="Infra {column} Work Item {i}",
-            )
-        )
-
-        return created
-
-
 
 
     # Board operations
