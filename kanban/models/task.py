@@ -27,3 +27,6 @@ class Task:
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     body: str = ""
+
+    def path(self) -> Path:
+        return Path(f"/{self.board}/{self.column}/{self.slug}")

@@ -51,6 +51,8 @@ kanban (main)>
 
 ### TODO
 
+- Use slugs in memory repository for private indexing
+- Models return a path
 - Cleanup: Define some getter methods as properties
 - Add comments to a task which are just appended to the body
 

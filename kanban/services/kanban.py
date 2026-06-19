@@ -12,6 +12,7 @@ from models import Task, TaskFilter, Board, Column, UserContext
 from storage.kanban import KanbanRepository, ColumnNotFound, BoardNotFound
 from services.git import GitService
 from services.index import IndexService
+from utils.str import kebab_case
 
 
 # ── Params ────────────────────────────────────────────────────────────────────
@@ -491,7 +492,7 @@ class KanbanService:
         task = Task(
             id=uuid4(),
             title=title,
-            slug=self._to_kebab_case(title),
+            slug=kebab_case(title),
             board=board,
             column=column,
             assignee=assignee,
@@ -528,7 +529,7 @@ class KanbanService:
                 raise ValueError(f"Task not found in scope: {board}/{column}/{title_or_id}")
             return task
 
-        filename = self._to_kebab_case(title_or_id)
+        filename = kebab_case(title_or_id)
         return self.repository.get_task(board, column, filename)
 
     def edit_task(
@@ -696,13 +697,6 @@ class KanbanService:
 
 
     # ── Internal helpers ──────────────────────────────────────────────────────
-
-    def _to_kebab_case(self, text: str) -> str:
-        """Convert free-form title text into a kebab-case filename slug."""
-        slug = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
-        if not slug:
-            raise ValueError("Task title must contain at least one alphanumeric character")
-        return slug
 
     def _task_to_markdown(self, task: Task) -> str:
         """Serialize a task to editable markdown with YAML-like frontmatter."""
