@@ -111,7 +111,7 @@ def _top_level_commands(parser: argparse.ArgumentParser) -> list[str]:
 
 def _initialize_kanban(svc: KanbanService) -> bool:
     """Prompt the user to initialize a kanban repository if not already initialized."""
-    if svc.is_initialized():
+    if svc.is_initialized:
         return True
 
     cwd = Path.cwd()
@@ -368,7 +368,7 @@ def _install_exit_signal_handlers():
 
 def _print_welcome_message(svc: KanbanService) -> None:
     """Print a welcome message when the REPL starts."""
-    if not svc.is_initialized():
+    if not svc.is_initialized:
         print("No kanban repository found in the current directory.")
         return
 

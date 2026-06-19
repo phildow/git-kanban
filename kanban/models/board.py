@@ -18,5 +18,6 @@ class Board:
     # Do I want to include created_at and created_by here? 
     # Maybe not since boards are more about organization than workflow?
 
+    @property
     def path(self) -> Path:
         return Path(f"/{self.name}")

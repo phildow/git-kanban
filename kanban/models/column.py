@@ -20,5 +20,6 @@ class Column:
     board: str
     position: int
 
+    @property
     def path(self) -> Path:
         return Path(f"/{self.board}/{self.name}")

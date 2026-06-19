@@ -98,11 +98,12 @@ class KanbanService:
     # Initialization
     # ------------------------------------------------------------------
 
+    @property
     def is_initialized(self) -> bool:
         """Return True if the repository is already initialized at the current path."""
-        # return self._kanban_root is not None and self._kanban_root.path.exists() and self.repository.is_initialized()
+        # return self._kanban_root is not None and self._kanban_root.path.exists() and self.repository.is_initialized
         # Move path.exists() check to repository
-        return self._kanban_root is not None and self.repository.is_initialized()
+        return self._kanban_root is not None and self.repository.is_initialized
 
     def init_kanban(self, path: Path = Path(".")) -> KanbanRoot:
         """

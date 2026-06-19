@@ -125,6 +125,7 @@ class KanbanRepository(ABC):
         Returns the list of created tasks for verification in tests.
         """
 
+    @property
     @abstractmethod
     def is_initialized(self) -> bool:
         """Return True if the repository is already initialized at the current path."""

@@ -48,7 +48,7 @@ class FilesystemRepository(KanbanRepository):
 
     # Bootstrap
     def init_storage(self, default_board: str = "main") -> None:
-        if self.is_initialized():
+        if self.is_initialized:
             raise ValueError("Kanban is already initialized")
 
         kanban_dir = self.kanban_dir
@@ -67,6 +67,7 @@ class FilesystemRepository(KanbanRepository):
     def bootstrap(self) -> list[Task]:
         raise NotImplementedError()
 
+    @property
     def is_initialized(self) -> bool:
         return self.kanban_dir.exists() and self.kanban_store_dir.exists()
 

@@ -66,7 +66,7 @@ class InMemoryRepository(KanbanRepository):
         When bootstrapping the default `main` board, also creates and seeds an
         `infra` board with the standard column set and distinct task names.
         """
-        assert self.is_initialized() == False, "Repository is already initialized"
+        assert self.is_initialized == False, "Repository is already initialized"
 
         tasks_per_column = 3
 
@@ -100,6 +100,7 @@ class InMemoryRepository(KanbanRepository):
 
         return created
 
+    @property
     def is_initialized(self) -> bool:
         """Return True if the repository is already initialized at the current path."""
         return self.get_config("initialized") == "true"
