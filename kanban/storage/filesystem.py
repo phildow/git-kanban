@@ -139,7 +139,10 @@ class FilesystemRepository(KanbanRepository):
         return Column(name=name, board=board, position=position, task_count=task_count)
 
     def column_exists(self, board: str, name: str) -> bool:
-        raise NotImplementedError()
+        if not self.board_exists(board):
+            raise BoardNotFound(board)
+        column_path = self.boards_dir / board / name
+        return column_path.is_dir() and not name.startswith(".")
 
     def create_column(self, board: str, name: str) -> Column:
         if not self.board_exists(board):
@@ -158,7 +161,11 @@ class FilesystemRepository(KanbanRepository):
         raise NotImplementedError()
 
     def delete_column(self, board: str, name: str) -> None:
-        raise NotImplementedError()
+        if not self.board_exists(board):
+            raise BoardNotFound(board)
+        if not self.column_exists(board, name):
+            raise ColumnNotFound(board, name)
+        shutil.rmtree(self.boards_dir / board / name)
 
     # Task operations
     def get_tasks(
