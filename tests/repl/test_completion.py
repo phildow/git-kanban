@@ -8,6 +8,7 @@ import unittest
 
 from pathlib import Path
 from types import SimpleNamespace
+from uuid import uuid4
 from unittest.mock import MagicMock, patch
 
 from cli.parser import build_parser as build_cli_parser
@@ -114,8 +115,9 @@ class _FakeSvc:
 
 class TestReplCompletion(unittest.TestCase):
     def setUp(self) -> None:
-        temp_dir = tempfile.gettempdir()
-        self.repo = InMemoryRepository(root=Path(temp_dir))
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+        temp_dir.mkdir()
+        self.repo = InMemoryRepository(root=temp_dir)
         self.svc = KanbanService(
             repository=self.repo,
             index_service=IndexService(repository=self.repo),

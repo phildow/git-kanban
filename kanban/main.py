@@ -1,5 +1,6 @@
 """Entry point for the kanban CLI."""
 
+import logging
 from pathlib import Path
 
 from cli.parser import parse_args
@@ -14,6 +15,8 @@ from storage.memory import InMemoryRepository
 
 
 def main() -> None:
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+    
     cwd = Path.cwd()
     repository = get_repository("filesystem")
     index_service = IndexService(repository=repository)
@@ -37,7 +40,9 @@ def main() -> None:
 
 def get_repository(typ: str) -> KanbanRepository:
     import tempfile
-    temp_dir = Path(tempfile.gettempdir())
+    from uuid import uuid4
+    temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+    temp_dir.mkdir()
     cwd = Path.cwd()
 
     if typ == "memory":

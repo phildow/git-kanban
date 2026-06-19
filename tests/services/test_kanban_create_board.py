@@ -5,6 +5,7 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
+from uuid import uuid4
 
 from models import UserContext
 from services.git import GitService
@@ -17,8 +18,9 @@ class TestKanbanServiceCreateBoard(unittest.TestCase):
     """create_board creates the board and the requested columns."""
 
     def setUp(self) -> None:
-        temp_dir = tempfile.gettempdir()
-        self.repo = InMemoryRepository(root=Path(temp_dir))
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+        temp_dir.mkdir()
+        self.repo = InMemoryRepository(root=temp_dir)
         self.svc = KanbanService(
             repository=self.repo,
             index_service=IndexService(repository=self.repo),

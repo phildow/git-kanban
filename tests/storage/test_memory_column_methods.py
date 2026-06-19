@@ -21,8 +21,9 @@ class TestInMemoryRepositoryColumnOps(unittest.TestCase):
     """Column operation contract tests for the in-memory repository."""
 
     def setUp(self) -> None:
-        temp_dir = tempfile.gettempdir()
-        self.repo = InMemoryRepository(root=Path(temp_dir))
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+        temp_dir.mkdir()
+        self.repo = InMemoryRepository(root=temp_dir)
         self.repo.create_board("alpha")
 
     def test_get_columns_and_create_column(self):

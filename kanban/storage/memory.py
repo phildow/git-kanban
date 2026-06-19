@@ -49,8 +49,7 @@ class InMemoryRepository(KanbanRepository):
 
     
     def init_storage(self, default_board: str = "main") -> None:
-        already_initialized = self.get_config("initialized") == "true"
-        if already_initialized or self.board_exists(default_board):
+        if self.board_exists(default_board):
            raise ValueError("Kanban is already initialized")
 
     def bootstrap(self) -> list[Task]:
@@ -66,8 +65,6 @@ class InMemoryRepository(KanbanRepository):
         When bootstrapping the default `main` board, also creates and seeds an
         `infra` board with the standard column set and distinct task names.
         """
-        assert self.is_initialized == False, "Repository is already initialized"
-
         tasks_per_column = 3
 
         first_board = "main"

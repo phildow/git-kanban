@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import shlex
 import signal
 
@@ -124,7 +125,9 @@ def _initialize_kanban(svc: KanbanService) -> bool:
             svc.init_kanban()
             return True
         except Exception as exc:
-            print(f"Failed to initialize repository: {exc}")
+            exc_desc = str(exc) or exc.__class__.__name__
+            logging.error("Failed to initialize repository: %s", exc_desc)
+            print(f"Failed to initialize repository")
             return False
     return False
 
@@ -453,10 +456,15 @@ def run_repl(*, svc: KanbanService, renderer: object) -> None:
                 except TaskNotFound as exc:
                     print(f"Task not found: {exc.identifier}")
                 except ValueError as exc:
+                    logging.error("Value error: %s", exc)
                     print(f"Value error: {exc}")
                 except KeyboardInterrupt:
                     print()
                     continue
+                except Exception as exc:
+                    exc_desc = str(exc) or exc.__class__.__name__
+                    logging.error("Unexpected error: %s", exc_desc, exc_info=True)
+                    print(f"Unexpected error: {exc_desc}")
     except _ReplExit:
         print()
 

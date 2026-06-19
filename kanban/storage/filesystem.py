@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import logging
+import shutil
+
 from datetime import datetime, timezone
 from pathlib import Path
-import shutil
 from typing import Optional
 from uuid import UUID
 
@@ -58,7 +60,7 @@ class FilesystemRepository(KanbanRepository):
             
         kanban_store_dir = self.kanban_store_dir
         kanban_store_dir.mkdir()
-        
+
         self.config_file.touch()
         self.index_file.touch()
 

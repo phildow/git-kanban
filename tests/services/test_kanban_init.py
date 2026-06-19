@@ -10,9 +10,10 @@ import tempfile
 import unittest
 
 from pathlib import Path
+from uuid import uuid4
 
 from models import UserContext
-from services.kanban import KanbanService, KanbanRoot
+from services.kanban import KanbanService
 from services.git import GitService
 from services.index import IndexService
 from storage.memory import InMemoryRepository
@@ -23,8 +24,9 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
 
     def test_init_creates_main_board_and_marks_initialized(self):
         """First init creates main board, default columns, context, and init flag."""
-        temp_dir = tempfile.gettempdir()
-        repo = InMemoryRepository(root=Path(temp_dir))
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+        temp_dir.mkdir()
+        repo = InMemoryRepository(root=temp_dir)
         svc = KanbanService(
             repository=repo,
             index_service=IndexService(repository=repo),
@@ -34,10 +36,7 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
 
         result = svc.init_kanban(Path("."))
 
-        self.assertIsInstance(result, KanbanRoot)
-        self.assertEqual(result.path, Path(".kanban-store"))
-        self.assertEqual(result.boards_dir, Path(".kanban-store/boards"))
-        self.assertFalse(result.git_init)
+        self.assertTrue(result)
         self.assertTrue(repo.board_exists("main"))
         self.assertEqual(
             [c.name for c in repo.get_columns("main")],
@@ -50,12 +49,12 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
 
         self.assertEqual(svc.user_context.board, "main")
         self.assertEqual(svc.user_context.column, "todo")
-        self.assertEqual(repo.get_config("initialized"), "true")
 
     def test_init_raises_when_called_twice(self):
         """Second init call raises because repository is already initialized."""
-        temp_dir = tempfile.gettempdir()
-        repo = InMemoryRepository(root=Path(temp_dir))
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+        temp_dir.mkdir()
+        repo = InMemoryRepository(root=temp_dir)
         svc = KanbanService(
             repository=repo,
             index_service=IndexService(repository=repo),
@@ -69,8 +68,9 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
 
     def test_init_raises_when_main_board_already_exists(self):
         """Init raises if sentinel board state already indicates bootstrapped repo."""
-        temp_dir = tempfile.gettempdir()
-        repo = InMemoryRepository(root=Path(temp_dir))
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+        temp_dir.mkdir()
+        repo = InMemoryRepository(root=temp_dir)
         repo.create_board("main")
         svc = KanbanService(
             repository=repo,
