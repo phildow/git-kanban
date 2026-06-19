@@ -5,7 +5,7 @@ from typing import Optional
 from uuid import UUID
 
 from models import Task, TaskFilter, Board, Column, UserContext
-from storage.kanban import KanbanRepository
+from storage.kanban import KanbanRepository, BoardNotFound
 
 
 class FilesystemRepository(KanbanRepository):
@@ -80,7 +80,10 @@ class FilesystemRepository(KanbanRepository):
         ]
 
     def get_board(self, name: str) -> Board:
-        raise NotImplementedError()
+        board_path = self.boards_dir / name
+        if not board_path.is_dir() or name.startswith("."):
+            raise BoardNotFound(name)
+        return Board(name=name)
 
     def board_exists(self, name: str) -> bool:
         raise NotImplementedError()
