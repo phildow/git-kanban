@@ -52,6 +52,8 @@ kanban (main)>
 ### TODO
 
 - find_tasks_by_title is unused
+- move search_tasks to the index service
+
 - Use slugs in memory repository for private indexing (add tests)
 - Models return a path
 - Cleanup: Define some getter methods as properties

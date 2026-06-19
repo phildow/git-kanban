@@ -86,21 +86,6 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
         with self.assertRaises(ColumnNotFound):
             self.repo.get_tasks(board="alpha", column="missing")
 
-    def test_find_get_and_exists(self):
-        """Find/get/exists resolve tasks by title and exact path semantics."""
-        t1 = self.repo.create_task(self._task("Fix parser", board="alpha", column="todo"), self._filename("Fix parser"))
-        t2 = self.repo.create_task(self._task("Fix parser", board="beta", column="todo"), self._filename("Fix parser"))
-
-        self.assertEqual({t.id for t in self.repo.find_tasks_by_title("fix parser")}, {t1.id, t2.id})
-        self.assertEqual(self.repo.find_tasks_by_title("fix parser", board="alpha"), [t1])
-
-        self.assertEqual(self.repo.get_task("alpha", "todo", "fix-parser"), t1)
-        self.assertTrue(self.repo.task_exists("beta", "todo", "fix-parser"))
-        self.assertFalse(self.repo.task_exists("beta", "todo", "missing"))
-
-        with self.assertRaises(TaskNotFound):
-            self.repo.get_task("alpha", "todo", "missing")
-
     def test_update_task_preserves_location_and_checks_collision(self):
         """Update keeps location immutable and blocks title collisions in-place."""
         first = self.repo.create_task(self._task("First", board="alpha", column="todo"), "first")

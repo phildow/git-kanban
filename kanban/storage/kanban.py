@@ -287,23 +287,6 @@ class KanbanRepository(ABC):
         """
 
     @abstractmethod
-    def find_tasks_by_title(
-        self,
-        title: str,
-        board: Optional[str] = None,
-    ) -> list[Task]:
-        """
-        Return all tasks whose title matches `title` (case-insensitive,
-        exact match), optionally scoped to a single board.
-
-        Used by the path-resolution step when a full <board>/<column>/<title>
-        path is not given. Callers must handle ambiguity (multiple results)
-        by surfacing an error.
-
-        Returns an empty list when no match is found.
-        """
-
-    @abstractmethod
     def get_task(self, board: str, column: str, filename: str) -> Task:
         """
         Return a single task by its exact board/column/filename path.
