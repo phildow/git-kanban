@@ -25,23 +25,32 @@ Be succinct.
 ## Project
 
 We are building a kanban style task manager in python that uses the filesystem for storage and git for change tracking. Tasks are stored as markdown documents in directories that correspond to boards with subdirectories for columns. The task's filename is its title.
+
 Metadata is stored as frontmatter in the markdown documents and includes a UUID to uniquely identify a task. A tasks's title (and so filename) may change but its UUID will not. The application uses a caching index for faster searching and for discovering when files have changed on disk outside of the application. The initial interface to the application is a CLI, but we will also support an TUI in the future.
 
-You could just use the shell and your text editor of choice, but we’re adding metadata, automatic commits, an index for fast searching, and a TUI. 
+The filesystem is the source of truth
+
+You could just use the shell and your text editor of choice, but we’re adding metadata, automatic commits, an index for fast searching, a REPL, and a TUI.
 
 A description of the architecture follows. Each layer interacts only with the layer below it.
 
 ```
-CLI
+CLI | REPL | TUI
   ↓
 KanbanService (coordinating facade)
   ↓
-Domain Services
-  ↓
+  ↓ -> Domain Services
+  ↓      ↓
 Repositories (ABC)
   ↓
 Storage (filesystem + SQLite) / Git
 ```
+
+### The Filesystem is the Source of Truth
+
+The filesystem is the single source of truth. Layers do not cache results from the layer below them. Data model objects do not model their relationships. Every time the `KanbanService` needs data from a domain service or the respository, it asks for it. Every time a repository needs data from storage, it asks for it, which means querying the filesystem.
+
+The index does cache data from the filesystem for search. It is updated by the `KanbanServie` after every interaction with the repository, read or write.
 
 **CLI Layer**
 
@@ -68,6 +77,7 @@ Storage (filesystem + SQLite) / Git
 - Two concrete implementations: `FilesystemRepository` and `InMemoryRepository` (for testing)
 - Concrete implementation injected at startup — domain services never instantiate repositories directly
 - Responsible for translating between storage format and domain dataclasses
+- The `Repository` is the source of truth for the `KanbanService.`
 - Return rich domain dataclasses
 
 **Storage**

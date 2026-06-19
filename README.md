@@ -3,6 +3,17 @@
 
 The repository uses pyenv and virtualenv. Run `.venv/bin/activate` to activate the virtual environment.
 
+## Lessons
+
+- Architecture and specification are more important not less
+- It is addictive with slot machine like mechanics: sometimes excellent, sometimes a giant mess
+- You'll know when you've underspecified, the quality is worse. Pause and return to design
+- Take it one piece at a time
+- I talk architecture and design with Claude before writing code
+- My loop is Design with Claude -> Claude Code | CoPilot -> Refactor -> Repeat
+- Review the diffs and tests, write your own commits
+
+
 ## Installation
 
 The preferred method requires pyenv and pyenv-virutalenv. They should be set up to activate the python environmment when you cd into this directory. Install pyenv and pyenv-virutalenv with homebrew, following the instructions to update your shell:

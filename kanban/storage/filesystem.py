@@ -18,6 +18,10 @@ class FilesystemRepository(KanbanRepository):
     def __init__(self, root: Path) -> None:
         super().__init__(root)
 
+    # ------------------------------------------------------------------
+    # Filepaths
+    # ------------------------------------------------------------------
+
     @property
     def kanban_dir(self) -> Path:
         return self.root / ".kanban"
@@ -26,6 +30,22 @@ class FilesystemRepository(KanbanRepository):
     def kanban_store_dir(self) -> Path:
         return self.root / ".kanban-store"
 
+    @property
+    def boards_dir(self) -> Path:
+        return self.kanban_store_dir / "boards"
+    
+    @property
+    def config_file(self) -> Path:
+        return self.kanban_dir / "config"
+
+    @property
+    def index_file(self) -> Path:
+        return self.kanban_dir / "index.db"
+
+    # ------------------------------------------------------------------
+    # Bootstrap and initialization
+    # ------------------------------------------------------------------
+
     # Bootstrap
     def init_storage(self, default_board: str = "main") -> None:
         if self.is_initialized():
@@ -33,12 +53,15 @@ class FilesystemRepository(KanbanRepository):
 
         kanban_dir = self.kanban_dir
         kanban_dir.mkdir()
-        (kanban_dir / "config").touch()
-        (kanban_dir / "index.db").touch()
+            
+        kanban_store_dir = self.kanban_store_dir
+        kanban_store_dir.mkdir()
+        
+        self.config_file.touch()
+        self.index_file.touch()
 
-        store_dir = self.kanban_store_dir
-        boards_dir = store_dir / "boards"
-        boards_dir.mkdir(parents=True)
+        boards_dir = self.boards_dir
+        boards_dir.mkdir()
         (boards_dir / ".metadata").touch()
 
     def bootstrap(self) -> list[Task]:
@@ -49,7 +72,11 @@ class FilesystemRepository(KanbanRepository):
 
     # Board operations
     def list_boards(self) -> list[Board]:
-        raise NotImplementedError()
+        return [
+            Board(name=entry.name)
+            for entry in sorted(self.boards_dir.iterdir())
+            if entry.is_dir() and not entry.name.startswith(".")
+        ]
 
     def get_board(self, name: str) -> Board:
         raise NotImplementedError()
