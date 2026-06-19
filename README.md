@@ -85,7 +85,7 @@ CONFIG
 - Allow the user to decide what columns are shown for a given terminal size when listing tasks
     - eg `task-cols:80=title,assignee,tags`
     - eg `task-cols:96=title,assignee,tags,due`
-- Allowe the user to customize the default board names
+- Allowe the user to customize the default column names
 
 - FileStorage
 - Use `.kanban` for configuration and caching and `.kanban-store` for the filesystem
