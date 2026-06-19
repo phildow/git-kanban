@@ -263,6 +263,11 @@ class FilesystemRepository(KanbanRepository):
     # ------------------------------------------------------------------
 
     def _parse_task_file(self, path: Path, board: str, column: str) -> Task:
+        
+        def _parse_dt(raw: str) -> datetime:
+            dt = datetime.fromisoformat(raw)
+            return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
+        
         """Parse a markdown task file with YAML frontmatter into a Task."""
         content = path.read_text(encoding="utf-8")
         lines = content.splitlines()
@@ -335,7 +340,3 @@ class FilesystemRepository(KanbanRepository):
         if filter.due_after is not None and (task.due_date is None or task.due_date <= filter.due_after):
             return False
         return True
-
-    def _parse_dt(raw: str) -> datetime:
-        dt = datetime.fromisoformat(raw)
-        return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
