@@ -9,7 +9,9 @@ These tests document expected board CRUD semantics, including:
 from __future__ import annotations
 
 import sys
+import tempfile
 import unittest
+
 from datetime import datetime, UTC
 from pathlib import Path
 from uuid import uuid4
@@ -23,7 +25,8 @@ class TestInMemoryRepositoryBoardOps(unittest.TestCase):
     """Board operation contract tests for the in-memory repository."""
 
     def setUp(self) -> None:
-        self.repo = InMemoryRepository()
+        temp_dir = tempfile.gettempdir()
+        self.repo = InMemoryRepository(root=Path(temp_dir))
 
     def test_create_get_list_exists_board(self):
         """Creates a board and verifies basic lookup/list/existence behavior."""

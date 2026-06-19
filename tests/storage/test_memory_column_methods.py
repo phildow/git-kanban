@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import sys
 import unittest
+import tempfile
 from pathlib import Path
 from uuid import uuid4
 
@@ -20,7 +21,8 @@ class TestInMemoryRepositoryColumnOps(unittest.TestCase):
     """Column operation contract tests for the in-memory repository."""
 
     def setUp(self) -> None:
-        self.repo = InMemoryRepository()
+        temp_dir = tempfile.gettempdir()
+        self.repo = InMemoryRepository(root=Path(temp_dir))
         self.repo.create_board("alpha")
 
     def test_list_columns_and_create_column(self):

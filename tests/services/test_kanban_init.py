@@ -6,7 +6,9 @@ These tests document initialization semantics for in-memory bootstrapping.
 from __future__ import annotations
 
 import sys
+import tempfile
 import unittest
+
 from pathlib import Path
 
 from models import UserContext
@@ -21,7 +23,8 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
 
     def test_init_creates_main_board_and_marks_initialized(self):
         """First init creates main board, default columns, context, and init flag."""
-        repo = InMemoryRepository()
+        temp_dir = tempfile.gettempdir()
+        repo = InMemoryRepository(root=Path(temp_dir))
         svc = KanbanService(
             repository=repo,
             index_service=IndexService(repository=repo),
@@ -51,7 +54,8 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
 
     def test_init_raises_when_called_twice(self):
         """Second init call raises because repository is already initialized."""
-        repo = InMemoryRepository()
+        temp_dir = tempfile.gettempdir()
+        repo = InMemoryRepository(root=Path(temp_dir))
         svc = KanbanService(
             repository=repo,
             index_service=IndexService(repository=repo),
@@ -65,7 +69,8 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
 
     def test_init_raises_when_main_board_already_exists(self):
         """Init raises if sentinel board state already indicates bootstrapped repo."""
-        repo = InMemoryRepository()
+        temp_dir = tempfile.gettempdir()
+        repo = InMemoryRepository(root=Path(temp_dir))
         repo.create_board("main")
         svc = KanbanService(
             repository=repo,

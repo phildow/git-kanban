@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta, UTC
+from pathlib import Path
 import random
 import re
 from typing import Optional
@@ -25,7 +26,9 @@ class InMemoryRepository(KanbanRepository):
     without touching calling code.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, root: Path) -> None:
+        super().__init__(root)
+
         self._boards: dict[str, Board] = {}
         self._tasks_by_id: dict[UUID, Task] = {}
         self._task_locations: dict[UUID, tuple[str, str]] = {}

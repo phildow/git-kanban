@@ -98,6 +98,11 @@ class KanbanRepository(ABC):
                               no I/O whatsoever.
     """
 
+    @abstractmethod
+    def __init__(self, root: Path) -> None:
+        """Initialize the repository. `path` is the root directory for all storage operations."""
+        self.root = root
+
     # ------------------------------------------------------------------
     # Bootstrap
     # ------------------------------------------------------------------
