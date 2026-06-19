@@ -9,11 +9,13 @@ from models import UserContext
 from services.git import GitService
 from services.kanban import KanbanService
 from services.index import IndexService
+from storage.filesystem import FilesystemRepository
 from storage.memory import InMemoryRepository
+
 
 def main() -> None:
     cwd = Path.cwd()
-    repository = InMemoryRepository(root=cwd)
+    repository = get_repository("filesystem")
     index_service = IndexService(repository=repository)
     git_service = GitService()
 
@@ -33,6 +35,15 @@ def main() -> None:
     except ValueError as e:
         print(f"Value error: {e}")
 
+def get_repository(typ: str) -> KanbanRepository:
+    import tempfile
+    temp_dir = Path(tempfile.gettempdir())
+    cwd = Path.cwd()
 
+    if typ == "memory":
+        return InMemoryRepository(root=temp_dir)
+    elif typ == "filesystem":
+        return FilesystemRepository(root=temp_dir)
+    
 if __name__ == "__main__":
     main()

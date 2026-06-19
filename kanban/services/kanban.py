@@ -92,8 +92,12 @@ class KanbanService:
         self.index_service = index_service
         self.git_service = git_service
         self._user_context = user_context
-        self._kanban_root = None
-    
+
+    @property
+    def root(self) -> Path:
+        """Return the KanbanRoot if the repository is initialized, or raise if not."""
+        return self.repository.root
+
     # ------------------------------------------------------------------
     # Initialization
     # ------------------------------------------------------------------
@@ -101,11 +105,10 @@ class KanbanService:
     @property
     def is_initialized(self) -> bool:
         """Return True if the repository is already initialized at the current path."""
-        # return self._kanban_root is not None and self._kanban_root.path.exists() and self.repository.is_initialized
         # Move path.exists() check to repository
-        return self._kanban_root is not None and self.repository.is_initialized
+        return self.repository.is_initialized
 
-    def init_kanban(self, path: Path = Path(".")) -> KanbanRoot:
+    def init_kanban(self, path: Path = Path(".")) -> bool:
         """
         Create the .kanban/ and .kanban-store/ directory skeleton, initialize git, and write the
         first commit.  Raises AlreadyInitialized if .kanban/ or .kanban-store/ already exists at
@@ -118,18 +121,8 @@ class KanbanService:
         self.repository.bootstrap()
         
         self.update_user_context(board="main", column="todo")
-        self.set_config("initialized", "true")
 
-        # TODO: this should probably just be path
-        kanban_root = path / ".kanban-store"
-
-        self._kanban_root = KanbanRoot(
-            path=kanban_root,
-            git_init=False,
-            boards_dir=kanban_root / "boards",
-        )
-
-        return self._kanban_root
+        return True
 
     # ------------------------------------------------------------------
     # User Context
@@ -316,7 +309,7 @@ class KanbanService:
     
         columns = [self.repository.create_column(board.name, col) for col in columns]
         board.columns = columns
-        
+
         return board
 
     def rename_board(self, path: str, new_name: str) -> Board:

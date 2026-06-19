@@ -51,6 +51,8 @@ kanban (main)>
 
 ### TODO
 
+- check init
+- check init error handling
 - move search_tasks to the index service
 - add utilty to filter for invisible files, which is used extensively in the filesystem repo
 

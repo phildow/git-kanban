@@ -114,10 +114,10 @@ def _initialize_kanban(svc: KanbanService) -> bool:
     if svc.is_initialized:
         return True
 
-    cwd = Path.cwd()
-    directory = cwd.name
+    root_dir = svc.root
+    directory = root_dir.name
 
-    print(f"No kanban repository found in {cwd}.")
+    print(f"No kanban repository found in {root_dir}.")
     should_init = input(f"Would you like to initialize kanban at {directory}? (y/N)) ").strip().lower()
     if should_init in {"y", "yes"}:
         try:
@@ -373,8 +373,8 @@ def _print_welcome_message(svc: KanbanService) -> None:
         return
 
     context = svc.user_context
-    board = context.board or "no board"
-    column = context.column or "no column"
+    board = context.board
+    column = context.column
 
     context_str = f"/{board}/{column}" if board and column else f"/{board}" if board else "/"
     print(f"Welcome to the kanban REPL. Current context: {context_str}\nType 'help (h)' for usage, 'quit (:q)' to exit")
