@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import shutil
 from typing import Optional
@@ -182,7 +182,39 @@ class FilesystemRepository(KanbanRepository):
         column: Optional[str] = None,
         filter: Optional[TaskFilter] = None,
     ) -> list[Task]:
-        raise NotImplementedError()
+
+        # if board and not column, return all the tasks in that board across all columns, applying filter if provided
+        # if board and column, return all the tasks in that column, applying filter if provided
+        # if no board, return all tasks across all boards and columns, applying filter if provided
+        # if no board and column, raise an error since we don't want to return all tasks without at least a board filter to limit scope
+
+        if board is None and column is not None:
+            raise ValueError("Cannot filter by column without a board: {}".format(column))
+
+        if board is not None and not self.board_exists(board):
+            raise BoardNotFound(board)
+        if board is not None and column is not None and not self.column_exists(board, column):
+            raise ColumnNotFound(board, column)
+
+        if board is not None:
+            boards = [board]
+        else:
+            boards = [e.name for e in sorted(self.boards_dir.iterdir()) if e.is_dir() and not e.name.startswith(".")]
+
+        tasks: list[Task] = []
+
+        for b in boards:
+            columns = [column] if column is not None else [e.name for e in sorted((self.boards_dir / b).iterdir()) if e.is_dir() and not e.name.startswith(".")]
+            for col in columns:
+                col_path = self.boards_dir / b / col
+                for entry in sorted(col_path.iterdir()):
+                    if not entry.is_file() or entry.name.startswith(".") or entry.suffix != ".md":
+                        continue
+                    task = self._parse_task_file(entry, b, col)
+                    if filter is not None and not self._task_matches_filter(task, filter):
+                        continue
+                    tasks.append(task)
+        return tasks
 
     def get_task_by_id(self, task_id: UUID) -> Task:
         raise NotImplementedError()
@@ -227,7 +259,7 @@ class FilesystemRepository(KanbanRepository):
     # TODO: kanban service also does task parsing move to a utility module to avoid duplication between service and repository layers
 
     # ------------------------------------------------------------------
-    # Task file parsing
+    # Task file parsing and utilities
     # ------------------------------------------------------------------
 
     def _parse_task_file(self, path: Path, board: str, column: str) -> Task:
@@ -259,15 +291,15 @@ class FilesystemRepository(KanbanRepository):
 
         due_date: datetime | None = None
         if raw := fm.get("due_date", "").strip():
-            due_date = datetime.fromisoformat(raw)
+            due_date = _parse_dt(raw)
 
         created_at: datetime | None = None
         if raw := fm.get("created_at", "").strip():
-            created_at = datetime.fromisoformat(raw)
+            created_at = _parse_dt(raw)
 
         updated_at: datetime | None = None
         if raw := fm.get("updated_at", "").strip():
-            updated_at = datetime.fromisoformat(raw)
+            updated_at = _parse_dt(raw)
 
         tags_raw = fm.get("tags", "").strip().strip("[]")
         tags = [t.strip() for t in tags_raw.split(",") if t.strip()]
@@ -287,3 +319,23 @@ class FilesystemRepository(KanbanRepository):
             updated_at=updated_at,
             body=body,
         )
+
+    def _task_matches_filter(self, task: Task, filter: TaskFilter) -> bool:
+        """Return True if the task satisfies all non-None filter criteria."""
+        if filter.assignee is not None and task.assignee != filter.assignee:
+            return False
+        if filter.priority is not None and task.priority != filter.priority:
+            return False
+        if filter.tag is not None and filter.tag not in task.tags:
+            return False
+        if filter.created_by is not None and task.created_by != filter.created_by:
+            return False
+        if filter.due_before is not None and (task.due_date is None or task.due_date >= filter.due_before):
+            return False
+        if filter.due_after is not None and (task.due_date is None or task.due_date <= filter.due_after):
+            return False
+        return True
+
+    def _parse_dt(raw: str) -> datetime:
+        dt = datetime.fromisoformat(raw)
+        return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)

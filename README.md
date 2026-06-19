@@ -51,8 +51,8 @@ kanban (main)>
 
 ### TODO
 
-- find_tasks_by_title is unused
 - move search_tasks to the index service
+- add utilty to filter for invisible files, which is used extensively in the filesystem repo
 
 - Use slugs in memory repository for private indexing (add tests)
 - Models return a path
