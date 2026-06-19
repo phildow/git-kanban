@@ -6,7 +6,7 @@ import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from models import Task, TaskFilter, Board, Column, UserContext
 from storage.kanban import KanbanRepository, BoardNotFound, BoardAlreadyExists, ColumnAlreadyExists, ColumnNotFound, TaskNotFound
@@ -68,8 +68,35 @@ class FilesystemRepository(KanbanRepository):
         boards_dir.mkdir()
         (boards_dir / ".metadata").touch()
 
+    # TODO: improve boostrapping with more frontmatter metadata and sample tasks, 
+    #       use existing methods to create them instead of writing files directly, 
+    #       which will ensure consistency and proper indexing
     def bootstrap(self) -> list[Task]:
-        raise NotImplementedError()
+        self.create_board("main")
+        for col in ("todo", "in-progress", "in-review", "done"):
+            self.create_column("main", col)
+
+        now = datetime.now(timezone.utc)
+        seeds = [
+            ("create your first todo", "create-your-first-todo", "todo"),
+            ("go for a bike ride", "go-for-a-bike-ride", "in-progress"),
+        ]
+        created: list[Task] = []
+        for title, slug, column in seeds:
+            task_id = uuid4()
+            path = self.boards_dir / "main" / column / f"{slug}.md"
+            path.write_text(
+                f"---\n"
+                f"id: {task_id}\n"
+                f"title: {title}\n"
+                f"slug: {slug}\n"
+                f"created_at: {now.isoformat()}\n"
+                f"updated_at: {now.isoformat()}\n"
+                f"---\n",
+                encoding="utf-8",
+            )
+            created.append(self._parse_task_file(path, "main", column))
+        return created
 
     @property
     def is_initialized(self) -> bool:

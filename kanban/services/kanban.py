@@ -117,7 +117,6 @@ class KanbanService:
         first, index second, git last.
         """
         self.repository.init_storage(default_board="main")
-        # TODO: should the repository just bootstrap itself
         self.repository.bootstrap()
         
         self.update_user_context(board="main", column="todo")
