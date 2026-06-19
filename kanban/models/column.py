@@ -19,6 +19,7 @@ class Column:
     # slug: str
     board: str
     position: int
+    task_count: int = 0
 
     @property
     def path(self) -> Path:

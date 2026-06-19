@@ -6,7 +6,7 @@ from typing import Optional
 from uuid import UUID
 
 from models import Task, TaskFilter, Board, Column, UserContext
-from storage.kanban import KanbanRepository, BoardNotFound, BoardAlreadyExists, ColumnAlreadyExists
+from storage.kanban import KanbanRepository, BoardNotFound, BoardAlreadyExists, ColumnAlreadyExists, ColumnNotFound
 
 
 class FilesystemRepository(KanbanRepository):
@@ -120,8 +120,23 @@ class FilesystemRepository(KanbanRepository):
             if entry.is_dir() and not entry.name.startswith(".")
         ]
 
+    # TODO: implement sorted in a metadata file to avoid relying on filesystem ordering
     def get_column(self, board: str, name: str) -> Column:
-        raise NotImplementedError()
+        if not self.board_exists(board):
+            raise BoardNotFound(board)
+        column_path = self.boards_dir / board / name
+        if not column_path.is_dir() or name.startswith("."):
+            raise ColumnNotFound(board, name)
+        task_count = sum(
+            1 for e in column_path.iterdir()
+            if e.is_file() and not e.name.startswith(".")
+        )
+        siblings = sorted(
+            e.name for e in (self.boards_dir / board).iterdir()
+            if e.is_dir() and not e.name.startswith(".")
+        )
+        position = siblings.index(name)
+        return Column(name=name, board=board, position=position, task_count=task_count)
 
     def column_exists(self, board: str, name: str) -> bool:
         raise NotImplementedError()
