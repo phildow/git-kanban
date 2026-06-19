@@ -358,20 +358,6 @@ class InMemoryRepository(KanbanRepository):
             raise TaskNotFound(str(task_id))
         return task
 
-    def find_tasks_by_title(self, title: str, board: Optional[str] = None) -> list[Task]:
-        if board is not None:
-            self.get_board(board)
-
-        title_lower = title.lower()
-        matches: list[Task] = []
-        for task_id, task in self._tasks_by_id.items():
-            task_board, _task_column = self._task_locations.get(task_id, (task.board, task.column))
-            if board is not None and task_board != board:
-                continue
-            if task.title.lower() == title_lower:
-                matches.append(task)
-        return matches
-
     def get_task(self, board: str, column: str, filename: str) -> Task:
         self.get_board(board)
         self.get_column(board, column)

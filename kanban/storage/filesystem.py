@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
 import shutil
 from typing import Optional
 from uuid import UUID
 
 from models import Task, TaskFilter, Board, Column, UserContext
-from storage.kanban import KanbanRepository, BoardNotFound, BoardAlreadyExists, ColumnAlreadyExists, ColumnNotFound
+from storage.kanban import KanbanRepository, BoardNotFound, BoardAlreadyExists, ColumnAlreadyExists, ColumnNotFound, TaskNotFound
 
 
 class FilesystemRepository(KanbanRepository):
@@ -186,11 +187,15 @@ class FilesystemRepository(KanbanRepository):
     def get_task_by_id(self, task_id: UUID) -> Task:
         raise NotImplementedError()
 
-    def find_tasks_by_title(self, title: str, board: Optional[str] = None) -> list[Task]:
-        raise NotImplementedError()
-
     def get_task(self, board: str, column: str, filename: str) -> Task:
-        raise NotImplementedError()
+        if not self.board_exists(board):
+            raise BoardNotFound(board)
+        if not self.column_exists(board, column):
+            raise ColumnNotFound(board, column)
+        task_path = self.boards_dir / board / column / f"{filename}.md"
+        if not task_path.is_file():
+            raise TaskNotFound(f"{board}/{column}/{filename}")
+        return self._parse_task_file(task_path, board, column)
 
     def task_exists(self, board: str, column: str, filename: str) -> bool:
         raise NotImplementedError()
@@ -217,3 +222,68 @@ class FilesystemRepository(KanbanRepository):
 
     def set_config(self, key: str, value: str) -> None:
         raise NotImplementedError()
+
+
+    # TODO: kanban service also does task parsing move to a utility module to avoid duplication between service and repository layers
+
+    # ------------------------------------------------------------------
+    # Task file parsing
+    # ------------------------------------------------------------------
+
+    def _parse_task_file(self, path: Path, board: str, column: str) -> Task:
+        """Parse a markdown task file with YAML frontmatter into a Task."""
+        content = path.read_text(encoding="utf-8")
+        lines = content.splitlines()
+
+        end_idx: int | None = None
+        if lines and lines[0].strip() == "---":
+            for i in range(1, len(lines)):
+                if lines[i].strip() == "---":
+                    end_idx = i
+                    break
+
+        fm: dict[str, str] = {}
+        if end_idx is not None:
+            for line in lines[1:end_idx]:
+                if not line.strip() or ":" not in line:
+                    continue
+                key, value = line.split(":", 1)
+                fm[key.strip()] = value.strip()
+            body = "\n".join(lines[end_idx + 1:]).strip("\n")
+        else:
+            body = content.strip("\n")
+
+        task_id = UUID(fm["id"]) if "id" in fm else UUID(int=0)
+        title = fm.get("title", path.stem)
+        slug = fm.get("slug", path.stem)
+
+        due_date: datetime | None = None
+        if raw := fm.get("due_date", "").strip():
+            due_date = datetime.fromisoformat(raw)
+
+        created_at: datetime | None = None
+        if raw := fm.get("created_at", "").strip():
+            created_at = datetime.fromisoformat(raw)
+
+        updated_at: datetime | None = None
+        if raw := fm.get("updated_at", "").strip():
+            updated_at = datetime.fromisoformat(raw)
+
+        tags_raw = fm.get("tags", "").strip().strip("[]")
+        tags = [t.strip() for t in tags_raw.split(",") if t.strip()]
+
+        return Task(
+            id=task_id,
+            title=title,
+            slug=slug,
+            board=board,
+            column=column,
+            created_by=fm.get("created_by") or None,
+            assignee=fm.get("assignee") or None,
+            priority=fm.get("priority") or None,
+            due_date=due_date,
+            tags=tags,
+            created_at=created_at,
+            updated_at=updated_at,
+            body=body,
+        )
