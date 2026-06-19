@@ -155,7 +155,14 @@ class FilesystemRepository(KanbanRepository):
         return Column(name=name, board=board, position=position)
 
     def rename_column(self, board: str, name: str, new_name: str) -> Column:
-        raise NotImplementedError()
+        if not self.board_exists(board):
+            raise BoardNotFound(board)
+        if not self.column_exists(board, name):
+            raise ColumnNotFound(board, name)
+        if self.column_exists(board, new_name):
+            raise ColumnAlreadyExists(board, new_name)
+        (self.boards_dir / board / name).rename(self.boards_dir / board / new_name)
+        return self.get_column(board, new_name)
 
     def reorder_column(self, board: str, name: str, position: int) -> list[Column]:
         raise NotImplementedError()
