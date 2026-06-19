@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import shutil
 from typing import Optional
 from uuid import UUID
 
@@ -104,7 +105,9 @@ class FilesystemRepository(KanbanRepository):
         return Board(name=new_name)
 
     def delete_board(self, name: str) -> None:
-        raise NotImplementedError()
+        if not self.board_exists(name):
+            raise BoardNotFound(name)
+        shutil.rmtree(self.boards_dir / name)
 
     # Column operations
     def get_columns(self, board: str) -> list[Column]:
