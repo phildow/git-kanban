@@ -3,6 +3,15 @@
 
 The repository uses pyenv and virtualenv. Run `.venv/bin/activate` to activate the virtual environment.
 
+## Version Map
+
+0.5 - Implement filesystem basics
+0.6 - Complete filesystem and in memory store
+0.7 - Implement indesing and search
+0.8 - Implement git tracking
+0.9 - Implement the TUI
+1.0 - Release
+
 ## Lessons
 
 - Architecture and specification are more important not less
@@ -75,9 +84,15 @@ CONFIG
 - Use `.kanban` for configuration and caching and `.kanban-store` for the filesystem
 - Once we have file storage `kanban init` this direcory and start storing tasks here (dogfood)
 - Which takes us to git integration
+
+
 - Agent Kanban `agent-kanban` watches your work and manages the tasks for you via the `kanban` cli
     - Check out a task it checks out a branch
     - Check out a branch it looks for the task to check out
+
+HISTORY
+
+- A visual representation in a view to the right when there is enough terminal size
 
 ### Running tests:
 
