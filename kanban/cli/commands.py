@@ -20,7 +20,7 @@ def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: object) 
 # ---------------------------------------------------------------------------
 
 def handle_board_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	result = svc.list_boards(sort=args.sort, reverse=args.reverse)
+	result = svc.get_boards(sort=args.sort, reverse=args.reverse)
 	renderer.render_board_list(args, result)
 
 
@@ -43,7 +43,7 @@ def handle_board_delete(args: argparse.Namespace, svc: KanbanService, renderer: 
 # ---------------------------------------------------------------------------
 
 def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	result = svc.list_columns(board=args.board, sort=args.sort, reverse=args.reverse)
+	result = svc.get_columns(board=args.board, sort=args.sort, reverse=args.reverse)
 	renderer.render_column_list(args, result)
 
 
@@ -71,7 +71,7 @@ def handle_column_delete(args: argparse.Namespace, svc: KanbanService, renderer:
 # ---------------------------------------------------------------------------
 
 def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	result = svc.list_tasks(path=args.path, sort=args.sort, reverse=args.reverse)
+	result = svc.get_tasks(path=args.path, sort=args.sort, reverse=args.reverse)
 	renderer.render_task_list(args, result)
 
 

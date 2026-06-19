@@ -37,7 +37,7 @@ class TestInMemoryRepositoryBoardOps(unittest.TestCase):
         self.assertEqual(board, Board(name="alpha", columns=[]))
         self.assertTrue(self.repo.board_exists("alpha"))
         self.assertEqual(self.repo.get_board("alpha"), board)
-        self.assertEqual(self.repo.list_boards(), [board])
+        self.assertEqual(self.repo.get_boards(), [board])
 
     def test_create_board_raises_when_duplicate(self):
         """Creating a board with an existing name raises `BoardAlreadyExists`."""

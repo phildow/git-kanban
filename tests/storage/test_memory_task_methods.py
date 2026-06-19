@@ -63,7 +63,7 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
         with self.assertRaises(TaskAlreadyExists):
             self.repo.create_task(self._task("dupe", board="alpha", column="todo"), "dupe")
 
-    def test_list_tasks_scope_and_filter(self):
+    def test_get_tasks_scope_and_filter(self):
         """List returns tasks by scope and applies `TaskFilter` constraints."""
         due_soon = datetime.now(UTC) + timedelta(days=1)
         due_later = datetime.now(UTC) + timedelta(days=10)
@@ -72,19 +72,19 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
         t2 = self.repo.create_task(self._task("B", board="alpha", column="doing", assignee="q", priority="low", tags=["y"], due_date=due_later), "b")
         t3 = self.repo.create_task(self._task("C", board="beta", column="todo", assignee="p", priority="high", tags=["x", "z"], due_date=due_later), "c")
 
-        self.assertEqual({t.id for t in self.repo.list_tasks()}, {t1.id, t2.id, t3.id})
-        self.assertEqual({t.id for t in self.repo.list_tasks(board="alpha")}, {t1.id, t2.id})
-        self.assertEqual(self.repo.list_tasks(board="alpha", column="doing"), [t2])
+        self.assertEqual({t.id for t in self.repo.get_tasks()}, {t1.id, t2.id, t3.id})
+        self.assertEqual({t.id for t in self.repo.get_tasks(board="alpha")}, {t1.id, t2.id})
+        self.assertEqual(self.repo.get_tasks(board="alpha", column="doing"), [t2])
 
         f = TaskFilter(assignee="p", priority="high", tag="x", due_before=datetime.now(UTC) + timedelta(days=2))
-        self.assertEqual(self.repo.list_tasks(filter=f), [t1])
+        self.assertEqual(self.repo.get_tasks(filter=f), [t1])
 
-    def test_list_tasks_validates_scope(self):
+    def test_get_tasks_validates_scope(self):
         """List validates explicit board/column scope before filtering."""
         with self.assertRaises(BoardNotFound):
-            self.repo.list_tasks(board="missing")
+            self.repo.get_tasks(board="missing")
         with self.assertRaises(ColumnNotFound):
-            self.repo.list_tasks(board="alpha", column="missing")
+            self.repo.get_tasks(board="alpha", column="missing")
 
     def test_find_get_and_exists(self):
         """Find/get/exists resolve tasks by title and exact path semantics."""
@@ -157,16 +157,16 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
         seeded = repo.bootstrap()
         self.assertEqual(len(seeded), 24)
 
-        boards = repo.list_boards()
+        boards = repo.get_boards()
         self.assertEqual(len(boards), 2)
 
-        main = repo.list_tasks(board="main")
-        infra = repo.list_tasks(board="infra")
+        main = repo.get_tasks(board="main")
+        infra = repo.get_tasks(board="infra")
         self.assertEqual(len(main), 12)
         self.assertEqual(len(infra), 12)
 
-        todo = repo.list_tasks(board="main", column="todo")
-        doing = repo.list_tasks(board="infra", column="todo")
+        todo = repo.get_tasks(board="main", column="todo")
+        doing = repo.get_tasks(board="infra", column="todo")
         self.assertEqual(len(todo), 3)
         self.assertEqual(len(doing), 3)
         self.assertTrue(all(task.slug for task in seeded))

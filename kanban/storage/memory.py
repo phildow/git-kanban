@@ -119,7 +119,7 @@ class InMemoryRepository(KanbanRepository):
         title_template: str,
     ) -> list[Task]:
         """Seed tasks for each column in a board using a title template."""
-        columns = self.list_columns(board)
+        columns = self.get_columns(board)
         created: list[Task] = []
         
         assignees = ["alice", "bob", "carol", "dave"]
@@ -149,7 +149,7 @@ class InMemoryRepository(KanbanRepository):
 
 
     # Board operations
-    def list_boards(self) -> list[Board]:
+    def get_boards(self) -> list[Board]:
         return list(self._boards.values())
 
     def get_board(self, name: str) -> Board:
@@ -217,7 +217,7 @@ class InMemoryRepository(KanbanRepository):
             self._task_filenames.pop(task_id, None)
 
     # Column operations
-    def list_columns(self, board: str) -> list[Column]:
+    def get_columns(self, board: str) -> list[Column]:
         return list(self.get_board(board).columns)
 
     def get_column(self, board: str, name: str) -> Column:
@@ -307,7 +307,7 @@ class InMemoryRepository(KanbanRepository):
             self._task_filenames.pop(task_id, None)
 
     # Task operations
-    def list_tasks(
+    def get_tasks(
         self,
         board: Optional[str] = None,
         column: Optional[str] = None,

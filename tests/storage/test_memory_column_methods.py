@@ -25,19 +25,19 @@ class TestInMemoryRepositoryColumnOps(unittest.TestCase):
         self.repo = InMemoryRepository(root=Path(temp_dir))
         self.repo.create_board("alpha")
 
-    def test_list_columns_and_create_column(self):
+    def test_get_columns_and_create_column(self):
         """Creates a column and verifies list output and default position."""
-        self.assertEqual(self.repo.list_columns("alpha"), [])
+        self.assertEqual(self.repo.get_columns("alpha"), [])
 
         created = self.repo.create_column("alpha", "todo")
 
         self.assertEqual(created, Column(name="todo", board="alpha", position=0))
-        self.assertEqual(self.repo.list_columns("alpha"), [created])
+        self.assertEqual(self.repo.get_columns("alpha"), [created])
 
     def test_column_methods_raise_when_board_missing(self):
         """Column APIs raise `BoardNotFound` when the board does not exist."""
         with self.assertRaises(BoardNotFound):
-            self.repo.list_columns("missing")
+            self.repo.get_columns("missing")
         with self.assertRaises(BoardNotFound):
             self.repo.get_column("missing", "todo")
         with self.assertRaises(BoardNotFound):
@@ -119,7 +119,7 @@ class TestInMemoryRepositoryColumnOps(unittest.TestCase):
 
         self.repo.delete_column("alpha", "todo")
 
-        self.assertEqual([c.name for c in self.repo.list_columns("alpha")], ["doing"])
+        self.assertEqual([c.name for c in self.repo.get_columns("alpha")], ["doing"])
         self.assertEqual(self.repo.get_column("alpha", "doing").position, 0)
         self.assertNotIn(todo_task.id, self.repo._tasks_by_id)
         self.assertIn(doing_task.id, self.repo._tasks_by_id)

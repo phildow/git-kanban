@@ -40,11 +40,11 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         self.assertFalse(result.git_init)
         self.assertTrue(repo.board_exists("main"))
         self.assertEqual(
-            [c.name for c in repo.list_columns("main")],
+            [c.name for c in repo.get_columns("main")],
             ["todo", "in-progress", "in-review", "done"],
         )
         self.assertEqual(
-            [c.position for c in repo.list_columns("main")],
+            [c.position for c in repo.get_columns("main")],
             [0, 1, 2, 3],
         )
 

@@ -62,24 +62,24 @@ class _FakeSvc:
         parts = path.parts # ["/", board|None, column|None, title-or-id|None]
 
         if len(parts) == 2:
-            return [f"{b.name}/" for b in self.list_boards() if b.name.startswith(path.name)]
+            return [f"{b.name}/" for b in self.get_boards() if b.name.startswith(path.name)]
         elif len(parts) == 2:
             board = parts[3]
-            return [f"{c.name}/" for c in self.list_columns(board) if c.name.startswith(path.name)]
+            return [f"{c.name}/" for c in self.get_columns(board) if c.name.startswith(path.name)]
         elif len(parts) == 4:
             board, column = parts[1], parts[2]
-            return [t.title for t in self.list_tasks(f"{board}/{column}") if t.title.startswith(path.name)]
+            return [t.title for t in self.get_tasks(f"{board}/{column}") if t.title.startswith(path.name)]
         else:
             return []
 
 
-    def list_boards(self):
+    def get_boards(self):
         return [
             SimpleNamespace(name="main"),
             SimpleNamespace(name="infra"),
         ]
 
-    def list_columns(self, board: str):
+    def get_columns(self, board: str):
         columns = {
             "main": [
                 SimpleNamespace(name="todo"),
@@ -90,7 +90,7 @@ class _FakeSvc:
         }
         return columns[board]
 
-    def list_tasks(self, path=None, **kwargs):
+    def get_tasks(self, path=None, **kwargs):
         _ = kwargs
         tasks = {
             "main/todo": [

@@ -71,7 +71,7 @@ class FilesystemRepository(KanbanRepository):
         return self.kanban_dir.exists() and self.kanban_store_dir.exists()
 
     # Board operations
-    def list_boards(self) -> list[Board]:
+    def get_boards(self) -> list[Board]:
         return [
             Board(name=entry.name)
             for entry in sorted(self.boards_dir.iterdir())
@@ -94,7 +94,7 @@ class FilesystemRepository(KanbanRepository):
         raise NotImplementedError()
 
     # Column operations
-    def list_columns(self, board: str) -> list[Column]:
+    def get_columns(self, board: str) -> list[Column]:
         raise NotImplementedError()
 
     def get_column(self, board: str, name: str) -> Column:
@@ -116,7 +116,7 @@ class FilesystemRepository(KanbanRepository):
         raise NotImplementedError()
 
     # Task operations
-    def list_tasks(
+    def get_tasks(
         self,
         board: Optional[str] = None,
         column: Optional[str] = None,

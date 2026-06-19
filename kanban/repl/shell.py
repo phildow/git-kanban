@@ -74,7 +74,7 @@ def _safe_list_task_names(svc: KanbanService, board: str | None, column: str | N
     if not board or not column:
         return []
     try:
-        tasks = svc.list_tasks(path=f"{board}/{column}")
+        tasks = svc.get_tasks(path=f"{board}/{column}")
     except Exception:
         return []
 

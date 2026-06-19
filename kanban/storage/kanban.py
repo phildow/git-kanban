@@ -135,7 +135,7 @@ class KanbanRepository(ABC):
     # ------------------------------------------------------------------
 
     @abstractmethod
-    def list_boards(self) -> list[Board]:
+    def get_boards(self) -> list[Board]:
         """
         Return all boards, each populated with their ordered column list.
 
@@ -186,7 +186,7 @@ class KanbanRepository(ABC):
     # ------------------------------------------------------------------
 
     @abstractmethod
-    def list_columns(self, board: str) -> list[Column]:
+    def get_columns(self, board: str) -> list[Column]:
         """
         Return columns for the given board in display order.
 
@@ -258,7 +258,7 @@ class KanbanRepository(ABC):
     # ------------------------------------------------------------------
 
     @abstractmethod
-    def list_tasks(
+    def get_tasks(
         self,
         board: Optional[str] = None,
         column: Optional[str] = None,
