@@ -86,7 +86,8 @@ class FilesystemRepository(KanbanRepository):
         return Board(name=name)
 
     def board_exists(self, name: str) -> bool:
-        raise NotImplementedError()
+        board_path = self.boards_dir / name
+        return board_path.is_dir() and not name.startswith(".")
 
     def create_board(self, name: str) -> Board:
         raise NotImplementedError()
