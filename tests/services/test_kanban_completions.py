@@ -25,20 +25,18 @@ class TestKanbanServiceCompletions(unittest.TestCase):
             git_service=GitService(),
             user_context=UserContext(),
         )
-        self.svc.create_board("alpha")
-        self.svc.create_board("beta")
+        self.svc.create_board("alpha", columns=[])
+        self.svc.create_column("alpha/todo")
+        self.svc.create_column("alpha/done")
+        self.svc.create_board("beta", columns=[])
+        self.svc.create_column("beta/backlog")
 
         """
         /alpha/
             /todo/
-            /in-progress/
-            /in-review/
             /done/
         /beta/
-            /todo/
-            /in-progress/
-            /in-review/
-            /done/
+            /backlog/
         """
 
     def test_completions_for_root(self):
@@ -59,7 +57,7 @@ class TestKanbanServiceCompletions(unittest.TestCase):
 
     def test_completions_for_board(self):
         completions = self.svc.completions_for_path("/alpha/")
-        expected_completions = ["todo/", "in-progress/", "in-review/", "done/"]
+        expected_completions = ["todo/", "done/"]
 
         self.assertCountEqual(completions, expected_completions)
         for completion in expected_completions:

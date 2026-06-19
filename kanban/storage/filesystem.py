@@ -96,7 +96,12 @@ class FilesystemRepository(KanbanRepository):
         return Board(name=name, columns=[])
 
     def rename_board(self, name: str, new_name: str) -> Board:
-        raise NotImplementedError()
+        if not self.board_exists(name):
+            raise BoardNotFound(name)
+        if self.board_exists(new_name):
+            raise BoardAlreadyExists(new_name)
+        (self.boards_dir / name).rename(self.boards_dir / new_name)
+        return Board(name=new_name)
 
     def delete_board(self, name: str) -> None:
         raise NotImplementedError()

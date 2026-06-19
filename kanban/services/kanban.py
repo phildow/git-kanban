@@ -305,7 +305,7 @@ class KanbanService:
         """
         return self.repository.get_boards()
 
-    def create_board(self, path: str, ) -> Board:
+    def create_board(self, path: str, columns = ["todo", "in-progress", "in-review", "done"]) -> Board:
         """
         Create a new board directory under .kanban/boards/.  Raises
         BoardAlreadyExists if a board with that name is already present.
@@ -313,11 +313,10 @@ class KanbanService:
         """
         board, _, _ = self.path_components(path)
         board = self.repository.create_board(board)
-
-        default_columns = ["todo", "in-progress", "in-review", "done"]
-        columns = [self.repository.create_column(board.name, col) for col in default_columns]
-
+    
+        columns = [self.repository.create_column(board.name, col) for col in columns]
         board.columns = columns
+        
         return board
 
     def rename_board(self, path: str, new_name: str) -> Board:
