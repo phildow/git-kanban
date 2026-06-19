@@ -5,7 +5,7 @@ from typing import Optional
 from uuid import UUID
 
 from models import Task, TaskFilter, Board, Column, UserContext
-from storage.kanban import KanbanRepository, BoardNotFound
+from storage.kanban import KanbanRepository, BoardNotFound, BoardAlreadyExists, ColumnAlreadyExists
 
 
 class FilesystemRepository(KanbanRepository):
@@ -90,7 +90,10 @@ class FilesystemRepository(KanbanRepository):
         return board_path.is_dir() and not name.startswith(".")
 
     def create_board(self, name: str) -> Board:
-        raise NotImplementedError()
+        if self.board_exists(name):
+            raise BoardAlreadyExists(name)
+        (self.boards_dir / name).mkdir()
+        return Board(name=name, columns=[])
 
     def rename_board(self, name: str, new_name: str) -> Board:
         raise NotImplementedError()
@@ -109,7 +112,14 @@ class FilesystemRepository(KanbanRepository):
         raise NotImplementedError()
 
     def create_column(self, board: str, name: str) -> Column:
-        raise NotImplementedError()
+        if not self.board_exists(board):
+            raise BoardNotFound(board)
+        column_path = self.boards_dir / board / name
+        if column_path.exists():
+            raise ColumnAlreadyExists(board, name)
+        column_path.mkdir()
+        position = len([e for e in (self.boards_dir / board).iterdir() if e.is_dir() and not e.name.startswith(".")]) - 1
+        return Column(name=name, board=board, position=position)
 
     def rename_column(self, board: str, name: str, new_name: str) -> Column:
         raise NotImplementedError()

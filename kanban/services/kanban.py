@@ -312,7 +312,13 @@ class KanbanService:
         Appends the new board to .kanban/.order and commits.
         """
         board, _, _ = self.path_components(path)
-        return self.repository.create_board(board)
+        board = self.repository.create_board(board)
+
+        default_columns = ["todo", "in-progress", "in-review", "done"]
+        columns = [self.repository.create_column(board.name, col) for col in default_columns]
+
+        board.columns = columns
+        return board
 
     def rename_board(self, path: str, new_name: str) -> Board:
         """

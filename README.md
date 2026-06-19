@@ -51,7 +51,7 @@ kanban (main)>
 
 ### TODO
 
-- Use slugs in memory repository for private indexing
+- Use slugs in memory repository for private indexing (add tests)
 - Models return a path
 - Cleanup: Define some getter methods as properties
 - Add comments to a task which are just appended to the body
@@ -69,6 +69,10 @@ TAB COMPLETION
 - Priority
 - Tags
 
+TESTS
+
+- Make sure create board converts name to slug and uses that for filename
+- Make sure create column converts name to slug and uses for filename
 
 CONFIG
 
@@ -81,6 +85,7 @@ CONFIG
 - Allow the user to decide what columns are shown for a given terminal size when listing tasks
     - eg `task-cols:80=title,assignee,tags`
     - eg `task-cols:96=title,assignee,tags,due`
+- Allowe the user to customize the default board names
 
 - FileStorage
 - Use `.kanban` for configuration and caching and `.kanban-store` for the filesystem
