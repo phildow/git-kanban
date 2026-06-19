@@ -111,7 +111,14 @@ class FilesystemRepository(KanbanRepository):
 
     # Column operations
     def get_columns(self, board: str) -> list[Column]:
-        raise NotImplementedError()
+        if not self.board_exists(board):
+            raise BoardNotFound(board)
+        board_path = self.boards_dir / board
+        return [
+            Column(name=entry.name, board=board, position=i)
+            for i, entry in enumerate(sorted(board_path.iterdir()))
+            if entry.is_dir() and not entry.name.startswith(".")
+        ]
 
     def get_column(self, board: str, name: str) -> Column:
         raise NotImplementedError()
