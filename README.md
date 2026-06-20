@@ -51,66 +51,41 @@ kanban (main)>
 
 ### TODO
 
-- Think I got cd and tab completion down! 
-- Correctly resolve `..` all commands that take paths not just cd
-- Correctly tab complete `..` for all commands that take paths
-- Use the same logic for other commands that take paths, and use resolve into components
+- FEAT: save and restore the command history
+
+- TEST: Create task with spaces
+- TEST: Create column with spaces
+- TEST: Create board with spaces
+
+- FEAT: Correctly resolve `..` all commands that take paths not just cd
+- FEAT: Correctly tab complete `..` for all commands that take paths
+- FEAT: Use the same logic for other commands that take paths, and use resolve into components
   taking into account relative paths and the user context
+
+- FEAT: tab completion for assigness and tags
+- FEAT: implement user sort order for boards
+- FEAT: implement user sort order for tasks
+- FEAT: bump command to move a board or task to the front
+
 - BUG: if a board is already specified, `create board x` doesn't work
+- BUG: `kanban (/) > ls main -al` returns no result and prompts `kanban (/) >`
 
-
-- fix cd!
-- check init
-- user sort order for boards and tasks
-- better bootdstrapping
-- move search_tasks to the index service
-- add utilty to filter for invisible files, which is used extensively in the filesystem repo
+- FEAT: better bootdstrapping
+- CHORE: move search_tasks to the index service
+- CHORE: add utilty to filter for invisible files, which is used extensively in the filesystem repo
 
 - Use slugs in memory repository for private indexing (add tests)
 - Models return a path
-- Cleanup: Define some getter methods as properties
-- Add comments to a task which are just appended to the body
+- FEAT: Add comments to a task which are just appended to the body
 
 ERROR HANDLING
 
 - check init error handling
-- improve cli error handling - use logging and stderr, exit(1)
 - make sure repl gives recoverable error messages
-
-
-TAB COMPLETION
-
-Shouldn't work this way:
-
-```
-kanban (/main/todo) > cd main/
-kanban (/main) > cd main/
-kanban (/main) >
-```
-
-- Swing back around to path completion in svc._rewrite_relative_paths (eg cd, ls)
-- Assignees, priorities, and tags are cached in the index
-- Double tab to cycle through completions
-
-- Commands
-- Paths relative and absolute
-- Flags
-- Assignees
-- Priority
-- Tags
-
-Worked with Claude chat to plan the design and write the code. If the code works:
-
-- Remove text_completion.py
 
 FILENAME VS TITLE
 
 - rename task|column does it take the title or a slug or both
-
-TESTS
-
-- Make sure create board converts name to slug and uses that for filename
-- Make sure create column converts name to slug and uses for filename
 
 CONFIG
 
@@ -125,15 +100,14 @@ CONFIG
     - eg `task-cols:96=title,assignee,tags,due`
 - Allowe the user to customize the default column names
 
-- FileStorage
-- Use `.kanban` for configuration and caching and `.kanban-store` for the filesystem
-- Once we have file storage `kanban init` this direcory and start storing tasks here (dogfood)
+- Once we have file storage `kanban init` this direcory and start storing tasks here (dogfood) ~ almost there!
 - Which takes us to git integration
 
+AGENT KANBAN
 
-- Agent Kanban `agent-kanban` watches your work and manages the tasks for you via the `kanban` cli
-    - Check out a task it checks out a branch
-    - Check out a branch it looks for the task to check out
+- watches your work and manages the tasks for you via the `kanban` cli
+- Check out a task it checks out a branch and vice versa
+- Check out a branch it looks for the task to check out
 
 HISTORY
 
