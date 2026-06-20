@@ -35,6 +35,7 @@ class InMemoryRepository(KanbanRepository):
         self._task_locations: dict[UUID, tuple[str, str]] = {}
         self._task_filenames: dict[UUID, str] = {}
         self._config: dict[str, str] = {}
+        self._userdata: dict[str, str] = {}
 
     # ------------------------------------------------------------------
     # Filepaths
@@ -43,7 +44,11 @@ class InMemoryRepository(KanbanRepository):
     @property
     def kanban_dir(self) -> Path | None:
         return None
-    
+
+    @property
+    def userdata_file(self) -> Path | None:
+        return None
+
     # ---------------------------------------------------------------------------
     # Initialization
     # ---------------------------------------------------------------------------

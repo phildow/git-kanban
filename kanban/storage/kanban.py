@@ -114,6 +114,14 @@ class KanbanRepository(ABC):
         """
         return None
 
+    @property
+    @abstractmethod
+    def userdata_file(self) -> Path | None:
+        """
+        Return the path to the .userdata file if applicable for this repository type, else None.
+        """
+        return None
+
     # ------------------------------------------------------------------
     # Bootstrap
     # ------------------------------------------------------------------

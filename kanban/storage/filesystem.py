@@ -44,6 +44,10 @@ class FilesystemRepository(KanbanRepository):
         return self.kanban_dir / "config"
 
     @property
+    def userdata_file(self) -> Path:
+        return self.kanban_store_dir / ".userdata"
+
+    @property
     def index_file(self) -> Path:
         return self.kanban_dir / "index.db"
 
@@ -62,6 +66,7 @@ class FilesystemRepository(KanbanRepository):
             
         kanban_store_dir = self.kanban_store_dir
         kanban_store_dir.mkdir()
+        (kanban_store_dir / ".userdata").touch()
 
         cfg = configparser.ConfigParser()
         cfg["user-context"] = {"board": default_board, "column": default_column}

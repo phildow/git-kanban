@@ -49,6 +49,11 @@ class TestFilesystemInitStorage(unittest.TestCase):
         self.repo.init_storage()
         self.assertTrue((self.root / ".kanban-store" / "boards" / ".metadata").is_file())
 
+    def test_userdata_file_is_created(self) -> None:
+        """`.kanban-store/.userdata` file is created."""
+        self.repo.init_storage()
+        self.assertTrue((self.root / ".kanban-store" / ".userdata").is_file())
+
     def test_raises_when_already_initialized(self) -> None:
         """Calling init_storage a second time raises ValueError."""
         self.repo.init_storage()

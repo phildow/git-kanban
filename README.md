@@ -51,6 +51,7 @@ kanban (main)>
 
 ### TODO
 
+- FEAT: Move user context metadata from the kanbna config file to the kanban-store user-data file
 - FEAT: improve repl rendering - always give feedback
 - FEAT: implement user sort order for boards
 - FEAT: implement user sort order for tasks

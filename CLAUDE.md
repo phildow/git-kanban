@@ -111,6 +111,7 @@ root-directory/
     config
     index.db
   .kanban-store/
+    .userdata
     boards/
       .metadata
       my-project/
@@ -155,6 +156,20 @@ git -C .kanban-store pull
 ```
 
 ### Metadata
+
+#### The Store
+
+The kanban store includes a hidden `.userdata` INI file. It contains preferences specific to the user and is added to the git ignore. (TODO) For example the user's most recently active /board/column is saved here and reloaded when the user starts the repl.
+
+#### Boards
+
+Boards metadata is stored in a hidden `.metadata` INI file in the boards directory. It contains settings that apply to the board, for example the column order. (TODO)
+
+#### Columns
+
+Columns metadata is stored in a hidden `.metadata` INI file in each column's directory. It contains settings that apply to the column, for example the task order. (TODO)
+
+#### Tasks
 
 Taks metadata is stored in the task's markdown file as frontmatter with the following fields and format:
 
