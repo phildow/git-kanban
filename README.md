@@ -51,8 +51,12 @@ kanban (main)>
 
 ### TODO
 
-- FEAT: implement user sort order for boards
+- FEAT: implement default sort order for columns
+- FEAT: implement default sort order for tasks
+
+- FEAT: implement user sort order for columns
 - FEAT: implement user sort order for tasks
+
 - FEAT: bump command to move a board or task to the front
 - FEAT: improve repl rendering - always give feedback
 

@@ -68,9 +68,8 @@ class FilesystemRepository(KanbanRepository):
         kanban_store_dir.mkdir()
         (kanban_store_dir / ".userdata").touch()
 
-        cfg = configparser.ConfigParser()
-        cfg["user-context"] = {"board": default_board, "column": default_column}
-        self.config_file.write_text(self._write_config(cfg), encoding="utf-8")
+        self.set_userdata("user-context.board", default_board)
+        self.set_userdata("user-context.column", default_column)
         
         self.index_file.touch()
 
@@ -291,6 +290,8 @@ class FilesystemRepository(KanbanRepository):
     def search_tasks(self, query: str, filter: Optional[TaskFilter] = None) -> list[Task]:
         raise NotImplementedError()
 
+    # TODO: Refactor all this shared code, rename config to avoid ambiguity with the configparser module
+
     # Config
     def get_config(self, keypath: str) -> str | None:
         """Read a value from the config INI file using a 'section.key' keypath."""
@@ -357,7 +358,7 @@ class FilesystemRepository(KanbanRepository):
                 cfg[section] = {}
             cfg[section][key] = value
 
-        self.userdata_file.write_text(self._write_userdata(cfg), encoding="utf-8")
+        self.userdata_file.write_text(self._write_config(cfg), encoding="utf-8")
 
     # Board metadata
     def _board_metadata_file(self, board: str) -> Path:
@@ -468,17 +469,19 @@ class FilesystemRepository(KanbanRepository):
         )
 
     @staticmethod
-    def _write_config(cfg: configparser.ConfigParser) -> str:
-        """Serialise a ConfigParser to a string."""
+    def _write_ini(cfg: configparser.ConfigParser) -> str:
+        """Serialise a ConfigParser to a string with tab-indented key-value pairs."""
         import io
         buf = io.StringIO()
         cfg.write(buf)
-        return buf.getvalue()
+        lines = []
+        for line in buf.getvalue().splitlines(keepends=True):
+            stripped = line.lstrip()
+            if stripped and not stripped.startswith("["):
+                line = "\t" + stripped
+            lines.append(line)
+        return "".join(lines)
 
     @staticmethod
-    def _write_userdata(cfg: configparser.ConfigParser) -> str:
-        """Serialise a ConfigParser to a string."""
-        import io
-        buf = io.StringIO()
-        cfg.write(buf)
-        return buf.getvalue()
+    def _write_config(cfg: configparser.ConfigParser) -> str:
+        return FilesystemRepository._write_ini(cfg)

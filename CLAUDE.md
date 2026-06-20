@@ -22,6 +22,7 @@ Be succinct.
 - Add documenation when you create types and methods, including for tests
 - Break up tests, keep unit tests small
 - Run tests from the current working directory with the bash command `python -m unittest discover -s tests`
+- Tab indent key-value pairs in INI files
 
 ## Project
 
@@ -160,7 +161,12 @@ git -C .kanban-store pull
 
 #### The Store
 
-The kanban store includes a hidden `.userdata` INI file. It contains preferences specific to the user and is added to the git ignore. (TODO) For example the user's most recently active /board/column is saved here and reloaded when the user starts the repl.
+The kanban store includes a hidden `.userdata` INI file. It contains preferences specific to the user and is added to the git ignore. (TODO) For example the user's most recently active /board/column is saved here and reloaded when the user starts the repl. For example:
+
+```
+[user-context]
+board = main
+```
 
 #### Boards
 
