@@ -417,7 +417,7 @@ class KanbanRepository(ABC):
     # ------------------------------------------------------------------
 
     @abstractmethod
-    def get_config(self, keypath: str) -> Optional[str]:
+    def get_config(self, keypath: str) -> str | None:
         """
         Return the value for the given config key, or None if not set.
 
@@ -428,3 +428,29 @@ class KanbanRepository(ABC):
     def set_config(self, keypath: str, value: str | None) -> None:
         """Set a config key to the given value."""
 
+
+    # ------------------------------------------------------------------
+    # Additional userdata storage (not required for core functionality)
+    # ------------------------------------------------------------------
+
+    @abstractmethod
+    def get_userdata(self, keypath: str) -> str | None:
+        """
+        Return the value for the given userdata key, or None if not set.
+
+        Userdata is stored in `.userdata` and is intended for arbitrary
+        key-value pairs that are not part of the core kanban data model but
+        may be useful for extensions or integrations.
+        """
+        return None
+
+    @abstractmethod
+    def set_userdata(self, keypath: str, value: str | None) -> None:
+        """
+        Set a userdata key to the given value.
+
+        Userdata is stored in `.userdata` and is intended for arbitrary
+        key-value pairs that are not part of the core kanban data model but
+        may be useful for extensions or integrations.
+        """
+        return None

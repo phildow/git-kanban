@@ -112,18 +112,10 @@ class KanbanService:
         self.git_service = git_service
         self._user_context = UserContext()
 
-        if self.repository.is_initialized:
-            # Load user context from repository config if available, else use defaults.
-            try:
-                board = self.repository.get_config("user-context.board")
-            except KeyError:
-                board = None
-            try:
-                column = self.repository.get_config("user-context.column")
-            except KeyError:
-                column = None
-            self._user_context.board = board
-            self._user_context.column = column
+        if self.is_initialized:
+            # Load user context from userdata if available, else use defaults.
+            self._user_context.board = self.get_userdata("user-context.board")
+            self._user_context.column = self.get_userdata("user-context.column")
 
     @property
     def root(self) -> Path:
@@ -177,14 +169,14 @@ class KanbanService:
         """Set the board/column context"""
         self._user_context.board = board
         self._user_context.column = column
-        self.set_config("user-context.board", board)
-        self.set_config("user-context.column", column)
+        self.set_userdata("user-context.board", board)
+        self.set_userdata("user-context.column", column)
 
     def clear_user_context(self) -> UserContext:
         """Clear the user context with initial default values."""
         self._user_context = UserContext()
-        self.set_config("user-context.board", None)
-        self.set_config("user-context.column", None)
+        self.set_userdata("user-context.board", None)
+        self.set_userdata("user-context.column", None)
         return self._user_context
 
     # ------------------------------------------------------------------
@@ -748,6 +740,14 @@ class KanbanService:
 
     # ── Config ────────────────────────────────────────────────────────────────
 
+    def get_config(self, keypath: str) -> str | None:
+        """
+        Read a configuration value from .kanban/.config.  Raises
+        InvalidConfigKey if the key is not supported and ConfigKeyNotSet if
+        the key is valid but has not been assigned a value.
+        """
+        return self.repository.get_config(keypath)
+
     def set_config(self, keypath: str, value: str) -> None:
         """
         Persist a configuration value to .kanban/.config under the given key.
@@ -756,15 +756,23 @@ class KanbanService:
         """
         self.repository.set_config(keypath, value)
 
+    # ── Userdata ──────────────────────────────────────────────────────────────
 
-    def get_config(self, keypath: str) -> str:
+    def get_userdata(self, keypath: str) -> str | None:
         """
-        Read a configuration value from .kanban/.config.  Raises
-        InvalidConfigKey if the key is not supported and ConfigKeyNotSet if
-        the key is valid but has not been assigned a value.
+        Read a userdata value from .kanban/.userdata.  Raises UserdataKeyNotSet
+        if the key does not exist.
         """
-        return self.repository.get_config(keypath)
+        return self.repository.get_userdata(keypath)
 
+    def set_userdata(self, keypath: str, value: str) -> None:
+        """
+        Persist arbitrary user data to .kanban/.userdata under the given key.
+        This is separate from config in that it's not intended for structured
+        application settings, but rather for users to store custom data like
+        API keys or snippets.  No git commit — userdata is local working state.
+        """
+        self.repository.set_userdata(keypath, value)
 
     # ── Status ────────────────────────────────────────────────────────────────
 

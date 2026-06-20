@@ -451,7 +451,7 @@ class InMemoryRepository(KanbanRepository):
         raise NotImplementedError()
 
     # Config
-    def get_config(self, keypath: str) -> Optional[str]:
+    def get_config(self, keypath: str) -> str | None:
         return self._config.get(keypath)
 
     def set_config(self, keypath: str, value: str | None) -> None:
@@ -460,3 +460,13 @@ class InMemoryRepository(KanbanRepository):
         else:
             self._config[keypath] = value
 
+    # User data
+    def get_userdata(self, keypath: str) -> str | None:
+        return self._userdata.get(keypath)
+
+    def set_userdata(self, keypath: str, value: str | None) -> None:
+        if value is None:
+            self._userdata.pop(keypath, None)
+        else:
+            self._userdata[keypath] = value
+            

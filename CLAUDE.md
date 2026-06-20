@@ -17,6 +17,7 @@ Be succinct.
 - When writing python prefer dot notation over `getattr`, especially when the type is known
 - Prefer explicit types over `object` and add type whenever possible
 - Use double quotes `"..."` for strings
+- When typing optionals for prefer `typ | None` instead of `Optional(typ)`
 - When a python dependency is required add it to the pyproject files
 - Add documenation when you create types and methods, including for tests
 - Break up tests, keep unit tests small
@@ -332,6 +333,8 @@ kanban >
 ```
 
 ### The User Context
+
+The user context is a service level model of user settings and preferences. It includes for example, the active board or board/column, akin to the current working directory.
 
 The REPL takes advantage of the user contex in the kanban service, allowing the user to set what is effectively the current working directory. If there is an active board or board/column, the REPL shows it in the prompt:
 
