@@ -281,8 +281,6 @@ class KanbanService:
         # This is the most complex case because it requires disambiguating between boards and columns 
         # based on the current context and repository state.
 
-        # TODO: append the normalized path to the user context and then resolve that into its components
-
         full_path = self.working_path / path
         board, column, task = self.path_components(str(full_path))
 
@@ -298,33 +296,6 @@ class KanbanService:
             self.update_user_context(board=board, column=column)    
         
         return self.user_context
-
-        # STOP
-
-        # board: str | None = None
-        # column: str | None = None
-
-        # if "/" in path:
-        #     board, column = path.split("/", 1)
-        #     if not board or not column:
-        #         raise ValueError("Path must be /BOARD or /BOARD/COLUMN")
-        # else:
-        #     board = path
-        #     current_board = self.user_context.board
-        #     if current_board:
-        #         try:
-        #             self.repository.get_column(current_board, path)
-        #             board = current_board
-        #             column = path
-        #         except ColumnNotFound:
-        #             column = None
-
-        # self.repository.get_board(board)
-        # if column is not None:
-        #     self.repository.get_column(board, column)
-
-        # self.update_user_context(board=board, column=column)
-        # return self.user_context
 
     def set_board(self, board: str) -> UserContext:
         """Set the current context to the given board, validating that it exists."""

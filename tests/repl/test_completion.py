@@ -16,9 +16,6 @@ from models import UserContext
 from repl.parser import build_parser as build_repl_parser
 from repl.shell import (
     _prompt,
-    _rewrite_relative_paths,
-    _complete_command_tokens,
-    _complete_path_tokens,
     run_repl,
 )
 from services.kanban import KanbanService
