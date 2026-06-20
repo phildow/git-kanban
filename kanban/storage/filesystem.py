@@ -146,6 +146,7 @@ class FilesystemRepository(KanbanRepository):
         if self.board_exists(name):
             raise BoardAlreadyExists(name)
         (self.boards_dir / name).mkdir()
+        (self.boards_dir / name / ".metadata").touch()
         return Board(name=name, columns=[])
 
     def rename_board(self, name: str, new_name: str) -> Board:
@@ -357,6 +358,45 @@ class FilesystemRepository(KanbanRepository):
             cfg[section][key] = value
 
         self.userdata_file.write_text(self._write_userdata(cfg), encoding="utf-8")
+
+    # Board metadata
+    def _board_metadata_file(self, board: str) -> Path:
+        """Return the path to the .metadata INI file for the given board."""
+        return self.boards_dir / board / ".metadata"
+
+    def get_board_metadata(self, board: str, keypath: str) -> str | None:
+        """Read a value from a board's .metadata INI file using a 'section.key' keypath."""
+        if "." not in keypath:
+            raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
+
+        section, key = keypath.split(".", 1)
+        cfg = configparser.ConfigParser()
+        cfg.read(self._board_metadata_file(board), encoding="utf-8")
+
+        if section not in cfg or key not in cfg[section]:
+            return None
+
+        return cfg[section][key]
+
+    def set_board_metadata(self, board: str, keypath: str, value: str | None) -> None:
+        """Write a value to a board's .metadata INI file using a 'section.key' keypath."""
+        if "." not in keypath:
+            raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
+
+        section, key = keypath.split(".", 1)
+        metadata_file = self._board_metadata_file(board)
+        cfg = configparser.ConfigParser()
+        cfg.read(metadata_file, encoding="utf-8")
+
+        if value is None:
+            if section in cfg and key in cfg[section]:
+                del cfg[section][key]
+        else:
+            if section not in cfg:
+                cfg[section] = {}
+            cfg[section][key] = value
+
+        metadata_file.write_text(self._write_config(cfg), encoding="utf-8")
 
     # TODO: kanban service also does task parsing move to a utility module to avoid duplication between service and repository layers
 

@@ -51,11 +51,10 @@ kanban (main)>
 
 ### TODO
 
-- FEAT: improve repl rendering - always give feedback
 - FEAT: implement user sort order for boards
 - FEAT: implement user sort order for tasks
 - FEAT: bump command to move a board or task to the front
-- FEAT: include result count in task listing
+- FEAT: improve repl rendering - always give feedback
 
 - TEST: make sure repl gives recoverable error messages
 - TEST: Check init error handling
