@@ -92,8 +92,25 @@ class TestKanbanServiceGetTasksFilter(unittest.TestCase):
         self.assertEqual([t.id for t in tasks], [self.t2.id])
 
     def test_filter_by_tag(self) -> None:
-        """tag narrows to tasks carrying that tag."""
-        tasks = self.svc.get_tasks(path="/main", filter=TaskFilter(tag="auth"), sort=None)
+        """A single tag matches tasks carrying that tag."""
+        tasks = self.svc.get_tasks(path="/main", filter=TaskFilter(tags=["auth"]), sort=None)
+        self.assertEqual([t.id for t in tasks], [self.t3.id])
+
+    def test_filter_by_multiple_tags_returns_union(self) -> None:
+        """Multiple tags match tasks that carry any one of them (OR semantics)."""
+        # t2 has "docs", t3 has "auth" — both should be returned
+        tasks = self.svc.get_tasks(path="/main", filter=TaskFilter(tags=["docs", "auth"]), sort=None)
+        self.assertEqual({t.id for t in tasks}, {self.t2.id, self.t3.id})
+
+    def test_filter_by_multiple_tags_with_overlap(self) -> None:
+        """Tasks matching more than one filter tag are included only once."""
+        # t1 has "bug", t3 has "bug" and "auth" — t3 matches both filter tags but appears once
+        tasks = self.svc.get_tasks(path="/main", filter=TaskFilter(tags=["bug", "auth"]), sort=None)
+        self.assertEqual({t.id for t in tasks}, {self.t1.id, self.t3.id})
+
+    def test_filter_by_multiple_tags_one_unknown(self) -> None:
+        """An unknown tag in the filter list is ignored; known tags still match."""
+        tasks = self.svc.get_tasks(path="/main", filter=TaskFilter(tags=["auth", "nonexistent"]), sort=None)
         self.assertEqual([t.id for t in tasks], [self.t3.id])
 
     def test_filter_by_created_by(self) -> None:
@@ -115,7 +132,7 @@ class TestKanbanServiceGetTasksFilter(unittest.TestCase):
 
     def test_combined_filter(self) -> None:
         """Multiple criteria are ANDed together."""
-        f = TaskFilter(assignee="alice", priority="high", tag="auth")
+        f = TaskFilter(assignee="alice", priority="high", tags=["auth"])
         tasks = self.svc.get_tasks(path="/main", filter=f, sort=None)
         self.assertEqual([t.id for t in tasks], [self.t3.id])
 
@@ -175,7 +192,7 @@ class TestKanbanServiceGetTasksFilterNullValues(unittest.TestCase):
 
     def test_empty_tags_excluded_by_tag_filter(self) -> None:
         """Task with no tags is not returned when filtering by tag."""
-        tasks = self.svc.get_tasks(path="/main", filter=TaskFilter(tag="bug"), sort=None)
+        tasks = self.svc.get_tasks(path="/main", filter=TaskFilter(tags=["bug"]), sort=None)
         self.assertIn(self.with_values.id, self._ids(tasks))
         self.assertNotIn(self.no_values.id, self._ids(tasks))
 

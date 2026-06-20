@@ -65,7 +65,7 @@ def _task_matches_filter(task: Task, filter: TaskFilter) -> bool:
         return False
     if filter.priority is not None and task.priority != filter.priority:
         return False
-    if filter.tag is not None and filter.tag not in task.tags:
+    if filter.tags and not any(t in task.tags for t in filter.tags):
         return False
     if filter.created_by is not None and task.created_by != filter.created_by:
         return False

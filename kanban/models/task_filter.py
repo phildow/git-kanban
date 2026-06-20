@@ -15,8 +15,7 @@ class TaskFilter:
     
     assignee:   str | None = None
     priority:   str | None = None          # "low" | "medium" | "high"
-    tag:        str | None = None
+    tags:       list[str] = field(default_factory=list)
     due_before: datetime | None = None
     due_after:  datetime | None = None
     created_by: str | None = None
-
