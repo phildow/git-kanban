@@ -53,6 +53,8 @@ kanban (main)>
 
 - FEAT: save and restore the command history
 
+- TEST: make sure repl gives recoverable error messages
+- TEST: Chec init error handling
 - TEST: Create task with spaces
 - TEST: Create column with spaces
 - TEST: Create board with spaces
@@ -74,14 +76,9 @@ kanban (main)>
 - CHORE: move search_tasks to the index service
 - CHORE: add utilty to filter for invisible files, which is used extensively in the filesystem repo
 
-- Use slugs in memory repository for private indexing (add tests)
+- CHORE: Use slugs in memory repository for private indexing (add tests)
 - Models return a path
 - FEAT: Add comments to a task which are just appended to the body
-
-ERROR HANDLING
-
-- check init error handling
-- make sure repl gives recoverable error messages
 
 FILENAME VS TITLE
 
