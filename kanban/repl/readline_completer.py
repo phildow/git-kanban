@@ -43,11 +43,28 @@ class ReplCompleter:
         segment names, this is what makes completion show plain names
         like "in-progress" while the resulting line still reads as the
         full path the person already typed plus that name.
+
+        Tab is bound to ``menu-complete`` rather than plain ``complete``
+        so that repeated presses cycle through each match one at a
+        time (wrapping back to the original text at the end), and
+        ``show-all-if-ambiguous`` makes the very first ambiguous press
+        display the full candidate list rather than requiring a second
+        press to see it. Shift-Tab is bound to
+        ``menu-complete-backward`` to cycle in reverse. This is GNU
+        readline behavior; it relies on the Python ``readline`` module
+        being linked against GNU readline rather than libedit (libedit
+        is the macOS system default and does not support
+        ``menu-complete`` the same way -- the ``gnureadline`` PyPI
+        package is a drop-in replacement if that turns out to matter
+        for your users).
         """
 
         readline.set_completer_delims(" \t\n/")
         readline.set_completer(self)
-        readline.parse_and_bind("tab: complete")
+        readline.parse_and_bind("set show-all-if-ambiguous on")
+        readline.parse_and_bind("set menu-complete-display-prefix on")
+        readline.parse_and_bind("tab: menu-complete")
+        readline.parse_and_bind('"\\e[1;2Z": menu-complete-backward')
 
     def __call__(self, text: str, state: int) -> str | None:
         """Readline's completer protocol: called repeatedly with state=0,1,2,...

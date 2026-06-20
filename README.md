@@ -53,34 +53,33 @@ kanban (main)>
 
 - FEAT: implement user sort order for boards
 - FEAT: implement user sort order for tasks
+- FEAT: bump command to move a board or task to the front
+- FEAT: include result count in task listing
+- FEAT: include task count in column and board listing
 
 - TEST: make sure repl gives recoverable error messages
-- TEST: Chec init error handling
+- TEST: Check init error handling
 - TEST: Create task with spaces - kebab_case
 - TEST: Create column with spaces - kebab_case
 - TEST: Create board with spaces - kebab_case
 - TEST BUG: tests create temp folders and don't clean them up
 
-- FEAT: Add support to double tab through 
 - FEAT: tab completion for assigness and tags
 - FEAT: Correctly resolve `..` all commands that take paths not just cd
 - FEAT: Correctly tab complete `..` for all commands that take paths
 - FEAT: Use the same logic for other commands that take paths, and use resolve into components
   taking into account relative paths and the user context
-
-- FEAT: bump command to move a board or task to the front
 - FEAT: ooo the shell will make as few as two columns
+- FEAT: better bootdstrapping
+- FEAT: Add comments to a task which are just appended to the body
 
 - BUG: if a board is already in the current context, `create board x` doesn't work
 - BUG: `kanban (/) > ls main -al` returns no result and prompts `kanban (/) >`
 
-- FEAT: better bootdstrapping
 - CHORE: move search_tasks to the index service
 - CHORE: add utilty to filter for invisible files, which is used extensively in the filesystem repo
-
 - CHORE: Use slugs in memory repository for private indexing (add tests)
-- Models return a path
-- FEAT: Add comments to a task which are just appended to the body
+- CHORE: Models return a path?
 
 FILENAME VS TITLE
 
@@ -91,15 +90,15 @@ CONFIG
 - Tabcomplete config keys?
 - Allow the user to alias repl commands in the config file
     - eg `c=create`
-- Allow the user to set a username to use for default createdb_by and assigned_to
-    - eg `username=philip`
+- Allow the user to set a name to use for default createdb_by and assigned_to (get this from get config if available)
+    - eg `name=philip`
 - Allow the user to set their preferred editor?
 - Allow the user to decide what columns are shown for a given terminal size when listing tasks
     - eg `task-cols:80=title,assignee,tags`
     - eg `task-cols:96=title,assignee,tags,due`
 - Allowe the user to customize the default column names
 
-- Once we have file storage `kanban init` this direcory and start storing tasks here (dogfood) ~ almost there!
+- Once we have file storage `kanban init` this directory and start storing tasks here (dogfood) ~ almost there!
 - Which takes us to git integration
 
 AGENT KANBAN
