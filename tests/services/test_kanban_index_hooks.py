@@ -28,7 +28,6 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
             repository=self.repo,
             index_service=self.index_service,
             git_service=GitService(),
-            user_context=UserContext(),
         )
 
         self.repo.create_board("alpha")

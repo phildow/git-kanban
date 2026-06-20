@@ -26,7 +26,6 @@ class TestKanbanServiceSetPath(unittest.TestCase):
             repository=self.repo,
             index_service=IndexService(repository=self.repo),
             git_service=GitService(),
-            user_context=UserContext(),
         )
         self.repo.create_board("alpha")
         self.repo.create_column("alpha", "todo")
@@ -60,7 +59,6 @@ class TestKanbanServiceResolvePath(unittest.TestCase):
             repository=self.repo,
             index_service=IndexService(repository=self.repo),
             git_service=GitService(),
-            user_context=UserContext(),
         )
 
     def test_resolve_path_relative_with_board_and_column_context(self):

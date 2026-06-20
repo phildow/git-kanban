@@ -25,7 +25,6 @@ class TestKanbanServiceCreateBoard(unittest.TestCase):
             repository=self.repo,
             index_service=IndexService(repository=self.repo),
             git_service=GitService(),
-            user_context=UserContext(),
         )
 
     def test_default_columns_are_created_when_none_passed(self) -> None:

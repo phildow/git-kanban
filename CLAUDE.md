@@ -131,7 +131,7 @@ root-directory/
   ...
 ```
 
-`.kanban/` contains local machine state (config, cache) that should probably never be committed at all, while  `.kanban-store/` contains the shared board state that git is tracking. Information about boards and columnts that is not stored in the files themselves, such as their original names and sort order, is kept in a `.metadata` file local to each folder.
+`.kanban/` contains local machine state (config, cache) that should probably never be committed at all, while  `.kanban-store/` contains the shared board state that git is tracking. Information about boards and columnts that is not stored in the files themselves, such as their original names and sort order, is kept in a `.metadata` INI file local to each folder.
 
 ### Git
 

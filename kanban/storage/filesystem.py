@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import configparser
 import logging
 import shutil
 
@@ -51,7 +52,7 @@ class FilesystemRepository(KanbanRepository):
     # ------------------------------------------------------------------
 
     # Bootstrap
-    def init_storage(self, default_board: str = "main") -> None:
+    def init_storage(self, default_board: str = "main", default_column: str = "todo") -> None:
         if self.is_initialized:
             raise ValueError("Kanban is already initialized")
 
@@ -62,7 +63,10 @@ class FilesystemRepository(KanbanRepository):
         kanban_store_dir = self.kanban_store_dir
         kanban_store_dir.mkdir()
 
-        self.config_file.touch()
+        cfg = configparser.ConfigParser()
+        cfg["user-context"] = {"board": default_board, "column": default_column}
+        self.config_file.write_text(self._write_config(cfg), encoding="utf-8")
+        
         self.index_file.touch()
 
         boards_dir = self.boards_dir
@@ -279,11 +283,38 @@ class FilesystemRepository(KanbanRepository):
         raise NotImplementedError()
 
     # Config
-    def get_config(self, key: str) -> Optional[str]:
-        raise NotImplementedError()
+    def get_config(self, keypath: str) -> Optional[str]:
+        """Read a value from the INI config file using a 'section.key' keypath."""
+        if "." not in keypath:
+            raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
 
-    def set_config(self, key: str, value: str) -> None:
-        raise NotImplementedError()
+        section, key = keypath.split(".", 1)
+        cfg = configparser.ConfigParser()
+        cfg.read(self.config_file, encoding="utf-8")
+
+        if section not in cfg:
+            raise KeyError(f"Config section '{section}' not found")
+        if key not in cfg[section]:
+            raise KeyError(f"Config key '{key}' not found in section '{section}'")
+
+        return cfg[section][key]
+
+    def set_config(self, keypath: str, value: str | None) -> None:
+        """Write a value to the INI config file using a 'section.key' keypath."""
+        if "." not in keypath:
+            raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
+
+        section, key = keypath.split(".", 1)
+        cfg = configparser.ConfigParser()
+        cfg.read(self.config_file, encoding="utf-8")
+
+        if value is None:
+            if key in cfg[section]:
+                del cfg[section][key]
+        else:
+            cfg[section][key] = value
+            
+        self.config_file.write_text(self._write_config(cfg), encoding="utf-8")
 
 
     # TODO: kanban service also does task parsing move to a utility module to avoid duplication between service and repository layers
@@ -354,6 +385,14 @@ class FilesystemRepository(KanbanRepository):
             updated_at=updated_at,
             body=body,
         )
+
+    @staticmethod
+    def _write_config(cfg: configparser.ConfigParser) -> str:
+        """Serialise a ConfigParser to a string."""
+        import io
+        buf = io.StringIO()
+        cfg.write(buf)
+        return buf.getvalue()
 
     def _task_matches_filter(self, task: Task, filter: TaskFilter) -> bool:
         """Return True if the task satisfies all non-None filter criteria."""

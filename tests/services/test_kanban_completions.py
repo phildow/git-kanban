@@ -25,7 +25,6 @@ class TestKanbanServiceCompletions(unittest.TestCase):
             repository=self.repo,
             index_service=IndexService(repository=self.repo),
             git_service=GitService(),
-            user_context=UserContext(),
         )
         self.svc.create_board("alpha", columns=[])
         self.svc.create_column("alpha/todo")

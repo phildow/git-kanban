@@ -82,7 +82,7 @@ class KanbanService:
         
     #     return attr
 
-    def __init__(self, repository: KanbanRepository, index_service: IndexService, git_service: GitService, user_context: UserContext) -> None:
+    def __init__(self, repository: KanbanRepository, index_service: IndexService, git_service: GitService) -> None:
         """
         Assemble the facade from its domain services.  All services are
         injected rather than instantiated here so that the InMemoryRepository
@@ -91,7 +91,20 @@ class KanbanService:
         self.repository = repository
         self.index_service = index_service
         self.git_service = git_service
-        self._user_context = user_context
+        self._user_context = UserContext()
+
+        if self.repository.is_initialized:
+            # Load user context from repository config if available, else use defaults.
+            try:
+                board = self.repository.get_config("user-context.board")
+            except KeyError:
+                board = None
+            try:
+                column = self.repository.get_config("user-context.column")
+            except KeyError:
+                column = None
+            self._user_context.board = board
+            self._user_context.column = column
 
     @property
     def root(self) -> Path:
@@ -145,10 +158,14 @@ class KanbanService:
         """Set the board/column context"""
         self._user_context.board = board
         self._user_context.column = column
+        self.repository.set_config("user-context.board", board)
+        self.repository.set_config("user-context.column", column)
 
     def clear_user_context(self) -> UserContext:
         """Clear the user context with initial default values."""
         self._user_context = UserContext()
+        self.repository.set_config("user-context.board", None)
+        self.repository.set_config("user-context.column", None)
         return self._user_context
 
     # ------------------------------------------------------------------
@@ -223,7 +240,7 @@ class KanbanService:
         clear:  bool = False,
     ) -> UserContext:
         """
-        Set or clear the current board/column context stored in .kanban/.config.
+        Set or clear the current board/column context stored in .kanban/config.
         Validates that the referenced board (and column, if given) exist before
         writing.  No git commit — context is local working state.
 

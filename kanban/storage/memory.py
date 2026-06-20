@@ -48,7 +48,7 @@ class InMemoryRepository(KanbanRepository):
     # Initialization
     # ---------------------------------------------------------------------------
     
-    def init_storage(self, default_board: str = "main") -> None:
+    def init_storage(self, default_board: str = "main", default_column: str = "todo") -> None:
         if self.board_exists(default_board):
            raise ValueError("Kanban is already initialized")
 
@@ -469,9 +469,12 @@ class InMemoryRepository(KanbanRepository):
         raise NotImplementedError()
 
     # Config
-    def get_config(self, key: str) -> Optional[str]:
-        return self._config.get(key)
+    def get_config(self, keypath: str) -> Optional[str]:
+        return self._config.get(keypath)
 
-    def set_config(self, key: str, value: str) -> None:
-        self._config[key] = value
+    def set_config(self, keypath: str, value: str | None) -> None:
+        if value is None:
+            self._config.pop(keypath, None)
+        else:
+            self._config[keypath] = value
 

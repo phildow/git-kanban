@@ -119,7 +119,7 @@ class KanbanRepository(ABC):
     # ------------------------------------------------------------------
 
     @abstractmethod
-    def init_storage(self, default_board: str = "main") -> None:
+    def init_storage(self, default_board: str = "main", default_column: str = "todo") -> None:
         """
         Initialize repository state for first use.
 
@@ -410,14 +410,14 @@ class KanbanRepository(ABC):
     # ------------------------------------------------------------------
 
     @abstractmethod
-    def get_config(self, key: str) -> Optional[str]:
+    def get_config(self, keypath: str) -> Optional[str]:
         """
         Return the value for the given config key, or None if not set.
 
-        Config is stored in `.kanban/.config`.
+        Config is stored in `.kanban/config`.
         """
 
     @abstractmethod
-    def set_config(self, key: str, value: str) -> None:
+    def set_config(self, keypath: str, value: str | None) -> None:
         """Set a config key to the given value."""
 

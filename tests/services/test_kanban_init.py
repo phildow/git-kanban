@@ -31,7 +31,6 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
             repository=repo,
             index_service=IndexService(repository=repo),
             git_service=GitService(),
-            user_context=UserContext(),
         )
 
         result = svc.init_kanban(Path("."))
@@ -59,7 +58,6 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
             repository=repo,
             index_service=IndexService(repository=repo),
             git_service=GitService(),
-            user_context=UserContext(),
         )
 
         svc.init_kanban(Path("."))
@@ -76,7 +74,6 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
             repository=repo,
             index_service=IndexService(repository=repo),
             git_service=GitService(),
-            user_context=UserContext(),
         )
 
         with self.assertRaises(ValueError):

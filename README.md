@@ -51,7 +51,6 @@ kanban (main)>
 
 ### TODO
 
-- FEAT: track the working directory in .kanban
 - FEAT: implement user sort order for boards
 - FEAT: implement user sort order for tasks
 
