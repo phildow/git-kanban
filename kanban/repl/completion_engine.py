@@ -290,6 +290,14 @@ class CompletionEngine:
         A leading ``/`` overrides the active context and resolves from
         the store root; otherwise completion starts at whatever depth
         the context already fixes (board, board+column, or neither).
+
+        Returns bare segment names (e.g. ``"in-progress/"``), not the
+        full path. ``/`` is configured as a readline word-break
+        character (see ReplCompleter.install), so readline itself only
+        ever replaces the fragment after the last ``/`` -- everything
+        typed before it stays in the buffer untouched. That's what
+        keeps the completion menu showing bare names while the
+        resulting line still reads as a full path.
         """
 
         override = token.startswith("/")

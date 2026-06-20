@@ -51,6 +51,14 @@ kanban (main)>
 
 ### TODO
 
+- Think I got cd and tab completion down! 
+- Correctly resolve `..` all commands that take paths not just cd
+- Correctly tab complete `..` for all commands that take paths
+- Use the same logic for other commands that take paths, and use resolve into components
+  taking into account relative paths and the user context
+- BUG: if a board is already specified, `create board x` doesn't work
+
+
 - fix cd!
 - check init
 - user sort order for boards and tasks

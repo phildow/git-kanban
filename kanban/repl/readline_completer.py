@@ -35,13 +35,17 @@ class ReplCompleter:
     def install(self) -> None:
         """Register this completer with readline for the REPL session.
 
-        Word-break characters are limited to whitespace so that ``/``
-        and ``-`` stay part of the current token; the engine does its
-        own path/slug segmentation rather than relying on readline's
-        default delimiters.
+        ``/`` is included as a word-break character alongside
+        whitespace, matching standard shell path-completion behavior:
+        readline computes the replaceable span as everything since the
+        last ``/`` (or whitespace), so it only ever touches the final
+        path segment. Combined with CompletionEngine returning bare
+        segment names, this is what makes completion show plain names
+        like "in-progress" while the resulting line still reads as the
+        full path the person already typed plus that name.
         """
 
-        readline.set_completer_delims(" \t\n")
+        readline.set_completer_delims(" \t\n/")
         readline.set_completer(self)
         readline.parse_and_bind("tab: complete")
 
