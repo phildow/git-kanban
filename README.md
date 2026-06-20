@@ -51,8 +51,8 @@ kanban (main)>
 
 ### TODO
 
+- fix cd!
 - check init
-- check init error handling
 - user sort order for boards and tasks
 - better bootdstrapping
 - move search_tasks to the index service
@@ -63,7 +63,22 @@ kanban (main)>
 - Cleanup: Define some getter methods as properties
 - Add comments to a task which are just appended to the body
 
+ERROR HANDLING
+
+- check init error handling
+- improve cli error handling - use logging and stderr, exit(1)
+- make sure repl gives recoverable error messages
+
+
 TAB COMPLETION
+
+Shouldn't work this way:
+
+```
+kanban (/main/todo) > cd main/
+kanban (/main) > cd main/
+kanban (/main) >
+```
 
 - Swing back around to path completion in svc._rewrite_relative_paths (eg cd, ls)
 - Assignees, priorities, and tags are cached in the index
@@ -71,10 +86,18 @@ TAB COMPLETION
 
 - Commands
 - Paths relative and absolute
-- Flags?
+- Flags
 - Assignees
 - Priority
 - Tags
+
+Worked with Claude chat to plan the design and write the code. If the code works:
+
+- Remove text_completion.py
+
+FILENAME VS TITLE
+
+- rename task|column does it take the title or a slug or both
 
 TESTS
 

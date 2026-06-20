@@ -1,5 +1,11 @@
 
-# TODO: add comment
+"""
+A service that provides handlers for REPL commands that reuse the same logic as the CLI handlers, 
+but with a different interface for passing arguments and rendering results.
+
+Designed to keep the base handlers lean. The main entry points for the REPL are in repl/handlers.py, 
+which call into this service as needed to perform more complex operations.
+"""
 
 import argparse
 

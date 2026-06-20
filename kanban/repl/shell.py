@@ -11,6 +11,9 @@ from argparse import Namespace
 from contextlib import contextmanager
 from pathlib import Path
 
+from repl.completion_engine import CompletionEngine
+from repl.parser import build_parser
+from repl.readline_completer import ReplCompleter
 from services.kanban import KanbanService
 from storage.kanban import BoardNotFound, ColumnNotFound, TaskNotFound
 
@@ -245,7 +248,7 @@ def _strip_trailing_slash(path: str) -> str:
     return path.rstrip("/")
 
 
-def resolve_set_path(path: str, svc: KanbanService) -> str:
+def _resolve_set_path(path: str, svc: KanbanService) -> str:
     """Resolve special REPL shortcuts for `set-path`"""
     normalized = _strip_trailing_slash(path)
     if normalized == "../..":
@@ -276,7 +279,7 @@ def _rewrite_relative_paths(tokens: list[str], svc: KanbanService) -> list[str]:
 
     if command in {"cd"}:
         if len(rewritten) >= 2:
-            rewritten[1] = resolve_set_path(rewritten[1], svc)
+            rewritten[1] = _resolve_set_path(rewritten[1], svc)
         return rewritten
 
     if command in {"list", "ls"}:
@@ -310,6 +313,7 @@ def _configure_readline_completion(parser: argparse.ArgumentParser, svc: KanbanS
 
     try:
         delimiters = readline.get_completer_delims().replace("/", "").replace("-", "")
+        # alternative: readline.set_completer_delims(" \t\n")
         readline.set_completer_delims(delimiters)
     except Exception:
         pass
@@ -393,7 +397,6 @@ def _print_help_message(parser: argparse.ArgumentParser) -> None:
 
 def run_repl(*, svc: KanbanService, renderer: object) -> None:
     """Run a simple command loop that reuses the CLI parser/handlers."""
-    from repl.parser import build_parser
 
     if not _initialize_kanban(svc):
         print("Kanban repository not initialized. Exiting.")
@@ -401,9 +404,14 @@ def run_repl(*, svc: KanbanService, renderer: object) -> None:
     
     try:
         parser = build_parser()
-        rewrite = _rewrite_relative_paths
+        # rewrite = _rewrite_relative_paths
         _configure_readline_shortcuts()
-        _configure_readline_completion(parser, svc)
+        # _configure_readline_completion(parser, svc)
+
+        engine = CompletionEngine(svc, parser)
+        completer = ReplCompleter(engine, get_context=lambda: svc.user_context)
+        completer.install()
+        
     except ValueError as exc:
         print(f"Value error: {exc}")
 
@@ -437,8 +445,8 @@ def run_repl(*, svc: KanbanService, renderer: object) -> None:
 
                 try:
                     tokens = shlex.split(raw)
-                    args: Namespace = parser.parse_args(rewrite(tokens, svc))
-                    # args: Namespace = parser.parse_args(tokens)
+                    # args: Namespace = parser.parse_args(rewrite(tokens, svc))
+                    args: Namespace = parser.parse_args(tokens)
                 except SystemExit:
                     # argparse already emitted a helpful message.
                     continue
@@ -457,7 +465,7 @@ def run_repl(*, svc: KanbanService, renderer: object) -> None:
                     print(f"Task not found: {exc.identifier}")
                 except ValueError as exc:
                     logging.error("Value error: %s", exc)
-                    print(f"Value error: {exc}")
+                    print(f"{exc}")
                 except KeyboardInterrupt:
                     print()
                     continue
