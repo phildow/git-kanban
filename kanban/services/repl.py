@@ -8,9 +8,26 @@ which call into this service as needed to perform more complex operations.
 """
 
 import argparse
+from datetime import datetime, timezone
 
-from models import Board, Column, Task
+from models import Board, Column, Task, TaskFilter
 from services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
+
+def _build_task_filter(args: argparse.Namespace) -> TaskFilter:
+    """Build a TaskFilter from parsed CLI/REPL filter arguments."""
+    def _parse_date(s: str | None) -> datetime | None:
+        return datetime.strptime(s, "%Y-%m-%d").replace(tzinfo=timezone.utc) if s else None
+
+    tags = getattr(args, "tags", None) or []
+    return TaskFilter(
+        assignee=getattr(args, "assignee", None),
+        priority=getattr(args, "priority", None),
+        tag=tags[0] if tags else None,
+        due_before=_parse_date(getattr(args, "due_before", None)),
+        due_after=_parse_date(getattr(args, "due_after", None)),
+        created_by=getattr(args, "created_by", None),
+    )
+
 
 def handle_list(args: argparse.Namespace, svc: KanbanService) -> tuple[list[Board | Column | Task], type]:
     """
@@ -24,7 +41,7 @@ def handle_list(args: argparse.Namespace, svc: KanbanService) -> tuple[list[Boar
 
     board, column, _ = svc.path_components(path)
 
-    filter = getattr(args, "filter", None)
+    filter = _build_task_filter(args)
     sort = getattr(args, "sort", None)
     reverse = getattr(args, "reverse", False)
     

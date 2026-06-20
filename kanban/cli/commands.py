@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 
+from models import TaskFilter
 from services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
 
 # ---------------------------------------------------------------------------
@@ -70,8 +72,24 @@ def handle_column_delete(args: argparse.Namespace, svc: KanbanService, renderer:
 # Task subcommands
 # ---------------------------------------------------------------------------
 
+def _build_task_filter(args: argparse.Namespace) -> TaskFilter:
+	"""Build a TaskFilter from parsed CLI/REPL filter arguments."""
+	def _parse_date(s: str | None) -> datetime | None:
+		return datetime.strptime(s, "%Y-%m-%d").replace(tzinfo=timezone.utc) if s else None
+
+	tags = getattr(args, "tags", None) or []
+	return TaskFilter(
+		assignee=getattr(args, "assignee", None),
+		priority=getattr(args, "priority", None),
+		tag=tags[0] if tags else None,
+		due_before=_parse_date(getattr(args, "due_before", None)),
+		due_after=_parse_date(getattr(args, "due_after", None)),
+		created_by=getattr(args, "created_by", None),
+	)
+
+
 def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	result = svc.get_tasks(path=args.path, sort=args.sort, reverse=args.reverse)
+	result = svc.get_tasks(path=args.path, filter=_build_task_filter(args), sort=args.sort, reverse=args.reverse)
 	renderer.render_task_list(args, result)
 
 

@@ -51,8 +51,6 @@ kanban (main)>
 
 ### TODO
 
-- BUG: task list filters aren't working
-
 - FEAT: implement user sort order for boards
 - FEAT: implement user sort order for tasks
 

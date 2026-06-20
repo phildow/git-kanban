@@ -128,7 +128,8 @@ class TestCommandHandlers(unittest.TestCase):
 
         commands.handle_task_list(args, self.svc, self.renderer)
 
-        self.svc.get_tasks.assert_called_once_with(path="board-a/todo", sort="title", reverse=True)
+        from models import TaskFilter
+        self.svc.get_tasks.assert_called_once_with(path="board-a/todo", filter=TaskFilter(), sort="title", reverse=True)
         self.renderer.render_task_list.assert_called_once_with(args, result)
 
     def test_handle_task_create_with_all_optional_fields(self):
