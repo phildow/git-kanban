@@ -115,6 +115,7 @@ def _add_board_parser(subparsers: argparse._SubParsersAction) -> None:
     # board delete
     p = board_sub.add_parser("delete", help="Delete a board")
     p.add_argument("board", metavar="BOARD", help="Board name")
+    p.add_argument("-f", "--force", action="store_true", default=False, help="Skip confirmation prompt")
     _add_global_flags(p)
     p.set_defaults(func=handle_board_delete)
 
@@ -160,6 +161,7 @@ def _add_column_parser(subparsers: argparse._SubParsersAction) -> None:
     # column delete
     p = col_sub.add_parser("delete", help="Delete a column")
     p.add_argument("path", metavar="BOARD/COLUMN", help="Column path")
+    p.add_argument("-f", "--force", action="store_true", default=False, help="Skip confirmation prompt")
     _add_global_flags(p)
     p.set_defaults(func=handle_column_delete)
 
@@ -221,6 +223,7 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     # task delete
     p = task_sub.add_parser("delete", help="Delete a task")
     p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
+    p.add_argument("-f", "--force", action="store_true", default=False, help="Skip confirmation prompt")
     _add_global_flags(p)
     p.set_defaults(func=handle_task_delete)
 

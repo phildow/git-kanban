@@ -74,7 +74,7 @@ class TestCommandHandlers(unittest.TestCase):
 
     def test_handle_board_delete(self):
         """`board delete` forwards board name and renders deletion result."""
-        args = self._args(board="my-board")
+        args = self._args(board="my-board", force=True)
         result = object()
         self.svc.delete_board.return_value = result
 
@@ -113,7 +113,7 @@ class TestCommandHandlers(unittest.TestCase):
         self.svc.reorder_column.assert_called_once_with("board-a/todo", 2)
         self.renderer.render_column_reorder.assert_called_once_with(args, result)
 
-        args = self._args(path="board-a/todo")
+        args = self._args(path="board-a/todo", force=True)
         result = object()
         self.svc.delete_column.return_value = result
         commands.handle_column_delete(args, self.svc, self.renderer)
@@ -297,7 +297,7 @@ class TestCommandHandlers(unittest.TestCase):
 
     def test_handle_task_delete(self):
         """`task delete` forwards task path and renders deletion result."""
-        args = self._args(path="board-a/todo/fix-parser")
+        args = self._args(path="board-a/todo/fix-parser", force=True)
         result = object()
         self.svc.delete_task.return_value = result
 

@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 
 from models import Board, Column, Task, TaskFilter
 from services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
+from utils.shell import prompt_for_confirmation
 
 def _build_task_filter(args: argparse.Namespace) -> TaskFilter:
     """Build a TaskFilter from parsed CLI/REPL filter arguments."""
@@ -47,7 +48,7 @@ def handle_list(args: argparse.Namespace, svc: KanbanService) -> tuple[list[Boar
     if all_tasks and board:
         return Task, svc.get_tasks(path=f"/{board}", filter=filter, sort=sort, reverse=reverse)
     elif all_tasks and not board:
-        raise ValueError("Cannot list all tasks without a board name: {}".format(path))
+        raise ValueError("Cannot list all tasks without a board name")
     if board and column:
         return Task, svc.get_tasks(path=f"/{board}/{column}", filter=filter, sort=sort, reverse=reverse)
     elif board and not column and all_tasks:
@@ -65,19 +66,30 @@ def handle_delete(args: argparse.Namespace, svc: KanbanService) -> type:
     may be absolute or relative to the current context.
     """
     path = getattr(args, "path", "") or ""
+    force = getattr(args, "force", False)
     board, column, task = svc.path_components(path)
 
+    def _confirm(message: str) -> bool:
+        return force or prompt_for_confirmation(message)
+
     if board and column and task:
-        svc.delete_task(path=f"/{board}/{column}/{task}")
-        return Task
-    elif board and column and not task:
-        svc.delete_column(path=f"/{board}/{column}")
-        return Column
-    elif board and not column:
-        svc.delete_board(board)
-        return Board
-    elif not board and not column:
+        if _confirm(f"Are you sure you want to delete the task '{task}'?"):
+            svc.delete_task(path=f"/{board}/{column}/{task}")
+            return Task
+    elif board and column:
+        if _confirm(f"Are you sure you want to delete the column '{column}'?"):
+            svc.delete_column(path=f"/{board}/{column}")
+            return Column
+    elif board:
+        if _confirm(f"Are you sure you want to delete the board '{board}'?"):
+            svc.delete_board(board)
+            return Board
+    else:
         raise ValueError("Cannot delete without a board name: {}".format(path))
+
+    # User declined deletion
+    return None
+    
 
 def repl_handle_move_task(args: argparse.Namespace, svc: KanbanService) -> None:
     """

@@ -177,14 +177,14 @@ class KanbanService:
         """Set the board/column context"""
         self._user_context.board = board
         self._user_context.column = column
-        self.repository.set_config("user-context.board", board)
-        self.repository.set_config("user-context.column", column)
+        self.set_config("user-context.board", board)
+        self.set_config("user-context.column", column)
 
     def clear_user_context(self) -> UserContext:
         """Clear the user context with initial default values."""
         self._user_context = UserContext()
-        self.repository.set_config("user-context.board", None)
-        self.repository.set_config("user-context.column", None)
+        self.set_config("user-context.board", None)
+        self.set_config("user-context.column", None)
         return self._user_context
 
     # ------------------------------------------------------------------
@@ -756,22 +756,22 @@ class KanbanService:
 
     # ── Config ────────────────────────────────────────────────────────────────
 
-    def set_config(self, key: str, value: str) -> None:
+    def set_config(self, keypath: str, value: str) -> None:
         """
         Persist a configuration value to .kanban/.config under the given key.
         Raises InvalidConfigKey if the key is not in the supported set.  No
         git commit — config is local working state, like current context.
         """
-        self.repository.set_config(key, value)
+        self.repository.set_config(keypath, value)
 
 
-    def get_config(self, key: str) -> str:
+    def get_config(self, keypath: str) -> str:
         """
         Read a configuration value from .kanban/.config.  Raises
         InvalidConfigKey if the key is not supported and ConfigKeyNotSet if
         the key is valid but has not been assigned a value.
         """
-        ...
+        return self.repository.get_config(keypath)
 
 
     # ── Status ────────────────────────────────────────────────────────────────

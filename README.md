@@ -51,6 +51,11 @@ kanban (main)>
 
 ### TODO
 
+- BUG: do not allow the user to delete a board that has tasks in it, or at least require a --force flag
+- BUG: do not allow the user to delete a board that is the current context
+- BUG: same for the column
+
+- FEAT: improve repl rendering - always give feedback
 - FEAT: implement user sort order for boards
 - FEAT: implement user sort order for tasks
 - FEAT: bump command to move a board or task to the front
@@ -84,6 +89,10 @@ kanban (main)>
 FILENAME VS TITLE
 
 - rename task|column does it take the title or a slug or both
+
+VERSION 1.1
+
+- Globbing for path commands
 
 CONFIG
 

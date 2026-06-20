@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 
 from models import TaskFilter
 from services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
+from utils.shell import prompt_for_confirmation
 
 # ---------------------------------------------------------------------------
 # Initialization commands
@@ -37,6 +38,8 @@ def handle_board_rename(args: argparse.Namespace, svc: KanbanService, renderer: 
 
 
 def handle_board_delete(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	if not args.force and not prompt_for_confirmation(f"Delete board '{args.board}'?"):
+		return
 	result = svc.delete_board(args.board)
 	renderer.render_board_delete(args, result)
 
@@ -65,6 +68,8 @@ def handle_column_reorder(args: argparse.Namespace, svc: KanbanService, renderer
 
 
 def handle_column_delete(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	if not args.force and not prompt_for_confirmation(f"Delete column '{args.path}'?"):
+		return
 	result = svc.delete_column(args.path)
 	renderer.render_column_delete(args, result)
 
@@ -135,6 +140,8 @@ def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: obj
 
 
 def handle_task_delete(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	if not args.force and not prompt_for_confirmation(f"Delete task '{args.path}'?"):
+		return
 	result = svc.delete_task(args.path)
 	renderer.render_task_delete(args, result)
 

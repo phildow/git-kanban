@@ -158,6 +158,7 @@ def _add_delete_parser(subparsers: argparse._SubParsersAction) -> None:
     group = p.add_mutually_exclusive_group(required=True)
     group.add_argument("path", metavar="BOARD[/COLUMN][/TASK]", nargs="?", help="Board, column, or task to delete")
     # group.required = True
+    p.add_argument("-f", "--force", action="store_true", default=False, help="Skip confirmation prompt")
     p.set_defaults(func=handle_delete)
 
 
