@@ -57,6 +57,25 @@ class KanbanStatus:
     index_fresh: bool
     uncommitted_changes: bool
 
+# ── Filtering ─────────────────────────────────────────────────────────────────
+
+def _task_matches_filter(task: Task, filter: TaskFilter) -> bool:
+    """Return True if task satisfies all non-None criteria in filter."""
+    if filter.assignee is not None and task.assignee != filter.assignee:
+        return False
+    if filter.priority is not None and task.priority != filter.priority:
+        return False
+    if filter.tag is not None and filter.tag not in task.tags:
+        return False
+    if filter.created_by is not None and task.created_by != filter.created_by:
+        return False
+    if filter.due_before is not None and (task.due_date is None or task.due_date >= filter.due_before):
+        return False
+    if filter.due_after is not None and (task.due_date is None or task.due_date <= filter.due_after):
+        return False
+    return True
+
+
 # ── KanbanService ─────────────────────────────────────────────────────────────
 
 class KanbanService:
@@ -495,7 +514,10 @@ class KanbanService:
         "created-at", "updated-at", or "created-by".
         """
         board, column, _ = self.path_components(path)
-        tasks = self.repository.get_tasks(board=board, column=column, filter=filter)
+        tasks = self.repository.get_tasks(board=board, column=column)
+
+        if filter:
+            tasks = [t for t in tasks if _task_matches_filter(t, filter)]
 
         if not sort:
             return tasks

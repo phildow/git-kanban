@@ -274,12 +274,11 @@ class KanbanRepository(ABC):
         self,
         board: Optional[str] = None,
         column: Optional[str] = None,
-        filter: Optional[TaskFilter] = None,
     ) -> list[Task]:
         """
-        Return tasks matching the given scope and optional filter.
+        Return tasks matching the given scope.
 
-        `board` and `column` narrow the scope before the filter is applied:
+        `board` and `column` narrow the scope:
         - Both None  → search all boards and columns.
         - board only → search all columns within that board.
         - Both set   → search only that specific column.

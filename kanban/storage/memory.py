@@ -309,7 +309,6 @@ class InMemoryRepository(KanbanRepository):
         self,
         board: Optional[str] = None,
         column: Optional[str] = None,
-        filter: Optional[TaskFilter] = None,
     ) -> list[Task]:
         if board is not None:
             self.get_board(board)
@@ -319,32 +318,10 @@ class InMemoryRepository(KanbanRepository):
         tasks: list[Task] = []
         for task_id, task in self._tasks_by_id.items():
             task_board, task_column = self._task_locations.get(task_id, (task.board, task.column))
-
-            # Scope filtering
             if board is not None and task_board != board:
                 continue
             if column is not None and task_column != column:
                 continue
-
-            # Optional metadata filtering
-            if filter is not None:
-                if filter.assignee is not None and task.assignee != filter.assignee:
-                    continue
-                if filter.priority is not None and task.priority != filter.priority:
-                    continue
-                if filter.tag is not None and filter.tag not in task.tags:
-                    continue
-                if filter.created_by is not None and task.created_by != filter.created_by:
-                    continue
-                if filter.due_before is not None and (
-                    task.due_date is None or task.due_date >= filter.due_before
-                ):
-                    continue
-                if filter.due_after is not None and (
-                    task.due_date is None or task.due_date <= filter.due_after
-                ):
-                    continue
-
             tasks.append(task)
 
         return tasks

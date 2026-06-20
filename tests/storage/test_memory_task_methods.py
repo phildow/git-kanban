@@ -77,9 +77,6 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
         self.assertEqual({t.id for t in self.repo.get_tasks(board="alpha")}, {t1.id, t2.id})
         self.assertEqual(self.repo.get_tasks(board="alpha", column="doing"), [t2])
 
-        f = TaskFilter(assignee="p", priority="high", tag="x", due_before=datetime.now(UTC) + timedelta(days=2))
-        self.assertEqual(self.repo.get_tasks(filter=f), [t1])
-
     def test_get_tasks_validates_scope(self):
         """List validates explicit board/column scope before filtering."""
         with self.assertRaises(BoardNotFound):

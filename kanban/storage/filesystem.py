@@ -214,14 +214,7 @@ class FilesystemRepository(KanbanRepository):
         self,
         board: Optional[str] = None,
         column: Optional[str] = None,
-        filter: Optional[TaskFilter] = None,
     ) -> list[Task]:
-
-        # if board and not column, return all the tasks in that board across all columns, applying filter if provided
-        # if board and column, return all the tasks in that column, applying filter if provided
-        # if no board, return all tasks across all boards and columns, applying filter if provided
-        # if no board and column, raise an error since we don't want to return all tasks without at least a board filter to limit scope
-
         if board is None and column is not None:
             raise ValueError("Cannot filter by column without a board: {}".format(column))
 
@@ -230,24 +223,22 @@ class FilesystemRepository(KanbanRepository):
         if board is not None and column is not None and not self.column_exists(board, column):
             raise ColumnNotFound(board, column)
 
-        if board is not None:
-            boards = [board]
-        else:
-            boards = [e.name for e in sorted(self.boards_dir.iterdir()) if e.is_dir() and not e.name.startswith(".")]
+        boards = [board] if board is not None else [
+            e.name for e in sorted(self.boards_dir.iterdir())
+            if e.is_dir() and not e.name.startswith(".")
+        ]
 
         tasks: list[Task] = []
-
         for b in boards:
-            columns = [column] if column is not None else [e.name for e in sorted((self.boards_dir / b).iterdir()) if e.is_dir() and not e.name.startswith(".")]
+            columns = [column] if column is not None else [
+                e.name for e in sorted((self.boards_dir / b).iterdir())
+                if e.is_dir() and not e.name.startswith(".")
+            ]
             for col in columns:
-                col_path = self.boards_dir / b / col
-                for entry in sorted(col_path.iterdir()):
+                for entry in sorted((self.boards_dir / b / col).iterdir()):
                     if not entry.is_file() or entry.name.startswith(".") or entry.suffix != ".md":
                         continue
-                    task = self._parse_task_file(entry, b, col)
-                    if filter is not None and not self._task_matches_filter(task, filter):
-                        continue
-                    tasks.append(task)
+                    tasks.append(self._parse_task_file(entry, b, col))
         return tasks
 
     def get_task_by_id(self, task_id: UUID) -> Task:
@@ -394,18 +385,3 @@ class FilesystemRepository(KanbanRepository):
         cfg.write(buf)
         return buf.getvalue()
 
-    def _task_matches_filter(self, task: Task, filter: TaskFilter) -> bool:
-        """Return True if the task satisfies all non-None filter criteria."""
-        if filter.assignee is not None and task.assignee != filter.assignee:
-            return False
-        if filter.priority is not None and task.priority != filter.priority:
-            return False
-        if filter.tag is not None and filter.tag not in task.tags:
-            return False
-        if filter.created_by is not None and task.created_by != filter.created_by:
-            return False
-        if filter.due_before is not None and (task.due_date is None or task.due_date >= filter.due_before):
-            return False
-        if filter.due_after is not None and (task.due_date is None or task.due_date <= filter.due_after):
-            return False
-        return True
