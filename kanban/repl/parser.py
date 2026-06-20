@@ -36,7 +36,7 @@ from repl.commands import (
 
 
 FORMAT_CHOICES = ["table", "plain", "json"]
-SORT_TASK_CHOICES = ["title", "priority", "due-date", "created-at", "updated-at", "created-by"]
+SORT_TASK_CHOICES = ["title", "priority", "due-date", "created-at", "updated-at", "created-by", "column"]
 SORT_BOARD_COLUMN_CHOICES = ["title"]
 PRIORITY_CHOICES = ["low", "medium", "high"]
 
@@ -76,7 +76,7 @@ def _add_global_flags(parser: argparse.ArgumentParser) -> None:
 
 
 def _add_task_filter_args(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--assignee", metavar="NAME", help="Filter by assignee")
+    parser.add_argument("-w", "--assignee", metavar="NAME", help="Filter by assignee")
     parser.add_argument("-p", "--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Filter by priority")
     parser.add_argument("-t", "--tag", metavar="TAG", action="append", dest="tags", help="Filter by tag (repeatable)")
     parser.add_argument("--due-before", metavar="DATE", help="Filter tasks due before date (YYYY-MM-DD)")
@@ -85,7 +85,7 @@ def _add_task_filter_args(parser: argparse.ArgumentParser) -> None:
 
 
 def _add_task_create_args(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--assignee", metavar="NAME", help="Assign task to a user")
+    parser.add_argument("-w", "--assignee", metavar="NAME", help="Assign task to a user")
     parser.add_argument("-p", "--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
     parser.add_argument("-t", "--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
     parser.add_argument("--due-date", metavar="DATE", help="Due date (YYYY-MM-DD)")
@@ -93,7 +93,7 @@ def _add_task_create_args(parser: argparse.ArgumentParser) -> None:
 
 
 def _add_task_update_args(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--assignee", metavar="NAME", help="Assign task to a user")
+    parser.add_argument("-w", "--assignee", metavar="NAME", help="Assign task to a user")
     parser.add_argument("-p", "--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
     parser.add_argument("-t", "--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
     parser.add_argument("--due-date", metavar="DATE", help="Due date (YYYY-MM-DD)")
@@ -101,8 +101,8 @@ def _add_task_update_args(parser: argparse.ArgumentParser) -> None:
 
 
 def _add_list_args(parser: argparse.ArgumentParser, sort_choices: list[str]) -> None:
-    parser.add_argument("--sort", choices=sort_choices, metavar="FIELD", help="Field to sort by")
-    parser.add_argument("--reverse", action="store_true", default=False, help="Reverse the sort order")
+    parser.add_argument("-s", "--sort", choices=sort_choices, metavar="FIELD", help="Field to sort by")
+    parser.add_argument("-r", "--reverse", action="store_true", default=False, help="Reverse the sort order")
 
 # UNUSED
 def _add_help_message(parser: argparse.ArgumentParser) -> None:

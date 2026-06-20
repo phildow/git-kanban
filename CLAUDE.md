@@ -198,7 +198,7 @@ kanban column delete <board>/<column>
 
 kanban task list <board>[/<column>]
     [--format <table|plain|json>]
-    [--sort <title|priority|due-date|created-at|updated-at|created-by>]
+    [--sort <title|priority|due-date|created-at|updated-at|created-by|<column>]
     [--reverse]
     [--assignee <name>]
     [--priority <low|medium|high>]
@@ -229,7 +229,7 @@ kanban task delete <board>/<column>/<task>
 kanban search <query>
     [--format <table|plain|json>]
     [--board <board>]
-    [--sort <title|priority|due-date|created-at|updated-at|created-by>]
+    [--sort <title|priority|due-date|created-at|updated-at|created-by>|<column>]
     [--reverse]
     [--assignee <name>]
     [--priority <low|medium|high>]
