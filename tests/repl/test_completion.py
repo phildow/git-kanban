@@ -8,6 +8,7 @@ import unittest
 
 from pathlib import Path
 from types import SimpleNamespace
+from uuid import uuid4
 from unittest.mock import MagicMock, patch
 
 from cli.parser import build_parser as build_cli_parser
@@ -62,24 +63,24 @@ class _FakeSvc:
         parts = path.parts # ["/", board|None, column|None, title-or-id|None]
 
         if len(parts) == 2:
-            return [f"{b.name}/" for b in self.list_boards() if b.name.startswith(path.name)]
+            return [f"{b.name}/" for b in self.get_boards() if b.name.startswith(path.name)]
         elif len(parts) == 2:
             board = parts[3]
-            return [f"{c.name}/" for c in self.list_columns(board) if c.name.startswith(path.name)]
+            return [f"{c.name}/" for c in self.get_columns(board) if c.name.startswith(path.name)]
         elif len(parts) == 4:
             board, column = parts[1], parts[2]
-            return [t.title for t in self.list_tasks(f"{board}/{column}") if t.title.startswith(path.name)]
+            return [t.title for t in self.get_tasks(f"{board}/{column}") if t.title.startswith(path.name)]
         else:
             return []
 
 
-    def list_boards(self):
+    def get_boards(self):
         return [
             SimpleNamespace(name="main"),
             SimpleNamespace(name="infra"),
         ]
 
-    def list_columns(self, board: str):
+    def get_columns(self, board: str):
         columns = {
             "main": [
                 SimpleNamespace(name="todo"),
@@ -90,7 +91,7 @@ class _FakeSvc:
         }
         return columns[board]
 
-    def list_tasks(self, path=None, **kwargs):
+    def get_tasks(self, path=None, **kwargs):
         _ = kwargs
         tasks = {
             "main/todo": [
@@ -114,18 +115,19 @@ class _FakeSvc:
 
 class TestReplCompletion(unittest.TestCase):
     def setUp(self) -> None:
-        temp_dir = tempfile.gettempdir()
-        self.repo = InMemoryRepository(root=Path(temp_dir))
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+        temp_dir.mkdir()
+        self.repo = InMemoryRepository(root=temp_dir)
         self.svc = KanbanService(
             repository=self.repo,
             index_service=IndexService(repository=self.repo),
             git_service=GitService(),
             user_context=UserContext(),
         )
-        self.svc.create_board("alpha")
+        self.svc.create_board("alpha", columns=[])
         self.svc.create_column("alpha/todo")
         self.svc.create_column("alpha/done")
-        self.svc.create_board("beta")
+        self.svc.create_board("beta", columns=[])
         self.svc.create_column("beta/backlog")
 
     # TODO: Add partial command completions tests for the repl

@@ -1,0 +1,46 @@
+"""Tests for FilesystemRepository.create_board."""
+
+from __future__ import annotations
+
+import tempfile
+import unittest
+from pathlib import Path
+
+from models import Board
+from storage.filesystem import FilesystemRepository
+from storage.kanban import BoardAlreadyExists
+
+
+class TestFilesystemCreateBoard(unittest.TestCase):
+    """create_board creates a directory and returns a Board, or raises on collision."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        self.repo = FilesystemRepository(root=self.root)
+        self.repo.init_storage()
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_creates_directory(self) -> None:
+        """A directory named after the board is created inside boards_dir."""
+        self.repo.create_board("alpha")
+        self.assertTrue((self.repo.boards_dir / "alpha").is_dir())
+
+    def test_returns_board(self) -> None:
+        """Returns a Board with the given name and an empty columns list."""
+        board = self.repo.create_board("alpha")
+        self.assertIsInstance(board, Board)
+        self.assertEqual(board.name, "alpha")
+        self.assertEqual(board.columns, [])
+
+    def test_raises_when_board_already_exists(self) -> None:
+        """Creating a board whose directory already exists raises BoardAlreadyExists."""
+        self.repo.create_board("alpha")
+        with self.assertRaises(BoardAlreadyExists):
+            self.repo.create_board("alpha")
+
+
+if __name__ == "__main__":
+    unittest.main()

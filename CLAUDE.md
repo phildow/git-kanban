@@ -48,7 +48,7 @@ Storage (filesystem + SQLite) / Git
 
 ### The Filesystem is the Source of Truth
 
-The filesystem is the single source of truth. Layers do not cache results from the layer below them. Data model objects do not model their relationships. Every time the `KanbanService` needs data from a domain service or the respository, it asks for it. Every time a repository needs data from storage, it asks for it, which means querying the filesystem.
+The filesystem is the single source of truth. Layers do not cache results from the layer below them. (Data model objects do not model their relationships - or these aren't cached, ie only use names or paths). Every time the `KanbanService` needs data from a domain service or the respository, it asks for it. Every time a repository needs data from storage, it asks for it, which means querying the filesystem.
 
 The index does cache data from the filesystem for search. It is updated by the `KanbanServie` after every interaction with the repository, read or write.
 
@@ -131,7 +131,7 @@ root-directory/
   ...
 ```
 
-`.kanban/` contains local machine state (config, cache) that should probably never be committed at all, while  `.kanban-store/` contains the shared board state that git is tracking. Information about boards and columnts that is not stored in the files themselves, such as the sort order, is kept in a `.metadata` file local to each folder.
+`.kanban/` contains local machine state (config, cache) that should probably never be committed at all, while  `.kanban-store/` contains the shared board state that git is tracking. Information about boards and columnts that is not stored in the files themselves, such as their original names and sort order, is kept in a `.metadata` file local to each folder.
 
 ### Git
 

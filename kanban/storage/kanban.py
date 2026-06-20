@@ -125,6 +125,7 @@ class KanbanRepository(ABC):
         Returns the list of created tasks for verification in tests.
         """
 
+    @property
     @abstractmethod
     def is_initialized(self) -> bool:
         """Return True if the repository is already initialized at the current path."""
@@ -135,7 +136,7 @@ class KanbanRepository(ABC):
     # ------------------------------------------------------------------
 
     @abstractmethod
-    def list_boards(self) -> list[Board]:
+    def get_boards(self) -> list[Board]:
         """
         Return all boards, each populated with their ordered column list.
 
@@ -186,7 +187,7 @@ class KanbanRepository(ABC):
     # ------------------------------------------------------------------
 
     @abstractmethod
-    def list_columns(self, board: str) -> list[Column]:
+    def get_columns(self, board: str) -> list[Column]:
         """
         Return columns for the given board in display order.
 
@@ -258,7 +259,7 @@ class KanbanRepository(ABC):
     # ------------------------------------------------------------------
 
     @abstractmethod
-    def list_tasks(
+    def get_tasks(
         self,
         board: Optional[str] = None,
         column: Optional[str] = None,
@@ -286,23 +287,6 @@ class KanbanRepository(ABC):
         """
 
     @abstractmethod
-    def find_tasks_by_title(
-        self,
-        title: str,
-        board: Optional[str] = None,
-    ) -> list[Task]:
-        """
-        Return all tasks whose title matches `title` (case-insensitive,
-        exact match), optionally scoped to a single board.
-
-        Used by the path-resolution step when a full <board>/<column>/<title>
-        path is not given. Callers must handle ambiguity (multiple results)
-        by surfacing an error.
-
-        Returns an empty list when no match is found.
-        """
-
-    @abstractmethod
     def get_task(self, board: str, column: str, filename: str) -> Task:
         """
         Return a single task by its exact board/column/filename path.
@@ -312,6 +296,7 @@ class KanbanRepository(ABC):
         Raises TaskNotFound if no task with this filename exists in that column.
         """
 
+    # TODO: unused
     @abstractmethod
     def task_exists(self, board: str, column: str, filename: str) -> bool:
         """

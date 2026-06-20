@@ -12,6 +12,7 @@ from models import Task, TaskFilter, Board, Column, UserContext
 from storage.kanban import KanbanRepository, ColumnNotFound, BoardNotFound
 from services.git import GitService
 from services.index import IndexService
+from utils.str import kebab_case
 
 
 # ── Params ────────────────────────────────────────────────────────────────────
@@ -91,19 +92,23 @@ class KanbanService:
         self.index_service = index_service
         self.git_service = git_service
         self._user_context = user_context
-        self._kanban_root = None
-    
+
+    @property
+    def root(self) -> Path:
+        """Return the KanbanRoot if the repository is initialized, or raise if not."""
+        return self.repository.root
+
     # ------------------------------------------------------------------
     # Initialization
     # ------------------------------------------------------------------
 
+    @property
     def is_initialized(self) -> bool:
         """Return True if the repository is already initialized at the current path."""
-        # return self._kanban_root is not None and self._kanban_root.path.exists() and self.repository.is_initialized()
         # Move path.exists() check to repository
-        return self._kanban_root is not None and self.repository.is_initialized()
+        return self.repository.is_initialized
 
-    def init_kanban(self, path: Path = Path(".")) -> KanbanRoot:
+    def init_kanban(self, path: Path = Path(".")) -> bool:
         """
         Create the .kanban/ and .kanban-store/ directory skeleton, initialize git, and write the
         first commit.  Raises AlreadyInitialized if .kanban/ or .kanban-store/ already exists at
@@ -112,22 +117,11 @@ class KanbanService:
         first, index second, git last.
         """
         self.repository.init_storage(default_board="main")
-        # TODO: should the repository just bootstrap itself
         self.repository.bootstrap()
         
         self.update_user_context(board="main", column="todo")
-        self.set_config("initialized", "true")
 
-        # TODO: this should probably just be path
-        kanban_root = path / ".kanban-store"
-
-        self._kanban_root = KanbanRoot(
-            path=kanban_root,
-            git_init=False,
-            boards_dir=kanban_root / "boards",
-        )
-
-        return self._kanban_root
+        return True
 
     # ------------------------------------------------------------------
     # User Context
@@ -197,23 +191,23 @@ class KanbanService:
         board, column, title_or_id = self.path_components(text)
 
         if board and column and title_or_id:
-            completions = [f"{t.slug}" for t in self.repository.list_tasks(board=board, column=column) if t.title.startswith(title_or_id)]
+            completions = [f"{t.slug}" for t in self.repository.get_tasks(board=board, column=column) if t.title.startswith(title_or_id)]
         elif board and column:
             # check if column is complete or partial. if partial, only return columns that match the partial
             # otherwise return all tasks in the column
             if self._column_exists(board, column):
-                completions = [f"{t.slug}" for t in self.repository.list_tasks(board=board, column=column) if t.title.startswith(column or "")]
+                completions = [f"{t.slug}" for t in self.repository.get_tasks(board=board, column=column) if t.title.startswith(column or "")]
             else:
-                completions = [f"{c.name}/" for c in self.repository.list_columns(board) if c.name.startswith(column or "")]
+                completions = [f"{c.name}/" for c in self.repository.get_columns(board) if c.name.startswith(column or "")]
         elif board:
             # check if board is complete or partial. if partial, only return boards that match the partial
             # otherwise return all columns in the board
             if self._board_exists(board):
-                completions = [f"{c.name}/" for c in self.repository.list_columns(board) if c.name.startswith(column or "")]
+                completions = [f"{c.name}/" for c in self.repository.get_columns(board) if c.name.startswith(column or "")]
             else:
-                completions = [f"{b.name}/" for b in self.repository.list_boards() if b.name.startswith(board or "")]
+                completions = [f"{b.name}/" for b in self.repository.get_boards() if b.name.startswith(board or "")]
         else:
-            completions = [f"{b.name}/" for b in self.repository.list_boards() if b.name.startswith(board or "")]
+            completions = [f"{b.name}/" for b in self.repository.get_boards() if b.name.startswith(board or "")]
 
         return completions
 
@@ -291,7 +285,7 @@ class KanbanService:
 
     # ── Boards ────────────────────────────────────────────────────────────────
 
-    def list_boards(
+    def get_boards(
         self,
         sort:    str | None = None,
         reverse: bool = False,
@@ -301,16 +295,21 @@ class KanbanService:
         it preserves the order recorded in .kanban/.order.  reverse flips
         whichever ordering is in effect.
         """
-        return self.repository.list_boards()
+        return self.repository.get_boards()
 
-    def create_board(self, path: str, ) -> Board:
+    def create_board(self, path: str, columns = ["todo", "in-progress", "in-review", "done"]) -> Board:
         """
         Create a new board directory under .kanban/boards/.  Raises
         BoardAlreadyExists if a board with that name is already present.
         Appends the new board to .kanban/.order and commits.
         """
         board, _, _ = self.path_components(path)
-        return self.repository.create_board(board)
+        board = self.repository.create_board(board)
+    
+        columns = [self.repository.create_column(board.name, col) for col in columns]
+        board.columns = columns
+
+        return board
 
     def rename_board(self, path: str, new_name: str) -> Board:
         """
@@ -347,7 +346,7 @@ class KanbanService:
 
     # ── Columns ───────────────────────────────────────────────────────────────
 
-    def list_columns(
+    def get_columns(
         self,
         board:   str | None = None,
         sort:    str | None = None,
@@ -360,7 +359,7 @@ class KanbanService:
         board's .order file.
         """
         board, _, _ = self.path_components(board)
-        return self.repository.list_columns(board)
+        return self.repository.get_columns(board)
 
     def create_column(self, path: str) -> Column:
         """
@@ -419,11 +418,11 @@ class KanbanService:
 
     # ── Tasks ─────────────────────────────────────────────────────────────────
 
-    def list_tasks(
+    def get_tasks(
         self,
         path:    str | None = None,
         filter:  TaskFilter = TaskFilter(),
-        sort:    str | None = None,
+        sort:    str | None = "column",
         reverse: bool = False,
     ) -> list[Task]:
         """
@@ -434,7 +433,7 @@ class KanbanService:
         "created-at", "updated-at", or "created-by".
         """
         board, column, _ = self.path_components(path)
-        tasks = self.repository.list_tasks(board=board, column=column, filter=filter)
+        tasks = self.repository.get_tasks(board=board, column=column, filter=filter)
 
         if not sort:
             return tasks
@@ -442,6 +441,8 @@ class KanbanService:
         def _value(task: Task):
             if sort == "title":
                 return task.title.lower()
+            if sort == "column":
+                return (task.column or "").lower()
             if sort == "priority":
                 priority_rank = {"low": 0, "medium": 1, "high": 2}
                 return priority_rank.get((task.priority or "").lower(), -1)
@@ -491,7 +492,7 @@ class KanbanService:
         task = Task(
             id=uuid4(),
             title=title,
-            slug=self._to_kebab_case(title),
+            slug=kebab_case(title),
             board=board,
             column=column,
             assignee=assignee,
@@ -528,7 +529,7 @@ class KanbanService:
                 raise ValueError(f"Task not found in scope: {board}/{column}/{title_or_id}")
             return task
 
-        filename = self._to_kebab_case(title_or_id)
+        filename = kebab_case(title_or_id)
         return self.repository.get_task(board, column, filename)
 
     def edit_task(
@@ -696,13 +697,6 @@ class KanbanService:
 
 
     # ── Internal helpers ──────────────────────────────────────────────────────
-
-    def _to_kebab_case(self, text: str) -> str:
-        """Convert free-form title text into a kebab-case filename slug."""
-        slug = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
-        if not slug:
-            raise ValueError("Task title must contain at least one alphanumeric character")
-        return slug
 
     def _task_to_markdown(self, task: Task) -> str:
         """Serialize a task to editable markdown with YAML-like frontmatter."""

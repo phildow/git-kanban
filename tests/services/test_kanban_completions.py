@@ -7,6 +7,7 @@ import tempfile
 import unittest
 
 from pathlib import Path
+from uuid import uuid4
 
 from models import UserContext
 from storage.kanban import BoardNotFound, ColumnNotFound
@@ -17,18 +18,19 @@ from storage.memory import InMemoryRepository
 
 class TestKanbanServiceCompletions(unittest.TestCase):
     def setUp(self) -> None:
-        temp_dir = tempfile.gettempdir()
-        self.repo = InMemoryRepository(root=Path(temp_dir))
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+        temp_dir.mkdir()
+        self.repo = InMemoryRepository(root=temp_dir)
         self.svc = KanbanService(
             repository=self.repo,
             index_service=IndexService(repository=self.repo),
             git_service=GitService(),
             user_context=UserContext(),
         )
-        self.svc.create_board("alpha")
+        self.svc.create_board("alpha", columns=[])
         self.svc.create_column("alpha/todo")
         self.svc.create_column("alpha/done")
-        self.svc.create_board("beta")
+        self.svc.create_board("beta", columns=[])
         self.svc.create_column("beta/backlog")
 
         """
@@ -58,7 +60,7 @@ class TestKanbanServiceCompletions(unittest.TestCase):
     def test_completions_for_board(self):
         completions = self.svc.completions_for_path("/alpha/")
         expected_completions = ["todo/", "done/"]
-        
+
         self.assertCountEqual(completions, expected_completions)
         for completion in expected_completions:
             self.assertIn(completion, completions)

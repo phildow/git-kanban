@@ -11,6 +11,7 @@ import tempfile
 import unittest
 
 from pathlib import Path
+from uuid import uuid4
 
 from storage.kanban import KanbanRepository
 from storage.memory import InMemoryRepository
@@ -25,8 +26,9 @@ class TestInMemoryRepositoryInterface(unittest.TestCase):
 
     def test_can_be_instantiated(self) -> None:
         """ABC enforcement: TypeError if any abstract method is unimplemented."""
-        temp_dir = tempfile.gettempdir()
-        repo = InMemoryRepository(root=Path(temp_dir))
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+        temp_dir.mkdir()
+        repo = InMemoryRepository(root=temp_dir)
         self.assertIsInstance(repo, KanbanRepository)
 
     def test_all_abstract_methods_are_overridden(self) -> None:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import shlex
 import signal
 
@@ -74,7 +75,7 @@ def _safe_list_task_names(svc: KanbanService, board: str | None, column: str | N
     if not board or not column:
         return []
     try:
-        tasks = svc.list_tasks(path=f"{board}/{column}")
+        tasks = svc.get_tasks(path=f"{board}/{column}")
     except Exception:
         return []
 
@@ -111,20 +112,22 @@ def _top_level_commands(parser: argparse.ArgumentParser) -> list[str]:
 
 def _initialize_kanban(svc: KanbanService) -> bool:
     """Prompt the user to initialize a kanban repository if not already initialized."""
-    if svc.is_initialized():
+    if svc.is_initialized:
         return True
 
-    cwd = Path.cwd()
-    directory = cwd.name
+    root_dir = svc.root
+    directory = root_dir.name
 
-    print(f"No kanban repository found in {cwd}.")
+    print(f"No kanban repository found in {root_dir}.")
     should_init = input(f"Would you like to initialize kanban at {directory}? (y/N)) ").strip().lower()
     if should_init in {"y", "yes"}:
         try:
             svc.init_kanban()
             return True
         except Exception as exc:
-            print(f"Failed to initialize repository: {exc}")
+            exc_desc = str(exc) or exc.__class__.__name__
+            logging.error("Failed to initialize repository: %s", exc_desc)
+            print(f"Failed to initialize repository")
             return False
     return False
 
@@ -368,13 +371,13 @@ def _install_exit_signal_handlers():
 
 def _print_welcome_message(svc: KanbanService) -> None:
     """Print a welcome message when the REPL starts."""
-    if not svc.is_initialized():
+    if not svc.is_initialized:
         print("No kanban repository found in the current directory.")
         return
 
     context = svc.user_context
-    board = context.board or "no board"
-    column = context.column or "no column"
+    board = context.board
+    column = context.column
 
     context_str = f"/{board}/{column}" if board and column else f"/{board}" if board else "/"
     print(f"Welcome to the kanban REPL. Current context: {context_str}\nType 'help (h)' for usage, 'quit (:q)' to exit")
@@ -453,10 +456,15 @@ def run_repl(*, svc: KanbanService, renderer: object) -> None:
                 except TaskNotFound as exc:
                     print(f"Task not found: {exc.identifier}")
                 except ValueError as exc:
+                    logging.error("Value error: %s", exc)
                     print(f"Value error: {exc}")
                 except KeyboardInterrupt:
                     print()
                     continue
+                except Exception as exc:
+                    exc_desc = str(exc) or exc.__class__.__name__
+                    logging.error("Unexpected error: %s", exc_desc, exc_info=True)
+                    print(f"Unexpected error: {exc_desc}")
     except _ReplExit:
         print()
 

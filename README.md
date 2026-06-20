@@ -3,6 +3,15 @@
 
 The repository uses pyenv and virtualenv. Run `.venv/bin/activate` to activate the virtual environment.
 
+## Version Map
+
+0.5 - Implement filesystem basics
+0.6 - Complete filesystem and in memory store
+0.7 - Implement indesing and search
+0.8 - Implement git tracking
+0.9 - Implement the TUI
+1.0 - Release
+
 ## Lessons
 
 - Architecture and specification are more important not less
@@ -42,6 +51,15 @@ kanban (main)>
 
 ### TODO
 
+- check init
+- check init error handling
+- user sort order for boards and tasks
+- better bootdstrapping
+- move search_tasks to the index service
+- add utilty to filter for invisible files, which is used extensively in the filesystem repo
+
+- Use slugs in memory repository for private indexing (add tests)
+- Models return a path
 - Cleanup: Define some getter methods as properties
 - Add comments to a task which are just appended to the body
 
@@ -58,6 +76,10 @@ TAB COMPLETION
 - Priority
 - Tags
 
+TESTS
+
+- Make sure create board converts name to slug and uses that for filename
+- Make sure create column converts name to slug and uses for filename
 
 CONFIG
 
@@ -70,14 +92,21 @@ CONFIG
 - Allow the user to decide what columns are shown for a given terminal size when listing tasks
     - eg `task-cols:80=title,assignee,tags`
     - eg `task-cols:96=title,assignee,tags,due`
+- Allowe the user to customize the default column names
 
 - FileStorage
 - Use `.kanban` for configuration and caching and `.kanban-store` for the filesystem
 - Once we have file storage `kanban init` this direcory and start storing tasks here (dogfood)
 - Which takes us to git integration
+
+
 - Agent Kanban `agent-kanban` watches your work and manages the tasks for you via the `kanban` cli
     - Check out a task it checks out a branch
     - Check out a branch it looks for the task to check out
+
+HISTORY
+
+- A visual representation in a view to the right when there is enough terminal size
 
 ### Running tests:
 

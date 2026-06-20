@@ -7,6 +7,7 @@ import tempfile
 import unittest
 
 from pathlib import Path
+from uuid import uuid4
 from unittest.mock import MagicMock
 
 from models import UserContext
@@ -19,8 +20,9 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
     """Verifies index update/delete hooks for task-changing operations."""
 
     def setUp(self) -> None:
-        temp_dir = tempfile.gettempdir()
-        self.repo = InMemoryRepository(root=Path(temp_dir))
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+        temp_dir.mkdir()
+        self.repo = InMemoryRepository(root=temp_dir)
         self.index_service = MagicMock()
         self.svc = KanbanService(
             repository=self.repo,

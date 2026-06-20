@@ -8,11 +8,19 @@ from uuid import UUID
 
 @dataclass
 class Column:
-    """A single workflow column within a board.
+    """
+    A single workflow column within a board.
 
     `position` is the zero-based display order inside the owning board.
     """
+    # TODO: add slug and path properties for easier referencing in the REPL and storage layers
 
     name: str
+    # slug: str
     board: str
     position: int
+    task_count: int = 0
+
+    @property
+    def path(self) -> Path:
+        return Path(f"/{self.board}/{self.name}")

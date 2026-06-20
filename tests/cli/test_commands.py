@@ -43,11 +43,11 @@ class TestCommandHandlers(unittest.TestCase):
         """`board list` forwards sort options and renders list output."""
         args = self._args(sort="title", reverse=True)
         result = object()
-        self.svc.list_boards.return_value = result
+        self.svc.get_boards.return_value = result
 
         commands.handle_board_list(args, self.svc, self.renderer)
 
-        self.svc.list_boards.assert_called_once_with(sort="title", reverse=True)
+        self.svc.get_boards.assert_called_once_with(sort="title", reverse=True)
         self.renderer.render_board_list.assert_called_once_with(args, result)
 
     def test_handle_board_create(self):
@@ -87,9 +87,9 @@ class TestCommandHandlers(unittest.TestCase):
         """Column handlers parse path arguments and dispatch correctly."""
         args = self._args(board="board-a", sort="title", reverse=False)
         result = object()
-        self.svc.list_columns.return_value = result
+        self.svc.get_columns.return_value = result
         commands.handle_column_list(args, self.svc, self.renderer)
-        self.svc.list_columns.assert_called_once_with(board="board-a", sort="title", reverse=False)
+        self.svc.get_columns.assert_called_once_with(board="board-a", sort="title", reverse=False)
         self.renderer.render_column_list.assert_called_once_with(args, result)
 
         args = self._args(path="board-a/todo")
@@ -124,11 +124,11 @@ class TestCommandHandlers(unittest.TestCase):
         """`task list` handler forwards path/sort options and renders output."""
         args = self._args(path="board-a/todo", sort="title", reverse=True)
         result = object()
-        self.svc.list_tasks.return_value = result
+        self.svc.get_tasks.return_value = result
 
         commands.handle_task_list(args, self.svc, self.renderer)
 
-        self.svc.list_tasks.assert_called_once_with(path="board-a/todo", sort="title", reverse=True)
+        self.svc.get_tasks.assert_called_once_with(path="board-a/todo", sort="title", reverse=True)
         self.renderer.render_task_list.assert_called_once_with(args, result)
 
     def test_handle_task_create_with_all_optional_fields(self):

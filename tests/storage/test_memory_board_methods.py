@@ -25,8 +25,9 @@ class TestInMemoryRepositoryBoardOps(unittest.TestCase):
     """Board operation contract tests for the in-memory repository."""
 
     def setUp(self) -> None:
-        temp_dir = tempfile.gettempdir()
-        self.repo = InMemoryRepository(root=Path(temp_dir))
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+        temp_dir.mkdir()
+        self.repo = InMemoryRepository(root=temp_dir)
 
     def test_create_get_list_exists_board(self):
         """Creates a board and verifies basic lookup/list/existence behavior."""
@@ -37,7 +38,7 @@ class TestInMemoryRepositoryBoardOps(unittest.TestCase):
         self.assertEqual(board, Board(name="alpha", columns=[]))
         self.assertTrue(self.repo.board_exists("alpha"))
         self.assertEqual(self.repo.get_board("alpha"), board)
-        self.assertEqual(self.repo.list_boards(), [board])
+        self.assertEqual(self.repo.get_boards(), [board])
 
     def test_create_board_raises_when_duplicate(self):
         """Creating a board with an existing name raises `BoardAlreadyExists`."""
