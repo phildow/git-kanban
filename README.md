@@ -51,7 +51,6 @@ kanban (main)>
 
 ### TODO
 
-- FEAT: implement default sort order for columns
 - FEAT: implement default sort order for tasks
 
 - FEAT: implement user sort order for columns

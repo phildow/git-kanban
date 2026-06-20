@@ -63,7 +63,8 @@ class FilesystemRepository(KanbanRepository):
         kanban_dir = self.kanban_dir
         kanban_dir.mkdir()
         (kanban_dir / "history").touch()
-            
+        self.config_file.touch()
+
         kanban_store_dir = self.kanban_store_dir
         kanban_store_dir.mkdir()
         (kanban_store_dir / ".userdata").touch()
@@ -162,17 +163,39 @@ class FilesystemRepository(KanbanRepository):
         shutil.rmtree(self.boards_dir / name)
 
     # Column operations
+
+    # TODO: fail gracefully from corrupt metadta files (e.g. missing column in order file) instead of crashing, 
+    #       and log warnings to help users fix them
+    # TODO: verify that the files listed in the sort order match the actual column directories and log warnings 
+    #       if not, and handle missing columns by appending them to the end of the list rather than crashing
+    
+    def _get_column_order(self, board: str) -> list[str]:
+        """Return the stored column order for a board, falling back to filesystem sort."""
+        raw = self.get_board_metadata(board, "columns.order")
+        if raw:
+            return [c.strip() for c in raw.split("\n") if c.strip()]
+        return sorted(
+            e.name for e in (self.boards_dir / board).iterdir()
+            if e.is_dir() and not e.name.startswith(".")
+        )
+
+    def _set_column_order(self, board: str, order: list[str]) -> None:
+        """Persist the column order for a board to its metadata file."""
+        self.set_board_metadata(board, "columns.order", "\n" + "\n".join(order))
+
     def get_columns(self, board: str) -> list[Column]:
         if not self.board_exists(board):
             raise BoardNotFound(board)
-        board_path = self.boards_dir / board
+        existing = {
+            e.name for e in (self.boards_dir / board).iterdir()
+            if e.is_dir() and not e.name.startswith(".")
+        }
+        order = self._get_column_order(board)
         return [
-            Column(name=entry.name, board=board, position=i)
-            for i, entry in enumerate(sorted(board_path.iterdir()))
-            if entry.is_dir() and not entry.name.startswith(".")
+            Column(name=name, board=board, position=i)
+            for i, name in enumerate(c for c in order if c in existing)
         ]
 
-    # TODO: implement sorted in a metadata file to avoid relying on filesystem ordering
     def get_column(self, board: str, name: str) -> Column:
         if not self.board_exists(board):
             raise BoardNotFound(board)
@@ -183,11 +206,8 @@ class FilesystemRepository(KanbanRepository):
             1 for e in column_path.iterdir()
             if e.is_file() and not e.name.startswith(".")
         )
-        siblings = sorted(
-            e.name for e in (self.boards_dir / board).iterdir()
-            if e.is_dir() and not e.name.startswith(".")
-        )
-        position = siblings.index(name)
+        order = self._get_column_order(board)
+        position = order.index(name) if name in order else len(order)
         return Column(name=name, board=board, position=position, task_count=task_count)
 
     def column_exists(self, board: str, name: str) -> bool:
@@ -202,9 +222,11 @@ class FilesystemRepository(KanbanRepository):
         column_path = self.boards_dir / board / name
         if column_path.exists():
             raise ColumnAlreadyExists(board, name)
+        order = self._get_column_order(board)  # read before mkdir so new dir isn't in fallback
         column_path.mkdir()
-        position = len([e for e in (self.boards_dir / board).iterdir() if e.is_dir() and not e.name.startswith(".")]) - 1
-        return Column(name=name, board=board, position=position)
+        order.append(name)
+        self._set_column_order(board, order)
+        return Column(name=name, board=board, position=len(order) - 1)
 
     def rename_column(self, board: str, name: str, new_name: str) -> Column:
         if not self.board_exists(board):
@@ -214,16 +236,33 @@ class FilesystemRepository(KanbanRepository):
         if self.column_exists(board, new_name):
             raise ColumnAlreadyExists(board, new_name)
         (self.boards_dir / board / name).rename(self.boards_dir / board / new_name)
+        order = self._get_column_order(board)
+        if name in order:
+            order[order.index(name)] = new_name
+        self._set_column_order(board, order)
         return self.get_column(board, new_name)
 
     def reorder_column(self, board: str, name: str, position: int) -> list[Column]:
-        raise NotImplementedError()
+        if not self.board_exists(board):
+            raise BoardNotFound(board)
+        if not self.column_exists(board, name):
+            raise ColumnNotFound(board, name)
+        order = self._get_column_order(board)
+        if name in order:
+            order.remove(name)
+        order.insert(max(0, min(position, len(order))), name)
+        self._set_column_order(board, order)
+        return self.get_columns(board)
 
     def delete_column(self, board: str, name: str) -> None:
         if not self.board_exists(board):
             raise BoardNotFound(board)
         if not self.column_exists(board, name):
             raise ColumnNotFound(board, name)
+        order = self._get_column_order(board)
+        if name in order:
+            order.remove(name)
+        self._set_column_order(board, order)
         shutil.rmtree(self.boards_dir / board / name)
 
     # Task operations
@@ -324,7 +363,7 @@ class FilesystemRepository(KanbanRepository):
                 cfg[section] = {}
             cfg[section][key] = value
 
-        self.config_file.write_text(self._write_config(cfg), encoding="utf-8")
+        self.config_file.write_text(self._write_ini(cfg), encoding="utf-8")
 
     # User data
     def get_userdata(self, keypath: str) -> str | None:
@@ -358,7 +397,7 @@ class FilesystemRepository(KanbanRepository):
                 cfg[section] = {}
             cfg[section][key] = value
 
-        self.userdata_file.write_text(self._write_config(cfg), encoding="utf-8")
+        self.userdata_file.write_text(self._write_ini(cfg), encoding="utf-8")
 
     # Board metadata
     def _board_metadata_file(self, board: str) -> Path:
@@ -397,7 +436,7 @@ class FilesystemRepository(KanbanRepository):
                 cfg[section] = {}
             cfg[section][key] = value
 
-        metadata_file.write_text(self._write_config(cfg), encoding="utf-8")
+        metadata_file.write_text(self._write_ini(cfg), encoding="utf-8")
 
     # TODO: kanban service also does task parsing move to a utility module to avoid duplication between service and repository layers
 
@@ -470,7 +509,14 @@ class FilesystemRepository(KanbanRepository):
 
     @staticmethod
     def _write_ini(cfg: configparser.ConfigParser) -> str:
-        """Serialise a ConfigParser to a string with tab-indented key-value pairs."""
+        """
+        Serialise a ConfigParser to a string with tab-indented key-value pairs.
+        
+        Extens the INI format to support multi-line values by allowing newlines 
+        in values and indenting continuation lines with tabs. This allows us to 
+        store lists (e.g. column order) and other complex data structures more
+        naturally than trying to encode them as single-line strings.
+        """
         import io
         buf = io.StringIO()
         cfg.write(buf)
@@ -478,10 +524,7 @@ class FilesystemRepository(KanbanRepository):
         for line in buf.getvalue().splitlines(keepends=True):
             stripped = line.lstrip()
             if stripped and not stripped.startswith("["):
-                line = "\t" + stripped
+                line = "\t" + line  # preserve existing indentation (continuation lines)
             lines.append(line)
         return "".join(lines)
 
-    @staticmethod
-    def _write_config(cfg: configparser.ConfigParser) -> str:
-        return FilesystemRepository._write_ini(cfg)

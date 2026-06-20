@@ -357,7 +357,7 @@ class KanbanService:
     ) -> list[Board]:
         """
         Return all boards in the repository.  sort accepts "title"; omitting
-        it preserves the order recorded in .kanban/.order.  reverse flips
+        it preserves the order recorded in .kanban-store/boards/.metadata.  reverse flips
         whichever ordering is in effect.
         """
         return self.repository.get_boards()
@@ -366,7 +366,7 @@ class KanbanService:
         """
         Create a new board directory under .kanban/boards/.  Raises
         BoardAlreadyExists if a board with that name is already present.
-        Appends the new board to .kanban/.order and commits.
+        Appends the new board to .kanban-store/boards/.metadata and commits.
         """
         board, _, _ = self.path_components(path)
         board = self.repository.create_board(board)
@@ -378,7 +378,7 @@ class KanbanService:
 
     def rename_board(self, path: str, new_name: str) -> Board:
         """
-        Rename a board directory and update .kanban/.order in place.  Raises
+        Rename a board directory and update .kanban-store/boards/.metadata in place.  Raises
         BoardNotFound if the source board does not exist, and BoardAlreadyExists
         if new_name is already taken.  All tasks within the board retain their
         UUIDs; only the directory name (and therefore the board's slug) changes.
@@ -394,7 +394,7 @@ class KanbanService:
 
     def delete_board(self, path: str) -> None:
         """
-        Recursively delete a board directory and remove it from .kanban/.order.
+        Recursively delete a board directory and remove it from .kanban-store/boards/.metadata.
         Raises BoardNotFound if the board does not exist.  Also removes all
         index entries for tasks that belonged to the board and clears the current
         context if it pointed at the deleted board.
@@ -425,7 +425,7 @@ class KanbanService:
         Return all columns for the given board.  Falls back to the current
         context board if board is None; raises NoBoardInContext if neither is
         set.  sort accepts "title"; omitting it preserves the order in the
-        board's .order file.
+        board's .metadata file.
         """
         board, _, _ = self.path_components(board)
         return self.repository.get_columns(board)
@@ -435,14 +435,14 @@ class KanbanService:
         Create a new column subdirectory for the provided path.  Raises
         BoardNotFound if the board does not exist and ColumnAlreadyExists if
         the column name is already taken within that board.  Appends the new
-        column to the board's .order file and commits.
+        column to the board's .metadata file and commits.
         """
         board, column, _ = self.path_components(path)
         return self.repository.create_column(board, column)
 
     def rename_column(self, path: str, new_name: str) -> Column:
         """
-        Rename a column subdirectory and update the board's .order file.
+        Rename a column subdirectory and update the board's .metadata file.
         Raises BoardNotFound, ColumnNotFound, or ColumnAlreadyExists as
         appropriate.  Tasks inside the column are untouched; their paths
         update implicitly via the directory rename.  Updates the current
@@ -459,7 +459,7 @@ class KanbanService:
 
     def reorder_column(self, path: str, position: int) -> list[Column]:
         """
-        Move a column to the given 1-based position in the board's .order
+        Move a column to the given 1-based position in the board's .metadata
         file.  Raises BoardNotFound or ColumnNotFound if either does not
         exist.  Position is clamped to the valid range rather than raising on
         out-of-bounds values.  Returns the full updated column list so the
@@ -472,7 +472,7 @@ class KanbanService:
         """
         Delete a column subdirectory and all tasks it contains.  Raises
         BoardNotFound or ColumnNotFound if either does not exist.  Removes
-        all index entries for tasks in the column, updates the board's .order
+        all index entries for tasks in the column, updates the board's .metadata
         file, and clears the current context column if it pointed here.
         """
         board, column, _ = self.path_components(path)

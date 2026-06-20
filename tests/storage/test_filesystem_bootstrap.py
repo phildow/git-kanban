@@ -31,7 +31,7 @@ class TestFilesystemBootstrap(unittest.TestCase):
         """All four standard columns are created under main."""
         self.repo.bootstrap()
         columns = [c.name for c in self.repo.get_columns("main")]
-        self.assertEqual(columns, ["done", "in-progress", "in-review", "todo"])
+        self.assertEqual(columns, ["todo", "in-progress", "in-review", "done"])
 
     def test_returns_task_list(self) -> None:
         """Returns a non-empty list of Task objects."""

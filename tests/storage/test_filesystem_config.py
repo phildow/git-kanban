@@ -23,7 +23,8 @@ class TestFilesystemGetConfig(unittest.TestCase):
 
     def test_returns_value_for_existing_key(self) -> None:
         """Returns the stored value when section and key both exist."""
-        self.assertEqual(self.repo.get_config("user-context.board"), "main")
+        self.repo.set_config("app.name", "kanban")
+        self.assertEqual(self.repo.get_config("app.name"), "kanban")
 
     def test_returns_none_for_missing_key(self) -> None:
         """Returns None when the section exists but the key does not."""
