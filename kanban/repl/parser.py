@@ -100,6 +100,10 @@ def _add_task_update_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--created-by", metavar="NAME", help="Creator name")
 
 
+def _add_list_args(parser: argparse.ArgumentParser, sort_choices: list[str]) -> None:
+    parser.add_argument("--sort", choices=sort_choices, metavar="FIELD", help="Field to sort by")
+    parser.add_argument("--reverse", action="store_true", default=False, help="Reverse the sort order")
+
 # UNUSED
 def _add_help_message(parser: argparse.ArgumentParser) -> None:
     """Print the help message for the REPL."""
@@ -141,6 +145,7 @@ def _add_list_parser(subparsers: argparse._SubParsersAction) -> None:
     group = p.add_mutually_exclusive_group(required=False)
     group.add_argument("path", metavar="BOARD[/COLUMN]", nargs="?", help="Board or board/column to list (optional)")
     group.add_argument("-a", "--tasks", dest="all_tasks", action="store_true", default=False, help="List all tasks on the current board")
+    _add_list_args(p, SORT_TASK_CHOICES)
     _add_task_filter_args(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_list)

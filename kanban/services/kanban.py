@@ -422,7 +422,7 @@ class KanbanService:
         self,
         path:    str | None = None,
         filter:  TaskFilter = TaskFilter(),
-        sort:    str | None = None,
+        sort:    str | None = "column",
         reverse: bool = False,
     ) -> list[Task]:
         """
@@ -441,6 +441,8 @@ class KanbanService:
         def _value(task: Task):
             if sort == "title":
                 return task.title.lower()
+            if sort == "column":
+                return (task.column or "").lower()
             if sort == "priority":
                 priority_rank = {"low": 0, "medium": 1, "high": 2}
                 return priority_rank.get((task.priority or "").lower(), -1)

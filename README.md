@@ -53,7 +53,8 @@ kanban (main)>
 
 - check init
 - check init error handling
-- much better 
+- user sort order for boards and tasks
+- better bootdstrapping
 - move search_tasks to the index service
 - add utilty to filter for invisible files, which is used extensively in the filesystem repo
 
