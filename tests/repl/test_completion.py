@@ -135,6 +135,7 @@ class TestReplInterruptBehavior(unittest.TestCase):
         renderer = MagicMock()
 
         svc.is_initialized = MagicMock(return_value=True)
+        svc.kanban_dir = None
 
         with patch("builtins.input", side_effect=[KeyboardInterrupt(), "quit"]) as input_mock:
             with patch("builtins.print") as print_mock:

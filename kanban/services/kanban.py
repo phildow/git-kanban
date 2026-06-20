@@ -98,6 +98,11 @@ class KanbanService:
         """Return the KanbanRoot if the repository is initialized, or raise if not."""
         return self.repository.root
 
+    @property
+    def kanban_dir(self) -> Path | None:
+        """Return the path to the .kanban directory if applicable for this repository type, else None."""
+        return self.repository.kanban_dir
+
     # ------------------------------------------------------------------
     # Initialization
     # ------------------------------------------------------------------
@@ -660,7 +665,7 @@ class KanbanService:
         self.index_service.delete(task)
         return None
 
-        
+
     # ── Search ────────────────────────────────────────────────────────────────
 
     def search(

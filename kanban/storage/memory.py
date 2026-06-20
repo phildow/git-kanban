@@ -17,6 +17,7 @@ from storage.kanban import (
     TaskNotFound,
     TaskAlreadyExists,
 )
+from utils.str import kebab_case
 
 
 class InMemoryRepository(KanbanRepository):
@@ -35,18 +36,17 @@ class InMemoryRepository(KanbanRepository):
         self._task_filenames: dict[UUID, str] = {}
         self._config: dict[str, str] = {}
 
-    @staticmethod
-    def _to_kebab_case(text: str) -> str:
-        slug = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
-        if not slug:
-            raise ValueError("Task title must contain at least one alphanumeric character")
-        return slug
-    
+    # ------------------------------------------------------------------
+    # Filepaths
+    # ------------------------------------------------------------------
+
+    @property
+    def kanban_dir(self) -> Path | None:
+        return None
     
     # ---------------------------------------------------------------------------
     # Initialization
     # ---------------------------------------------------------------------------
-
     
     def init_storage(self, default_board: str = "main") -> None:
         if self.board_exists(default_board):
@@ -128,7 +128,7 @@ class InMemoryRepository(KanbanRepository):
         for column in columns:
             for i in range(1, tasks_per_column + 1):
                 title = title_template.format(column=column.name.capitalize(), i=i, board=board.capitalize)
-                slug = self._to_kebab_case(title)
+                slug = kebab_case(title)
                 task = Task(
                     id=uuid4(),
                     title=title,
@@ -417,7 +417,7 @@ class InMemoryRepository(KanbanRepository):
                 continue
             other_board, other_column = self._task_locations.get(other_id, (other_task.board, other_task.column))
             other_filename = self._task_filenames.get(other_id, "")
-            new_filename = self._to_kebab_case(task.title)
+            new_filename = kebab_case(task.title)
             if other_board == existing_board and other_column == existing_column and other_filename == new_filename:
                 raise TaskAlreadyExists(existing_board, existing_column, new_filename)
 
@@ -428,7 +428,7 @@ class InMemoryRepository(KanbanRepository):
 
         self._tasks_by_id[task.id] = task
         self._task_locations[task.id] = (existing_board, existing_column)
-        self._task_filenames[task.id] = self._to_kebab_case(task.title)
+        self._task_filenames[task.id] = kebab_case(task.title)
         task.slug = self._task_filenames[task.id]
         return task
 
@@ -445,7 +445,7 @@ class InMemoryRepository(KanbanRepository):
                 continue
             other_board, other_column = self._task_locations.get(other_id, (other_task.board, other_task.column))
             other_filename = self._task_filenames.get(other_id, "")
-            task_filename = self._task_filenames.get(task_id, self._to_kebab_case(task.title))
+            task_filename = self._task_filenames.get(task_id, kebab_case(task.title))
             if other_board == dest_board and other_column == dest_column and other_filename == task_filename:
                 raise TaskAlreadyExists(dest_board, dest_column, task_filename)
 

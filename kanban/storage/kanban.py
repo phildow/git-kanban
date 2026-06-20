@@ -25,6 +25,7 @@ Conventions
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Optional
 
 from models import UserContext, Board, Column, Task, TaskFilter
@@ -102,6 +103,16 @@ class KanbanRepository(ABC):
     def __init__(self, root: Path) -> None:
         """Initialize the repository. `path` is the root directory for all storage operations."""
         self.root = root
+
+    @property
+    @abstractmethod
+    def kanban_dir(self) -> Path | None:
+        """
+        Return the path to the .kanban directory if applicable for this repository type, else None.
+
+        The KanbanService uses this to determine whether to look for a Git repository and config file.
+        """
+        return None
 
     # ------------------------------------------------------------------
     # Bootstrap

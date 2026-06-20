@@ -27,7 +27,7 @@ class FilesystemRepository(KanbanRepository):
     # ------------------------------------------------------------------
 
     @property
-    def kanban_dir(self) -> Path:
+    def kanban_dir(self) -> Path | None:
         return self.root / ".kanban"
 
     @property
@@ -57,6 +57,7 @@ class FilesystemRepository(KanbanRepository):
 
         kanban_dir = self.kanban_dir
         kanban_dir.mkdir()
+        (kanban_dir / "history").touch()
             
         kanban_store_dir = self.kanban_store_dir
         kanban_store_dir.mkdir()

@@ -7,7 +7,7 @@ The repository uses pyenv and virtualenv. Run `.venv/bin/activate` to activate t
 
 0.5 - Implement filesystem basics
 0.6 - Complete filesystem and in memory store
-0.7 - Implement indesing and search
+0.7 - Implement indexing and search
 0.8 - Implement git tracking
 0.9 - Implement the TUI
 1.0 - Release
@@ -51,25 +51,28 @@ kanban (main)>
 
 ### TODO
 
-- FEAT: save and restore the command history
+- FEAT: track the working directory in .kanban
+- FEAT: implement user sort order for boards
+- FEAT: implement user sort order for tasks
 
 - TEST: make sure repl gives recoverable error messages
 - TEST: Chec init error handling
-- TEST: Create task with spaces
-- TEST: Create column with spaces
-- TEST: Create board with spaces
+- TEST: Create task with spaces - kebab_case
+- TEST: Create column with spaces - kebab_case
+- TEST: Create board with spaces - kebab_case
+- TEST BUG: tests create temp folders and don't clean them up
 
+- FEAT: Add support to double tab through 
+- FEAT: tab completion for assigness and tags
 - FEAT: Correctly resolve `..` all commands that take paths not just cd
 - FEAT: Correctly tab complete `..` for all commands that take paths
 - FEAT: Use the same logic for other commands that take paths, and use resolve into components
   taking into account relative paths and the user context
 
-- FEAT: tab completion for assigness and tags
-- FEAT: implement user sort order for boards
-- FEAT: implement user sort order for tasks
 - FEAT: bump command to move a board or task to the front
+- FEAT: ooo the shell will make as few as two columns
 
-- BUG: if a board is already specified, `create board x` doesn't work
+- BUG: if a board is already in the current context, `create board x` doesn't work
 - BUG: `kanban (/) > ls main -al` returns no result and prompts `kanban (/) >`
 
 - FEAT: better bootdstrapping

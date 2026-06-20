@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import atexit
 import logging
 import shlex
 import signal
@@ -147,6 +148,43 @@ def _print_help_message(parser: argparse.ArgumentParser) -> None:
     print(help_text)
 
 
+def _load_command_history(svc: KanbanService) -> None:
+    """Return the command history from the REPL history file, if available."""
+    if readline is None:
+        return
+
+    kanban_dir = svc.kanban_dir
+    if not kanban_dir:
+        return
+
+    history_file = kanban_dir / "history"
+    if not history_file.exists():
+        return
+
+    try:
+        readline.read_history_file(str(history_file))
+    except Exception as exc:
+        exc_desc = str(exc) or exc.__class__.__name__
+        logging.error("Failed to read REPL history file: %s", exc_desc)
+
+
+def _save_command_history(svc: KanbanService) -> None:
+    """Save the command history to the REPL history file."""
+    if readline is None:
+        return
+
+    kanban_dir = svc.kanban_dir
+    if not kanban_dir:
+        return
+
+    history_file = kanban_dir / "history"
+    try:
+        readline.write_history_file(str(history_file))
+    except Exception as exc:
+        exc_desc = str(exc) or exc.__class__.__name__
+        logging.error("Failed to save REPL history file: %s", exc_desc)
+
+
 def run_repl(*, svc: KanbanService, renderer: object) -> None:
     """Run a simple command loop that reuses the CLI parser/handlers."""
 
@@ -164,6 +202,9 @@ def run_repl(*, svc: KanbanService, renderer: object) -> None:
         
     except ValueError as exc:
         print(f"Value error: {exc}")
+
+    _load_command_history(svc)
+    atexit.register(lambda: _save_command_history(svc))
 
     _print_welcome_message(svc)
 

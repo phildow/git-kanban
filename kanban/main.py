@@ -13,12 +13,16 @@ from services.index import IndexService
 from storage.filesystem import FilesystemRepository
 from storage.memory import InMemoryRepository
 
+__DEBUG__ = True
+
+FILESYSTEM = "filesystem"
+MEMORY = "memory"
 
 def main() -> None:
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
     
     cwd = Path.cwd()
-    repository = get_repository("filesystem")
+    repository = get_repository(FILESYSTEM)
     index_service = IndexService(repository=repository)
     git_service = GitService()
 
@@ -41,14 +45,21 @@ def main() -> None:
 def get_repository(typ: str) -> KanbanRepository:
     import tempfile
     from uuid import uuid4
-    temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
-    temp_dir.mkdir()
-    cwd = Path.cwd()
 
-    if typ == "memory":
-        return InMemoryRepository(root=temp_dir)
-    elif typ == "filesystem":
-        return FilesystemRepository(root=temp_dir)
+    if __DEBUG__:
+        # ID = uuid4().hex[:8]
+        ID = "test"
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{ID}"
+        if not temp_dir.exists():
+            temp_dir.mkdir()
+        cwd = temp_dir
+    else:  
+        cwd = Path.cwd()
+
+    if typ == MEMORY:
+        return InMemoryRepository(root=cwd)
+    elif typ == FILESYSTEM:
+        return FilesystemRepository(root=cwd)
     
 if __name__ == "__main__":
     main()
