@@ -193,19 +193,11 @@ class KanbanService:
 
     def _board_exists(self, board: str) -> bool:
         """Return True if the given board exists in the repository, False if not."""
-        try:
-            self.repository.get_board(board)
-            return True
-        except BoardNotFound:
-            return False
+        return self.repository.board_exists(board)
 
     def _column_exists(self, board: str, column: str) -> bool:
         """Return True if the given column exists in the repository, False if not."""
-        try:
-            self.repository.get_column(board, column)
-            return True
-        except (BoardNotFound, ColumnNotFound):
-            return False
+        return self.repository.column_exists(board, column)
 
     def resolve_path(self, path: str | None = None) -> Path:
         """

@@ -254,7 +254,6 @@ def run_repl(*, svc: KanbanService, renderer: object) -> None:
                 except TaskNotFound as exc:
                     print(f"Task not found: {exc.identifier}")
                 except ValueError as exc:
-                    logging.error("Value error: %s", exc)
                     print(f"{exc}")
                 except KeyboardInterrupt:
                     print()

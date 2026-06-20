@@ -109,11 +109,23 @@ class FilesystemRepository(KanbanRepository):
 
     # Board operations
     def get_boards(self) -> list[Board]:
-        return [
-            Board(name=entry.name)
-            for entry in sorted(self.boards_dir.iterdir())
-            if entry.is_dir() and not entry.name.startswith(".")
-        ]
+        boards = []
+        for entry in sorted(self.boards_dir.iterdir()):
+            if not entry.is_dir() or entry.name.startswith("."):
+                continue
+            column_count = sum(
+                1 for e in entry.iterdir()
+                if e.is_dir() and not e.name.startswith(".")
+            )
+            task_count = sum(
+                1
+                for col in entry.iterdir()
+                if col.is_dir() and not col.name.startswith(".")
+                for f in col.iterdir()
+                if f.is_file() and not f.name.startswith(".")
+            )
+            boards.append(Board(name=entry.name, column_count=column_count, task_count=task_count))
+        return boards
 
     def get_board(self, name: str) -> Board:
         board_path = self.boards_dir / name

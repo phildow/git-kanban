@@ -85,13 +85,58 @@ class Renderer:
 			self._emit(args, "No boards")
 			return
 
-		self._emit(args, "\n".join(board.name for board in result))
-		return
+		if args.list == True:
+			self.render_board_list_verbose(args, result)
+		else:
+			self.render_board_list_slug_only(args, result) 
+			
+	def render_board_list_slug_only(self, args: argparse.Namespace, result: list[Board]) -> None:
+		"""Render a simple list of board slugs, without additional details."""
+		slugs = [board.slug for board in result]
+		
+		# TODO: From this point below shares logic with render_task_list_slug_only, 
+		# 		consider refactoring to a shared helper function
 
-		lines = ["Boards", "------"]
-		for board in result:
-			lines.append(f"{board.name} ({len(board.columns)} columns)")
+		if any(len(slug) > 16 for slug in slugs):
+			self._emit(args, "\n".join(slugs))
+			return
+
+		term_width, _ = shutil.get_terminal_size(fallback=(80, 24))
+		col_width = 16
+		gap = 1
+		cols = max(1, (term_width + gap) // (col_width + gap))
+
+		formatted = [f"{self._clamped(slug, col_width):<{col_width}}" for slug in slugs]
+		lines = []
+		for i in range(0, len(formatted), cols):
+			row = formatted[i:i + cols]
+			lines.append(" ".join(row).rstrip())
+
 		self._emit(args, "\n".join(lines))
+
+	def render_board_list_verbose(self, args: argparse.Namespace, result: list[Board]) -> None:
+		"""Render a detailed list of boards, including their column counts."""
+		if not result:
+			self._emit(args, "No boards")
+			return
+
+		items = []
+
+		heading =   [f"{"Name":<32}", f"{"Columns":<16}", f"{"Tasks":<16}"]
+		underline = [f"{"----":<32}", f"{"-------":<16}", f"{"-----":<16}"]
+
+		items.append("".join(heading))
+		items.append("".join(underline))
+
+		for board in result:
+			elems = [
+				f"{self._clamped(board.name, 32-1):<32}",
+				f"{self._clamped(str(board.column_count), 16-1):<16}",
+				f"{self._clamped(str(board.task_count), 16-1):<16}"
+			]
+			items.append("".join(elems))
+
+		self._emit(args, "\n".join(items))
 
 	def render_board_create(self, args: argparse.Namespace, result: Board) -> None:
 		"""Render a message indicating that a board was created, including its name."""
@@ -160,8 +205,8 @@ class Renderer:
 
 		items = []
 
-		heading =  [  f"{"Title":<32}", f"{"Num Tasks":<16}"]
-		uderline = [  f"{"-----":<32}", f"{"---------":<16}"]
+		heading =  [  f"{"Name":<32}", f"{"Tasks":<16}"]
+		uderline = [  f"{"----":<32}", f"{"-----":<16}"]
 
 		items.append("".join(heading))
 		items.append("".join(uderline))
@@ -169,7 +214,7 @@ class Renderer:
 		for column in result:
 			elems = [
 				f"{self._clamped(column.name, 32-1):<32}",
-				f"{self._clamped(column.task_count, 16-1):<16}",
+				f"{self._clamped(str(column.task_count), 16-1):<16}",
 				]
 			items.append("".join(elems))
 		
@@ -314,6 +359,10 @@ class Renderer:
 				f"{self._clamped(task.due_date.isoformat() if task.due_date else "-", 16-1):<16}"
 				]
 			items.append("".join(elems))
+		
+		items.insert(0, "---------------------")
+		items.insert(1, f"Number of tasks: {len(result)}")
+		items.insert(2, "---------------------\n")
 		
 		self._emit(args, "\n".join(items))
 

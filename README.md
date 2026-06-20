@@ -51,16 +51,11 @@ kanban (main)>
 
 ### TODO
 
-- BUG: do not allow the user to delete a board that has tasks in it, or at least require a --force flag
-- BUG: do not allow the user to delete a board that is the current context
-- BUG: same for the column
-
 - FEAT: improve repl rendering - always give feedback
 - FEAT: implement user sort order for boards
 - FEAT: implement user sort order for tasks
 - FEAT: bump command to move a board or task to the front
 - FEAT: include result count in task listing
-- FEAT: include task count in column and board listing
 
 - TEST: make sure repl gives recoverable error messages
 - TEST: Check init error handling

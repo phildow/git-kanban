@@ -13,7 +13,12 @@ class Board:
     
     name: str
     # slug: str
+
+    # TODO: is this even used - a core principle is that we do not cache filesystem state in memory
     columns: list[Column] = field(default_factory=list)
+    
+    column_count: int = 0
+    task_count: int = 0
 
     # Do I want to include created_at and created_by here? 
     # Maybe not since boards are more about organization than workflow?
@@ -21,3 +26,7 @@ class Board:
     @property
     def path(self) -> Path:
         return Path(f"/{self.name}")
+
+    @property
+    def slug(self) -> str:
+        return self.name.lower().replace(" ", "-")
