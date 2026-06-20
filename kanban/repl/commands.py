@@ -61,7 +61,10 @@ def handle_list(args: argparse.Namespace, svc: KanbanService, renderer: object) 
 def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	typ = repl_handle_delete(args, svc)
 
-	if typ is Board:
+	if typ is None:
+		# user declined deletion
+		return
+	elif typ is Board:
 		renderer.render_board_delete(args)
 	elif typ is Column:
 		renderer.render_column_delete(args)

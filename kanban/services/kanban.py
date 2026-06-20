@@ -415,11 +415,15 @@ class KanbanService:
         index entries for tasks that belonged to the board and clears the current
         context if it pointed at the deleted board.
         """
+
+        # TODO: do not allow the user to delete a board that has tasks in it, or at least require a --force flag
+        # TODO: do not allow the user to delete a board that is the current context
+
         board, _, _ = self.path_components(path)
-        board = self.repository.delete_board(board)
+        self.repository.delete_board(board)
         
         # Clear current context if it points to the deleted board.
-        if self._user_context.board == board.name:
+        if self._user_context.board == board:
             self.clear_user_context()
 
         return board

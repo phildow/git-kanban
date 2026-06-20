@@ -24,3 +24,7 @@ class Column:
     @property
     def path(self) -> Path:
         return Path(f"/{self.board}/{self.name}")
+
+    @property
+    def slug(self) -> str:
+        return self.name.lower().replace(" ", "-")

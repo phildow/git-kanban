@@ -93,24 +93,21 @@ class Renderer:
 			lines.append(f"{board.name} ({len(board.columns)} columns)")
 		self._emit(args, "\n".join(lines))
 
-	@_requires_verbose
 	def render_board_create(self, args: argparse.Namespace, result: Board) -> None:
 		"""Render a message indicating that a board was created, including its name."""
 		board_name = result.name or getattr(args, "board", None)
-		self._emit(args, f"Board created: {board_name}")
+		self._emit(args, f"Created board: {board_name}")
 
-	@_requires_verbose
 	def render_board_rename(self, args: argparse.Namespace, result: Board) -> None:
 		"""Render a message indicating that a board was renamed, including the old and new names."""
 		old_name = getattr(args, "board", None)
 		new_name = result.name or getattr(args, "new_name", None)
-		self._emit(args, f"Board renamed: {old_name} -> {new_name}")
+		self._emit(args, f"Renamed board: {old_name} -> {new_name}")
 
-	# @_requires_verbose
 	def render_board_delete(self, args: argparse.Namespace) -> None:
 		"""Render a message indicating that a board was deleted, including its name."""
 		board_name = getattr(args, "board", None)
-		self._emit(args, f"Board deleted: {board_name}")
+		self._emit(args, f"Deleted board: {board_name}")
 
 # ---------------------------------------------------------------------------
 # Column rendering
@@ -122,13 +119,66 @@ class Renderer:
 			self._emit(args, "No columns")
 			return
 
-		self._emit(args, "\n".join(column.name for column in result))
-		return
+		if args.list == True:
+			self.render_column_list_verbose(args, result)
+		else:
+			self.render_column_list_slug_only(args, result)
 
-		lines = ["Columns", "-------"]
-		for column in result:
-			lines.append(f"{column.position + 1}. {column.name}")
+	def render_column_list_slug_only(self, args: argparse.Namespace, result: list[Column]) -> None:
+		"""
+		Render a simple list of column slugs, without additional details. 
+		If any slugs are longer than 16 characters, render one per line. 
+		Otherwise, render in a compact multi-column format.
+		"""
+		slugs = [column.slug for column in result]
+
+		# TODO: From this point below shares logic with render_task_list_slug_only, 
+		# 		consider refactoring to a shared helper function
+
+		if any(len(slug) > 16 for slug in slugs):
+			self._emit(args, "\n".join(slugs))
+			return
+
+		term_width, _ = shutil.get_terminal_size(fallback=(80, 24))
+		col_width = 16
+		gap = 1
+		cols = max(1, (term_width + gap) // (col_width + gap))
+
+		formatted = [f"{self._clamped(slug, col_width):<{col_width}}" for slug in slugs]
+		lines = []
+		for i in range(0, len(formatted), cols):
+			row = formatted[i:i + cols]
+			lines.append(" ".join(row).rstrip())
+
 		self._emit(args, "\n".join(lines))
+
+	def render_column_list_verbose(self, args: argparse.Namespace, result: list[Column]) -> None:
+		"""Render a detailed list of columns, including their board names and positions."""
+		if not result:
+			self._emit(args, "No columns")
+			return
+
+		items = []
+
+		heading =  [  f"{"Title":<32}", f"{"Num Tasks":<16}"]
+		uderline = [  f"{"-----":<32}", f"{"---------":<16}"]
+
+		items.append("".join(heading))
+		items.append("".join(uderline))
+
+		for column in result:
+			elems = [
+				f"{self._clamped(column.name, 32-1):<32}",
+				f"{self._clamped(column.task_count, 16-1):<16}",
+				]
+			items.append("".join(elems))
+		
+		self._emit(args, "\n".join(items))
+
+		# lines = ["Columns", "-------"]
+		# for column in result:
+		# 	lines.append(f"{column.position + 1}. {column.name}")
+		# self._emit(args, "\n".join(lines))
 
 	@_requires_verbose
 	def render_column_create(self, args: argparse.Namespace, result: Column) -> None:
@@ -196,7 +246,6 @@ class Renderer:
 
 	def render_task_list(self, args: argparse.Namespace, result: list[Task]) -> None:
 		"""Render a list of tasks, optionally with their slugs, titles, and locations."""
-		list = getattr(args, "list", False)
 		if args.list == True:
 			self.render_task_list_verbose(args, result)
 		else:

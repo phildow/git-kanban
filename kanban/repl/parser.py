@@ -152,7 +152,7 @@ def _add_list_parser(subparsers: argparse._SubParsersAction) -> None:
 
 
 def _add_delete_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser("delete", aliases=["rm"], help="Delete a board, column, or task")
+    p = subparsers.add_parser("delete", aliases=["del", "rm"], help="Delete a board, column, or task")
     _add_global_flags(p)
     # delete_sub = p.add_subparsers(dest="path", metavar="BOARD[/COLUMN][/TASK]", help="Board, column, or task to delete")
     group = p.add_mutually_exclusive_group(required=True)

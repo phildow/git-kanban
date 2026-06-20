@@ -265,7 +265,7 @@ The REPL commands follow.
 
 ```
 COMMAND
-  cd               Set or clear the active board and column
+  cd               Set the active board and column
   board            Set the active board
   column           Set the active column
   create (new, n)  Create a board, column, or task
