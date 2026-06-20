@@ -265,9 +265,9 @@ class KanbanService:
         if path.startswith("/"):
             board, column, _ = self.path_components(path)
             if board and not self._board_exists(board):
-                raise BoardNotFound(f"Board not found: /{board}")
+                raise BoardNotFound(board)
             if column and not self._column_exists(board, column):
-                raise ColumnNotFound(f"Column not found: /{board}/{column}")
+                raise ColumnNotFound(board, column)
             if board and column:
                 self.update_user_context(board=board, column=column)
                 return self.user_context
@@ -276,32 +276,55 @@ class KanbanService:
                 return self.user_context
 
         # address a relative path like "todo" or "my-project/todo", 
-        # which is resolved against the current context.
+        # which is resolved against the current context. 
+        #
+        # This is the most complex case because it requires disambiguating between boards and columns 
+        # based on the current context and repository state.
 
-        board: str | None = None
-        column: str | None = None
+        # TODO: append the normalized path to the user context and then resolve that into its components
 
-        if "/" in path:
-            board, column = path.split("/", 1)
-            if not board or not column:
-                raise ValueError("Path must be /BOARD or /BOARD/COLUMN")
-        else:
-            board = path
-            current_board = self.user_context.board
-            if current_board:
-                try:
-                    self.repository.get_column(current_board, path)
-                    board = current_board
-                    column = path
-                except ColumnNotFound:
-                    column = None
+        full_path = self.working_path / path
+        board, column, task = self.path_components(str(full_path))
 
-        self.repository.get_board(board)
-        if column is not None:
-            self.repository.get_column(board, column)
-
-        self.update_user_context(board=board, column=column)
+        if task:
+            raise ValueError(f"Invalid path: {path} (cannot set context to a task)")
+        if board and not self._board_exists(board):
+            raise BoardNotFound(board)
+        if column and not self._column_exists(board, column):
+            raise ColumnNotFound(board, column)
+        if board:
+            self.update_user_context(board=board, column=column)
+        if column:
+            self.update_user_context(board=board, column=column)    
+        
         return self.user_context
+
+        # STOP
+
+        # board: str | None = None
+        # column: str | None = None
+
+        # if "/" in path:
+        #     board, column = path.split("/", 1)
+        #     if not board or not column:
+        #         raise ValueError("Path must be /BOARD or /BOARD/COLUMN")
+        # else:
+        #     board = path
+        #     current_board = self.user_context.board
+        #     if current_board:
+        #         try:
+        #             self.repository.get_column(current_board, path)
+        #             board = current_board
+        #             column = path
+        #         except ColumnNotFound:
+        #             column = None
+
+        # self.repository.get_board(board)
+        # if column is not None:
+        #     self.repository.get_column(board, column)
+
+        # self.update_user_context(board=board, column=column)
+        # return self.user_context
 
     def set_board(self, board: str) -> UserContext:
         """Set the current context to the given board, validating that it exists."""
@@ -309,7 +332,7 @@ class KanbanService:
         board = self.repository.get_board(board)
 
         if not board:
-            raise BoardNotFound(f"Board not found: {board}")
+            raise BoardNotFound(board)
 
         self.update_user_context(board=board.name, column=None)
         return self.user_context
@@ -324,7 +347,7 @@ class KanbanService:
         column = self.repository.get_column(board, column)
 
         if not column:
-            raise ColumnNotFound(f"Column not found: {board}/{column}")
+            raise ColumnNotFound(board, column)
 
         self.update_user_context(board=board, column=column.name)
         return self.user_context
