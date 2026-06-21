@@ -126,5 +126,62 @@ class TestFilesystemTaskOrder(unittest.TestCase):
         self.assertEqual(titles, ["alpha", "beta", "charlie"])
 
 
+class TestFilesystemTaskOrderWithOtherMetadata(unittest.TestCase):
+    """Task order (a multi-line INI value) survives reads and writes alongside other metadata."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        self.repo = FilesystemRepository(root=self.root)
+        self.repo.init_storage()
+        self.repo.create_board("proj")
+        self.repo.create_column("proj", "todo")
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def _task(self, title: str, slug: str) -> Task:
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+        return Task(id=uuid4(), title=title, slug=slug, board="proj", column="todo",
+                    created_at=now, updated_at=now)
+
+    def test_task_order_preserved_after_writing_other_metadata(self) -> None:
+        """Task order is unchanged after an unrelated key is written to the same file."""
+        self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
+        self.repo.create_task(self._task("Beta", "beta"), "beta")
+        self.repo.set_column_metadata("proj", "todo", "display.color", "blue")
+        titles = [t.title for t in self.repo.get_tasks(board="proj", column="todo")]
+        self.assertEqual(titles, ["Alpha", "Beta"])
+
+    def test_other_metadata_preserved_after_adding_task(self) -> None:
+        """An unrelated metadata key is unchanged after a new task is created."""
+        self.repo.set_column_metadata("proj", "todo", "display.color", "blue")
+        self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
+        self.repo.create_task(self._task("Beta", "beta"), "beta")
+        self.assertEqual(self.repo.get_column_metadata("proj", "todo", "display.color"), "blue")
+
+    def test_task_order_preserved_across_multiple_write_cycles(self) -> None:
+        """Task order survives interleaved writes from task creation and other metadata."""
+        self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
+        self.repo.set_column_metadata("proj", "todo", "display.color", "blue")
+        self.repo.create_task(self._task("Beta", "beta"), "beta")
+        self.repo.set_column_metadata("proj", "todo", "display.color", "green")
+        self.repo.create_task(self._task("Gamma", "gamma"), "gamma")
+        titles = [t.title for t in self.repo.get_tasks(board="proj", column="todo")]
+        self.assertEqual(titles, ["Alpha", "Beta", "Gamma"])
+        self.assertEqual(self.repo.get_column_metadata("proj", "todo", "display.color"), "green")
+
+    def test_task_order_preserved_with_multiple_other_sections(self) -> None:
+        """Task order is correct when several other sections exist in the metadata file."""
+        self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
+        self.repo.create_task(self._task("Beta", "beta"), "beta")
+        self.repo.set_column_metadata("proj", "todo", "display.color", "blue")
+        self.repo.set_column_metadata("proj", "todo", "access.owner", "alice")
+        self.repo.set_column_metadata("proj", "todo", "limits.wip", "3")
+        titles = [t.title for t in self.repo.get_tasks(board="proj", column="todo")]
+        self.assertEqual(titles, ["Alpha", "Beta"])
+
+
 if __name__ == "__main__":
     unittest.main()
