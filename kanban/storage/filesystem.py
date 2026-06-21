@@ -158,7 +158,12 @@ class FilesystemRepository(KanbanRepository):
         )
 
     def _set_task_order(self, board: str, column: str, order: list[str]) -> None:
-        """Persist the task order for a column to its .metadata file."""
+        """Persist the task order for a column to its .metadata file.
+
+        Each filename is stored on its own line using configparser's multi-line
+        value support: continuation lines are indented, so configparser treats
+        them as part of the same value rather than new keys.
+        """
         self.set_column_metadata(board, column, "tasks.order", "\n" + "\n".join(order))
 
     def _get_column_order(self, board: str) -> list[str]:
@@ -172,7 +177,12 @@ class FilesystemRepository(KanbanRepository):
         )
 
     def _set_column_order(self, board: str, order: list[str]) -> None:
-        """Persist the column order for a board to its metadata file."""
+        """Persist the column order for a board to its metadata file.
+
+        Each directory name is stored on its own line using configparser's
+        multi-line value support: continuation lines are indented, so
+        configparser treats them as part of the same value rather than new keys.
+        """
         self.set_board_metadata(board, "columns.order", "\n" + "\n".join(order))
 
     def get_columns(self, board: str) -> list[Column]:
