@@ -11,6 +11,7 @@ from uuid import UUID, uuid4
 
 from models import Task, TaskFilter, Board, Column
 from storage.kanban import KanbanRepository, BoardNotFound, BoardAlreadyExists, ColumnAlreadyExists, ColumnNotFound, TaskNotFound
+from storage.seeds import BOOTSTRAP_SEEDS
 
 
 class FilesystemRepository(KanbanRepository):
@@ -80,33 +81,41 @@ class FilesystemRepository(KanbanRepository):
         boards_dir.mkdir()
         (boards_dir / ".metadata").touch()
 
-    # TODO: improve boostrapping with more frontmatter metadata and sample tasks, 
-    #       use existing methods to create them instead of writing files directly, 
-    #       which will ensure consistency and proper indexing
+    # TODO: use existing methods to create tasks instead of writing files directly
+    #       to ensure consistency and proper indexing
     def bootstrap(self) -> list[Task]:
         self.create_board("main")
         for col in ("todo", "in-progress", "in-review", "done"):
             self.create_column("main", col)
 
         now = datetime.now(timezone.utc)
-        seeds = [
-            ("create your first todo", "create-your-first-todo", "todo"),
-            ("go for a bike ride", "go-for-a-bike-ride", "in-progress"),
-        ]
         created: list[Task] = []
-        for title, slug, column in seeds:
+        for seed in BOOTSTRAP_SEEDS:
             task_id = uuid4()
+            title = seed["title"]
+            slug = seed["slug"]
+            column = seed["column"]
             path = self.boards_dir / "main" / column / f"{slug}.md"
-            path.write_text(
-                f"---\n"
-                f"id: {task_id}\n"
-                f"title: {title}\n"
-                f"slug: {slug}\n"
-                f"created_at: {now.isoformat()}\n"
-                f"updated_at: {now.isoformat()}\n"
-                f"---\n",
-                encoding="utf-8",
-            )
+
+            fm_lines = [
+                "---",
+                f"id: {task_id}",
+                f"title: {title}",
+                f"slug: {slug}",
+                f"created_at: {now.isoformat()}",
+                f"updated_at: {now.isoformat()}",
+            ]
+            if priority := seed.get("priority"):
+                fm_lines.append(f"priority: {priority}")
+            if assignee := seed.get("assignee"):
+                fm_lines.append(f"assignee: {assignee}")
+            fm_lines.append("---")
+
+            content = "\n".join(fm_lines) + "\n"
+            if body := seed.get("body", ""):
+                content += f"\n{body}\n"
+
+            path.write_text(content, encoding="utf-8")
             created.append(self._parse_task_file(path, "main", column))
         return created
 

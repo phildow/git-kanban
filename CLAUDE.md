@@ -121,16 +121,20 @@ project-root
             ├── .metadata
             ├── done
             ├── in-progress
+            │   └── .metadata
             │   └── go-for-a-bike-ride.md
             ├── in-review
             └── todo
+                └── .metadata
                 └── create-your-first-todo.md
+                └── try-making-another-board.md
 ```
 
 ```
 root-directory/
   .kanban/
     config
+    history
     index.db
     userdata
   .kanban-store/
@@ -191,11 +195,11 @@ The kanban store includes a `userdata` INI file. It contains preferences specifi
 
 #### Boards
 
-Boards metadata is stored in a hidden `.metadata` INI file in the boards directory. It contains settings that apply to the board, for example the column order. (TODO)
+...
 
 #### Board
 
-Board (singular) metadata is stored ...
+Board (singular) metadata is stored in a hidden `.metadata` INI file in the each board directory. It contains settings that apply to the board, for example the column order. (TODO)
 
 #### Column
 
@@ -328,6 +332,10 @@ COMMAND
   search           Full-text search across tasks
   log              Show git log for a task or scope
   status           Show repository status summary
+
+  assign           Assign a task to someone
+  top              Move a task to the top of its column
+  bottom           Moave a task to the bottom of its column
 
 options:
   -h, --help         Show this help message

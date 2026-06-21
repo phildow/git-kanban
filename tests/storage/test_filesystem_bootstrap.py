@@ -40,20 +40,33 @@ class TestFilesystemBootstrap(unittest.TestCase):
         self.assertTrue(len(tasks) > 0)
         self.assertTrue(all(isinstance(t, Task) for t in tasks))
 
-    def test_first_todo_task_exists(self) -> None:
-        """The 'create your first todo' task is in the todo column."""
+    def test_todo_tasks_exist(self) -> None:
+        """Three tutorial tasks are seeded into the todo column."""
         tasks = self.repo.bootstrap()
         todo_tasks = [t for t in tasks if t.column == "todo"]
-        self.assertEqual(len(todo_tasks), 1)
-        self.assertEqual(todo_tasks[0].title, "create your first todo")
-        self.assertEqual(todo_tasks[0].board, "main")
+        self.assertEqual(len(todo_tasks), 3)
+        titles = [t.title for t in todo_tasks]
+        self.assertIn("list your boards and tasks", titles)
+        self.assertIn("create a new task", titles)
+        self.assertIn("move a task to another column", titles)
+        for t in todo_tasks:
+            self.assertEqual(t.board, "main")
 
-    def test_bike_ride_task_in_progress(self) -> None:
-        """The 'go for a bike ride' task is in the in-progress column."""
+    def test_in_progress_task_has_metadata(self) -> None:
+        """The in-progress seed task is seeded with priority and assignee."""
         tasks = self.repo.bootstrap()
         in_progress = [t for t in tasks if t.column == "in-progress"]
         self.assertEqual(len(in_progress), 1)
-        self.assertEqual(in_progress[0].title, "go for a bike ride")
+        self.assertEqual(in_progress[0].title, "update a task with details")
+        self.assertEqual(in_progress[0].priority, "high")
+        self.assertEqual(in_progress[0].assignee, "alice")
+
+    def test_bike_ride_task_in_done(self) -> None:
+        """The 'go for a bike ride' task is seeded into the done column."""
+        tasks = self.repo.bootstrap()
+        done_tasks = [t for t in tasks if t.column == "done"]
+        self.assertEqual(len(done_tasks), 1)
+        self.assertEqual(done_tasks[0].title, "go for a bike ride")
 
     def test_tasks_have_ids(self) -> None:
         """Each bootstrapped task has a non-zero UUID assigned."""
@@ -64,12 +77,17 @@ class TestFilesystemBootstrap(unittest.TestCase):
             self.assertNotEqual(task.id, UUID(int=0))
 
     def test_task_files_on_disk(self) -> None:
-        """Task files are written to the correct column directory."""
+        """Task files are written to the correct column directories."""
         self.repo.bootstrap()
-        todo_path = self.repo.boards_dir / "main" / "todo" / "create-your-first-todo.md"
-        bike_path = self.repo.boards_dir / "main" / "in-progress" / "go-for-a-bike-ride.md"
-        self.assertTrue(todo_path.is_file())
-        self.assertTrue(bike_path.is_file())
+        expected = [
+            self.repo.boards_dir / "main" / "todo" / "list-your-boards-and-tasks.md",
+            self.repo.boards_dir / "main" / "todo" / "create-a-new-task.md",
+            self.repo.boards_dir / "main" / "todo" / "move-a-task-to-another-column.md",
+            self.repo.boards_dir / "main" / "in-progress" / "update-a-task-with-details.md",
+            self.repo.boards_dir / "main" / "done" / "go-for-a-bike-ride.md",
+        ]
+        for path in expected:
+            self.assertTrue(path.is_file(), f"Missing: {path.name}")
 
 
 if __name__ == "__main__":
