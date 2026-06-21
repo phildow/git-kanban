@@ -147,6 +147,20 @@ class FilesystemRepository(KanbanRepository):
     # TODO: verify that the files listed in the sort order match the actual column directories and log warnings 
     #       if not, and handle missing columns by appending them to the end of the list rather than crashing
     
+    def _get_task_order(self, board: str, column: str) -> list[str]:
+        """Return the stored task order for a column, falling back to filesystem sort."""
+        raw = self.get_column_metadata(board, column, "tasks.order")
+        if raw:
+            return [f.strip() for f in raw.split("\n") if f.strip()]
+        return sorted(
+            e.name for e in (self.boards_dir / board / column).iterdir()
+            if e.is_file() and not e.name.startswith(".") and e.suffix == ".md"
+        )
+
+    def _set_task_order(self, board: str, column: str, order: list[str]) -> None:
+        """Persist the task order for a column to its .metadata file."""
+        self.set_column_metadata(board, column, "tasks.order", "\n" + "\n".join(order))
+
     def _get_column_order(self, board: str) -> list[str]:
         """Return the stored column order for a board, falling back to filesystem sort."""
         raw = self.get_board_metadata(board, "columns.order")
@@ -202,6 +216,7 @@ class FilesystemRepository(KanbanRepository):
             raise ColumnAlreadyExists(board, name)
         order = self._get_column_order(board)  # read before mkdir so new dir isn't in fallback
         column_path.mkdir()
+        (column_path / ".metadata").touch()
         order.append(name)
         self._set_column_order(board, order)
         return Column(name=name, board=board, position=len(order) - 1)
@@ -269,10 +284,11 @@ class FilesystemRepository(KanbanRepository):
                 if e.is_dir() and not e.name.startswith(".")
             ]
             for col in columns:
-                for entry in sorted((self.boards_dir / b / col).iterdir()):
-                    if not entry.is_file() or entry.name.startswith(".") or entry.suffix != ".md":
-                        continue
-                    tasks.append(self._parse_task_file(entry, b, col))
+                col_dir = self.boards_dir / b / col
+                for filename in self._get_task_order(b, col):
+                    entry = col_dir / filename
+                    if entry.is_file():
+                        tasks.append(self._parse_task_file(entry, b, col))
         return tasks
 
     def get_task_by_id(self, task_id: UUID) -> Task:
@@ -321,6 +337,10 @@ class FilesystemRepository(KanbanRepository):
         if task.body:
             content += f"\n{task.body}\n"
         path.write_text(content, encoding="utf-8")
+        order = self._get_task_order(task.board, task.column)
+        if f"{filename}.md" not in order:
+            order.append(f"{filename}.md")
+        self._set_task_order(task.board, task.column, order)
         return self._parse_task_file(path, task.board, task.column)
 
     def update_task(self, task: Task) -> Task:
@@ -443,6 +463,39 @@ class FilesystemRepository(KanbanRepository):
                 cfg[section] = {}
             cfg[section][key] = value
 
+        metadata_file.write_text(self._write_ini(cfg), encoding="utf-8")
+
+    # Column metadata
+    def _column_metadata_file(self, board: str, column: str) -> Path:
+        """Return the path to the .metadata INI file for the given column."""
+        return self.boards_dir / board / column / ".metadata"
+
+    def get_column_metadata(self, board: str, column: str, keypath: str) -> str | None:
+        """Read a value from a column's .metadata INI file using a 'section.key' keypath."""
+        if "." not in keypath:
+            raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
+        section, key = keypath.split(".", 1)
+        cfg = configparser.ConfigParser()
+        cfg.read(self._column_metadata_file(board, column), encoding="utf-8")
+        if section not in cfg or key not in cfg[section]:
+            return None
+        return cfg[section][key]
+
+    def set_column_metadata(self, board: str, column: str, keypath: str, value: str | None) -> None:
+        """Write a value to a column's .metadata INI file using a 'section.key' keypath."""
+        if "." not in keypath:
+            raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
+        section, key = keypath.split(".", 1)
+        metadata_file = self._column_metadata_file(board, column)
+        cfg = configparser.ConfigParser()
+        cfg.read(metadata_file, encoding="utf-8")
+        if value is None:
+            if section in cfg and key in cfg[section]:
+                del cfg[section][key]
+        else:
+            if section not in cfg:
+                cfg[section] = {}
+            cfg[section][key] = value
         metadata_file.write_text(self._write_ini(cfg), encoding="utf-8")
 
     # TODO: kanban service also does task parsing move to a utility module to avoid duplication between service and repository layers
