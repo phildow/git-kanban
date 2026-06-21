@@ -64,6 +64,48 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         with self.assertRaises(ValueError):
             svc.init_kanban(Path("."))
 
+    def test_init_seeds_tasks_from_default_seeds(self):
+        """init_kanban creates tasks from BOOTSTRAP_SEEDS in the main board."""
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+        temp_dir.mkdir()
+        repo = InMemoryRepository(root=temp_dir)
+        svc = KanbanService(
+            repository=repo,
+            index_service=IndexService(repository=repo),
+            git_service=GitService(),
+        )
+
+        svc.init_kanban(Path("."))
+
+        tasks = repo.get_tasks(board="main")
+        titles = {t.title for t in tasks}
+        self.assertIn("list your boards and tasks", titles)
+        self.assertIn("create a new task", titles)
+        self.assertIn("move a task to another column", titles)
+        self.assertIn("update a task with details", titles)
+        self.assertIn("go for a bike ride", titles)
+
+    def test_init_seeds_tasks_from_custom_seeds(self):
+        """init_kanban accepts a custom seed list instead of the default."""
+        from storage.seeds import BootstrapSeed
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+        temp_dir.mkdir()
+        repo = InMemoryRepository(root=temp_dir)
+        svc = KanbanService(
+            repository=repo,
+            index_service=IndexService(repository=repo),
+            git_service=GitService(),
+        )
+        custom: list[BootstrapSeed] = [
+            {"title": "custom task", "slug": "custom-task", "column": "todo"},
+        ]
+
+        svc.init_kanban(Path("."), seeds=custom)
+
+        titles = {t.title for t in repo.get_tasks(board="main")}
+        self.assertIn("custom task", titles)
+        self.assertNotIn("list your boards and tasks", titles)
+
     def test_init_raises_when_main_board_already_exists(self):
         """Init raises if sentinel board state already indicates bootstrapped repo."""
         temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"

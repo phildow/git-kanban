@@ -57,50 +57,32 @@ class InMemoryRepository(KanbanRepository):
         if self.board_exists(default_board):
            raise ValueError("Kanban is already initialized")
 
-    def bootstrap(self) -> list[Task]:
-        """
-        Bootstrap the repository with a default board and columns if it is not already initialized.
-        Returns the new KanbanRoot info if initialization was performed, or None if the repository was already initialized.
-
-        Seed sample tasks across all columns for local development.
-
-        Returns created tasks in creation order. Raises `BoardNotFound` when
-        the requested board does not exist.
-        
-        When bootstrapping the default `main` board, also creates and seeds an
-        `infra` board with the standard column set and distinct task names.
-        """
+    def bootstrap(self) -> None:
+        """Create the default board and column structure. Also seeds rich dev data for local use."""
         tasks_per_column = 3
 
         first_board = "main"
         second_board = "infra"
-        created: list[Task] = []
 
         if not self.board_exists(first_board):
             self.create_board(first_board)
             self._bootstrap_columns(first_board)
 
-        created.extend(
-            self._bootstrap_tasks(
-                board=first_board,
-                tasks_per_column=tasks_per_column,
-                title_template="{column} Task {i}",
-            )
+        self._bootstrap_tasks(
+            board=first_board,
+            tasks_per_column=tasks_per_column,
+            title_template="{column} Task {i}",
         )
 
         if not self.board_exists(second_board):
             self.create_board(second_board)
             self._bootstrap_columns(second_board)
 
-        created.extend(
-            self._bootstrap_tasks(
-                board=second_board,
-                tasks_per_column=tasks_per_column,
-                title_template="Infra {column} Work Item {i}",
-            )
+        self._bootstrap_tasks(
+            board=second_board,
+            tasks_per_column=tasks_per_column,
+            title_template="Infra {column} Work Item {i}",
         )
-
-        return created
 
     @property
     def is_initialized(self) -> bool:

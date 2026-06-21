@@ -11,7 +11,6 @@ from uuid import UUID, uuid4
 
 from models import Task, TaskFilter, Board, Column
 from storage.kanban import KanbanRepository, BoardNotFound, BoardAlreadyExists, ColumnAlreadyExists, ColumnNotFound, TaskNotFound
-from storage.seeds import BOOTSTRAP_SEEDS
 
 
 class FilesystemRepository(KanbanRepository):
@@ -81,43 +80,11 @@ class FilesystemRepository(KanbanRepository):
         boards_dir.mkdir()
         (boards_dir / ".metadata").touch()
 
-    # TODO: use existing methods to create tasks instead of writing files directly
-    #       to ensure consistency and proper indexing
-    def bootstrap(self) -> list[Task]:
+    def bootstrap(self) -> None:
+        """Create the default board and column structure. Task seeding is handled by the service."""
         self.create_board("main")
         for col in ("todo", "in-progress", "in-review", "done"):
             self.create_column("main", col)
-
-        now = datetime.now(timezone.utc)
-        created: list[Task] = []
-        for seed in BOOTSTRAP_SEEDS:
-            task_id = uuid4()
-            title = seed["title"]
-            slug = seed["slug"]
-            column = seed["column"]
-            path = self.boards_dir / "main" / column / f"{slug}.md"
-
-            fm_lines = [
-                "---",
-                f"id: {task_id}",
-                f"title: {title}",
-                f"slug: {slug}",
-                f"created_at: {now.isoformat()}",
-                f"updated_at: {now.isoformat()}",
-            ]
-            if priority := seed.get("priority"):
-                fm_lines.append(f"priority: {priority}")
-            if assignee := seed.get("assignee"):
-                fm_lines.append(f"assignee: {assignee}")
-            fm_lines.append("---")
-
-            content = "\n".join(fm_lines) + "\n"
-            if body := seed.get("body", ""):
-                content += f"\n{body}\n"
-
-            path.write_text(content, encoding="utf-8")
-            created.append(self._parse_task_file(path, "main", column))
-        return created
 
     @property
     def is_initialized(self) -> bool:
@@ -325,7 +292,36 @@ class FilesystemRepository(KanbanRepository):
         raise NotImplementedError()
 
     def create_task(self, task: Task, filename: str) -> Task:
-        raise NotImplementedError()
+        if not self.board_exists(task.board):
+            raise BoardNotFound(task.board)
+        if not self.column_exists(task.board, task.column):
+            raise ColumnNotFound(task.column)
+        path = self.boards_dir / task.board / task.column / f"{filename}.md"
+        now = datetime.now(timezone.utc)
+        fm_lines = [
+            "---",
+            f"id: {task.id}",
+            f"title: {task.title}",
+            f"slug: {task.slug}",
+            f"created_at: {(task.created_at or now).isoformat()}",
+            f"updated_at: {(task.updated_at or now).isoformat()}",
+        ]
+        if task.priority:
+            fm_lines.append(f"priority: {task.priority}")
+        if task.assignee:
+            fm_lines.append(f"assignee: {task.assignee}")
+        if task.tags:
+            fm_lines.append(f"tags: [{', '.join(task.tags)}]")
+        if task.due_date:
+            fm_lines.append(f"due_date: {task.due_date.isoformat()}")
+        if task.created_by:
+            fm_lines.append(f"created_by: {task.created_by}")
+        fm_lines.append("---")
+        content = "\n".join(fm_lines) + "\n"
+        if task.body:
+            content += f"\n{task.body}\n"
+        path.write_text(content, encoding="utf-8")
+        return self._parse_task_file(path, task.board, task.column)
 
     def update_task(self, task: Task) -> Task:
         raise NotImplementedError()

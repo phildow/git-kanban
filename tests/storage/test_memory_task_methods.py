@@ -138,8 +138,7 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
         temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
         temp_dir.mkdir()
         repo = InMemoryRepository(root=temp_dir)
-        seeded = repo.bootstrap()
-        self.assertEqual(len(seeded), 24)
+        repo.bootstrap()
 
         boards = repo.get_boards()
         self.assertEqual(len(boards), 2)
@@ -153,7 +152,7 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
         doing = repo.get_tasks(board="infra", column="todo")
         self.assertEqual(len(todo), 3)
         self.assertEqual(len(doing), 3)
-        self.assertTrue(all(task.slug for task in seeded))
+        self.assertTrue(all(task.slug for task in main + infra))
 
 
 if __name__ == "__main__":

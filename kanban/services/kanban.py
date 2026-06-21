@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 import re
 import shlex
@@ -10,6 +10,7 @@ from uuid import UUID, uuid4
 
 from models import Task, TaskFilter, Board, Column, UserContext
 from storage.kanban import KanbanRepository, ColumnNotFound, BoardNotFound
+from storage.seeds import BOOTSTRAP_SEEDS, BootstrapSeed
 from services.git import GitService
 from services.index import IndexService
 from utils.str import kebab_case
@@ -137,7 +138,7 @@ class KanbanService:
         # Move path.exists() check to repository
         return self.repository.is_initialized
 
-    def init_kanban(self, path: Path = Path(".")) -> bool:
+    def init_kanban(self, path: Path = Path("."), seeds: list[BootstrapSeed] = BOOTSTRAP_SEEDS) -> bool:
         """
         Create the .kanban/ and .kanban-store/ directory skeleton, initialize git, and write the
         first commit.  Raises AlreadyInitialized if .kanban/ or .kanban-store/ already exists at
@@ -147,7 +148,24 @@ class KanbanService:
         """
         self.repository.init_storage(default_board="main")
         self.repository.bootstrap()
+
+        now = datetime.now(timezone.utc)
         
+        for seed in seeds:
+            task = Task(
+                id=uuid4(),
+                title=seed["title"],
+                slug=seed["slug"],
+                board="main",
+                column=seed["column"],
+                priority=seed.get("priority"),
+                assignee=seed.get("assignee"),
+                body=seed.get("body", ""),
+                created_at=now,
+                updated_at=now,
+            )
+            self.repository.create_task(task, task.slug)
+
         self.update_user_context(board="main", column="todo")
 
         return True

@@ -138,11 +138,8 @@ class KanbanRepository(ABC):
         """
 
     @abstractmethod
-    def bootstrap(self) -> list[Task]:
-        """
-        Helper to seed a default set of boards, columns, and tasks.
-        Returns the list of created tasks for verification in tests.
-        """
+    def bootstrap(self) -> None:
+        """Create the default board and column structure for a new repository."""
 
     @property
     @abstractmethod
