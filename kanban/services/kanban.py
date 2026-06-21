@@ -760,14 +760,14 @@ class KanbanService:
 
     def get_userdata(self, keypath: str) -> str | None:
         """
-        Read a userdata value from .kanban/.userdata.  Raises UserdataKeyNotSet
+        Read a userdata value from .kanban/userdata.  Raises UserdataKeyNotSet
         if the key does not exist.
         """
         return self.repository.get_userdata(keypath)
 
     def set_userdata(self, keypath: str, value: str) -> None:
         """
-        Persist arbitrary user data to .kanban/.userdata under the given key.
+        Persist arbitrary user data to .kanban/userdata under the given key.
         This is separate from config in that it's not intended for structured
         application settings, but rather for users to store custom data like
         API keys or snippets.  No git commit — userdata is local working state.

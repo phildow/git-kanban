@@ -27,6 +27,8 @@ class FilesystemRepository(KanbanRepository):
     # Filepaths
     # ------------------------------------------------------------------
 
+    # TODO: make some of these properties private
+
     @property
     def kanban_dir(self) -> Path | None:
         return self.root / ".kanban"
@@ -45,7 +47,7 @@ class FilesystemRepository(KanbanRepository):
 
     @property
     def userdata_file(self) -> Path:
-        return self.kanban_store_dir / ".userdata"
+        return self.kanban_dir / "userdata"
 
     @property
     def index_file(self) -> Path:
@@ -67,7 +69,7 @@ class FilesystemRepository(KanbanRepository):
 
         kanban_store_dir = self.kanban_store_dir
         kanban_store_dir.mkdir()
-        (kanban_store_dir / ".userdata").touch()
+        self.userdata_file.touch()
 
         self.set_userdata("user-context.board", default_board)
         self.set_userdata("user-context.column", default_column)

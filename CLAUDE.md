@@ -108,17 +108,38 @@ The index does cache data from the filesystem for search. It is updated by the `
 For filesystem storage the directory layout has the following structure in the root project directory:
 
 ```
+project-root
+├── .kanban
+│   ├── config
+│   ├── history
+│   └── index.db
+│   └── userdata
+└── .kanban-store
+    └── boards
+        ├── .metadata
+        └── main
+            ├── .metadata
+            ├── done
+            ├── in-progress
+            │   └── go-for-a-bike-ride.md
+            ├── in-review
+            └── todo
+                └── create-your-first-todo.md
+```
+
+```
 root-directory/
   .kanban/
     config
     index.db
+    userdata
   .kanban-store/
-    .userdata
     boards/
       .metadata
       my-project/
         .metadata
         todo/
+          .metadata
           complete-this-task.md
           also-thistask.md
         in-progress/
@@ -161,22 +182,26 @@ git -C .kanban-store pull
 
 #### The Store
 
-The kanban store includes a hidden `.userdata` INI file. It contains preferences specific to the user and is added to the git ignore. (TODO) For example the user's most recently active /board/column is saved here and reloaded when the user starts the repl. For example:
+The kanban store includes a `userdata` INI file. It contains preferences specific to the user and is added to the git ignore. (TODO) For example the user's most recently active /board/column is saved here and reloaded when the user starts the repl. For example:
 
 ```
 [user-context]
-board = main
+  board = main
 ```
 
 #### Boards
 
 Boards metadata is stored in a hidden `.metadata` INI file in the boards directory. It contains settings that apply to the board, for example the column order. (TODO)
 
-#### Columns
+#### Board
+
+Board (singular) metadata is stored ...
+
+#### Column
 
 Columns metadata is stored in a hidden `.metadata` INI file in each column's directory. It contains settings that apply to the column, for example the task order. (TODO)
 
-#### Tasks
+#### Task
 
 Taks metadata is stored in the task's markdown file as frontmatter with the following fields and format:
 

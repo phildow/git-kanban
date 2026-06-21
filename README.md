@@ -51,6 +51,17 @@ kanban (main)>
 
 ### TODO
 
+POTENTIAL INCONSISTENCY
+- Where metadata is required, eg sort order, files may be missing or renamed directly, change not reflected in metadata file
+- Can you write metadata to a file and track it in git (no)
+- The file system is the source of truth, although metadata or the index may be out of sync. 
+- Corrections defer to the filesystem, eg sort: 
+-   If the filename appears in the metadata but not the folder, remove it from the metadata
+-   If the filename appears in the folder but not the metadata, add it to the back
+- Two kinds of syncing:
+-   Filesystem -> cache | metadata
+-   Filesystme <-> git
+
 - FEAT: implement default sort order for tasks
 
 - FEAT: implement user sort order for columns

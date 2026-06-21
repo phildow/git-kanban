@@ -118,7 +118,7 @@ class KanbanRepository(ABC):
     @abstractmethod
     def userdata_file(self) -> Path | None:
         """
-        Return the path to the .userdata file if applicable for this repository type, else None.
+        Return the path to the userdata file if applicable for this repository type, else None.
         """
         return None
 
@@ -438,7 +438,7 @@ class KanbanRepository(ABC):
         """
         Return the value for the given userdata key, or None if not set.
 
-        Userdata is stored in `.userdata` and is intended for arbitrary
+        Userdata is stored in `userdata` and is intended for arbitrary
         key-value pairs that are not part of the core kanban data model but
         may be useful for extensions or integrations.
         """
@@ -449,7 +449,7 @@ class KanbanRepository(ABC):
         """
         Set a userdata key to the given value.
 
-        Userdata is stored in `.userdata` and is intended for arbitrary
+        Userdata is stored in `userdata` and is intended for arbitrary
         key-value pairs that are not part of the core kanban data model but
         may be useful for extensions or integrations.
         """
