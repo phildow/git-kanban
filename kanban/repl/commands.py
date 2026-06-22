@@ -6,8 +6,7 @@ import argparse
 
 from models import Board, Column, Task
 from services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
-from services.repl import handle_list as repl_handle_list
-from services.repl import handle_delete as repl_handle_delete
+from services.repl import handle_list as handle_list_helper, handle_delete as handle_delete_helper, handle_move as handle_move_helper
 
 # ---------------------------------------------------------------------------
 # Working context commands (use, board, column)
@@ -40,13 +39,12 @@ def handle_column_change(args: argparse.Namespace, svc: KanbanService, renderer:
 	result = svc.set_column(column=args.column)
 	renderer.render_change_column(args, result)
 
-
 # ---------------------------------------------------------------------------
 # Common commands (list, delete)
 # ---------------------------------------------------------------------------
 
 def handle_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	typ, results = repl_handle_list(args, svc)
+	typ, results = handle_list_helper(args, svc)
 	
 	if typ is Board:
 		renderer.render_board_list(args, results)
@@ -59,7 +57,7 @@ def handle_list(args: argparse.Namespace, svc: KanbanService, renderer: object) 
 
 
 def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	typ = repl_handle_delete(args, svc)
+	typ = handle_delete_helper(args, svc)
 
 	if typ is None:
 		# user declined deletion
@@ -73,9 +71,21 @@ def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: object
 	else:
 		raise ValueError("Unexpected result type from handle_delete: {}".format(typ))
 
-def handle_move(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	move_type = repl_handle_move_task(args, svc)
 
+def handle_move(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	typ, result = handle_move_helper(args, svc)
+	
+	if typ is None:
+		# user declined move
+		return
+	elif typ is Board:
+		renderer.render_board_move(args, result)
+	elif typ is Column:
+		renderer.render_column_move(args, result)
+	elif typ is Task:
+		renderer.render_task_move(args, result)
+	else:
+		raise ValueError("Unexpected result type from handle_move: {}".format(typ))
 
 # ---------------------------------------------------------------------------
 # Board subcommands
@@ -152,7 +162,6 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: o
 def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	result = svc.move_task(args.path, args.dest)
 	renderer.render_task_move(args, result)
-
 
 # ---------------------------------------------------------------------------
 # Additional commands (search, log, status, config)

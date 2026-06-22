@@ -366,8 +366,6 @@ class Renderer:
 		
 		self._emit(args, "\n".join(items))
 
-
-	@_requires_verbose
 	def render_task_create(self, args: argparse.Namespace, result: Task) -> None:
 		"""
 		Render a message indicating that a task was created, 
@@ -406,11 +404,13 @@ class Renderer:
 	def render_task_edit(self, args: argparse.Namespace, result: Task) -> None:
 		self._emit(args, result)
 
-	@_requires_verbose
-	def render_task_move(self, args: argparse.Namespace, result: Task) -> None:
-		self._emit(args, result)
-
-	# @_requires_verbose
+	def render_task_move(self, args: argparse.Namespace, task: Task) -> None:
+		if task.board and task.column:
+			msg = f"Task moved to: {task.board}/{task.column}/{task.slug}"
+		else:
+			msg = f"Task moved: {task.slug}"
+		self._emit(args, msg)
+	
 	def render_task_delete(self, args: argparse.Namespace) -> None:
 		path = getattr(args, "path", None)
 		if path:

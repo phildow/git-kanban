@@ -29,7 +29,7 @@ def _build_task_filter(args: argparse.Namespace) -> TaskFilter:
     )
 
 
-def handle_list(args: argparse.Namespace, svc: KanbanService) -> tuple[list[Board | Column | Task], type]:
+def handle_list(args: argparse.Namespace, svc: KanbanService) -> tuple[type, list[Board | Column | Task]]:
     """
     List the contents at the path applying filters and sort.  This is
     the main entry point for all list/ls commands in the REPL, which pass a
@@ -91,7 +91,7 @@ def handle_delete(args: argparse.Namespace, svc: KanbanService) -> type:
     return None
     
 
-def repl_handle_move_task(args: argparse.Namespace, svc: KanbanService) -> None:
+def handle_move(args: argparse.Namespace, svc: KanbanService) -> tuple[type, Task | Column | Board]:
     """
     Move the entity at the given path to a new location.  This is the main
     entry point for all move commands in the REPL, which pass a user-provided
@@ -107,9 +107,12 @@ def repl_handle_move_task(args: argparse.Namespace, svc: KanbanService) -> None:
 
     if board and column and task:
         svc.move_task(path=f"/{board}/{column}/{task}", dest_board=dest_board, dest_column=dest_column)
+        return Task, svc.get_task(path=f"/{board}/{column}/{task}")
     elif board and column and not task:
         svc.move_column(path=f"/{board}/{column}", dest_board=dest_board)
+        return Column, svc.get_column(path=f"/{board}/{column}")
     elif board and not column and not task:
-        svc.move_task(path=f"{task}", dest_board=dest_board)
+        svc.move_task(path=f"/{board}/{task}", dest_board=dest_board)
+        return Task, svc.get_task(path=f"/{board}/{task}")
     elif not board and not column and not task:
         raise ValueError("Cannot move without a board name: {}".format(path))

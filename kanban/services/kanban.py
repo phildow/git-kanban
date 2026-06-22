@@ -686,8 +686,12 @@ class KanbanService:
         ColumnNotFound as appropriate.  Updates the index and commits.
         """
         board, column, title = self.path_components(path)
-        _ = board, column, title, dest
-        raise NotImplementedError()
+        dest_board, dest_column, dest_title = self.path_components(dest)
+        task = self.get_task(path)
+        
+        result = self.repository.move_task(task, dest_board, dest_column)
+        self.index_service.update(result)
+        return result
 
     def delete_task(
         self,
