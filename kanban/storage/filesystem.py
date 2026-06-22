@@ -389,45 +389,65 @@ class FilesystemRepository(KanbanRepository):
     def update_task(self, task: Task) -> Task:
         raise NotImplementedError()
 
-    def move_task(self, task: Task, dest_board: str, dest_column: str) -> Task:
-        filename = f"{task.slug}.md"
-        src_path = self.boards_dir / task.board / task.column / filename
-        dest_path = self.boards_dir / dest_board / dest_column / filename
+    # TODO: clean this up!
+    def move_task(self, task: Task, dest: Path) -> Task:
+        dest_board = dest.parts[0]
+        dest_column = dest.parts[1]
+        dest_slug = dest.parts[2] if len(dest.parts) > 2 else task.slug
 
-        if not src_path.is_file():
+        src_filename = f"{task.slug}.md"
+        dest_filename = f"{dest_slug}.md"
+        src_file = self.boards_dir / task.board / task.column / src_filename
+        dest_file = self.boards_dir / dest_board / dest_column / dest_filename
+        same_location = task.board == dest_board and task.column == dest_column and dest_slug == task.slug
+        rename_in_place = task.board == dest_board and task.column == dest_column and dest_slug != task.slug
+
+        if not src_file.is_file():
             raise TaskNotFound(f"{task.board}/{task.column}/{task.slug}")
         if not self.board_exists(dest_board):
             raise BoardNotFound(dest_board)
         if not self.column_exists(dest_board, dest_column):
             raise ColumnNotFound(dest_board, dest_column)
-        if dest_path.exists() and dest_path != src_path:
-            raise TaskAlreadyExists(dest_board, dest_column, task.slug)
+        if not same_location and dest_file.exists():
+            raise TaskAlreadyExists(dest_board, dest_column, dest_slug)
 
         now = datetime.now(timezone.utc)
-        lines = src_path.read_text(encoding="utf-8").splitlines(keepends=True)
+        lines = src_file.read_text(encoding="utf-8").splitlines(keepends=True)
 
         for i, line in enumerate(lines):
             if line.startswith("updated_at:"):
                 lines[i] = f"updated_at: {now.isoformat()}\n"
-                break
-        
-        dest_path.write_text("".join(lines), encoding="utf-8")
-        if src_path != dest_path:
-            src_path.unlink()
+            elif line.startswith("slug:") and dest_slug != task.slug:
+                lines[i] = f"slug: {dest_slug}\n"
 
-        src_order = self._get_task_order(task.board, task.column)
-        if filename in src_order:
-            src_order.remove(filename)
-        
-        self._set_task_order(task.board, task.column, src_order)
+        # TODO Unify this logic
 
-        dest_order = self._get_task_order(dest_board, dest_column)
-        if filename not in dest_order:
-            dest_order.append(filename)
-        
-        self._set_task_order(dest_board, dest_column, dest_order)
+        if same_location:
+            src_file.write_text("".join(lines), encoding="utf-8")
+        elif rename_in_place:
+            dest_file.write_text("".join(lines), encoding="utf-8")
+            src_file.unlink()
+            order = self._get_task_order(task.board, task.column)
+            if src_filename in order:
+                order[order.index(src_filename)] = dest_filename
+            else:
+                order.append(dest_filename)
+            self._set_task_order(task.board, task.column, order)
+        else:
+            dest_file.write_text("".join(lines), encoding="utf-8")
+            src_file.unlink()
 
-        return self._parse_task_file(dest_path, dest_board, dest_column)
+            src_order = self._get_task_order(task.board, task.column)
+            if src_filename in src_order:
+                src_order.remove(src_filename)
+            self._set_task_order(task.board, task.column, src_order)
+
+            dest_order = self._get_task_order(dest_board, dest_column)
+            if dest_filename not in dest_order:
+                dest_order.append(dest_filename)
+            self._set_task_order(dest_board, dest_column, dest_order)
+
+        return self._parse_task_file(dest_file, dest_board, dest_column)
 
     def delete_task(self, task: Task) -> None:
         filename = f"{task.slug}.md"

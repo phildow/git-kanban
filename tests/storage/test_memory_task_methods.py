@@ -105,16 +105,16 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
         self.repo.create_task(self._task("Move me", board="beta", column="todo"), self._filename("Move me"))
 
         with self.assertRaises(TaskAlreadyExists):
-            self.repo.move_task(moved, "beta", "todo")
+            self.repo.move_task(moved, Path("beta") / "todo")
 
-        result = self.repo.move_task(moved, "alpha", "doing")
+        result = self.repo.move_task(moved, Path("alpha") / "doing")
         self.assertEqual(result.board, "alpha")
         self.assertEqual(result.column, "doing")
 
         with self.assertRaises(BoardNotFound):
-            self.repo.move_task(moved, "missing", "todo")
+            self.repo.move_task(moved, Path("missing") / "todo")
         with self.assertRaises(ColumnNotFound):
-            self.repo.move_task(moved, "alpha", "missing")
+            self.repo.move_task(moved, Path("alpha") / "missing")
 
         self.repo.delete_task(moved)
         

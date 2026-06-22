@@ -227,7 +227,7 @@ class KanbanService:
     def path_components(self, path: str | None = None) -> tuple[str | None, str | None, str | None]:
         """Resolve a [BOARD/][COLUMN/]TITLE path into its components."""
         path = self.resolve_path(path)
-        parts = path.parts # ["/", board|None, column|None, title-or-id|None]
+        parts = path.parts # ["/", board|None, column|None, title|None]
         return parts[1] if len(parts) > 1 else None, \
                parts[2] if len(parts) > 2 else None, \
                parts[3] if len(parts) > 3 else None
@@ -675,8 +675,8 @@ class KanbanService:
 
     def move_task(
         self,
-        path:        str,
-        dest:        str,
+        path:   str,
+        dest:   str,
     ) -> Task:
         """
         Move a task's .md file to a new board/column location.  dest may be
@@ -685,11 +685,15 @@ class KanbanService:
         Raises TaskNotFound, AmbiguousTaskReference, BoardNotFound, or
         ColumnNotFound as appropriate.  Updates the index and commits.
         """
-        board, column, title = self.path_components(path)
         dest_board, dest_column, dest_title = self.path_components(dest)
         task = self.get_task(path)
-        
-        result = self.repository.move_task(task, dest_board, dest_column)
+
+        #TODO: dest_title should never be none in this case?
+
+        repo_dest = Path(dest_board) / dest_column
+        if dest_title:
+            repo_dest = repo_dest / dest_title
+        result = self.repository.move_task(task, repo_dest)
         self.index_service.update(result)
         return result
 

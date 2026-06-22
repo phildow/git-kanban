@@ -331,29 +331,42 @@ class InMemoryRepository(KanbanRepository):
         task.slug = self._task_filenames[task.id]
         return task
 
-    def move_task(self, task: Task, dest_board: str, dest_column: str) -> Task:
-        task = self._tasks_by_id.get(task.id)
-        if task is None:
+    def move_task(self, task: Task, dest: Path) -> Task:
+        dest_board = dest.parts[0]
+        dest_column = dest.parts[1]
+        dest_slug = dest.parts[2] if len(dest.parts) > 2 else None
+
+        stored = self._tasks_by_id.get(task.id)
+        if stored is None:
             raise TaskNotFound(str(task.id))
 
         self.get_board(dest_board)
         self.get_column(dest_board, dest_column)
 
-        for other_id, other_task in self._tasks_by_id.items():
-            if other_id == task.id:
-                continue
-            other_board, other_column = self._task_locations.get(other_id, (other_task.board, other_task.column))
-            other_filename = self._task_filenames.get(other_id, "")
-            task_filename = self._task_filenames.get(task.id, kebab_case(task.title))
-            if other_board == dest_board and other_column == dest_column and other_filename == task_filename:
-                raise TaskAlreadyExists(dest_board, dest_column, task_filename)
+        current_slug = self._task_filenames.get(task.id, kebab_case(task.title))
+        effective_dest_slug = dest_slug if dest_slug is not None else current_slug
+        same_location = (stored.board == dest_board and stored.column == dest_column
+                         and effective_dest_slug == current_slug)
 
-        task.board = dest_board
-        task.column = dest_column
-        task.updated_at = datetime.now(UTC)
-        self._task_locations[task.id] = (dest_board, dest_column)
-        task.slug = self._task_filenames.get(task.id, task.slug)
-        return task
+        if not same_location:
+            for other_id, other_task in self._tasks_by_id.items():
+                if other_id == task.id:
+                    continue
+                other_board, other_column = self._task_locations.get(other_id, (other_task.board, other_task.column))
+                other_filename = self._task_filenames.get(other_id, "")
+                if other_board == dest_board and other_column == dest_column and other_filename == effective_dest_slug:
+                    raise TaskAlreadyExists(dest_board, dest_column, effective_dest_slug)
+
+            stored.board = dest_board
+            stored.column = dest_column
+            self._task_locations[task.id] = (dest_board, dest_column)
+
+        if dest_slug is not None:
+            self._task_filenames[task.id] = dest_slug
+            stored.slug = dest_slug
+
+        stored.updated_at = datetime.now(UTC)
+        return stored
 
     def delete_task(self, task: Task) -> None:
         task_id = task.id

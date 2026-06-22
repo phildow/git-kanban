@@ -72,6 +72,7 @@ def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: object
 		raise ValueError("Unexpected result type from handle_delete: {}".format(typ))
 
 
+	# TODO: Currenty unused
 def handle_move(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	typ, result = handle_move_helper(args, svc)
 	
