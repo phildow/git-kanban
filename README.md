@@ -55,9 +55,18 @@ kanban (main)>
 
 REMAINING FILESYSTEM
 
+- CHORE: make sure index methods are called for all services that change a task
+
 - CHORE: basic refactoring to use exists methods in the filesystem, i'm sure there's more
-- CHORE: rename all those render methods to use parameters that reflect their types
+- CHORE: add utilty to filter for invisible files, which is used extensively in the filesystem repo
+- CHORE: Use slugs in memory repository for private indexing (add tests)
 - FEAT: move can rename a task in the current location as well as move
+- FEAT: improve repl rendering - always give feedback
+
+- FEAT: Correctly resolve `..` all commands that take paths not just cd
+- FEAT: Correctly tab complete `..` for all commands that take paths
+- FEAT: Use the same logic for other commands that take paths, and use resolve into components
+  taking into account relative paths and the user context
 
 - TEST: Create task with spaces - kebab_case
 - TEST: Create column with spaces - kebab_case
@@ -81,25 +90,17 @@ POTENTIAL INCONSISTENCY
 - FEAT: implement user sort order for tasks
 
 - FEAT: bump command to move a board or task to the front
-- FEAT: improve repl rendering - always give feedback
-
 - TEST: make sure repl gives recoverable error messages
 
 - FEAT: tab completion for assigness and tags
-- FEAT: Correctly resolve `..` all commands that take paths not just cd
-- FEAT: Correctly tab complete `..` for all commands that take paths
-- FEAT: Use the same logic for other commands that take paths, and use resolve into components
-  taking into account relative paths and the user context
 - FEAT: ooo the shell will make as few as two columns
 - FEAT: Add comments to a task which are just appended to the body
 
 - BUG: if a board is already in the current context, `create board x` doesn't work
 - BUG: `kanban (/) > ls main -al` returns no result and prompts `kanban (/) >`
 
-- CHORE: move search_tasks to the index service
-- CHORE: add utilty to filter for invisible files, which is used extensively in the filesystem repo
-- CHORE: Use slugs in memory repository for private indexing (add tests)
 - CHORE: Models return a path?
+- CHORE: rename all those render methods to use parameters that reflect their types
 
 FILENAME VS TITLE
 
