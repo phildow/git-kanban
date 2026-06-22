@@ -659,8 +659,8 @@ class KanbanService:
 
     def update_task(
         self,
-        path: str,
-        updates:     TaskUpdateParams,
+        path:     str,
+        updates:  TaskUpdateParams,
     ) -> Task:
         """
         Apply TaskUpdateParams to an existing task's frontmatter and body,
@@ -669,9 +669,26 @@ class KanbanService:
         TaskNotFound or AmbiguousTaskReference via path_components.
         Updates the index entry and commits.
         """
-        board, column, title = self.path_components(path)
-        _ = board, column, title, updates
-        raise NotImplementedError()
+        task = self.get_task(path)
+
+        # TODO: how do we handle removing a field?
+        # If the user wants to remove a due date, for example, they would have to pass in updates.due_date = None, but that is indistinguishable from "don't change the due date".
+        # We could use a sentinel value or a separate "remove" flag for each field, but that seems cumbersome.  For now, we will just treat None as "don't change".
+
+        if updates.title and updates.title != task.title:
+            task.title = updates.title
+            task.slug = kebab_case(updates.title)
+        if updates.assignee is not None:
+            task.assignee = updates.assignee
+        if updates.priority is not None:
+            task.priority = updates.priority
+        if updates.tags is not None:
+            task.tags = updates.tags
+        if updates.due_date is not None:
+            task.due_date = updates.due_date
+
+        self.repository.update_task(task)
+        return task
 
     def move_task(
         self,

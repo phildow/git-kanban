@@ -55,8 +55,6 @@ kanban (main)>
 
 REMAINING FILESYSTEM
 
-- update_task
-
 - CHORE: basic refactoring to use exists methods in the filesystem, i'm sure there's more
 - CHORE: rename all those render methods to use parameters that reflect their types
 - FEAT: move can rename a task in the current location as well as move

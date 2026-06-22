@@ -11,6 +11,7 @@ from uuid import UUID, uuid4
 
 from models import Task, TaskFilter, Board, Column
 from storage.kanban import KanbanRepository, BoardNotFound, BoardAlreadyExists, ColumnAlreadyExists, ColumnNotFound, TaskNotFound, TaskAlreadyExists
+from utils.str import kebab_case
 
 
 class FilesystemRepository(KanbanRepository):
@@ -387,7 +388,56 @@ class FilesystemRepository(KanbanRepository):
         return self._parse_task_file(path, task.board, task.column)
 
     def update_task(self, task: Task) -> Task:
-        raise NotImplementedError()
+        current_filename = f"{task.slug}.md"
+        current_path = self.boards_dir / task.board / task.column / current_filename
+
+        if not current_path.is_file():
+            raise TaskNotFound(f"{task.board}/{task.column}/{task.slug}")
+
+        new_slug = kebab_case(task.title)
+        new_filename = f"{new_slug}.md"
+        new_path = self.boards_dir / task.board / task.column / new_filename
+        renamed = new_slug != task.slug
+
+        if renamed and new_path.exists():
+            raise TaskAlreadyExists(task.board, task.column, new_slug)
+
+        now = datetime.now(timezone.utc)
+        fm_lines = [
+            "---",
+            f"id: {task.id}",
+            f"title: {task.title}",
+            f"slug: {new_slug}",
+            f"created_at: {task.created_at.isoformat() if task.created_at else now.isoformat()}",
+            f"updated_at: {now.isoformat()}",
+        ]
+        if task.priority:
+            fm_lines.append(f"priority: {task.priority}")
+        if task.assignee:
+            fm_lines.append(f"assignee: {task.assignee}")
+        if task.tags:
+            fm_lines.append(f"tags: [{', '.join(task.tags)}]")
+        if task.due_date:
+            fm_lines.append(f"due_date: {task.due_date.isoformat()}")
+        if task.created_by:
+            fm_lines.append(f"created_by: {task.created_by}")
+        fm_lines.append("---")
+        content = "\n".join(fm_lines) + "\n"
+        if task.body:
+            content += f"\n{task.body}\n"
+
+        new_path.write_text(content, encoding="utf-8")
+
+        if renamed:
+            current_path.unlink()
+            order = self._get_task_order(task.board, task.column)
+            if current_filename in order:
+                order[order.index(current_filename)] = new_filename
+            else:
+                order.append(new_filename)
+            self._set_task_order(task.board, task.column, order)
+
+        return self._parse_task_file(new_path, task.board, task.column)
 
     # TODO: clean this up!
     def move_task(self, task: Task, dest: Path) -> Task:
