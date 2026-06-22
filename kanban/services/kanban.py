@@ -699,7 +699,7 @@ class KanbanService:
         index entry and commits.
         """
         task = self.get_task(path)
-        self.repository.delete_task(task.id)
+        self.repository.delete_task(task)
         self.index_service.delete(task)
         return None
 

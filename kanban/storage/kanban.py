@@ -43,18 +43,21 @@ class RepositoryError(Exception):
 
 
 class BoardNotFound(RepositoryError):
+    """Raised when a board lookup fails."""
     def __init__(self, name: str):
         super().__init__(f"Board not found: {name!r}")
         self.name = name
 
 
 class BoardAlreadyExists(RepositoryError):
+    """Raised when a board creation fails due to a name collision."""
     def __init__(self, name: str):
         super().__init__(f"Board already exists: {name!r}")
         self.name = name
 
 
 class ColumnNotFound(RepositoryError):
+    """Raised when a column lookup fails."""
     def __init__(self, board: str, name: str):
         super().__init__(f"Column not found: {board!r}/{name!r}")
         self.board = board
@@ -62,6 +65,7 @@ class ColumnNotFound(RepositoryError):
 
 
 class ColumnAlreadyExists(RepositoryError):
+    """Raised when a column creation fails due to a name collision."""
     def __init__(self, board: str, name: str):
         super().__init__(f"Column already exists: {board!r}/{name!r}")
         self.board = board
@@ -69,12 +73,14 @@ class ColumnAlreadyExists(RepositoryError):
 
 
 class TaskNotFound(RepositoryError):
+    """Raised when a task lookup fails."""
     def __init__(self, identifier: str):
         super().__init__(f"Task not found: {identifier!r}")
         self.identifier = identifier
 
 
 class TaskAlreadyExists(RepositoryError):
+    """Raised when a task creation fails due to a name collision."""
     def __init__(self, board: str, column: str, title: str):
         super().__init__(f"Task already exists: {board!r}/{column!r}/{title!r}")
         self.board = board
@@ -350,7 +356,7 @@ class KanbanRepository(ABC):
     @abstractmethod
     def move_task(
         self,
-        task_id: UUID,
+        task: Task,
         dest_board: str,
         dest_column: str,
     ) -> Task:
@@ -361,7 +367,7 @@ class KanbanRepository(ABC):
         The task's UUID and all metadata are preserved. `updated_at` is
         refreshed.
 
-        Raises TaskNotFound if no task with `task_id` exists.
+        Raises TaskNotFound if the task does not exist.
         Raises BoardNotFound if `dest_board` does not exist.
         Raises ColumnNotFound if `dest_column` does not exist on `dest_board`.
         Raises TaskAlreadyExists if a task with the same title already exists
@@ -369,11 +375,11 @@ class KanbanRepository(ABC):
         """
 
     @abstractmethod
-    def delete_task(self, task_id: UUID) -> None:
+    def delete_task(self, task: Task) -> None:
         """
-        Delete a task by UUID.
+        Delete a taskD.
 
-        Raises TaskNotFound if no task with this UUID exists.
+        Raises TaskNotFound if the task does not exist.
         """
 
     # ------------------------------------------------------------------

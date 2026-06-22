@@ -331,31 +331,32 @@ class InMemoryRepository(KanbanRepository):
         task.slug = self._task_filenames[task.id]
         return task
 
-    def move_task(self, task_id: UUID, dest_board: str, dest_column: str) -> Task:
-        task = self._tasks_by_id.get(task_id)
+    def move_task(self, task: Task, dest_board: str, dest_column: str) -> Task:
+        task = self._tasks_by_id.get(task.id)
         if task is None:
-            raise TaskNotFound(str(task_id))
+            raise TaskNotFound(str(task.id))
 
         self.get_board(dest_board)
         self.get_column(dest_board, dest_column)
 
         for other_id, other_task in self._tasks_by_id.items():
-            if other_id == task_id:
+            if other_id == task.id:
                 continue
             other_board, other_column = self._task_locations.get(other_id, (other_task.board, other_task.column))
             other_filename = self._task_filenames.get(other_id, "")
-            task_filename = self._task_filenames.get(task_id, kebab_case(task.title))
+            task_filename = self._task_filenames.get(task.id, kebab_case(task.title))
             if other_board == dest_board and other_column == dest_column and other_filename == task_filename:
                 raise TaskAlreadyExists(dest_board, dest_column, task_filename)
 
         task.board = dest_board
         task.column = dest_column
         task.updated_at = datetime.now(UTC)
-        self._task_locations[task_id] = (dest_board, dest_column)
-        task.slug = self._task_filenames.get(task_id, task.slug)
+        self._task_locations[task.id] = (dest_board, dest_column)
+        task.slug = self._task_filenames.get(task.id, task.slug)
         return task
 
-    def delete_task(self, task_id: UUID) -> None:
+    def delete_task(self, task: Task) -> None:
+        task_id = task.id
         if task_id not in self._tasks_by_id:
             raise TaskNotFound(str(task_id))
 

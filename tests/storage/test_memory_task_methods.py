@@ -105,21 +105,21 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
         self.repo.create_task(self._task("Move me", board="beta", column="todo"), self._filename("Move me"))
 
         with self.assertRaises(TaskAlreadyExists):
-            self.repo.move_task(moved.id, "beta", "todo")
+            self.repo.move_task(moved, "beta", "todo")
 
-        result = self.repo.move_task(moved.id, "alpha", "doing")
+        result = self.repo.move_task(moved, "alpha", "doing")
         self.assertEqual(result.board, "alpha")
         self.assertEqual(result.column, "doing")
 
         with self.assertRaises(BoardNotFound):
-            self.repo.move_task(moved.id, "missing", "todo")
+            self.repo.move_task(moved, "missing", "todo")
         with self.assertRaises(ColumnNotFound):
-            self.repo.move_task(moved.id, "alpha", "missing")
+            self.repo.move_task(moved, "alpha", "missing")
 
-        self.repo.delete_task(moved.id)
+        self.repo.delete_task(moved)
         
         with self.assertRaises(TaskNotFound):
-            self.repo.delete_task(moved.id)
+            self.repo.delete_task(moved)
 
 
 if __name__ == "__main__":

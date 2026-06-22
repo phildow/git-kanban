@@ -319,6 +319,7 @@ class FilesystemRepository(KanbanRepository):
                     entry = col_dir / filename
                     if entry.is_file():
                         tasks.append(self._parse_task_file(entry, b, col))
+
         return tasks
 
     def get_task(self, board: str, column: str, filename: str) -> Task:
@@ -331,16 +332,20 @@ class FilesystemRepository(KanbanRepository):
         
         if not task_path.is_file():
             raise TaskNotFound(f"{board}/{column}/{filename}")
+            
         return self._parse_task_file(task_path, board, column)
 
     def task_exists(self, board: str, column: str, filename: str) -> bool:
-        raise NotImplementedError()
+        path = self.boards_dir / board / column / f"{filename}.md"
+        return path.is_file()
 
     def create_task(self, task: Task, filename: str) -> Task:
         if not self.board_exists(task.board):
             raise BoardNotFound(task.board)
         if not self.column_exists(task.board, task.column):
-            raise ColumnNotFound(task.column)
+            raise ColumnNotFound(task.board, task.column)
+        if self.task_exists(task.board, task.column, filename):
+            TaskAlreadyExists(task.board, task.column, filename)
         
         path = self.boards_dir / task.board / task.column / f"{filename}.md"
         now = datetime.now(timezone.utc)
@@ -382,11 +387,22 @@ class FilesystemRepository(KanbanRepository):
     def update_task(self, task: Task) -> Task:
         raise NotImplementedError()
 
-    def move_task(self, task_id: UUID, dest_board: str, dest_column: str) -> Task:
+    def move_task(self, task: Task, dest_board: str, dest_column: str) -> Task:
         raise NotImplementedError()
 
-    def delete_task(self, task_id: UUID) -> None:
-        raise NotImplementedError()
+    def delete_task(self, task: Task) -> None:
+        filename = f"{task.slug}.md"
+        path = self.boards_dir / task.board / task.column / filename
+        order = self._get_task_order(task.board, task.column)
+        
+        if filename in order:
+            order.remove(filename)
+        self._set_task_order(task.board, task.column, order)
+        
+        if not path.is_file():
+            raise TaskNotFound(f"{task.board}/{task.column}/{task.slug}")
+        else:
+            path.unlink()
 
     # ------------------------------------------------------------------
     # Config, user data, and metadata
@@ -430,7 +446,7 @@ class FilesystemRepository(KanbanRepository):
         self.config_file.write_text(self._write_ini(cfg), encoding="utf-8")
 
     # User data
-    
+
     def get_userdata(self, keypath: str) -> str | None:
         """Read a value from the userdata INI file using a 'section.key' keypath."""
         if "." not in keypath:

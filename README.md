@@ -67,6 +67,7 @@ REMAINING FILESYSTEM
 - TEST: Check init error handling, don't overwrite a repo, don't initialize a repo that's already been created
 
 - Ensure memory store supports same features as filesystem (ordering)
+- Ensure CLI continues to support core behaviors
 
 POTENTIAL INCONSISTENCY
 - Where metadata is required, eg sort order, files may be missing or renamed directly, change not reflected in metadata file
