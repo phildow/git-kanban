@@ -138,7 +138,7 @@ class KanbanService:
         # Move path.exists() check to repository
         return self.repository.is_initialized
 
-    def init_kanban(self, path: Path = Path("."), config: BootstrapConfig = BOOTSTRAP_CONFIG) -> bool:
+    def initialize_kanban(self, path: Path = Path("."), config: BootstrapConfig = BOOTSTRAP_CONFIG) -> bool:
         """
         Create the .kanban/ and .kanban-store/ directory skeleton, initialize git, and write the
         first commit.  Raises AlreadyInitialized if .kanban/ or .kanban-store/ already exists at
@@ -225,7 +225,7 @@ class KanbanService:
             return Path(self.working_path) / (path or "")
         
     def path_components(self, path: str | None = None) -> tuple[str | None, str | None, str | None]:
-        """Resolve a [BOARD/][COLUMN/]TITLE_OR_ID path into its components."""
+        """Resolve a [BOARD/][COLUMN/]TITLE path into its components."""
         path = self.resolve_path(path)
         parts = path.parts # ["/", board|None, column|None, title-or-id|None]
         return parts[1] if len(parts) > 1 else None, \
@@ -236,10 +236,10 @@ class KanbanService:
     def completions_for_path(self, text: str) -> list[str]:
         """Return a list of valid path completions for the given partial text."""
         
-        board, column, title_or_id = self.path_components(text)
+        board, column, title = self.path_components(text)
 
-        if board and column and title_or_id:
-            completions = [f"{t.slug}" for t in self.repository.get_tasks(board=board, column=column) if t.title.startswith(title_or_id)]
+        if board and column and title:
+            completions = [f"{t.slug}" for t in self.repository.get_tasks(board=board, column=column) if t.title.startswith(title)]
         elif board and column:
             # check if column is complete or partial. if partial, only return columns that match the partial
             # otherwise return all tasks in the column
@@ -669,9 +669,9 @@ class KanbanService:
         TaskNotFound or AmbiguousTaskReference via path_components.
         Updates the index entry and commits.
         """
-        board, column, title_or_id = self.path_components(path)
-        _ = board, column, title_or_id, updates
-        ...
+        board, column, title = self.path_components(path)
+        _ = board, column, title, updates
+        raise NotImplementedError()
 
     def move_task(
         self,
@@ -685,9 +685,9 @@ class KanbanService:
         Raises TaskNotFound, AmbiguousTaskReference, BoardNotFound, or
         ColumnNotFound as appropriate.  Updates the index and commits.
         """
-        board, column, title_or_id = self.path_components(path)
-        _ = board, column, title_or_id, dest
-        ...
+        board, column, title = self.path_components(path)
+        _ = board, column, title, dest
+        raise NotImplementedError()
 
     def delete_task(
         self,
@@ -730,23 +730,23 @@ class KanbanService:
         self,
         board:       str | None = None,
         column:      str | None = None,
-        title_or_id: str | None = None,
+        title:       str | None = None,
         limit:       int = 20,
     ) -> list[GitCommit]:
         """
         Return structured commit history, optionally scoped to a board, column,
-        or specific task by UUID.  When title_or_id is provided, resolves the
+        or specific task by UUID.  When title is provided, resolves the
         task first via _resolve_path_into_parts so that history follows the file
         through any renames.  Delegates path filtering to GitService.
         """
-        ...
+        raise NotImplementedError()
 
     def squash(self, board: str | None = None) -> GitCommit:
         """
         Collapse all commits since the last squash (or since init) into one.
         Scoped to a single board if provided.  Returns the new squash commit.
         """
-        ...
+        raise NotImplementedError()
 
 
     # ── Config ────────────────────────────────────────────────────────────────
@@ -792,7 +792,7 @@ class KanbanService:
         Snapshot of the repository: current context, board/column/task counts,
         index freshness, and whether there are uncommitted changes in git.
         """
-        ...
+        raise NotImplementedError()
 
 
     # ── Internal helpers ──────────────────────────────────────────────────────
@@ -882,4 +882,4 @@ class KanbanService:
 
     def _commit(self, type: str, scope: str, description: str) -> None:
         """Compose a structured commit message and delegate to GitService."""
-        ...
+        raise NotImplementedError()

@@ -51,7 +51,7 @@ class InMemoryRepository(KanbanRepository):
         return None
 
     # ---------------------------------------------------------------------------
-    # Initialization
+    # Initialization (setup)
     # ---------------------------------------------------------------------------
     
     def init_storage(self) -> None:
@@ -65,7 +65,10 @@ class InMemoryRepository(KanbanRepository):
         """Return True if the repository is already initialized at the current path."""
         return self._is_initialized
 
+    # ------------------------------------------------------------------
     # Board operations
+    # ------------------------------------------------------------------
+
     def get_boards(self) -> list[Board]:
         return list(self._boards.values())
 
@@ -133,7 +136,10 @@ class InMemoryRepository(KanbanRepository):
             self._task_locations.pop(task_id, None)
             self._task_filenames.pop(task_id, None)
 
-    # Column operations
+    # ------------------------------------------------------------------
+    # Columns operations
+    # ------------------------------------------------------------------
+
     def get_columns(self, board: str) -> list[Column]:
         return list(self.get_board(board).columns)
 
@@ -223,7 +229,10 @@ class InMemoryRepository(KanbanRepository):
             self._task_locations.pop(task_id, None)
             self._task_filenames.pop(task_id, None)
 
+    # ------------------------------------------------------------------
     # Task operations
+    # ------------------------------------------------------------------
+
     def get_tasks(
         self,
         board: Optional[str] = None,
@@ -354,11 +363,12 @@ class InMemoryRepository(KanbanRepository):
         self._task_locations.pop(task_id, None)
         self._task_filenames.pop(task_id, None)
 
-    # Search
-    def search_tasks(self, query: str, filter: Optional[TaskFilter] = None) -> list[Task]:
-        raise NotImplementedError()
+    # ------------------------------------------------------------------
+    # Config, user data, and metadata
+    # ------------------------------------------------------------------
 
     # Config
+
     def get_config(self, keypath: str) -> str | None:
         return self._config.get(keypath)
 
@@ -369,6 +379,7 @@ class InMemoryRepository(KanbanRepository):
             self._config[keypath] = value
 
     # User data
+    
     def get_userdata(self, keypath: str) -> str | None:
         return self._userdata.get(keypath)
 

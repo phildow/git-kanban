@@ -87,7 +87,7 @@ def _initialize_kanban(svc: KanbanService) -> bool:
     should_init = input(f"Would you like to initialize kanban at {directory}? (y/N)) ").strip().lower()
     if should_init in {"y", "yes"}:
         try:
-            svc.init_kanban()
+            svc.initialize_kanban()
             return True
         except Exception as exc:
             exc_desc = str(exc) or exc.__class__.__name__

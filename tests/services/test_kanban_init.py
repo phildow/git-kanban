@@ -33,7 +33,7 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
             git_service=GitService(),
         )
 
-        result = svc.init_kanban(Path("."))
+        result = svc.initialize_kanban(Path("."))
 
         self.assertTrue(result)
         self.assertTrue(repo.board_exists("main"))
@@ -60,12 +60,12 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
             git_service=GitService(),
         )
 
-        svc.init_kanban(Path("."))
+        svc.initialize_kanban(Path("."))
         with self.assertRaises(ValueError):
-            svc.init_kanban(Path("."))
+            svc.initialize_kanban(Path("."))
 
     def test_init_seeds_tasks_from_default_seeds(self):
-        """init_kanban creates tasks from BOOTSTRAP_SEEDS in the main board."""
+        """initialize_kanban creates tasks from BOOTSTRAP_SEEDS in the main board."""
         temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
         temp_dir.mkdir()
         repo = InMemoryRepository(root=temp_dir)
@@ -75,7 +75,7 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
             git_service=GitService(),
         )
 
-        svc.init_kanban(Path("."))
+        svc.initialize_kanban(Path("."))
 
         tasks = repo.get_tasks(board="main")
         titles = {t.title for t in tasks}
@@ -86,7 +86,7 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         self.assertIn("go for a bike ride", titles)
 
     def test_init_seeds_tasks_from_custom_config(self):
-        """init_kanban accepts a custom BootstrapConfig instead of the default."""
+        """initialize_kanban accepts a custom BootstrapConfig instead of the default."""
         from storage.seeds import BootstrapConfig
         temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
         temp_dir.mkdir()
@@ -108,7 +108,7 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
             ],
         }
 
-        svc.init_kanban(Path("."), config=custom)
+        svc.initialize_kanban(Path("."), config=custom)
 
         self.assertTrue(repo.board_exists("work"))
         self.assertEqual([c.name for c in repo.get_columns("work")], ["backlog", "doing", "done"])

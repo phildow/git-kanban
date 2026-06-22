@@ -126,6 +126,12 @@ class KanbanRepository(ABC):
     # Initialization (Setup)
     # ------------------------------------------------------------------
 
+    @property
+    @abstractmethod
+    def is_initialized(self) -> bool:
+        """Return True if the repository is already initialized at the current path."""
+        return False
+
     @abstractmethod
     def init_storage(self) -> None:
         """
@@ -138,12 +144,6 @@ class KanbanRepository(ABC):
 
         Raises ValueError when already initialized.
         """
-
-    @property
-    @abstractmethod
-    def is_initialized(self) -> bool:
-        """Return True if the repository is already initialized at the current path."""
-        return False
 
     # ------------------------------------------------------------------
     # Board operations
@@ -377,29 +377,6 @@ class KanbanRepository(ABC):
         """
 
     # ------------------------------------------------------------------
-    # Search
-    # ------------------------------------------------------------------
-
-    @abstractmethod
-    def search_tasks(
-        self,
-        query: str,
-        filter: Optional[TaskFilter] = None,
-    ) -> list[Task]:
-        """
-        Full-text search across task titles and bodies, returning tasks
-        ranked by relevance.
-
-        `filter` narrows results by metadata fields before ranking.
-
-        The FilesystemRepository starts with a linear scan of markdown files;
-        this is later backed by the SQLite FTS5 cache when the data model
-        stabilises. The InMemoryRepository may do a simple substring match.
-
-        Returns an empty list when no tasks match.
-        """
-
-    # ------------------------------------------------------------------
     # Config
     # ------------------------------------------------------------------
 
@@ -414,7 +391,6 @@ class KanbanRepository(ABC):
     @abstractmethod
     def set_config(self, keypath: str, value: str | None) -> None:
         """Set a config key to the given value."""
-
 
     # ------------------------------------------------------------------
     # Additional userdata storage (not required for core functionality)

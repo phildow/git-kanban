@@ -45,6 +45,9 @@ class IndexService:
         """Scaffold for removing a single task from the index cache."""
         _ = task
 
+    def search_tasks(self, query: str, filter: Optional[TaskFilter] = None) -> list[Task]:
+        raise NotImplementedError()
+
     def get_state(self) -> IndexState:
         """Return index build metadata as an ``IndexState`` value object."""
         return IndexState(built_at=self._built_at)

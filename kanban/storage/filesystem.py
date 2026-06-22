@@ -54,10 +54,13 @@ class FilesystemRepository(KanbanRepository):
         return self.kanban_dir / "index.db"
 
     # ------------------------------------------------------------------
-    # Bootstrap and initialization
+    # Initialization (setup)
     # ------------------------------------------------------------------
 
-    # Bootstrap
+    @property
+    def is_initialized(self) -> bool:
+        return self.kanban_dir.exists() and self.kanban_store_dir.exists()
+
     def init_storage(self) -> None:
         if self.is_initialized:
             raise ValueError("Kanban is already initialized")
@@ -77,11 +80,10 @@ class FilesystemRepository(KanbanRepository):
         boards_dir.mkdir()
         (boards_dir / ".metadata").touch()
 
-    @property
-    def is_initialized(self) -> bool:
-        return self.kanban_dir.exists() and self.kanban_store_dir.exists()
-
+    # ------------------------------------------------------------------
     # Board operations
+    # ------------------------------------------------------------------
+
     def get_boards(self) -> list[Board]:
         boards = []
         for entry in sorted(self.boards_dir.iterdir()):
@@ -131,7 +133,9 @@ class FilesystemRepository(KanbanRepository):
             raise BoardNotFound(name)
         shutil.rmtree(self.boards_dir / name)
 
-    # Column operations
+    # ------------------------------------------------------------------
+    # Columns operations
+    # ------------------------------------------------------------------
 
     # TODO: fail gracefully from corrupt metadta files (e.g. missing column in order file) instead of crashing, 
     #       and log warnings to help users fix them
@@ -280,7 +284,10 @@ class FilesystemRepository(KanbanRepository):
         self._set_column_order(board, order)
         shutil.rmtree(self.boards_dir / board / name)
 
+    # ------------------------------------------------------------------
     # Task operations
+    # ------------------------------------------------------------------
+    
     def get_tasks(
         self,
         board: Optional[str] = None,
@@ -381,13 +388,14 @@ class FilesystemRepository(KanbanRepository):
     def delete_task(self, task_id: UUID) -> None:
         raise NotImplementedError()
 
-    # Search
-    def search_tasks(self, query: str, filter: Optional[TaskFilter] = None) -> list[Task]:
-        raise NotImplementedError()
+    # ------------------------------------------------------------------
+    # Config, user data, and metadata
+    # ------------------------------------------------------------------
 
     # TODO: Refactor all this shared code, rename config to avoid ambiguity with the configparser module
 
     # Config
+    
     def get_config(self, keypath: str) -> str | None:
         """Read a value from the config INI file using a 'section.key' keypath."""
         if "." not in keypath:
@@ -422,6 +430,7 @@ class FilesystemRepository(KanbanRepository):
         self.config_file.write_text(self._write_ini(cfg), encoding="utf-8")
 
     # User data
+    
     def get_userdata(self, keypath: str) -> str | None:
         """Read a value from the userdata INI file using a 'section.key' keypath."""
         if "." not in keypath:
@@ -456,6 +465,7 @@ class FilesystemRepository(KanbanRepository):
         self.userdata_file.write_text(self._write_ini(cfg), encoding="utf-8")
 
     # Board metadata
+    
     def _board_metadata_file(self, board: str) -> Path:
         """Return the path to the .metadata INI file for the given board."""
         return self.boards_dir / board / ".metadata"
@@ -495,6 +505,7 @@ class FilesystemRepository(KanbanRepository):
         metadata_file.write_text(self._write_ini(cfg), encoding="utf-8")
 
     # Column metadata
+
     def _column_metadata_file(self, board: str, column: str) -> Path:
         """Return the path to the .metadata INI file for the given column."""
         return self.boards_dir / board / column / ".metadata"

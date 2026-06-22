@@ -53,10 +53,20 @@ kanban (main)>
 
 0.6 - Complete filesystem and in memory store
 
+REMAINING FILESYSTEM
+
+- task_exists
+- update_task
+- move_task
+- delete_task
+- search_tasks
+
 - TEST: Create task with spaces - kebab_case
 - TEST: Create column with spaces - kebab_case
 - TEST: Create board with spaces - kebab_case
-- TEST BUG: tests create temp folders and don't clean them up
+- TEST: Check init error handling, don't overwrite a repo, don't initialize a repo that's already been created
+
+- Ensure memory store supports same features as filesystem (ordering)
 
 POTENTIAL INCONSISTENCY
 - Where metadata is required, eg sort order, files may be missing or renamed directly, change not reflected in metadata file
@@ -75,8 +85,6 @@ POTENTIAL INCONSISTENCY
 - FEAT: improve repl rendering - always give feedback
 
 - TEST: make sure repl gives recoverable error messages
-- TEST: Check init error handling, don't overwrite a repo, don't initialize a repo that's alrady been
-
 
 - FEAT: tab completion for assigness and tags
 - FEAT: Correctly resolve `..` all commands that take paths not just cd
@@ -84,7 +92,6 @@ POTENTIAL INCONSISTENCY
 - FEAT: Use the same logic for other commands that take paths, and use resolve into components
   taking into account relative paths and the user context
 - FEAT: ooo the shell will make as few as two columns
-- FEAT: better bootdstrapping
 - FEAT: Add comments to a task which are just appended to the body
 
 - BUG: if a board is already in the current context, `create board x` doesn't work

@@ -15,7 +15,7 @@ from utils.shell import prompt_for_confirmation
 
 def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	_ = args
-	result = svc.init_kanban()
+	result = svc.initialize_kanban()
 	renderer.render_init(args, result)
 
 # ---------------------------------------------------------------------------
