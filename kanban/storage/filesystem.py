@@ -10,7 +10,7 @@ from typing import Optional
 from uuid import UUID, uuid4
 
 from models import Task, TaskFilter, Board, Column
-from storage.kanban import KanbanRepository, BoardNotFound, BoardAlreadyExists, ColumnAlreadyExists, ColumnNotFound, TaskNotFound
+from storage.kanban import KanbanRepository, BoardNotFound, BoardAlreadyExists, ColumnAlreadyExists, ColumnNotFound, TaskNotFound, TaskAlreadyExists
 
 
 class FilesystemRepository(KanbanRepository):
@@ -84,6 +84,10 @@ class FilesystemRepository(KanbanRepository):
     # Board operations
     # ------------------------------------------------------------------
 
+    def board_exists(self, name: str) -> bool:
+        board_path = self.boards_dir / name
+        return board_path.is_dir() and not name.startswith(".")
+
     def get_boards(self) -> list[Board]:
         boards = []
         for entry in sorted(self.boards_dir.iterdir()):
@@ -108,10 +112,6 @@ class FilesystemRepository(KanbanRepository):
         if not board_path.is_dir() or name.startswith("."):
             raise BoardNotFound(name)
         return Board(name=name)
-
-    def board_exists(self, name: str) -> bool:
-        board_path = self.boards_dir / name
-        return board_path.is_dir() and not name.startswith(".")
 
     def create_board(self, name: str) -> Board:
         if self.board_exists(name):
@@ -142,6 +142,8 @@ class FilesystemRepository(KanbanRepository):
     # TODO: verify that the files listed in the sort order match the actual column directories and log warnings 
     #       if not, and handle missing columns by appending them to the end of the list rather than crashing
     
+    # TODO: move these methods
+
     def _get_task_order(self, board: str, column: str) -> list[str]:
         """Return the stored task order for a column, falling back to filesystem sort."""
         raw = self.get_column_metadata(board, column, "tasks.order")
@@ -180,6 +182,13 @@ class FilesystemRepository(KanbanRepository):
         """
         self.set_board_metadata(board, "columns.order", "\n" + "\n".join(order))
 
+    def column_exists(self, board: str, name: str) -> bool:
+        if not self.board_exists(board):
+            raise BoardNotFound(board)
+        
+        column_path = self.boards_dir / board / name
+        return column_path.is_dir() and not name.startswith(".")
+
     def get_columns(self, board: str) -> list[Column]:
         if not self.board_exists(board):
             raise BoardNotFound(board)
@@ -213,13 +222,6 @@ class FilesystemRepository(KanbanRepository):
         position = order.index(name) if name in order else len(order)
         
         return Column(name=name, board=board, position=position, task_count=task_count)
-
-    def column_exists(self, board: str, name: str) -> bool:
-        if not self.board_exists(board):
-            raise BoardNotFound(board)
-        
-        column_path = self.boards_dir / board / name
-        return column_path.is_dir() and not name.startswith(".")
 
     def create_column(self, board: str, name: str) -> Column:
         if not self.board_exists(board):
@@ -288,6 +290,10 @@ class FilesystemRepository(KanbanRepository):
     # Task operations
     # ------------------------------------------------------------------
     
+    def task_exists(self, board: str, column: str, filename: str) -> bool:
+        path = self.boards_dir / board / column / f"{filename}.md"
+        return path.is_file()
+
     def get_tasks(
         self,
         board: Optional[str] = None,
@@ -334,10 +340,6 @@ class FilesystemRepository(KanbanRepository):
             raise TaskNotFound(f"{board}/{column}/{filename}")
             
         return self._parse_task_file(task_path, board, column)
-
-    def task_exists(self, board: str, column: str, filename: str) -> bool:
-        path = self.boards_dir / board / column / f"{filename}.md"
-        return path.is_file()
 
     def create_task(self, task: Task, filename: str) -> Task:
         if not self.board_exists(task.board):
@@ -388,7 +390,44 @@ class FilesystemRepository(KanbanRepository):
         raise NotImplementedError()
 
     def move_task(self, task: Task, dest_board: str, dest_column: str) -> Task:
-        raise NotImplementedError()
+        filename = f"{task.slug}.md"
+        src_path = self.boards_dir / task.board / task.column / filename
+        dest_path = self.boards_dir / dest_board / dest_column / filename
+
+        if not src_path.is_file():
+            raise TaskNotFound(f"{task.board}/{task.column}/{task.slug}")
+        if not self.board_exists(dest_board):
+            raise BoardNotFound(dest_board)
+        if not self.column_exists(dest_board, dest_column):
+            raise ColumnNotFound(dest_board, dest_column)
+        if dest_path.exists() and dest_path != src_path:
+            raise TaskAlreadyExists(dest_board, dest_column, task.slug)
+
+        now = datetime.now(timezone.utc)
+        lines = src_path.read_text(encoding="utf-8").splitlines(keepends=True)
+
+        for i, line in enumerate(lines):
+            if line.startswith("updated_at:"):
+                lines[i] = f"updated_at: {now.isoformat()}\n"
+                break
+        
+        dest_path.write_text("".join(lines), encoding="utf-8")
+        if src_path != dest_path:
+            src_path.unlink()
+
+        src_order = self._get_task_order(task.board, task.column)
+        if filename in src_order:
+            src_order.remove(filename)
+        
+        self._set_task_order(task.board, task.column, src_order)
+
+        dest_order = self._get_task_order(dest_board, dest_column)
+        if filename not in dest_order:
+            dest_order.append(filename)
+        
+        self._set_task_order(dest_board, dest_column, dest_order)
+
+        return self._parse_task_file(dest_path, dest_board, dest_column)
 
     def delete_task(self, task: Task) -> None:
         filename = f"{task.slug}.md"

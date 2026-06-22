@@ -61,6 +61,8 @@ REMAINING FILESYSTEM
 - delete_task
 - search_tasks
 
+- basic refactoring to use exists methods in the filesystem, i'm sure there's more
+
 - TEST: Create task with spaces - kebab_case
 - TEST: Create column with spaces - kebab_case
 - TEST: Create board with spaces - kebab_case
