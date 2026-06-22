@@ -327,13 +327,6 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.log.assert_called_once_with(path="alpha/todo/fix-parser", limit=5)
         self.renderer.render_log.assert_called_once_with(args, result)
 
-    def test_handle_log_raises_if_missing(self):
-        args = self._args(path=None, limit=None)
-        del self.svc.log
-
-        with self.assertRaises(NotImplementedError):
-            commands.handle_log(args, self.svc, self.renderer)
-
     def test_handle_status(self):
         args = self._args(format="json")
         result = object()
@@ -343,13 +336,6 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         self.svc.status.assert_called_once_with(format="json")
         self.renderer.render_status.assert_called_once_with(args, result)
-
-    def test_handle_status_raises_if_missing(self):
-        args = self._args(format="plain")
-        del self.svc.status
-
-        with self.assertRaises(NotImplementedError):
-            commands.handle_status(args, self.svc, self.renderer)
 
     def test_handle_config_set_and_get(self):
         args = self._args(key="name", value="Philip")
@@ -369,19 +355,6 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         self.svc.config_get.assert_called_once_with("name")
         self.renderer.render_config_get.assert_called_once_with(args, result)
-
-    def test_handle_config_set_and_get_raise_if_missing(self):
-        args_set = self._args(key="k", value="v")
-        args_get = self._args(key="k")
-        del self.svc.config_set
-        del self.svc.config_get
-
-        with self.assertRaises(NotImplementedError):
-            commands.handle_config_set(args_set, self.svc, self.renderer)
-
-        with self.assertRaises(NotImplementedError):
-            commands.handle_config_get(args_get, self.svc, self.renderer)
-
 
 if __name__ == "__main__":
     unittest.main()

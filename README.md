@@ -55,11 +55,7 @@ kanban (main)>
 
 REMAINING FILESYSTEM
 
-- task_exists
 - update_task
-- move_task
-- delete_task
-- search_tasks
 
 - CHORE: basic refactoring to use exists methods in the filesystem, i'm sure there's more
 - CHORE: rename all those render methods to use parameters that reflect their types

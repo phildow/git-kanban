@@ -156,29 +156,21 @@ def handle_search(args: argparse.Namespace, svc: KanbanService, renderer: object
 
 
 def handle_log(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	if not hasattr(svc, "log"):
-		raise NotImplementedError("log is not implemented on the service yet")
 	result = svc.log(path=args.path, limit=args.limit)
 	renderer.render_log(args, result)
 
 
 def handle_status(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	if not hasattr(svc, "status"):
-		raise NotImplementedError("status is not implemented on the service yet")
 	result = svc.status(format=args.format)
 	renderer.render_status(args, result)
 
 
 def handle_config_set(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	if not hasattr(svc, "config_set"):
-		raise NotImplementedError("config set is not implemented on the service yet")
 	result = svc.config_set(args.key, args.value)
 	renderer.render_config_set(args, result)
 
 
 def handle_config_get(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	if not hasattr(svc, "config_get"):
-		raise NotImplementedError("config get is not implemented on the service yet")
 	result = svc.config_get(args.key)
 	renderer.render_config_get(args, result)
 

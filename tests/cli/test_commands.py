@@ -328,14 +328,6 @@ class TestCommandHandlers(unittest.TestCase):
         self.svc.log.assert_called_once_with(path="board-a/todo/task-1", limit=5)
         self.renderer.render_log.assert_called_once_with(args, result)
 
-    def test_log_handler_raises_if_missing(self):
-        """`log` handler raises `NotImplementedError` when service lacks `log`."""
-        args = self._args(path=None, limit=None)
-        del self.svc.log
-
-        with self.assertRaises(NotImplementedError):
-            commands.handle_log(args, self.svc, self.renderer)
-
     def test_status_handler(self):
         """`status` handler forwards format option and renders result."""
         args = self._args(format="json")
@@ -346,14 +338,6 @@ class TestCommandHandlers(unittest.TestCase):
 
         self.svc.status.assert_called_once_with(format="json")
         self.renderer.render_status.assert_called_once_with(args, result)
-
-    def test_status_handler_raises_if_missing(self):
-        """`status` handler raises when service does not implement status."""
-        args = self._args(format="table")
-        del self.svc.status
-
-        with self.assertRaises(NotImplementedError):
-            commands.handle_status(args, self.svc, self.renderer)
 
     def test_config_handlers(self):
         """Config set/get handlers call their matching service operations."""
@@ -370,19 +354,6 @@ class TestCommandHandlers(unittest.TestCase):
         commands.handle_config_get(args, self.svc, self.renderer)
         self.svc.config_get.assert_called_once_with("name")
         self.renderer.render_config_get.assert_called_once_with(args, result)
-
-    def test_config_handlers_raise_if_missing(self):
-        """Config handlers raise when service lacks set/get implementations."""
-        args_set = self._args(key="k", value="v")
-        args_get = self._args(key="k")
-        del self.svc.config_set
-        del self.svc.config_get
-
-        with self.assertRaises(NotImplementedError):
-            commands.handle_config_set(args_set, self.svc, self.renderer)
-
-        with self.assertRaises(NotImplementedError):
-            commands.handle_config_get(args_get, self.svc, self.renderer)
 
 
 if __name__ == "__main__":
