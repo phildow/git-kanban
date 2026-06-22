@@ -85,9 +85,9 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         self.assertIn("update a task with details", titles)
         self.assertIn("go for a bike ride", titles)
 
-    def test_init_seeds_tasks_from_custom_seeds(self):
-        """init_kanban accepts a custom seed list instead of the default."""
-        from storage.seeds import BootstrapSeed
+    def test_init_seeds_tasks_from_custom_config(self):
+        """init_kanban accepts a custom BootstrapConfig instead of the default."""
+        from storage.seeds import BootstrapConfig
         temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
         temp_dir.mkdir()
         repo = InMemoryRepository(root=temp_dir)
@@ -96,13 +96,23 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
             index_service=IndexService(repository=repo),
             git_service=GitService(),
         )
-        custom: list[BootstrapSeed] = [
-            {"title": "custom task", "slug": "custom-task", "column": "todo"},
-        ]
+        custom: BootstrapConfig = {
+            "boards": [
+                {
+                    "name": "work",
+                    "columns": ["backlog", "doing", "done"],
+                    "tasks": [
+                        {"title": "custom task", "slug": "custom-task", "column": "backlog"},
+                    ],
+                }
+            ],
+        }
 
-        svc.init_kanban(Path("."), seeds=custom)
+        svc.init_kanban(Path("."), config=custom)
 
-        titles = {t.title for t in repo.get_tasks(board="main")}
+        self.assertTrue(repo.board_exists("work"))
+        self.assertEqual([c.name for c in repo.get_columns("work")], ["backlog", "doing", "done"])
+        titles = {t.title for t in repo.get_tasks(board="work")}
         self.assertIn("custom task", titles)
         self.assertNotIn("list your boards and tasks", titles)
 

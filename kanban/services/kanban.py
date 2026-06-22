@@ -10,7 +10,7 @@ from uuid import UUID, uuid4
 
 from models import Task, TaskFilter, Board, Column, UserContext
 from storage.kanban import KanbanRepository, ColumnNotFound, BoardNotFound
-from storage.seeds import BOOTSTRAP_SEEDS, BootstrapSeed
+from storage.seeds import BOOTSTRAP_CONFIG, BootstrapConfig
 from services.git import GitService
 from services.index import IndexService
 from utils.str import kebab_case
@@ -138,7 +138,7 @@ class KanbanService:
         # Move path.exists() check to repository
         return self.repository.is_initialized
 
-    def init_kanban(self, path: Path = Path("."), seeds: list[BootstrapSeed] = BOOTSTRAP_SEEDS) -> bool:
+    def init_kanban(self, path: Path = Path("."), config: BootstrapConfig = BOOTSTRAP_CONFIG) -> bool:
         """
         Create the .kanban/ and .kanban-store/ directory skeleton, initialize git, and write the
         first commit.  Raises AlreadyInitialized if .kanban/ or .kanban-store/ already exists at
@@ -147,29 +147,31 @@ class KanbanService:
         first, index second, git last.
         """
         now = datetime.now(timezone.utc)
-
         self.repository.init_storage()
 
-        self.repository.create_board("main")
-        for col in ("todo", "in-progress", "in-review", "done"):
-            self.repository.create_column("main", col)
+        for board_config in config["boards"]:
+            board = board_config["name"]
+            self.repository.create_board(board)
+            for col in board_config["columns"]:
+                self.repository.create_column(board, col)
+            for task_config in board_config["tasks"]:
+                task = Task(
+                    id=uuid4(),
+                    title=task_config["title"],
+                    slug=task_config["slug"],
+                    board=board,
+                    column=task_config["column"],
+                    priority=task_config.get("priority"),
+                    assignee=task_config.get("assignee"),
+                    body=task_config.get("body", ""),
+                    created_at=now,
+                    updated_at=now,
+                )
+                self.repository.create_task(task, task.slug)
 
-        for seed in seeds:
-            task = Task(
-                id=uuid4(),
-                title=seed["title"],
-                slug=seed["slug"],
-                board="main",
-                column=seed["column"],
-                priority=seed.get("priority"),
-                assignee=seed.get("assignee"),
-                body=seed.get("body", ""),
-                created_at=now,
-                updated_at=now,
-            )
-            self.repository.create_task(task, task.slug)
-
-        self.update_user_context(board="main", column="todo")
+        default_board = config.get("usercontext", {}).get("board")
+        default_column = config.get("usercontext", {}).get("column")        
+        self.update_user_context(board=default_board, column=default_column)
 
         return True
 
