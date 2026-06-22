@@ -42,16 +42,6 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
     def _filename(self, title: str) -> str:
         return title.lower().replace(" ", "-")
 
-    def test_create_and_get_by_id(self):
-        """Creates a task and verifies ID lookup and timestamp defaults."""
-        task = self._task("t1")
-        created = self.repo.create_task(task, "t1")
-
-        self.assertIs(created, task)
-        self.assertIsNotNone(created.created_at)
-        self.assertIsNotNone(created.updated_at)
-        self.assertEqual(self.repo.get_task_by_id(task.id), task)
-
     def test_create_validates_location_and_uniqueness(self):
         """Create validates board/column existence and title uniqueness per column."""
         with self.assertRaises(BoardNotFound):
@@ -127,8 +117,7 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
             self.repo.move_task(moved.id, "alpha", "missing")
 
         self.repo.delete_task(moved.id)
-        with self.assertRaises(TaskNotFound):
-            self.repo.get_task_by_id(moved.id)
+        
         with self.assertRaises(TaskNotFound):
             self.repo.delete_task(moved.id)
 

@@ -606,25 +606,13 @@ class KanbanService:
         path: str,
     ) -> Task:
         """
-        Resolve and return a single task by title slug or UUID.  Delegates
+        Resolve and return a single task by title slug.  Delegates
         location resolution to resolve_path, which applies the
         explicit → context → index-search chain and raises TaskNotFound or
         AmbiguousTaskReference if resolution fails.
         """
-        board, column, title_or_id = self.path_components(path)
-        task_id: UUID | None = None
-        try:
-            task_id = UUID(title_or_id)
-        except ValueError:
-            task_id = None
-
-        if task_id is not None:
-            task = self.repository.get_task_by_id(task_id)
-            if task.board != board or task.column != column:
-                raise ValueError(f"Task not found in scope: {board}/{column}/{title_or_id}")
-            return task
-
-        filename = kebab_case(title_or_id)
+        board, column, title = self.path_components(path)
+        filename = kebab_case(title)
         return self.repository.get_task(board, column, filename)
 
     def edit_task(

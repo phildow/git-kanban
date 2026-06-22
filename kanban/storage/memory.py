@@ -245,12 +245,6 @@ class InMemoryRepository(KanbanRepository):
 
         return tasks
 
-    def get_task_by_id(self, task_id: UUID) -> Task:
-        task = self._tasks_by_id.get(task_id)
-        if task is None:
-            raise TaskNotFound(str(task_id))
-        return task
-
     def get_task(self, board: str, column: str, filename: str) -> Task:
         self.get_board(board)
         self.get_column(board, column)

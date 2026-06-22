@@ -292,14 +292,6 @@ class KanbanRepository(ABC):
         """
 
     @abstractmethod
-    def get_task_by_id(self, task_id: UUID) -> Task:
-        """
-        Return a single task by its UUID.
-
-        Raises TaskNotFound if no task with this UUID exists anywhere.
-        """
-
-    @abstractmethod
     def get_task(self, board: str, column: str, filename: str) -> Task:
         """
         Return a single task by its exact board/column/filename path.

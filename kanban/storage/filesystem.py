@@ -314,9 +314,6 @@ class FilesystemRepository(KanbanRepository):
                         tasks.append(self._parse_task_file(entry, b, col))
         return tasks
 
-    def get_task_by_id(self, task_id: UUID) -> Task:
-        raise NotImplementedError()
-
     def get_task(self, board: str, column: str, filename: str) -> Task:
         if not self.board_exists(board):
             raise BoardNotFound(board)
