@@ -123,23 +123,21 @@ class KanbanRepository(ABC):
         return None
 
     # ------------------------------------------------------------------
-    # Bootstrap
+    # Initialization (Setup)
     # ------------------------------------------------------------------
 
     @abstractmethod
-    def init_storage(self, default_board: str = "main", default_column: str = "todo") -> None:
+    def init_storage(self) -> None:
         """
-        Initialize repository state for first use.
+        Initialize repository state for first use. Called by the KanbanService when creating 
+        a new repository.
 
-        Implementations should create the default board and any other necessary bootstrap state. 
-        This is called by the KanbanService during its initialization.
+        Do not create the default board/column structure here; the service handles that. 
+        This method is for storage-specific initialization, such as creating necessary 
+        directories or files.
 
         Raises ValueError when already initialized.
         """
-
-    @abstractmethod
-    def bootstrap(self) -> None:
-        """Create the default board and column structure for a new repository."""
 
     @property
     @abstractmethod

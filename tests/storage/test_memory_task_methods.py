@@ -132,28 +132,6 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
         with self.assertRaises(TaskNotFound):
             self.repo.delete_task(moved.id)
 
-    def test_bootstrap_creates_tasks_for_each_board_andcolumn(self):
-        """Bootstrap helper seeds a fixed number of tasks in each board column."""
-        # 2 boards x 4 columns each x 3 tasks per column = 24 seeded tasks
-        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
-        temp_dir.mkdir()
-        repo = InMemoryRepository(root=temp_dir)
-        repo.bootstrap()
-
-        boards = repo.get_boards()
-        self.assertEqual(len(boards), 2)
-
-        main = repo.get_tasks(board="main")
-        infra = repo.get_tasks(board="infra")
-        self.assertEqual(len(main), 12)
-        self.assertEqual(len(infra), 12)
-
-        todo = repo.get_tasks(board="main", column="todo")
-        doing = repo.get_tasks(board="infra", column="todo")
-        self.assertEqual(len(todo), 3)
-        self.assertEqual(len(doing), 3)
-        self.assertTrue(all(task.slug for task in main + infra))
-
 
 if __name__ == "__main__":
     unittest.main()

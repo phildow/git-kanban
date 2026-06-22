@@ -51,18 +51,22 @@ kanban (main)>
 
 ### TODO
 
+0.6 - Complete filesystem and in memory store
+
+- TEST: Create task with spaces - kebab_case
+- TEST: Create column with spaces - kebab_case
+- TEST: Create board with spaces - kebab_case
+- TEST BUG: tests create temp folders and don't clean them up
+
 POTENTIAL INCONSISTENCY
 - Where metadata is required, eg sort order, files may be missing or renamed directly, change not reflected in metadata file
-- Can you write metadata to a file and track it in git (no)
-- The file system is the source of truth, although metadata or the index may be out of sync. 
+- The file system is the source of truth, although metadata or the index may be out of sync.
 - Corrections defer to the filesystem, eg sort: 
 -   If the filename appears in the metadata but not the folder, remove it from the metadata
 -   If the filename appears in the folder but not the metadata, add it to the back
 - Two kinds of syncing:
 -   Filesystem -> cache | metadata
 -   Filesystme <-> git
-
-- FEAT: implement default sort order for tasks
 
 - FEAT: implement user sort order for columns
 - FEAT: implement user sort order for tasks
@@ -71,11 +75,8 @@ POTENTIAL INCONSISTENCY
 - FEAT: improve repl rendering - always give feedback
 
 - TEST: make sure repl gives recoverable error messages
-- TEST: Check init error handling
-- TEST: Create task with spaces - kebab_case
-- TEST: Create column with spaces - kebab_case
-- TEST: Create board with spaces - kebab_case
-- TEST BUG: tests create temp folders and don't clean them up
+- TEST: Check init error handling, don't overwrite a repo, don't initialize a repo that's alrady been
+
 
 - FEAT: tab completion for assigness and tags
 - FEAT: Correctly resolve `..` all commands that take paths not just cd

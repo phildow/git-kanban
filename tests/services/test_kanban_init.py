@@ -106,21 +106,6 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         self.assertIn("custom task", titles)
         self.assertNotIn("list your boards and tasks", titles)
 
-    def test_init_raises_when_main_board_already_exists(self):
-        """Init raises if sentinel board state already indicates bootstrapped repo."""
-        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
-        temp_dir.mkdir()
-        repo = InMemoryRepository(root=temp_dir)
-        repo.create_board("main")
-        svc = KanbanService(
-            repository=repo,
-            index_service=IndexService(repository=repo),
-            git_service=GitService(),
-        )
-
-        with self.assertRaises(ValueError):
-            svc.init_kanban(Path("."))
-
 
 if __name__ == "__main__":
     unittest.main()

@@ -29,13 +29,14 @@ class InMemoryRepository(KanbanRepository):
 
     def __init__(self, root: Path) -> None:
         super().__init__(root)
-
         self._boards: dict[str, Board] = {}
         self._tasks_by_id: dict[UUID, Task] = {}
         self._task_locations: dict[UUID, tuple[str, str]] = {}
         self._task_filenames: dict[UUID, str] = {}
         self._config: dict[str, str] = {}
         self._userdata: dict[str, str] = {}
+
+        self._is_initialized = False
 
     # ------------------------------------------------------------------
     # Filepaths
@@ -53,85 +54,16 @@ class InMemoryRepository(KanbanRepository):
     # Initialization
     # ---------------------------------------------------------------------------
     
-    def init_storage(self, default_board: str = "main", default_column: str = "todo") -> None:
-        if self.board_exists(default_board):
+    def init_storage(self) -> None:
+        if self.is_initialized:
            raise ValueError("Kanban is already initialized")
-
-    def bootstrap(self) -> None:
-        """Create the default board and column structure. Also seeds rich dev data for local use."""
-        tasks_per_column = 3
-
-        first_board = "main"
-        second_board = "infra"
-
-        if not self.board_exists(first_board):
-            self.create_board(first_board)
-            self._bootstrap_columns(first_board)
-
-        self._bootstrap_tasks(
-            board=first_board,
-            tasks_per_column=tasks_per_column,
-            title_template="{column} Task {i}",
-        )
-
-        if not self.board_exists(second_board):
-            self.create_board(second_board)
-            self._bootstrap_columns(second_board)
-
-        self._bootstrap_tasks(
-            board=second_board,
-            tasks_per_column=tasks_per_column,
-            title_template="Infra {column} Work Item {i}",
-        )
-
+        else:
+            self._is_initialized = True
+        
     @property
     def is_initialized(self) -> bool:
         """Return True if the repository is already initialized at the current path."""
-        return self.get_config("initialized") == "true"
-
-    def _bootstrap_columns(self, board: str) -> None:
-        """Ensure the standard column set exists for the target board."""
-        default_columns = ["todo", "in-progress", "in-review", "done"]
-        for column in default_columns:
-            if not self.column_exists(board, column):
-                self.create_column(board, column)
-
-    def _bootstrap_tasks(
-        self,
-        *,
-        board: str,
-        tasks_per_column: int,
-        title_template: str,
-    ) -> list[Task]:
-        """Seed tasks for each column in a board using a title template."""
-        columns = self.get_columns(board)
-        created: list[Task] = []
-        
-        assignees = ["alice", "bob", "carol", "dave"]
-        priorities = ["low", "medium", "high"]
-        tags = ["bug", "feature", "chore"]
-        dates = [date.today() + timedelta(days=i) for i in range(1, 14)]
-
-        for column in columns:
-            for i in range(1, tasks_per_column + 1):
-                title = title_template.format(column=column.name.capitalize(), i=i, board=board.capitalize)
-                slug = kebab_case(title)
-                task = Task(
-                    id=uuid4(),
-                    title=title,
-                    slug=slug,
-                    board=board,
-                    column=column.name,
-                    created_by=random.choice(assignees),
-                    assignee=random.choice(assignees),
-                    priority=random.choice(priorities),
-                    due_date=random.choice(dates),
-                    tags=[random.choice(tags)],
-                )
-                created.append(self.create_task(task, slug))
-
-        return created
-
+        return self._is_initialized
 
     # Board operations
     def get_boards(self) -> list[Board]:
@@ -451,4 +383,3 @@ class InMemoryRepository(KanbanRepository):
             self._userdata.pop(keypath, None)
         else:
             self._userdata[keypath] = value
-            

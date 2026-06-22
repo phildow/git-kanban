@@ -58,7 +58,7 @@ class FilesystemRepository(KanbanRepository):
     # ------------------------------------------------------------------
 
     # Bootstrap
-    def init_storage(self, default_board: str = "main", default_column: str = "todo") -> None:
+    def init_storage(self) -> None:
         if self.is_initialized:
             raise ValueError("Kanban is already initialized")
 
@@ -70,21 +70,12 @@ class FilesystemRepository(KanbanRepository):
         kanban_store_dir = self.kanban_store_dir
         kanban_store_dir.mkdir()
         self.userdata_file.touch()
-
-        self.set_userdata("user-context.board", default_board)
-        self.set_userdata("user-context.column", default_column)
         
         self.index_file.touch()
 
         boards_dir = self.boards_dir
         boards_dir.mkdir()
         (boards_dir / ".metadata").touch()
-
-    def bootstrap(self) -> None:
-        """Create the default board and column structure. Task seeding is handled by the service."""
-        self.create_board("main")
-        for col in ("todo", "in-progress", "in-review", "done"):
-            self.create_column("main", col)
 
     @property
     def is_initialized(self) -> bool:
@@ -188,11 +179,14 @@ class FilesystemRepository(KanbanRepository):
     def get_columns(self, board: str) -> list[Column]:
         if not self.board_exists(board):
             raise BoardNotFound(board)
+        
         existing = {
             e.name for e in (self.boards_dir / board).iterdir()
             if e.is_dir() and not e.name.startswith(".")
         }
+        
         order = self._get_column_order(board)
+        
         return [
             Column(name=name, board=board, position=i)
             for i, name in enumerate(c for c in order if c in existing)
@@ -201,33 +195,42 @@ class FilesystemRepository(KanbanRepository):
     def get_column(self, board: str, name: str) -> Column:
         if not self.board_exists(board):
             raise BoardNotFound(board)
+        
         column_path = self.boards_dir / board / name
+        
         if not column_path.is_dir() or name.startswith("."):
             raise ColumnNotFound(board, name)
         task_count = sum(
             1 for e in column_path.iterdir()
             if e.is_file() and not e.name.startswith(".")
         )
+        
         order = self._get_column_order(board)
         position = order.index(name) if name in order else len(order)
+        
         return Column(name=name, board=board, position=position, task_count=task_count)
 
     def column_exists(self, board: str, name: str) -> bool:
         if not self.board_exists(board):
             raise BoardNotFound(board)
+        
         column_path = self.boards_dir / board / name
         return column_path.is_dir() and not name.startswith(".")
 
     def create_column(self, board: str, name: str) -> Column:
         if not self.board_exists(board):
             raise BoardNotFound(board)
+        
         column_path = self.boards_dir / board / name
+        
         if column_path.exists():
             raise ColumnAlreadyExists(board, name)
-        order = self._get_column_order(board)  # read before mkdir so new dir isn't in fallback
+        
+        order = self._get_column_order(board)
         column_path.mkdir()
         (column_path / ".metadata").touch()
         order.append(name)
+        
         self._set_column_order(board, order)
         return Column(name=name, board=board, position=len(order) - 1)
 
@@ -238,10 +241,13 @@ class FilesystemRepository(KanbanRepository):
             raise ColumnNotFound(board, name)
         if self.column_exists(board, new_name):
             raise ColumnAlreadyExists(board, new_name)
+        
         (self.boards_dir / board / name).rename(self.boards_dir / board / new_name)
         order = self._get_column_order(board)
+        
         if name in order:
             order[order.index(name)] = new_name
+        
         self._set_column_order(board, order)
         return self.get_column(board, new_name)
 
@@ -250,10 +256,13 @@ class FilesystemRepository(KanbanRepository):
             raise BoardNotFound(board)
         if not self.column_exists(board, name):
             raise ColumnNotFound(board, name)
+       
         order = self._get_column_order(board)
+        
         if name in order:
             order.remove(name)
         order.insert(max(0, min(position, len(order))), name)
+        
         self._set_column_order(board, order)
         return self.get_columns(board)
 
@@ -262,9 +271,12 @@ class FilesystemRepository(KanbanRepository):
             raise BoardNotFound(board)
         if not self.column_exists(board, name):
             raise ColumnNotFound(board, name)
+        
         order = self._get_column_order(board)
+        
         if name in order:
             order.remove(name)
+        
         self._set_column_order(board, order)
         shutil.rmtree(self.boards_dir / board / name)
 
@@ -288,6 +300,7 @@ class FilesystemRepository(KanbanRepository):
         ]
 
         tasks: list[Task] = []
+        
         for b in boards:
             columns = [column] if column is not None else [
                 e.name for e in sorted((self.boards_dir / b).iterdir())
@@ -309,7 +322,9 @@ class FilesystemRepository(KanbanRepository):
             raise BoardNotFound(board)
         if not self.column_exists(board, column):
             raise ColumnNotFound(board, column)
+        
         task_path = self.boards_dir / board / column / f"{filename}.md"
+        
         if not task_path.is_file():
             raise TaskNotFound(f"{board}/{column}/{filename}")
         return self._parse_task_file(task_path, board, column)
@@ -322,6 +337,7 @@ class FilesystemRepository(KanbanRepository):
             raise BoardNotFound(task.board)
         if not self.column_exists(task.board, task.column):
             raise ColumnNotFound(task.column)
+        
         path = self.boards_dir / task.board / task.column / f"{filename}.md"
         now = datetime.now(timezone.utc)
         fm_lines = [
@@ -332,6 +348,7 @@ class FilesystemRepository(KanbanRepository):
             f"created_at: {(task.created_at or now).isoformat()}",
             f"updated_at: {(task.updated_at or now).isoformat()}",
         ]
+        
         if task.priority:
             fm_lines.append(f"priority: {task.priority}")
         if task.assignee:
@@ -342,15 +359,20 @@ class FilesystemRepository(KanbanRepository):
             fm_lines.append(f"due_date: {task.due_date.isoformat()}")
         if task.created_by:
             fm_lines.append(f"created_by: {task.created_by}")
+        
         fm_lines.append("---")
         content = "\n".join(fm_lines) + "\n"
+        
         if task.body:
             content += f"\n{task.body}\n"
+        
         path.write_text(content, encoding="utf-8")
         order = self._get_task_order(task.board, task.column)
+        
         if f"{filename}.md" not in order:
             order.append(f"{filename}.md")
         self._set_task_order(task.board, task.column, order)
+        
         return self._parse_task_file(path, task.board, task.column)
 
     def update_task(self, task: Task) -> Task:
@@ -484,21 +506,26 @@ class FilesystemRepository(KanbanRepository):
         """Read a value from a column's .metadata INI file using a 'section.key' keypath."""
         if "." not in keypath:
             raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
+        
         section, key = keypath.split(".", 1)
         cfg = configparser.ConfigParser()
         cfg.read(self._column_metadata_file(board, column), encoding="utf-8")
+        
         if section not in cfg or key not in cfg[section]:
             return None
+        
         return cfg[section][key]
 
     def set_column_metadata(self, board: str, column: str, keypath: str, value: str | None) -> None:
         """Write a value to a column's .metadata INI file using a 'section.key' keypath."""
         if "." not in keypath:
             raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
+       
         section, key = keypath.split(".", 1)
         metadata_file = self._column_metadata_file(board, column)
         cfg = configparser.ConfigParser()
         cfg.read(metadata_file, encoding="utf-8")
+        
         if value is None:
             if section in cfg and key in cfg[section]:
                 del cfg[section][key]
@@ -506,6 +533,7 @@ class FilesystemRepository(KanbanRepository):
             if section not in cfg:
                 cfg[section] = {}
             cfg[section][key] = value
+        
         metadata_file.write_text(self._write_ini(cfg), encoding="utf-8")
 
     # TODO: kanban service also does task parsing move to a utility module to avoid duplication between service and repository layers

@@ -146,11 +146,14 @@ class KanbanService:
         operational, so it orchestrates creation order directly: filesystem
         first, index second, git last.
         """
-        self.repository.init_storage(default_board="main")
-        self.repository.bootstrap()
-
         now = datetime.now(timezone.utc)
-        
+
+        self.repository.init_storage()
+
+        self.repository.create_board("main")
+        for col in ("todo", "in-progress", "in-review", "done"):
+            self.repository.create_column("main", col)
+
         for seed in seeds:
             task = Task(
                 id=uuid4(),
