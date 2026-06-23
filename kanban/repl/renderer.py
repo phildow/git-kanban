@@ -3,23 +3,10 @@
 from __future__ import annotations
 
 import argparse
-import json
 import shutil
-from functools import wraps
 
 from models import UserContext, Board, Column, Task
 from services.kanban import GitCommit, KanbanRoot, KanbanStatus
-
-
-def _requires_verbose(method):
-	@wraps(method)
-	def _wrapped(self, args: argparse.Namespace, result):
-		if not getattr(args, "verbose", False):
-			return None
-		return method(self, args, result)
-
-	return _wrapped
-
 
 class Renderer:
 	def _emit(self, args: argparse.Namespace, value: object) -> None:
@@ -39,12 +26,10 @@ class Renderer:
 # Initialization and context rendering
 # ---------------------------------------------------------------------------
 
-	@_requires_verbose
 	def render_init(self, args: argparse.Namespace, result: KanbanRoot) -> None:
 		"""Render a message indicating that the Kanban system has been initialized."""
 		self._emit(args, result)
 
-	@_requires_verbose
 	def render_set_path(self, args: argparse.Namespace, result: UserContext) -> None:
 		"""Render a message indicating the new current context path, or that the context was cleared."""
 		board = result.board
@@ -220,12 +205,6 @@ class Renderer:
 		
 		self._emit(args, "\n".join(items))
 
-		# lines = ["Columns", "-------"]
-		# for column in result:
-		# 	lines.append(f"{column.position + 1}. {column.name}")
-		# self._emit(args, "\n".join(lines))
-
-	@_requires_verbose
 	def render_column_create(self, args: argparse.Namespace, result: Column) -> None:
 		"""
 		Render a message indicating that a column was created, 
@@ -238,7 +217,6 @@ class Renderer:
 			return
 		self._emit(args, f"Column created: {column_name}")
 
-	@_requires_verbose
 	def render_column_rename(self, args: argparse.Namespace, result: Column) -> None:
 		"""
 		Render a message indicating that a column was renamed, including the old and new names,
@@ -254,7 +232,6 @@ class Renderer:
 			return
 		self._emit(args, f"Column renamed: {old_name} -> {new_name}")
 
-	@_requires_verbose
 	def render_column_reorder(self, args: argparse.Namespace, result: list[Column]) -> None:
 		"""
 		Render a message indicating that a column was reordered, including its name and new position,
@@ -271,7 +248,6 @@ class Renderer:
 			return
 		self._emit(args, f"Column reordered: {target}")
 
-	# @_requires_verbose
 	def render_column_delete(self, args: argparse.Namespace) -> None:
 		"""
 		Render a message indicating that a column was deleted, 
@@ -433,10 +409,8 @@ class Renderer:
 	def render_status(self, args: argparse.Namespace, result: KanbanStatus) -> None:
 		self._emit(args, result)
 
-	@_requires_verbose
 	def render_config_set(self, args: argparse.Namespace, result: None) -> None:
 		self._emit(args, result)
 
-	@_requires_verbose
 	def render_config_get(self, args: argparse.Namespace, result: str) -> None:
 		self._emit(args, result)
