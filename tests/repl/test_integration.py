@@ -74,12 +74,14 @@ class _ReplBase(unittest.TestCase):
         self._tmp.cleanup()
 
     def run_repl(self, *argv: str) -> str:
-        """Execute a REPL command and return captured stdout."""
+        """Execute a REPL command, assert non-empty output, and return captured stdout."""
         args = parse_args(list(argv))
         buf = io.StringIO()
         with redirect_stdout(buf):
             args.func(args, self.svc, self.renderer)
-        return buf.getvalue()
+        out = buf.getvalue()
+        self.assertTrue(out.strip(), f"Command produced no output: {' '.join(argv)}")
+        return out
 
     @property
     def boards_dir(self) -> Path:
