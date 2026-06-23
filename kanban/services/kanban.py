@@ -191,6 +191,14 @@ class KanbanService:
     def working_path(self) -> Path:
         return self.user_context.path
     
+    @property
+    def working_board(self) -> str | None:
+        return self.user_context.board
+    
+    @property
+    def working_column(self) -> str | None:
+        return self.user_context.column
+    
     def update_user_context(self, board: str | None, column: str | None) -> UserContext:
         """Set the board/column context"""
         self._user_context.board = board

@@ -10,7 +10,9 @@ the kanban store.
 
 Convention (matches the parser's own naming):
     - A positional or flag with ``dest in PATH_LIKE_DESTS`` completes as
-      a full board/column/task path, walked against the active context.
+      a full board/column/task path, walked against the active context,
+      handled entirely by the service's own ``path_components`` 
+      and ``get_boards/get_columns/get_tasks`` methods.
     - ``dest == "board"`` completes against existing board names.
     - ``dest == "column"`` completes against columns of the active
       board.
@@ -69,12 +71,9 @@ class CompletionDataSource(Protocol):
     def path_components(self, path: str | None = None) -> tuple[str | None, str | None, str | None]:
         ...
 
-
-class UserContextLike(Protocol):
-    """The subset of the REPL's user context that completion needs."""
-
-    board: str | None
-    column: str | None
+    @property
+    def working_board(self) -> str | None:
+        ...
 
 
 class CompletionEngine:
@@ -104,13 +103,12 @@ class CompletionEngine:
         self._service = service
         self._root = parser
 
-    def complete(self, line: str, cursor: int, context: UserContextLike) -> list[str]:
+    def complete(self, line: str, cursor: int) -> list[str]:
         """Return completion candidates for the token at ``cursor``.
 
         Args:
             line: The full current input line.
             cursor: Cursor offset into ``line``.
-            context: The REPL's active board/column, if any.
 
         Returns:
             Candidate strings, each a full replacement for the current
@@ -127,7 +125,7 @@ class CompletionEngine:
                 return []  # an already-typed subcommand token didn't match
             return self._matching(list(pending_subcommand.choices), partial)
 
-        return self._leaf_completions(parser, remaining, partial, context)
+        return self._leaf_completions(parser, remaining, partial)
 
     def _descend(
         self, parser: argparse.ArgumentParser, tokens: list[str]
@@ -172,7 +170,6 @@ class CompletionEngine:
         parser: argparse.ArgumentParser,
         tokens: list[str],
         partial: str,
-        context: UserContextLike,
     ) -> list[str]:
         """Complete a positional or flag for a leaf (non-subcommand) parser."""
 
@@ -186,13 +183,13 @@ class CompletionEngine:
         if previous is not None:
             option = self._option_for_flag(optionals, previous)
             if option is not None and self._takes_value(option):
-                return self._complete_for_action(option, partial, context)
+                return self._complete_for_action(option, partial)
 
         positionals = parser._get_positional_actions()
         index = self._count_positionals(optionals, tokens)
         if index >= len(positionals):
             return []
-        return self._complete_for_action(positionals[index], partial, context)
+        return self._complete_for_action(positionals[index], partial)
 
     @staticmethod
     def _option_for_flag(
@@ -239,9 +236,7 @@ class CompletionEngine:
             count += 1
         return count
 
-    def _complete_for_action(
-        self, action: argparse.Action, partial: str, context: UserContextLike
-    ) -> list[str]:
+    def _complete_for_action(self, action: argparse.Action, partial: str) -> list[str]:
         """Complete a value for ``action`` per the dest-naming convention."""
 
         if action.choices:
@@ -251,10 +246,10 @@ class CompletionEngine:
         if action.dest == "board":
             return self._matching([b.name for b in self._service.get_boards()], partial)
         if action.dest == "column":
-            if context.board is None:
+            if self._service.working_board is None:
                 return []
             return self._matching(
-                [c.name for c in self._service.get_columns(context.board)], partial
+                [c.name for c in self._service.get_columns(self._service.working_board)], partial
             )
         return []  # free text: no suggestions
 
@@ -292,7 +287,8 @@ class CompletionEngine:
 
         A leading ``/`` overrides the active context and resolves from
         the store root; otherwise completion starts at whatever depth
-        the service's own ``UserContext`` already fixes.
+        the service's own ``UserContext`` already fixes, by way of the
+        service's ``path_components`` method.
 
         Returns bare segment names (e.g. ``"in-progress/"``), not the
         full path. ``/`` is configured as a readline word-break

@@ -161,6 +161,10 @@ class FakeKanbanService:
         self._board = board
         self._column = column
 
+    @property
+    def working_board(self) -> str | None:
+        return self._board
+
     def get_boards(self) -> list[_Named]:
         return [_Named(name) for name in self._BOARDS]
 
@@ -200,7 +204,7 @@ class EngineTestCase(unittest.TestCase):
     def complete(self, line: str, context: _Context | None = None) -> list[str]:
         ctx = context or _Context()
         self.service.set_context(ctx.board, ctx.column)
-        return self.engine.complete(line, len(line), ctx)
+        return self.engine.complete(line, len(line))
 
 
 class NoContextPathCompletionTests(EngineTestCase):

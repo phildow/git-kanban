@@ -8,9 +8,8 @@ required.
 from __future__ import annotations
 
 import readline
-from typing import Callable
 
-from repl.completion_engine import CompletionEngine, UserContextLike
+from repl.completion_engine import CompletionEngine
 
 
 class ReplCompleter:
@@ -18,18 +17,10 @@ class ReplCompleter:
 
     Args:
         engine: The pure completion engine to delegate to.
-        get_context: Called on each completion attempt to fetch the
-            REPL's *current* active board/column, since context can
-            change between commands (e.g. after ``cd``).
     """
 
-    def __init__(
-        self,
-        engine: CompletionEngine,
-        get_context: Callable[[], UserContextLike],
-    ) -> None:
+    def __init__(self, engine: CompletionEngine) -> None:
         self._engine = engine
-        self._get_context = get_context
         self._matches: list[str] = []
 
     def install(self) -> None:
@@ -82,7 +73,7 @@ class ReplCompleter:
         if state == 0:
             line = readline.get_line_buffer()
             cursor = readline.get_endidx()
-            self._matches = self._engine.complete(line, cursor, self._get_context())
+            self._matches = self._engine.complete(line, cursor)
         if state < len(self._matches):
             return self._matches[state]
         return None

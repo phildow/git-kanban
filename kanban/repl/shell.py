@@ -197,7 +197,7 @@ def run_repl(*, svc: KanbanService, renderer: object) -> None:
         _configure_readline_shortcuts()
 
         engine = CompletionEngine(svc, parser)
-        completer = ReplCompleter(engine, get_context=lambda: svc.user_context)
+        completer = ReplCompleter(engine)
         completer.install()
         
     except ValueError as exc:
