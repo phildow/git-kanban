@@ -152,6 +152,15 @@ class FakeKanbanService:
         },
     }
 
+    def __init__(self) -> None:
+        self._board: str | None = None
+        self._column: str | None = None
+
+    def set_context(self, board: str | None, column: str | None) -> None:
+        """Mirror the REPL's user context so path_components resolves correctly."""
+        self._board = board
+        self._column = column
+
     def get_boards(self) -> list[_Named]:
         return [_Named(name) for name in self._BOARDS]
 
@@ -162,8 +171,18 @@ class FakeKanbanService:
         return [_Task(slug) for slug in self._BOARDS[board][column]]
 
     def path_components(self, path: str | None = None) -> tuple[str | None, str | None, str | None]:
-        """Split an absolute path into (board, column, title) components."""
-        parts = Path(path or "/").resolve(strict=False).parts
+        """Resolve path against the stored user context, mirroring KanbanService."""
+        raw = path or ""
+        if raw.startswith("/"):
+            base = Path("/")
+            rest = raw.lstrip("/")
+        else:
+            context_parts = [p for p in [self._board, self._column] if p]
+            base = Path("/").joinpath(*context_parts) if context_parts else Path("/")
+            rest = raw
+        segments = [s for s in rest.rstrip("/").split("/") if s]
+        resolved = base.joinpath(*segments).resolve(strict=False) if segments else base
+        parts = resolved.parts
         return (
             parts[1] if len(parts) > 1 else None,
             parts[2] if len(parts) > 2 else None,
@@ -175,10 +194,13 @@ class EngineTestCase(unittest.TestCase):
     """Shared fixture setup for completion engine tests."""
 
     def setUp(self) -> None:
-        self.engine = CompletionEngine(FakeKanbanService(), _build_fixture_parser())
+        self.service = FakeKanbanService()
+        self.engine = CompletionEngine(self.service, _build_fixture_parser())
 
     def complete(self, line: str, context: _Context | None = None) -> list[str]:
-        return self.engine.complete(line, len(line), context or _Context())
+        ctx = context or _Context()
+        self.service.set_context(ctx.board, ctx.column)
+        return self.engine.complete(line, len(line), ctx)
 
 
 class NoContextPathCompletionTests(EngineTestCase):

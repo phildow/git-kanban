@@ -247,7 +247,7 @@ class CompletionEngine:
         if action.choices:
             return self._matching([str(choice) for choice in action.choices], partial)
         if action.dest in PATH_LIKE_DESTS:
-            return self._complete_path(partial, context)
+            return self._complete_path(partial)
         if action.dest == "board":
             return self._matching([b.name for b in self._service.get_boards()], partial)
         if action.dest == "column":
@@ -287,12 +287,12 @@ class CompletionEngine:
             return [], text
         return tokens[:-1], tokens[-1]
 
-    def _complete_path(self, token: str, context: UserContextLike) -> list[str]:
+    def _complete_path(self, token: str) -> list[str]:
         """Complete a board/column/task path token.
 
         A leading ``/`` overrides the active context and resolves from
         the store root; otherwise completion starts at whatever depth
-        the context already fixes (board, board+column, or neither).
+        the service's own ``UserContext`` already fixes.
 
         Returns bare segment names (e.g. ``"in-progress/"``), not the
         full path. ``/`` is configured as a readline word-break
@@ -309,23 +309,8 @@ class CompletionEngine:
         else:
             prefix, partial = token[: slash_idx + 1], token[slash_idx + 1:]
 
-        board, column, _ = self._service.path_components(self._absolute_prefix(prefix, context))
+        board, column, _ = self._service.path_components(prefix or None)
         return self._walk(board, column, partial)
-
-    @staticmethod
-    def _absolute_prefix(prefix: str, context: UserContextLike) -> str:
-        """Return an absolute path string for ``prefix`` resolved against ``context``.
-
-        Called before ``path_components`` so the service never needs to
-        read the REPL's user context -- the engine supplies it directly.
-        ``/``-prefixed tokens override context exactly as on a shell.
-        """
-
-        if prefix.startswith("/"):
-            return prefix
-        context_parts = [p for p in [context.board, context.column] if p]
-        prefix_parts = [p for p in prefix.rstrip("/").split("/") if p]
-        return "/" + "/".join(context_parts + prefix_parts) + "/"
 
     def _walk(self, board: str | None, column: str | None, partial: str) -> list[str]:
         """Complete the level reached by ``(board, column)`` against ``partial``."""
