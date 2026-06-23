@@ -299,6 +299,8 @@ class CompletionEngine:
         resulting line still reads as a full path.
         """
 
+        # TODO: allow task completions for all commands that take a path
+
         slash_idx = token.rfind("/")
         if slash_idx == -1:
             prefix, partial = "", token

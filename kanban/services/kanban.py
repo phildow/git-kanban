@@ -226,41 +226,6 @@ class KanbanService:
         """Return True if the given column exists in the repository, False if not."""
         return self.repository.column_exists(board, column)
 
-    # def resolve_path(self, path: str | None = None) -> Path:
-    #     """
-    #     Resolve a user-provided path into an absolute Path object.
-
-    #     The path may be absolute (starting with "/") or relative to the
-    #     current user context.  ".." moves up one level; navigating above
-    #     root raises ValueError.  Multiple ".." segments are supported.
-    #     """
-
-    #     def _resolve(components: list[str], current: Path) -> Path:
-    #         if not components:
-    #             return current
-    #         head, *tail = components
-    #         if head in ("", "."):
-    #             return _resolve(tail, current)
-    #         if head == "..":
-    #             if current == Path("/"):
-    #                 raise ValueError(
-    #                     f"Path traversal goes above root: "
-    #                     f"cannot apply '..' to '{current}'"
-    #                 )
-    #             return _resolve(tail, current.parent)
-    #         return _resolve(tail, current / head)
-
-    #     path = path or ""
-    #     if path.startswith("/"):
-    #         base = Path("/")
-    #         rest = path.lstrip("/")
-    #     else:
-    #         base = self.working_path
-    #         rest = path
-
-    #     components = [c for c in rest.split("/") if c]
-    #     return _resolve(components, base)
-        
     def resolve_path(self, path: str | None = None) -> Path:
 
         """
@@ -282,30 +247,6 @@ class KanbanService:
         resolved_path = base.joinpath(*components).resolve(strict=False)
         return resolved_path
         
-    # def resolve_path(self, path: str | None = None) -> Path:
-
-    #     print(f"DEBUG Resolving path: {path} against working path: {self.working_path}")
-
-    #     path = path or ""
-    #     if path.startswith("/"):
-    #         base = Path("/")
-    #         rest = path.lstrip("/")
-    #     else:
-    #         base = self.working_path
-    #         rest = path
-        
-    #     components = Path(rest).parts
-
-    #     for comp in components:
-    #         if comp == "..":
-    #             base = base.parent
-    #         elif comp != "." and comp != "":
-    #             base = base / comp
-
-    #     print(f"DEBUG Resolved path: {base}")
-
-    #     return base
-
     def path_components(self, path: str | None = None) -> tuple[str | None, str | None, str | None]:
         """Resolve a [BOARD/][COLUMN/]TITLE path into its components."""
         path = self.resolve_path(path)
@@ -313,33 +254,6 @@ class KanbanService:
         return parts[1] if len(parts) > 1 else None, \
                parts[2] if len(parts) > 2 else None, \
                parts[3] if len(parts) > 3 else None
-
-    # TODO: UNSUED - see CompletionEngine
-    def completions_for_path(self, text: str) -> list[str]:
-        """Return a list of valid path completions for the given partial text."""
-        
-        board, column, title = self.path_components(text)
-
-        if board and column and title:
-            completions = [f"{t.slug}" for t in self.repository.get_tasks(board=board, column=column) if t.title.startswith(title)]
-        elif board and column:
-            # check if column is complete or partial. if partial, only return columns that match the partial
-            # otherwise return all tasks in the column
-            if self._column_exists(board, column):
-                completions = [f"{t.slug}" for t in self.repository.get_tasks(board=board, column=column) if t.title.startswith(column or "")]
-            else:
-                completions = [f"{c.name}/" for c in self.repository.get_columns(board) if c.name.startswith(column or "")]
-        elif board:
-            # check if board is complete or partial. if partial, only return boards that match the partial
-            # otherwise return all columns in the board
-            if self._board_exists(board):
-                completions = [f"{c.name}/" for c in self.repository.get_columns(board) if c.name.startswith(column or "")]
-            else:
-                completions = [f"{b.name}/" for b in self.repository.get_boards() if b.name.startswith(board or "")]
-        else:
-            completions = [f"{b.name}/" for b in self.repository.get_boards() if b.name.startswith(board or "")]
-
-        return completions
 
     def change_dir(
         self,
@@ -357,9 +271,7 @@ class KanbanService:
         """
 
         path = self._strip_trailing_slash(path) if path else None
-        # current_board = self.user_context.board
-        # current_column = self.user_context.column
-
+        
         # address the simplest cases first: 
         # no args, clear flag, or root path all reset to the default context
 
@@ -370,66 +282,14 @@ class KanbanService:
         if path is None:
             return self.user_context
 
-        # address the cases with ".." in the path, 
-        # which have special semantics for navigating up the context levels
-
-        # TODO: raise errors for invalid use of ".."
-
-        # if path == "../..":
-        #     return self.clear_user_context()
-        # if path == ".." and current_board and current_column:
-        #     self.update_user_context(board=current_board, column=None)
-        #     return self.user_context
-        # if path == ".." and current_board and not current_column:
-        #     self.update_user_context(board=None, column=None)
-        #     return self.user_context
-        # if path == ".." and not current_board and not current_column:
-        #     self.update_user_context(board=None, column=None)
-        #     return self.user_context
-
-        # address an absolute path like /my-project/todo or /my-project
-        # which may be provided by the user or generated by the completer
-
-        # if path.startswith("/"):
-        #     board, column, _ = self.path_components(path)
-        #     if board and not self._board_exists(board):
-        #         raise BoardNotFound(board)
-        #     if column and not self._column_exists(board, column):
-        #         raise ColumnNotFound(board, column)
-        #     if board and column:
-        #         self.update_user_context(board=board, column=column)
-        #         return self.user_context
-        #     if board and not column:
-        #         self.update_user_context(board=board, column=None)
-        #         return self.user_context
-
-
-        # address a relative path like "todo" or "my-project/todo", 
-        # which is resolved against the current context. 
-        #
-        # This is the most complex case because it requires disambiguating between boards and columns 
-        # based on the current context and repository state.
-
-        # full_path = self.working_path / path
-        # board, column, task = self.path_components(str(full_path))
-
         board, column, task = self.path_components(path)
 
         if task:
-            raise ValueError(f"Invalid path: {path} (cannot set context to a task)")
+            raise ValueError(f"Invalid path: {path} (cannot cd to a task)")
         if board and not self._board_exists(board):
             raise BoardNotFound(board)
         if column and not self._column_exists(board, column):
             raise ColumnNotFound(board, column)
-        
-        # elif board:
-        #     self.update_user_context(board=board, column=column)
-        # elif column:
-        #     self.update_user_context(board=board, column=column)    
-        # else:
-        #     self.clear_user_context()
-
-        # return self.user_context
         
         return self.update_user_context(board=board, column=column)
 
@@ -616,6 +476,9 @@ class KanbanService:
 
 
     # ── Tasks ─────────────────────────────────────────────────────────────────
+
+    # TODO: get_boards and get_columns take names not paths why is get_tasks different?  
+    # Should it take a path or a board/column pair?  If it takes a path, should it be able to take a task path and return just that task?
 
     def get_tasks(
         self,

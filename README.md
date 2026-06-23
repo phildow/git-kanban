@@ -53,7 +53,10 @@ kanban (main)>
 
 0.6 - Complete filesystem and in memory store
 
-REMAINING FILESYSTEM
+~
+
+- BUG: woah don't hide all errors!
+- BUG: update completion engine to allow task completion as well (many commands take tasks)
 
 - TEST: Create task with spaces - kebab_case
 - TEST: Create column with spaces - kebab_case
@@ -62,15 +65,6 @@ REMAINING FILESYSTEM
 - TEST: Check init error handling, don't overwrite a repo, don't initialize a repo that's already been created
 - TEST: Ensure memory store supports same features as filesystem (ordering)
 
-- DIRECTORY TRAVERSAL 
-
-- Correctly resolve `..` all commands that take paths not just cd
-- Correctly tab complete `..` for all commands that take paths
-- Resolve too many `..` to an error
-- Use the same logic for other commands that take paths, and use resolve into components
-  taking into account relative paths and the user context
-- Add integration tests for the user context and relative paths
-
 - FEAT: add closed_at metadata to a Task
 - FEAT: config: default boards that automatically set the closed_at value: None until moved to done or archived if None
 
@@ -78,8 +72,7 @@ REMAINING FILESYSTEM
 
 ~
 
-- BUG: if a board is already in the current context, `create board x` doesn't work
-- BUG: `kanban (/) > ls main -al` returns no result and prompts `kanban (/) >`
+- BUG: `kanban (/) > ls main -al` returns an error probably a mutually exlusive argument `kanban (/) >`
 
 - FEAT: give the user the option to bootstrap from the repl
 - TEST: renaming the board or column keeps the user context in sync
@@ -90,9 +83,8 @@ REMAINING FILESYSTEM
 - CHORE: add utilty to filter for invisible files, which is used extensively in the filesystem repo
 - CHORE: Use slugs in memory repository for private indexing (add tests)
 
-
-
 POTENTIAL INCONSISTENCY
+
 - Where metadata is required, eg sort order, files may be missing or renamed directly, change not reflected in metadata file
 - The file system is the source of truth, although metadata or the index may be out of sync.
 - Corrections defer to the filesystem, eg sort: 
