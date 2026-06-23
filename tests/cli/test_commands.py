@@ -330,13 +330,13 @@ class TestCommandHandlers(unittest.TestCase):
 
     def test_status_handler(self):
         """`status` handler forwards format option and renders result."""
-        args = self._args(format="json")
+        args = self._args(format="plain")
         result = object()
         self.svc.status.return_value = result
 
         commands.handle_status(args, self.svc, self.renderer)
 
-        self.svc.status.assert_called_once_with(format="json")
+        self.svc.status.assert_called_once_with(format="plain")
         self.renderer.render_status.assert_called_once_with(args, result)
 
     def test_config_handlers(self):

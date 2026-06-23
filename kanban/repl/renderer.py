@@ -360,10 +360,12 @@ class Renderer:
 				]
 			items.append("".join(elems))
 		
+		items.append("")
+
 		items.insert(0, "---------------------")
 		items.insert(1, f"Number of tasks: {len(result)}")
 		items.insert(2, "---------------------\n")
-		
+
 		self._emit(args, "\n".join(items))
 
 	def render_task_create(self, args: argparse.Namespace, result: Task) -> None:

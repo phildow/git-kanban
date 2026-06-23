@@ -190,7 +190,7 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # task list
     p = task_sub.add_parser("list", help="List tasks")
-    p.add_argument("path", metavar="BOARD[/COLUMN]", help="Board/column path")
+    p.add_argument("path", metavar="/BOARD[/COLUMN]", help="Board/column path")
     _add_list_flag_arg(p)
     _add_list_format_args(p, SORT_TASK_CHOICES)
     _add_task_filter_args(p)

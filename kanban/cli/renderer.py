@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import argparse
-import json
 from functools import wraps
 
-from models import UserContext, Board, Column, Task
+from models import Board, Column, Task
 from services.kanban import GitCommit, KanbanRoot, KanbanStatus
 
 
@@ -42,17 +41,6 @@ class Renderer:
 
 	def render_board_list(self, args: argparse.Namespace, result: list[Board]) -> None:
 		fmt = getattr(args, "format", "plain")
-
-		if fmt == "json":
-			payload = [
-				{
-					"name": board.name,
-					"column_count": len(board.columns),
-				}
-				for board in result
-			]
-			self._emit(args, json.dumps(payload, indent=2))
-			return
 
 		if not result:
 			self._emit(args, "No boards")
@@ -90,18 +78,6 @@ class Renderer:
 
 	def render_column_list(self, args: argparse.Namespace, result: list[Column]) -> None:
 		fmt = getattr(args, "format", "plain")
-
-		if fmt == "json":
-			payload = [
-				{
-					"name": column.name,
-					"board": column.board,
-					"position": column.position,
-				}
-				for column in result
-			]
-			self._emit(args, json.dumps(payload, indent=2))
-			return
 
 		if not result:
 			self._emit(args, "No columns")
@@ -168,25 +144,6 @@ class Renderer:
 	def render_task_list(self, args: argparse.Namespace, result: list[Task]) -> None:
 		fmt = getattr(args, "format", "plain")
 
-		if fmt == "json":
-			payload = [
-				{
-					"id": str(task.id),
-					"title": task.title,
-					"slug": task.slug,
-					"board": task.board,
-					"column": task.column,
-					"assignee": task.assignee,
-					"priority": task.priority,
-					"due_date": task.due_date.isoformat() if task.due_date else None,
-					"tags": task.tags,
-					"created_by": task.created_by,
-				}
-				for task in result
-			]
-			self._emit(args, json.dumps(payload, indent=2))
-			return
-
 		if not result:
 			self._emit(args, "No tasks")
 			return
@@ -215,27 +172,6 @@ class Renderer:
 			self._emit(args, f"Task created: {result.slug}")
 
 	def render_task_show(self, args: argparse.Namespace, result: Task) -> None:
-		fmt = getattr(args, "format", "plain")
-
-		if fmt == "json":
-			payload = {
-				"id": str(result.id),
-				"title": result.title,
-				"slug": result.slug,
-				"board": result.board,
-				"column": result.column,
-				"assignee": result.assignee,
-				"priority": result.priority,
-				"due_date": result.due_date.isoformat() if result.due_date else None,
-				"tags": result.tags,
-				"created_by": result.created_by,
-				"created_at": result.created_at.isoformat() if result.created_at else None,
-				"updated_at": result.updated_at.isoformat() if result.updated_at else None,
-				"body": result.body,
-			}
-			self._emit(args, json.dumps(payload, indent=2))
-			return
-
 		lines = [
 			f"Slug: {result.slug}",
 			f"ID: {result.id}",
