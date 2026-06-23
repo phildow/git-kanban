@@ -55,7 +55,8 @@ kanban (main)>
 
 REMAINING FILESYSTEM
 
-- FEAT: A JSON option for every command on the CLI, uses a separate renderer
+- TEST: Integration testing
+
 - TEST: renaming the board or column keeps the user context in sync
 - CLAUDE: note that models are lightweight and do not include relationships, where they reference other entities they reference them by name only, always call a service layer method to get a fully qualified object
 

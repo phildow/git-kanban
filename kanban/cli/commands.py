@@ -8,15 +8,12 @@ from datetime import datetime, timezone
 from models import TaskFilter
 from services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
 from utils.shell import prompt_for_confirmation
-from cli.json_renderer import JsonRenderer
-
-_json_renderer = JsonRenderer()
 
 
-def _pick(args: argparse.Namespace, renderer: object) -> object:
+def _pick(args: argparse.Namespace, renderer: object, json_renderer: object) -> object:
     """Return the JSON renderer when --format json is requested, otherwise the default."""
     if getattr(args, "format", None) == "json":
-        return _json_renderer
+        return json_renderer
     return renderer
 
 
@@ -24,65 +21,65 @@ def _pick(args: argparse.Namespace, renderer: object) -> object:
 # Initialization commands
 # ---------------------------------------------------------------------------
 
-def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	_ = args
 	result = svc.initialize_kanban()
-	_pick(args, renderer).render_init(args, result)
+	_pick(args, renderer, json_renderer).render_init(args, result)
 
 # ---------------------------------------------------------------------------
 # Board subcommands
 # ---------------------------------------------------------------------------
 
-def handle_board_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_board_list(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.get_boards(sort=args.sort, reverse=args.reverse)
-	_pick(args, renderer).render_board_list(args, result)
+	_pick(args, renderer, json_renderer).render_board_list(args, result)
 
 
-def handle_board_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_board_create(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.create_board(args.board)
-	_pick(args, renderer).render_board_create(args, result)
+	_pick(args, renderer, json_renderer).render_board_create(args, result)
 
 
-def handle_board_rename(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_board_rename(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.rename_board(args.board, args.new_name)
-	_pick(args, renderer).render_board_rename(args, result)
+	_pick(args, renderer, json_renderer).render_board_rename(args, result)
 
 
-def handle_board_delete(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_board_delete(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	if not args.force and not prompt_for_confirmation(f"Delete board '{args.board}'?"):
 		return
 	result = svc.delete_board(args.board)
-	_pick(args, renderer).render_board_delete(args, result)
+	_pick(args, renderer, json_renderer).render_board_delete(args, result)
 
 # ---------------------------------------------------------------------------
 # Column subcommands
 # ---------------------------------------------------------------------------
 
-def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.get_columns(board=args.board, sort=args.sort, reverse=args.reverse)
-	_pick(args, renderer).render_column_list(args, result)
+	_pick(args, renderer, json_renderer).render_column_list(args, result)
 
 
-def handle_column_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_column_create(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.create_column(args.path)
-	_pick(args, renderer).render_column_create(args, result)
+	_pick(args, renderer, json_renderer).render_column_create(args, result)
 
 
-def handle_column_rename(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_column_rename(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.rename_column(args.path, args.new_name)
-	_pick(args, renderer).render_column_rename(args, result)
+	_pick(args, renderer, json_renderer).render_column_rename(args, result)
 
 
-def handle_column_reorder(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_column_reorder(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.reorder_column(args.path, args.position)
-	_pick(args, renderer).render_column_reorder(args, result)
+	_pick(args, renderer, json_renderer).render_column_reorder(args, result)
 
 
-def handle_column_delete(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_column_delete(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	if not args.force and not prompt_for_confirmation(f"Delete column '{args.path}'?"):
 		return
 	result = svc.delete_column(args.path)
-	_pick(args, renderer).render_column_delete(args, result)
+	_pick(args, renderer, json_renderer).render_column_delete(args, result)
 
 # ---------------------------------------------------------------------------
 # Task subcommands
@@ -103,12 +100,12 @@ def _build_task_filter(args: argparse.Namespace) -> TaskFilter:
 	)
 
 
-def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.get_tasks(path=args.path, filter=_build_task_filter(args), sort=args.sort, reverse=args.reverse)
-	_pick(args, renderer).render_task_list(args, result)
+	_pick(args, renderer, json_renderer).render_task_list(args, result)
 
 
-def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	# TODO - why can't I use args.assignee directly here? Is it because it's an optional argument on the parser?
 	params = TaskCreateParams(
 		assignee=getattr(args, "assignee", None),
@@ -119,20 +116,20 @@ def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: o
 	)
 
 	result = svc.create_task(args.path, params)
-	_pick(args, renderer).render_task_create(args, result)
+	_pick(args, renderer, json_renderer).render_task_create(args, result)
 
 
-def handle_task_show(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_task_show(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.get_task(args.path)
-	_pick(args, renderer).render_task_show(args, result)
+	_pick(args, renderer, json_renderer).render_task_show(args, result)
 
 
-def handle_task_edit(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_task_edit(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.edit_task(args.path)
-	_pick(args, renderer).render_task_edit(args, result)
+	_pick(args, renderer, json_renderer).render_task_edit(args, result)
 
 
-def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	updates = TaskUpdateParams(
 		title=getattr(args, "title", None),
 		assignee=getattr(args, "assignee", None),
@@ -142,51 +139,52 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: o
 	)
 
 	result = svc.update_task(args.path, updates=updates)
-	_pick(args, renderer).render_task_edit(args, result)
+	_pick(args, renderer, json_renderer).render_task_edit(args, result)
 
 
-def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.move_task(args.path, args.dest)
-	_pick(args, renderer).render_task_move(args, result)
+	_pick(args, renderer, json_renderer).render_task_move(args, result)
 
 
-def handle_task_delete(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_task_delete(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	if not args.force and not prompt_for_confirmation(f"Delete task '{args.path}'?"):
 		return
 	result = svc.delete_task(args.path)
-	_pick(args, renderer).render_task_delete(args, result)
+	_pick(args, renderer, json_renderer).render_task_delete(args, result)
 
 
 # ---------------------------------------------------------------------------
 # Additional commands (search, log, status, config)
 # ---------------------------------------------------------------------------
 
-def handle_search(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_search(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.search(args.query, board=args.board, sort=args.sort, reverse=args.reverse)
-	_pick(args, renderer).render_search(args, result)
+	_pick(args, renderer, json_renderer).render_search(args, result)
 
 
-def handle_log(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_log(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.log(path=args.path, limit=args.limit)
-	_pick(args, renderer).render_log(args, result)
+	_pick(args, renderer, json_renderer).render_log(args, result)
 
 
-def handle_status(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_status(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.status(format=args.format)
-	_pick(args, renderer).render_status(args, result)
+	_pick(args, renderer, json_renderer).render_status(args, result)
 
 
-def handle_config_set(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_config_set(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.config_set(args.key, args.value)
-	_pick(args, renderer).render_config_set(args, result)
+	_pick(args, renderer, json_renderer).render_config_set(args, result)
 
 
-def handle_config_get(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_config_get(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.config_get(args.key)
-	_pick(args, renderer).render_config_get(args, result)
+	_pick(args, renderer, json_renderer).render_config_get(args, result)
 
 
-def handle_repl(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_repl(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
+	_ = args, json_renderer
 	from repl.renderer import Renderer as REPLRenderer
 	from repl import run_repl
 	renderer = REPLRenderer()

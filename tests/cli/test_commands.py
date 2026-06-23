@@ -23,6 +23,7 @@ class TestCommandHandlers(unittest.TestCase):
     def setUp(self) -> None:
         self.svc = MagicMock()
         self.renderer = MagicMock()
+        self.json_renderer = MagicMock()
         self.repl_renderer = MagicMock()
 
     def _args(self, **kwargs) -> Namespace:
@@ -34,7 +35,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.initialize_kanban.return_value = result
 
-        commands.handle_init(args, self.svc, self.renderer)
+        commands.handle_init(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.initialize_kanban.assert_called_once_with()
         self.renderer.render_init.assert_called_once_with(args, result)
@@ -45,7 +46,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.get_boards.return_value = result
 
-        commands.handle_board_list(args, self.svc, self.renderer)
+        commands.handle_board_list(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.get_boards.assert_called_once_with(sort="title", reverse=True)
         self.renderer.render_board_list.assert_called_once_with(args, result)
@@ -56,7 +57,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.create_board.return_value = result
 
-        commands.handle_board_create(args, self.svc, self.renderer)
+        commands.handle_board_create(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.create_board.assert_called_once_with("my-board")
         self.renderer.render_board_create.assert_called_once_with(args, result)
@@ -67,7 +68,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.rename_board.return_value = result
 
-        commands.handle_board_rename(args, self.svc, self.renderer)
+        commands.handle_board_rename(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.rename_board.assert_called_once_with("old", "new")
         self.renderer.render_board_rename.assert_called_once_with(args, result)
@@ -78,7 +79,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.delete_board.return_value = result
 
-        commands.handle_board_delete(args, self.svc, self.renderer)
+        commands.handle_board_delete(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.delete_board.assert_called_once_with("my-board")
         self.renderer.render_board_delete.assert_called_once_with(args, result)
@@ -88,35 +89,35 @@ class TestCommandHandlers(unittest.TestCase):
         args = self._args(board="board-a", sort="title", reverse=False)
         result = object()
         self.svc.get_columns.return_value = result
-        commands.handle_column_list(args, self.svc, self.renderer)
+        commands.handle_column_list(args, self.svc, self.renderer, self.json_renderer)
         self.svc.get_columns.assert_called_once_with(board="board-a", sort="title", reverse=False)
         self.renderer.render_column_list.assert_called_once_with(args, result)
 
         args = self._args(path="board-a/todo")
         result = object()
         self.svc.create_column.return_value = result
-        commands.handle_column_create(args, self.svc, self.renderer)
+        commands.handle_column_create(args, self.svc, self.renderer, self.json_renderer)
         self.svc.create_column.assert_called_once_with("board-a/todo")
         self.renderer.render_column_create.assert_called_once_with(args, result)
 
         args = self._args(path="board-a/todo", new_name="doing")
         result = object()
         self.svc.rename_column.return_value = result
-        commands.handle_column_rename(args, self.svc, self.renderer)
+        commands.handle_column_rename(args, self.svc, self.renderer, self.json_renderer)
         self.svc.rename_column.assert_called_once_with("board-a/todo", "doing")
         self.renderer.render_column_rename.assert_called_once_with(args, result)
 
         args = self._args(path="board-a/todo", position=2)
         result = object()
         self.svc.reorder_column.return_value = result
-        commands.handle_column_reorder(args, self.svc, self.renderer)
+        commands.handle_column_reorder(args, self.svc, self.renderer, self.json_renderer)
         self.svc.reorder_column.assert_called_once_with("board-a/todo", 2)
         self.renderer.render_column_reorder.assert_called_once_with(args, result)
 
         args = self._args(path="board-a/todo", force=True)
         result = object()
         self.svc.delete_column.return_value = result
-        commands.handle_column_delete(args, self.svc, self.renderer)
+        commands.handle_column_delete(args, self.svc, self.renderer, self.json_renderer)
         self.svc.delete_column.assert_called_once_with("board-a/todo")
         self.renderer.render_column_delete.assert_called_once_with(args, result)
 
@@ -126,7 +127,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.get_tasks.return_value = result
 
-        commands.handle_task_list(args, self.svc, self.renderer)
+        commands.handle_task_list(args, self.svc, self.renderer, self.json_renderer)
 
         from models import TaskFilter
         self.svc.get_tasks.assert_called_once_with(path="board-a/todo", filter=TaskFilter(), sort="title", reverse=True)
@@ -145,7 +146,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.create_task.return_value = result
 
-        commands.handle_task_create(args, self.svc, self.renderer)
+        commands.handle_task_create(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.create_task.assert_called_once_with(
             "board-a/todo/fix-parser",
@@ -165,7 +166,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.create_task.return_value = result
 
-        commands.handle_task_create(args, self.svc, self.renderer)
+        commands.handle_task_create(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.create_task.assert_called_once_with(
             "board-a/todo/check-no-other-args",
@@ -192,7 +193,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.create_task.return_value = result
 
-        commands.handle_task_create(args, self.svc, self.renderer)
+        commands.handle_task_create(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.create_task.assert_called_once_with(
             "board-a/todo/check-tags-none",
@@ -212,7 +213,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.get_task.return_value = result
 
-        commands.handle_task_show(args, self.svc, self.renderer)
+        commands.handle_task_show(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.get_task.assert_called_once_with("board-a/todo/fix-parser")
         self.renderer.render_task_show.assert_called_once_with(args, result)
@@ -223,7 +224,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.update_task.return_value = result
 
-        commands.handle_task_update(args, self.svc, self.renderer)
+        commands.handle_task_update(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.update_task.assert_called_once_with(
             "board-a/todo/fix-parser",
@@ -250,7 +251,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.update_task.return_value = result
 
-        commands.handle_task_update(args, self.svc, self.renderer)
+        commands.handle_task_update(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.update_task.assert_called_once_with(
             "board-a/todo/fix-parser",
@@ -270,7 +271,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.update_task.return_value = result
 
-        commands.handle_task_update(args, self.svc, self.renderer)
+        commands.handle_task_update(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.update_task.assert_called_once_with(
             "board-a/todo/fix-parser",
@@ -290,7 +291,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.move_task.return_value = result
 
-        commands.handle_task_move(args, self.svc, self.renderer)
+        commands.handle_task_move(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.move_task.assert_called_once_with("board-a/todo/fix-parser", "board-a/done")
         self.renderer.render_task_move.assert_called_once_with(args, result)
@@ -301,7 +302,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.delete_task.return_value = result
 
-        commands.handle_task_delete(args, self.svc, self.renderer)
+        commands.handle_task_delete(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.delete_task.assert_called_once_with("board-a/todo/fix-parser")
         self.renderer.render_task_delete.assert_called_once_with(args, result)
@@ -312,7 +313,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.search.return_value = result
 
-        commands.handle_search(args, self.svc, self.renderer)
+        commands.handle_search(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.search.assert_called_once_with("query", board="board-a", sort="title", reverse=False)
         self.renderer.render_search.assert_called_once_with(args, result)
@@ -323,7 +324,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.log.return_value = result
 
-        commands.handle_log(args, self.svc, self.renderer)
+        commands.handle_log(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.log.assert_called_once_with(path="board-a/todo/task-1", limit=5)
         self.renderer.render_log.assert_called_once_with(args, result)
@@ -334,7 +335,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.status.return_value = result
 
-        commands.handle_status(args, self.svc, self.renderer)
+        commands.handle_status(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.status.assert_called_once_with(format="plain")
         self.renderer.render_status.assert_called_once_with(args, result)
@@ -344,14 +345,14 @@ class TestCommandHandlers(unittest.TestCase):
         args = self._args(key="name", value="Philip")
         result = object()
         self.svc.config_set.return_value = result
-        commands.handle_config_set(args, self.svc, self.renderer)
+        commands.handle_config_set(args, self.svc, self.renderer, self.json_renderer)
         self.svc.config_set.assert_called_once_with("name", "Philip")
         self.renderer.render_config_set.assert_called_once_with(args, result)
 
         args = self._args(key="name")
         result = object()
         self.svc.config_get.return_value = result
-        commands.handle_config_get(args, self.svc, self.renderer)
+        commands.handle_config_get(args, self.svc, self.renderer, self.json_renderer)
         self.svc.config_get.assert_called_once_with("name")
         self.renderer.render_config_get.assert_called_once_with(args, result)
 

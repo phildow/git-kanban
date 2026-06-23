@@ -34,8 +34,6 @@ from repl.commands import (
     handle_set_path,
 )
 
-
-FORMAT_CHOICES = ["table", "plain", "json"]
 SORT_TASK_CHOICES = ["title", "priority", "due-date", "created-at", "updated-at", "created-by", "column"]
 SORT_BOARD_COLUMN_CHOICES = ["title"]
 PRIORITY_CHOICES = ["low", "medium", "high"]

@@ -52,10 +52,12 @@ def _add_format_arg(parser: argparse.ArgumentParser) -> None:
                         help="Output format: plain or json")
 
 
-def _add_list_format_args(parser: argparse.ArgumentParser, sort_choices: list[str]) -> None:
-    _add_format_arg(parser)
+
+def _add_list_format_and_sort_args(parser: argparse.ArgumentParser, sort_choices: list[str]) -> None:
     parser.add_argument("-s", "--sort", choices=sort_choices, metavar="FIELD", help="Field to sort by")
     parser.add_argument("-r", "--reverse", action="store_true", default=False, help="Reverse the sort order")
+    parser.add_argument("--format", choices=FORMAT_CHOICES, default="plain", metavar="FORMAT",
+                        help="Output format: plain, json, or table (default: plain)")
 
 
 def _add_task_filter_args(parser: argparse.ArgumentParser) -> None:
@@ -67,17 +69,13 @@ def _add_task_filter_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--created-by", metavar="NAME", help="Filter by creator")
 
 
-def _add_list_flag_arg(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("-l", "--list", action="store_true", default=False,
-                        help="Enable list-mode output")
-
-
 def _add_task_create_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("-w", "--assignee", metavar="NAME", help="Assign task to a user")
     parser.add_argument("-p", "--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
     parser.add_argument("-t", "--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
     parser.add_argument("--due-date", metavar="DATE", help="Due date (YYYY-MM-DD)")
     parser.add_argument("--created-by", metavar="NAME", help="Creator name")
+
 
 def _add_task_update_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("-w", "--assignee", metavar="NAME", help="Assign task to a user")
@@ -99,8 +97,7 @@ def _add_board_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # board list
     p = board_sub.add_parser("list", help="List all boards")
-    _add_list_flag_arg(p)
-    _add_list_format_args(p, SORT_BOARD_COLUMN_CHOICES)
+    _add_list_format_and_sort_args(p, SORT_BOARD_COLUMN_CHOICES)
     _add_global_flags(p)
     p.set_defaults(func=handle_board_list)
 
@@ -141,8 +138,7 @@ def _add_column_parser(subparsers: argparse._SubParsersAction) -> None:
     # column list
     p = col_sub.add_parser("list", help="List columns")
     p.add_argument("board", metavar="BOARD", help="Board name")
-    _add_list_flag_arg(p)
-    _add_list_format_args(p, SORT_BOARD_COLUMN_CHOICES)
+    _add_list_format_and_sort_args(p, SORT_BOARD_COLUMN_CHOICES)
     _add_global_flags(p)
     p.set_defaults(func=handle_column_list)
 
@@ -191,8 +187,7 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     # task list
     p = task_sub.add_parser("list", help="List tasks")
     p.add_argument("path", metavar="/BOARD[/COLUMN]", help="Board/column path")
-    _add_list_flag_arg(p)
-    _add_list_format_args(p, SORT_TASK_CHOICES)
+    _add_list_format_and_sort_args(p, SORT_TASK_CHOICES)
     _add_task_filter_args(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_task_list)
@@ -274,7 +269,7 @@ def build_parser() -> argparse.ArgumentParser:
     # search
     p = subparsers.add_parser("search", help="Full-text search across tasks")
     p.add_argument("query", metavar="QUERY", help="Search query")
-    _add_list_format_args(p, SORT_TASK_CHOICES)
+    _add_list_format_and_sort_args(p, SORT_TASK_CHOICES)
     _add_task_filter_args(p)
     p.add_argument("--board", metavar="BOARD", help="Restrict search to a specific board")
     _add_global_flags(p)

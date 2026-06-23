@@ -5,6 +5,7 @@ from pathlib import Path
 
 from cli.parser import parse_args
 from cli.renderer import Renderer
+from cli.json_renderer import JsonRenderer
 
 from models import UserContext
 from services.git import GitService
@@ -24,17 +25,17 @@ def main() -> None:
     repository = get_repository(FILESYSTEM)
     index_service = IndexService(repository=repository)
     git_service = GitService()
-    user_context = UserContext()
     svc = KanbanService(repository=repository, index_service=index_service, git_service=git_service)
     renderer = Renderer()
-    
+    json_renderer = JsonRenderer()
+
     args = parse_args()
 
     if not hasattr(args, "func"):
         raise SystemExit("No command handler registered")
 
     try:
-        args.func(args, svc, renderer)
+        args.func(args, svc, renderer, json_renderer)
     except ValueError as e:
         print(f"Value error: {e}")
 
