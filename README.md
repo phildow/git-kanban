@@ -55,8 +55,6 @@ kanban (main)>
 
 REMAINING FILESYSTEM
 
-- TEST: Integration testing
-
 - FEAT: give the user the option to bootstrap from the repl
 - TEST: renaming the board or column keeps the user context in sync
 - CLAUDE: note that models are lightweight and do not include relationships, where they reference other entities they reference them by name only, always call a service layer method to get a fully qualified object

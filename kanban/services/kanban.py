@@ -149,9 +149,10 @@ class KanbanService:
         self.repository.init_storage()
         self._bootstrap(config)
 
-        default_board = config.get("usercontext", {}).get("board")
-        default_column = config.get("usercontext", {}).get("column")
-        self.update_user_context(board=default_board, column=default_column)
+        if config is not None:
+            default_board = config.get("usercontext", {}).get("board")
+            default_column = config.get("usercontext", {}).get("column")
+            self.update_user_context(board=default_board, column=default_column)
 
         return True
 
