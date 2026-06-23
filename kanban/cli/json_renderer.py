@@ -7,7 +7,7 @@ import json
 from functools import wraps
 
 from models import Board, Column, Task
-from services.kanban import GitCommit, KanbanRoot, KanbanStatus
+from services.kanban import GitCommit, KanbanStatus
 
 
 def _requires_verbose(method):
@@ -15,7 +15,8 @@ def _requires_verbose(method):
     def _wrapped(self, args: argparse.Namespace, result):
         if not getattr(args, "verbose", False):
             return None
-        return method(self, args, result)
+        else:
+            return method(self, args, result)
     return _wrapped
 
 
@@ -73,9 +74,9 @@ class JsonRenderer:
     # ── Initialisation ────────────────────────────────────────────────────────
 
     @_requires_verbose
-    def render_init(self, args: argparse.Namespace, result: KanbanRoot) -> None:
+    def render_init(self, args: argparse.Namespace, result: bool) -> None:
         _ = result
-        self._emit(args, json.dumps({"initialized": True}))
+        self._emit(args, json.dumps({"initialized": result}, indent=2))
 
     # ── Boards ────────────────────────────────────────────────────────────────
 
@@ -93,7 +94,7 @@ class JsonRenderer:
     @_requires_verbose
     def render_board_delete(self, args: argparse.Namespace, result: None) -> None:
         _ = result
-        self._emit(args, json.dumps({"deleted": getattr(args, "board", None)}))
+        self._emit(args, json.dumps({"deleted": getattr(args, "board", None)}, indent=2))
 
     # ── Columns ───────────────────────────────────────────────────────────────
 
@@ -115,7 +116,7 @@ class JsonRenderer:
     @_requires_verbose
     def render_column_delete(self, args: argparse.Namespace, result: None) -> None:
         _ = result
-        self._emit(args, json.dumps({"deleted": getattr(args, "path", None)}))
+        self._emit(args, json.dumps({"deleted": getattr(args, "path", None)}, indent=2))
 
     # ── Tasks ─────────────────────────────────────────────────────────────────
 
@@ -139,7 +140,7 @@ class JsonRenderer:
     @_requires_verbose
     def render_task_delete(self, args: argparse.Namespace, result: None) -> None:
         _ = result
-        self._emit(args, json.dumps({"deleted": getattr(args, "path", None)}))
+        self._emit(args, json.dumps({"deleted": getattr(args, "path", None)}, indent=2))
 
     # ── Search, log, status, config ───────────────────────────────────────────
 
@@ -168,4 +169,4 @@ class JsonRenderer:
 
     @_requires_verbose
     def render_config_get(self, args: argparse.Namespace, result: str) -> None:
-        self._emit(args, json.dumps({"key": args.key, "value": result}))
+        self._emit(args, json.dumps({"key": args.key, "value": result}, indent=2))

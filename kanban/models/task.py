@@ -32,3 +32,7 @@ class Task:
     @property
     def path(self) -> Path:
         return Path(f"/{self.board}/{self.column}/{self.slug}")
+    
+    def filename(self) -> str:
+        """Return the filename for this task, based on its slug."""
+        return f"{self.slug}.md"

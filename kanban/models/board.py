@@ -30,3 +30,8 @@ class Board:
     @property
     def slug(self) -> str:
         return self.name.lower().replace(" ", "-")
+    
+    @property
+    def filename(self) -> str:
+        return self.slug
+    

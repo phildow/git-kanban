@@ -29,7 +29,7 @@ def _build_task_filter(args: argparse.Namespace) -> TaskFilter:
     )
 
 
-def handle_list(args: argparse.Namespace, svc: KanbanService) -> tuple[type, list[Board | Column | Task]]:
+def handle_list_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[type, list[Board | Column | Task]]:
     """
     List the contents at the path applying filters and sort.  This is
     the main entry point for all list/ls commands in the REPL, which pass a
@@ -49,6 +49,7 @@ def handle_list(args: argparse.Namespace, svc: KanbanService) -> tuple[type, lis
         return Task, svc.get_tasks(path=f"/{board}", filter=filter, sort=sort, reverse=reverse)
     elif all_tasks and not board:
         raise ValueError("Cannot list all tasks without a board name")
+    
     if board and column:
         return Task, svc.get_tasks(path=f"/{board}/{column}", filter=filter, sort=sort, reverse=reverse)
     elif board and not column and all_tasks:
@@ -59,7 +60,7 @@ def handle_list(args: argparse.Namespace, svc: KanbanService) -> tuple[type, lis
         return Board, svc.get_boards(sort=sort, reverse=reverse)
        
 
-def handle_delete(args: argparse.Namespace, svc: KanbanService) -> type:
+def handle_delete_helper(args: argparse.Namespace, svc: KanbanService) -> type:
     """
     Delete the entity at the given path.  This is the main entry point for
     all delete/rm commands in the REPL, which pass a user-provided path that
@@ -91,7 +92,7 @@ def handle_delete(args: argparse.Namespace, svc: KanbanService) -> type:
     return None
     
 
-def handle_move(args: argparse.Namespace, svc: KanbanService) -> tuple[type, Task | Column | Board]:
+def handle_move_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[type, Task | Column | Board]:
     """
     Move the entity at the given path to a new location.  This is the main
     entry point for all move commands in the REPL, which pass a user-provided
@@ -116,3 +117,4 @@ def handle_move(args: argparse.Namespace, svc: KanbanService) -> tuple[type, Tas
         return Task, svc.get_task(path=f"/{board}/{task}")
     elif not board and not column and not task:
         raise ValueError("Cannot move without a board name: {}".format(path))
+    

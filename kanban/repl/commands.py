@@ -7,8 +7,8 @@ from __future__ import annotations
 import argparse
 
 from models import Board, Column, Task
+from repl.command_helpers import handle_list_helper, handle_delete_helper, handle_move_helper
 from services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
-from services.repl import handle_list as handle_list_helper, handle_delete as handle_delete_helper, handle_move as handle_move_helper
 from storage.seeds import BOOTSTRAP_CONFIG
 
 # ---------------------------------------------------------------------------

@@ -55,10 +55,6 @@ kanban (main)>
 
 REMAINING FILESYSTEM
 
-- INT: check that the REPL output is never empty
-- INT: improve repl rendering - always give feedback
-- TEST: make sure repl gives recoverable error messages
-
 - TEST: Create task with spaces - kebab_case
 - TEST: Create column with spaces - kebab_case
 - TEST: Create board with spaces - kebab_case
@@ -76,6 +72,8 @@ REMAINING FILESYSTEM
 
 - FEAT: add closed_at metadata to a Task
 - FEAT: config: default boards that automatically set the closed_at value: None until moved to done or archived if None
+
+- TEST: make sure repl gives recoverable error messages
 
 ~
 

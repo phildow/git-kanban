@@ -75,7 +75,7 @@ def _prompt(svc: KanbanService) -> str:
     return f"kanban ({svc.working_path}) > "
 
 
-def _initialize_kanban(svc: KanbanService) -> bool:
+def _initialize_kanban(svc: KanbanService, renderer: object) -> bool:
     """Prompt the user to initialize a kanban repository if not already initialized."""
     if svc.is_initialized:
         return True
@@ -88,11 +88,12 @@ def _initialize_kanban(svc: KanbanService) -> bool:
     if should_init in {"y", "yes"}:
         try:
             svc.initialize_kanban()
+            renderer.render_init(None, True)
             return True
         except Exception as exc:
             exc_desc = str(exc) or exc.__class__.__name__
             logging.error("Failed to initialize repository: %s", exc_desc)
-            print(f"Failed to initialize repository")
+            renderer.render_init(None, False)
             return False
     return False
 
@@ -188,8 +189,7 @@ def _save_command_history(svc: KanbanService) -> None:
 def run_repl(*, svc: KanbanService, renderer: object) -> None:
     """Run a simple command loop that reuses the CLI parser/handlers."""
 
-    if not _initialize_kanban(svc):
-        print("Kanban repository not initialized. Exiting.")
+    if not _initialize_kanban(svc, renderer):
         exit(1)
     
     try:

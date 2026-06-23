@@ -41,12 +41,6 @@ class TaskUpdateParams:
 # ── Return types ──────────────────────────────────────────────────────────────
 
 @dataclass
-class KanbanRoot:
-    path:       Path           # .kanban-store/ directory
-    git_init:   bool           # True if git repo was freshly created
-    boards_dir: Path
-
-@dataclass
 class GitCommit:
     sha:         str
 
@@ -121,7 +115,7 @@ class KanbanService:
 
     @property
     def root(self) -> Path:
-        """Return the KanbanRoot if the repository is initialized, or raise if not."""
+        """Return the root directory of the repository if initialized, or raise if not."""
         return self.repository.root
 
     @property

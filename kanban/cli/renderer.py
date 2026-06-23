@@ -6,7 +6,7 @@ import argparse
 from functools import wraps
 
 from models import Board, Column, Task
-from services.kanban import GitCommit, KanbanRoot, KanbanStatus
+from services.kanban import GitCommit, KanbanStatus
 
 
 def _requires_verbose(method):
@@ -14,7 +14,8 @@ def _requires_verbose(method):
 	def _wrapped(self, args: argparse.Namespace, result):
 		if not getattr(args, "verbose", False):
 			return None
-		return method(self, args, result)
+		else:
+			return method(self, args, result)
 
 	return _wrapped
 
@@ -32,8 +33,11 @@ class Renderer:
 # ---------------------------------------------------------------------------
 
 	@_requires_verbose
-	def render_init(self, args: argparse.Namespace, result: KanbanRoot) -> None:
-		self._emit(args, result)
+	def render_init(self, args: argparse.Namespace, result: bool) -> None:
+		if result:
+			self._emit(args, "Kanban system initialized successfully.")
+		else:
+			self._emit(args, "Failed to initialize Kanban system.")
 
 # ---------------------------------------------------------------------------
 # Board rendering
@@ -98,8 +102,8 @@ class Renderer:
 		column_name = result.name
 		if board_name and column_name:
 			self._emit(args, f"Column created: {board_name}/{column_name}")
-			return
-		self._emit(args, f"Column created: {column_name}")
+		else:
+			self._emit(args, f"Column created: {column_name}")
 
 	@_requires_verbose
 	def render_column_rename(self, args: argparse.Namespace, result: Column) -> None:
@@ -110,8 +114,8 @@ class Renderer:
 
 		if board_name:
 			self._emit(args, f"Column renamed: {board_name}/{old_name} -> {board_name}/{new_name}")
-			return
-		self._emit(args, f"Column renamed: {old_name} -> {new_name}")
+		else:
+			self._emit(args, f"Column renamed: {old_name} -> {new_name}")
 
 	@_requires_verbose
 	def render_column_reorder(self, args: argparse.Namespace, result: list[Column]) -> None:
@@ -123,8 +127,8 @@ class Renderer:
 
 		if isinstance(position, int):
 			self._emit(args, f"Column reordered: {target} -> position {position + 1}")
-			return
-		self._emit(args, f"Column reordered: {target}")
+		else:
+			self._emit(args, f"Column reordered: {target}")
 
 	@_requires_verbose
 	def render_column_delete(self, args: argparse.Namespace, result: None) -> None:
@@ -134,8 +138,8 @@ class Renderer:
 		board_name = path.split("/", 1)[0] if "/" in path else None
 		if board_name:
 			self._emit(args, f"Column deleted: {board_name}/{column_name}")
-			return
-		self._emit(args, f"Column deleted: {column_name}")
+		else:
+			self._emit(args, f"Column deleted: {column_name}")
 
 # ---------------------------------------------------------------------------
 # Task rendering
@@ -197,8 +201,8 @@ class Renderer:
 		path = getattr(args, "path", None)
 		if path:
 			self._emit(args, f"Task deleted: {path}")
-			return
-		self._emit(args, "Task deleted")
+		else:
+			self._emit(args, "Task deleted")
 
 # ---------------------------------------------------------------------------
 # Additional rendering (search, log, status, config)

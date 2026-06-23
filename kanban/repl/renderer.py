@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import re
 import shutil
+from unittest import result
 
 from models import UserContext, Board, Column, Task
-from services.kanban import GitCommit, KanbanRoot, KanbanStatus
+from services.kanban import GitCommit, KanbanStatus
 
 class Renderer:
 	def _emit(self, args: argparse.Namespace, value: object) -> None:
@@ -20,15 +22,19 @@ class Renderer:
 	def _clamped(self, s: str, max_len: int, suffix: str = "...") -> str:
 		if len(s) <= max_len:
 			return s
-		return s[:max_len - len(suffix)] + suffix
+		else:
+			return s[:max_len - len(suffix)] + suffix
 
 # ---------------------------------------------------------------------------
 # Initialization and context rendering
 # ---------------------------------------------------------------------------
 
-	def render_init(self, args: argparse.Namespace, result: KanbanRoot) -> None:
+	def render_init(self, args: argparse.Namespace, result: bool) -> None:
 		"""Render a message indicating that the Kanban system has been initialized."""
-		self._emit(args, result)
+		if result:
+			self._emit(args, "Kanban system initialized successfully.")
+		else:
+			self._emit(args, "Failed to initialize Kanban system.")
 
 	def render_set_path(self, args: argparse.Namespace, result: UserContext) -> None:
 		"""Render a message indicating the new current context path, or that the context was cleared."""
@@ -50,7 +56,7 @@ class Renderer:
 		if board:
 			self._emit(args, f"Changed board to: {board}")
 		else:
-			self._emit(args, "Bboard cleared")
+			self._emit(args, "Board cleared")
 
 	def render_change_column(self, args: argparse.Namespace, result: UserContext) -> None:
 		"""Render a message indicating the new current column, or that the column context was cleared."""
@@ -214,8 +220,8 @@ class Renderer:
 		column_name = result.name
 		if board_name and column_name:
 			self._emit(args, f"Column created: {board_name}/{column_name}")
-			return
-		self._emit(args, f"Column created: {column_name}")
+		else:
+			self._emit(args, f"Column created: {column_name}")
 
 	def render_column_rename(self, args: argparse.Namespace, result: Column) -> None:
 		"""
@@ -229,8 +235,8 @@ class Renderer:
 
 		if board_name:
 			self._emit(args, f"Column renamed: {board_name}/{old_name} -> {board_name}/{new_name}")
-			return
-		self._emit(args, f"Column renamed: {old_name} -> {new_name}")
+		else:
+			self._emit(args, f"Column renamed: {old_name} -> {new_name}")
 
 	def render_column_reorder(self, args: argparse.Namespace, result: list[Column]) -> None:
 		"""
@@ -245,8 +251,8 @@ class Renderer:
 
 		if isinstance(position, int):
 			self._emit(args, f"Column reordered: {target} -> position {position + 1}")
-			return
-		self._emit(args, f"Column reordered: {target}")
+		else:
+			self._emit(args, f"Column reordered: {target}")
 
 	def render_column_delete(self, args: argparse.Namespace) -> None:
 		"""
@@ -258,8 +264,8 @@ class Renderer:
 		board_name = path.split("/", 1)[0] if "/" in path else None
 		if board_name:
 			self._emit(args, f"Column deleted: {board_name}/{column_name}")
-			return
-		self._emit(args, f"Column deleted: {column_name}")
+		else:
+			self._emit(args, f"Column deleted: {column_name}")
 
 # ---------------------------------------------------------------------------
 # Task rendering
@@ -393,8 +399,8 @@ class Renderer:
 		path = getattr(args, "path", None)
 		if path:
 			self._emit(args, f"Task deleted: {path}")
-			return
-		self._emit(args, "Task deleted")
+		else:
+			self._emit(args, "Task deleted")
 
 # ---------------------------------------------------------------------------
 # Additional rendering (search, log, status, config)
