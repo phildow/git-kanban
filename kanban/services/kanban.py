@@ -413,6 +413,10 @@ class KanbanService:
         # Keep current context in sync.
         self._user_context.board = board.name
 
+        # Update index entries for tasks in the renamed board.
+        for task in self.get_tasks(f"/{board.name}"):
+            self.index_service.update_task(task)
+
         return board
 
     def delete_board(self, path: str) -> None:
@@ -427,11 +431,16 @@ class KanbanService:
         # TODO: do not allow the user to delete a board that is the current context
 
         board, _, _ = self.path_components(path)
+        tasks = self.get_tasks(path)
         self.repository.delete_board(board)
         
         # Clear current context if it points to the deleted board.
         if self._user_context.board == board:
             self.clear_user_context()
+
+        # Remove all index entries for tasks in the deleted board.
+        for task in tasks:
+            self.index_service.delete_task(task)
 
         return board
 
@@ -475,8 +484,12 @@ class KanbanService:
         renamed_column = self.repository.rename_column(board, column, new_name)
 
         # Update current context if it points at the renamed column.
-        if self._user_context.board == board and self._user_context.column == column.name:
+        if self._user_context.board == board and self._user_context.column == column:
             self._user_context.column = renamed_column.name
+
+        # Update index entries for tasks in the renamed column.
+        for task in self.get_tasks(f"{board}/{new_name}"):
+            self.index_service.update_task(task)
 
         return renamed_column
 
@@ -499,11 +512,16 @@ class KanbanService:
         file, and clears the current context column if it pointed here.
         """
         board, column, _ = self.path_components(path)
+        tasks = self.get_tasks(path)
         self.repository.delete_column(board, column)
 
         # If current context points at this column, clear column only.
         if self._user_context.board == board and self._user_context.column == column:
             self._user_context.column = None
+
+        # Remove all index entries for tasks in the deleted column.
+        for task in tasks:
+            self.index_service.delete_task(task)
 
         return None
 
@@ -598,7 +616,7 @@ class KanbanService:
         )
         filename = task.slug
         created_task = self.repository.create_task(task, filename)
-        self.index_service.update(created_task)
+        self.index_service.update_task(created_task)
         return created_task
 
     def get_task(
@@ -648,7 +666,7 @@ class KanbanService:
 
             edited_task = self._task_from_markdown(edited_text, original=task)
             updated = self.repository.update_task(edited_task)
-            self.index_service.update(updated)
+            self.index_service.update_task(updated)
             return updated
         finally:
             if tmp_path:
@@ -687,8 +705,9 @@ class KanbanService:
         if updates.due_date is not None:
             task.due_date = updates.due_date
 
-        self.repository.update_task(task)
-        return task
+        updated = self.repository.update_task(task)
+        self.index_service.update_task(updated)
+        return updated
 
     def move_task(
         self,
@@ -711,7 +730,7 @@ class KanbanService:
         if dest_title:
             repo_dest = repo_dest / dest_title
         result = self.repository.move_task(task, repo_dest)
-        self.index_service.update(result)
+        self.index_service.update_task(result)
         return result
 
     def delete_task(
@@ -725,7 +744,7 @@ class KanbanService:
         """
         task = self.get_task(path)
         self.repository.delete_task(task)
-        self.index_service.delete(task)
+        self.index_service.delete_task(task)
         return None
 
 

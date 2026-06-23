@@ -56,14 +56,14 @@ class TestIndexService(unittest.TestCase):
         self.assertFalse(self.service.is_fresh(max_age_seconds=60))
 
     def test_update_is_scaffold_noop(self):
-        """`update()` is a scaffold no-op and accepts a task argument."""
+        """`update_task()` is a scaffold no-op and accepts a task argument."""
         task = object()
-        self.service.update(task)
+        self.service.update_task(task)
 
     def test_delete_is_scaffold_noop(self):
-        """`delete()` is a scaffold no-op and accepts a task argument."""
+        """`delete_task()` is a scaffold no-op and accepts a task argument."""
         task = object()
-        self.service.delete(task)
+        self.service.delete_task(task)
 
 
 if __name__ == "__main__":

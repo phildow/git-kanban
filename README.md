@@ -55,7 +55,6 @@ kanban (main)>
 
 REMAINING FILESYSTEM
 
-- CHORE: make sure index methods are called for all services that change a task
 
 - CHORE: basic refactoring to use exists methods in the filesystem, i'm sure there's more
 - CHORE: add utilty to filter for invisible files, which is used extensively in the filesystem repo
