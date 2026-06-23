@@ -300,6 +300,9 @@ class CompletionEngine:
         resulting line still reads as a full path.
         """
 
+        # TODO: use path_components here and paqss into _walk, 
+        # so that ".." and relative paths work correctly. Currently
+
         override = token.startswith("/")
         body = token[1:] if override else token
         segments = body.split("/")

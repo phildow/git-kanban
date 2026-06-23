@@ -197,6 +197,7 @@ class KanbanService:
         self._user_context.column = column
         self.set_userdata("user-context.board", board)
         self.set_userdata("user-context.column", column)
+        return self._user_context
 
     def clear_user_context(self) -> UserContext:
         """Clear the user context with initial default values."""
@@ -217,7 +218,43 @@ class KanbanService:
         """Return True if the given column exists in the repository, False if not."""
         return self.repository.column_exists(board, column)
 
+    # def resolve_path(self, path: str | None = None) -> Path:
+    #     """
+    #     Resolve a user-provided path into an absolute Path object.
+
+    #     The path may be absolute (starting with "/") or relative to the
+    #     current user context.  ".." moves up one level; navigating above
+    #     root raises ValueError.  Multiple ".." segments are supported.
+    #     """
+
+    #     def _resolve(components: list[str], current: Path) -> Path:
+    #         if not components:
+    #             return current
+    #         head, *tail = components
+    #         if head in ("", "."):
+    #             return _resolve(tail, current)
+    #         if head == "..":
+    #             if current == Path("/"):
+    #                 raise ValueError(
+    #                     f"Path traversal goes above root: "
+    #                     f"cannot apply '..' to '{current}'"
+    #                 )
+    #             return _resolve(tail, current.parent)
+    #         return _resolve(tail, current / head)
+
+    #     path = path or ""
+    #     if path.startswith("/"):
+    #         base = Path("/")
+    #         rest = path.lstrip("/")
+    #     else:
+    #         base = self.working_path
+    #         rest = path
+
+    #     components = [c for c in rest.split("/") if c]
+    #     return _resolve(components, base)
+        
     def resolve_path(self, path: str | None = None) -> Path:
+
         """
         Resolve a user-provided path into an absolute Path object.
 
@@ -225,22 +262,6 @@ class KanbanService:
         current user context.  ".." moves up one level; navigating above
         root raises ValueError.  Multiple ".." segments are supported.
         """
-
-        def _resolve(components: list[str], current: Path) -> Path:
-            if not components:
-                return current
-            head, *tail = components
-            if head in ("", "."):
-                return _resolve(tail, current)
-            if head == "..":
-                if current == Path("/"):
-                    raise ValueError(
-                        f"Path traversal goes above root: "
-                        f"cannot apply '..' to '{current}'"
-                    )
-                return _resolve(tail, current.parent)
-            return _resolve(tail, current / head)
-
         path = path or ""
         if path.startswith("/"):
             base = Path("/")
@@ -250,8 +271,33 @@ class KanbanService:
             rest = path
 
         components = [c for c in rest.split("/") if c]
-        return _resolve(components, base)
+        resolved_path = base.joinpath(*components).resolve(strict=False)
+        return resolved_path
         
+    # def resolve_path(self, path: str | None = None) -> Path:
+
+    #     print(f"DEBUG Resolving path: {path} against working path: {self.working_path}")
+
+    #     path = path or ""
+    #     if path.startswith("/"):
+    #         base = Path("/")
+    #         rest = path.lstrip("/")
+    #     else:
+    #         base = self.working_path
+    #         rest = path
+        
+    #     components = Path(rest).parts
+
+    #     for comp in components:
+    #         if comp == "..":
+    #             base = base.parent
+    #         elif comp != "." and comp != "":
+    #             base = base / comp
+
+    #     print(f"DEBUG Resolved path: {base}")
+
+    #     return base
+
     def path_components(self, path: str | None = None) -> tuple[str | None, str | None, str | None]:
         """Resolve a [BOARD/][COLUMN/]TITLE path into its components."""
         path = self.resolve_path(path)
@@ -302,57 +348,52 @@ class KanbanService:
         kanban use --clear          →  change_dir(clear=True)
         """
 
-        # TODO: should be possible to simply use path componenents to determine the new context, 
-        #       but need to handle ".." and relative paths first (NO)
-
         path = self._strip_trailing_slash(path) if path else None
-        current_board = self.user_context.board
-        current_column = self.user_context.column
+        # current_board = self.user_context.board
+        # current_column = self.user_context.column
 
         # address the simplest cases first: 
         # no args, clear flag, or root path all reset to the default context
 
         if clear:
             return self.clear_user_context()
-
-        if path is None:
-            return self.user_context
-
         if path == "/":
             return self.clear_user_context()
+        if path is None:
+            return self.user_context
 
         # address the cases with ".." in the path, 
         # which have special semantics for navigating up the context levels
 
         # TODO: raise errors for invalid use of ".."
 
-        if path == "../..":
-            return self.clear_user_context()
-        if path == ".." and current_board and current_column:
-            self.update_user_context(board=current_board, column=None)
-            return self.user_context
-        if path == ".." and current_board and not current_column:
-            self.update_user_context(board=None, column=None)
-            return self.user_context
-        if path == ".." and not current_board and not current_column:
-            self.update_user_context(board=None, column=None)
-            return self.user_context
+        # if path == "../..":
+        #     return self.clear_user_context()
+        # if path == ".." and current_board and current_column:
+        #     self.update_user_context(board=current_board, column=None)
+        #     return self.user_context
+        # if path == ".." and current_board and not current_column:
+        #     self.update_user_context(board=None, column=None)
+        #     return self.user_context
+        # if path == ".." and not current_board and not current_column:
+        #     self.update_user_context(board=None, column=None)
+        #     return self.user_context
 
         # address an absolute path like /my-project/todo or /my-project
         # which may be provided by the user or generated by the completer
 
-        if path.startswith("/"):
-            board, column, _ = self.path_components(path)
-            if board and not self._board_exists(board):
-                raise BoardNotFound(board)
-            if column and not self._column_exists(board, column):
-                raise ColumnNotFound(board, column)
-            if board and column:
-                self.update_user_context(board=board, column=column)
-                return self.user_context
-            if board and not column:
-                self.update_user_context(board=board, column=None)
-                return self.user_context
+        # if path.startswith("/"):
+        #     board, column, _ = self.path_components(path)
+        #     if board and not self._board_exists(board):
+        #         raise BoardNotFound(board)
+        #     if column and not self._column_exists(board, column):
+        #         raise ColumnNotFound(board, column)
+        #     if board and column:
+        #         self.update_user_context(board=board, column=column)
+        #         return self.user_context
+        #     if board and not column:
+        #         self.update_user_context(board=board, column=None)
+        #         return self.user_context
 
 
         # address a relative path like "todo" or "my-project/todo", 
@@ -361,10 +402,10 @@ class KanbanService:
         # This is the most complex case because it requires disambiguating between boards and columns 
         # based on the current context and repository state.
 
-        full_path = self.working_path / path
-        board, column, task = self.path_components(str(full_path))
+        # full_path = self.working_path / path
+        # board, column, task = self.path_components(str(full_path))
 
-        # board, column, task = self.path_components(path)
+        board, column, task = self.path_components(path)
 
         if task:
             raise ValueError(f"Invalid path: {path} (cannot set context to a task)")
@@ -372,12 +413,17 @@ class KanbanService:
             raise BoardNotFound(board)
         if column and not self._column_exists(board, column):
             raise ColumnNotFound(board, column)
-        if board:
-            self.update_user_context(board=board, column=column)
-        if column:
-            self.update_user_context(board=board, column=column)    
         
-        return self.user_context
+        # elif board:
+        #     self.update_user_context(board=board, column=column)
+        # elif column:
+        #     self.update_user_context(board=board, column=column)    
+        # else:
+        #     self.clear_user_context()
+
+        # return self.user_context
+        
+        return self.update_user_context(board=board, column=column)
 
     def set_board(self, board: str) -> UserContext:
         """Set the current context to the given board, validating that it exists."""

@@ -17,7 +17,7 @@ from services.index import IndexService
 from storage.memory import InMemoryRepository
 
 
-class TestKanbanServiceSetPath(unittest.TestCase):
+class TestKanbanServiceChangeDir(unittest.TestCase):
     def setUp(self) -> None:
         temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
         temp_dir.mkdir()
