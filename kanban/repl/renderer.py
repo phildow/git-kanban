@@ -86,10 +86,6 @@ class Renderer:
 
 	def render_board_list(self, args: argparse.Namespace, result: list[Board]) -> None:
 		"""Render a list of boards, optionally with their column counts"""
-		if not result:
-			self._emit(args, "No boards")
-			return
-
 		if args.list == True:
 			self.render_board_list_verbose(args, result)
 		else:
@@ -97,6 +93,9 @@ class Renderer:
 			
 	def render_board_list_slug_only(self, args: argparse.Namespace, result: list[Board]) -> None:
 		"""Render a simple list of board slugs, without additional details."""
+		if not result:
+			return
+
 		slugs = [board.slug for board in result]
 		
 		# TODO: From this point below shares logic with render_task_list_slug_only, 
@@ -121,10 +120,6 @@ class Renderer:
 
 	def render_board_list_verbose(self, args: argparse.Namespace, result: list[Board]) -> None:
 		"""Render a detailed list of boards, including their column counts."""
-		if not result:
-			self._emit(args, "No boards")
-			return
-
 		items = []
 
 		heading =   [f"{"Name":<32}", f"{"Columns":<16}", f"{"Tasks":<16}"]
@@ -165,10 +160,6 @@ class Renderer:
 
 	def render_column_list(self, args: argparse.Namespace, result: list[Column]) -> None:
 		"""Render a list of columns, optionally with their board names and positions"""
-		if not result:
-			self._emit(args, "No columns")
-			return
-
 		if args.list == True:
 			self.render_column_list_verbose(args, result)
 		else:
@@ -180,6 +171,8 @@ class Renderer:
 		If any slugs are longer than 16 characters, render one per line. 
 		Otherwise, render in a compact multi-column format.
 		"""
+		if not result:
+			return
 		slugs = [column.slug for column in result]
 
 		# TODO: From this point below shares logic with render_task_list_slug_only, 
@@ -204,10 +197,6 @@ class Renderer:
 
 	def render_column_list_verbose(self, args: argparse.Namespace, result: list[Column]) -> None:
 		"""Render a detailed list of columns, including their board names and positions."""
-		if not result:
-			self._emit(args, "No columns")
-			return
-
 		items = []
 
 		heading =  [  f"{"Name":<32}", f"{"Tasks":<16}"]
@@ -299,6 +288,9 @@ class Renderer:
 		If any slugs are longer than 16 characters, render one per line. 
 		Otherwise, render in a compact multi-column format.
 		"""
+		if not result:
+			return
+		
 		slugs = [task.slug for task in result]
 
 		if any(len(slug) > 16 for slug in slugs):
