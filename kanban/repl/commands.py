@@ -1,4 +1,6 @@
-"""Subcommand handlers for the kanban REPL."""
+"""
+Subcommand handlers for the kanban REPL.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +9,16 @@ import argparse
 from models import Board, Column, Task
 from services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
 from services.repl import handle_list as handle_list_helper, handle_delete as handle_delete_helper, handle_move as handle_move_helper
+from storage.seeds import BOOTSTRAP_CONFIG
+
+# ---------------------------------------------------------------------------
+# Initialization commands
+# ---------------------------------------------------------------------------
+
+def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	config = BOOTSTRAP_CONFIG if getattr(args, "bootstrap", False) else None
+	result = svc.initialize_kanban(config=config)
+	renderer.render_init(args, result)
 
 # ---------------------------------------------------------------------------
 # Working context commands (use, board, column)

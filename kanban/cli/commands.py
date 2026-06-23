@@ -1,10 +1,13 @@
-"""Subcommand handlers for the kanban CLI."""
+"""
+Subcommand handlers for the kanban CLI.
+"""
 
 from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
 
+from storage.seeds import BOOTSTRAP_CONFIG
 from models import TaskFilter
 from services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
 from utils.shell import prompt_for_confirmation
@@ -22,8 +25,8 @@ def _pick(args: argparse.Namespace, renderer: object, json_renderer: object) -> 
 # ---------------------------------------------------------------------------
 
 def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
-	_ = args
-	result = svc.initialize_kanban()
+	config = BOOTSTRAP_CONFIG if getattr(args, "bootstrap", False) else None
+	result = svc.initialize_kanban(config=config)
 	_pick(args, renderer, json_renderer).render_init(args, result)
 
 # ---------------------------------------------------------------------------

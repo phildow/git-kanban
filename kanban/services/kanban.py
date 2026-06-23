@@ -10,7 +10,7 @@ from uuid import UUID, uuid4
 
 from models import Task, TaskFilter, Board, Column, UserContext
 from storage.kanban import KanbanRepository, ColumnNotFound, BoardNotFound
-from storage.seeds import BOOTSTRAP_CONFIG, BootstrapConfig
+from storage.seeds import BootstrapConfig
 from services.git import GitService
 from services.index import IndexService
 from utils.str import kebab_case
@@ -129,7 +129,7 @@ class KanbanService:
         return self.repository.kanban_dir
 
     # ------------------------------------------------------------------
-    # Initialization
+    # Initialization (setup, bootstrap)
     # ------------------------------------------------------------------
 
     @property
@@ -138,7 +138,7 @@ class KanbanService:
         # Move path.exists() check to repository
         return self.repository.is_initialized
 
-    def initialize_kanban(self, path: Path = Path("."), config: BootstrapConfig = BOOTSTRAP_CONFIG) -> bool:
+    def initialize_kanban(self, path: Path = Path("."), config: BootstrapConfig | None = None) -> bool:
         """
         Create the .kanban/ and .kanban-store/ directory skeleton, initialize git, and write the
         first commit.  Raises AlreadyInitialized if .kanban/ or .kanban-store/ already exists at
@@ -146,9 +146,22 @@ class KanbanService:
         operational, so it orchestrates creation order directly: filesystem
         first, index second, git last.
         """
-        now = datetime.now(timezone.utc)
         self.repository.init_storage()
+        self._bootstrap(config)
 
+        default_board = config.get("usercontext", {}).get("board")
+        default_column = config.get("usercontext", {}).get("column")
+        self.update_user_context(board=default_board, column=default_column)
+
+        return True
+
+    def _bootstrap(self, config: BootstrapConfig | None = None) -> None:
+        """Create the default boards, columns, and tasks for a new repository."""
+        if config is None:
+            return
+        
+        now = datetime.now(timezone.utc)
+        
         for board_config in config["boards"]:
             board = board_config["name"]
             self.repository.create_board(board)
@@ -168,13 +181,7 @@ class KanbanService:
                     updated_at=now,
                 )
                 self.repository.create_task(task, task.slug)
-
-        default_board = config.get("usercontext", {}).get("board")
-        default_column = config.get("usercontext", {}).get("column")        
-        self.update_user_context(board=default_board, column=default_column)
-
-        return True
-
+        
     # ------------------------------------------------------------------
     # User Context
     # ------------------------------------------------------------------

@@ -14,6 +14,7 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 
 from cli import commands
+from storage.seeds import BOOTSTRAP_CONFIG
 from services.kanban import TaskCreateParams, TaskUpdateParams
 
 
@@ -29,15 +30,26 @@ class TestCommandHandlers(unittest.TestCase):
     def _args(self, **kwargs) -> Namespace:
         return Namespace(**kwargs)
 
-    def test_handle_init_calls_service_and_renderer(self):
-        """`init` handler calls service `initialize_kanban()` and forwards result to renderer."""
-        args = self._args()
+    def test_handle_init_without_bootstrap(self):
+        """`init` without --bootstrap calls initialize_kanban with config=None."""
+        args = self._args(bootstrap=False)
         result = object()
         self.svc.initialize_kanban.return_value = result
 
         commands.handle_init(args, self.svc, self.renderer, self.json_renderer)
 
-        self.svc.initialize_kanban.assert_called_once_with()
+        self.svc.initialize_kanban.assert_called_once_with(config=None)
+        self.renderer.render_init.assert_called_once_with(args, result)
+
+    def test_handle_init_with_bootstrap(self):
+        """`init --bootstrap` calls initialize_kanban with BOOTSTRAP_CONFIG."""
+        args = self._args(bootstrap=True)
+        result = object()
+        self.svc.initialize_kanban.return_value = result
+
+        commands.handle_init(args, self.svc, self.renderer, self.json_renderer)
+
+        self.svc.initialize_kanban.assert_called_once_with(config=BOOTSTRAP_CONFIG)
         self.renderer.render_init.assert_called_once_with(args, result)
 
     def test_handle_board_list(self):

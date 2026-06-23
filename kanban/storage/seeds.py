@@ -17,9 +17,8 @@ class BootstrapSeed(TypedDict, total=False):
 
 class BootstrapConfig(TypedDict):
     """Full configuration for bootstrapping a new repository."""
-    board: str
-    columns: list[str]
-    tasks: list[BootstrapSeed]
+    boards: list[dict]
+    usercontext: dict[str, str]
 
 
 BOOTSTRAP_CONFIG: BootstrapConfig = {

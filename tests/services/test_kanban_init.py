@@ -12,6 +12,7 @@ import unittest
 from pathlib import Path
 from uuid import uuid4
 
+from storage.seeds import BOOTSTRAP_CONFIG
 from models import UserContext
 from services.kanban import KanbanService
 from services.git import GitService
@@ -33,7 +34,7 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
             git_service=GitService(),
         )
 
-        result = svc.initialize_kanban(Path("."))
+        result = svc.initialize_kanban(Path("."), config=BOOTSTRAP_CONFIG)
 
         self.assertTrue(result)
         self.assertTrue(repo.board_exists("main"))
@@ -60,9 +61,9 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
             git_service=GitService(),
         )
 
-        svc.initialize_kanban(Path("."))
+        svc.initialize_kanban(Path("."), config=BOOTSTRAP_CONFIG)
         with self.assertRaises(ValueError):
-            svc.initialize_kanban(Path("."))
+            svc.initialize_kanban(Path("."), config=BOOTSTRAP_CONFIG)
 
     def test_init_seeds_tasks_from_default_seeds(self):
         """initialize_kanban creates tasks from BOOTSTRAP_SEEDS in the main board."""
@@ -75,7 +76,7 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
             git_service=GitService(),
         )
 
-        svc.initialize_kanban(Path("."))
+        svc.initialize_kanban(Path("."), config=BOOTSTRAP_CONFIG)
 
         tasks = repo.get_tasks(board="main")
         titles = {t.title for t in tasks}

@@ -16,6 +16,7 @@ from repl.commands import (
     handle_column_change,
     handle_board_create,
     handle_board_rename,
+    handle_init,
     handle_list,
     handle_delete,
     handle_column_create,
@@ -307,6 +308,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     subparsers = parser.add_subparsers(dest="command", metavar="COMMAND")
     subparsers.required = True
+
+    # init
+    p = subparsers.add_parser("init", help="Initialise a new kanban repository")
+    p.add_argument("-b", "--bootstrap", action="store_true", default=False,
+                   help="Seed the repository with a default board and columns")
+    _add_global_flags(p)
+    p.set_defaults(func=handle_init)
 
     _add_cd_parser(subparsers)
     _add_board_parser(subparsers)

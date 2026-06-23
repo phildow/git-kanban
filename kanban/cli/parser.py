@@ -258,6 +258,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     # init
     p = subparsers.add_parser("init", help="Initialise a new kanban repository in the current directory")
+    p.add_argument("-b", "--bootstrap", action="store_true", default=False,
+                   help="Seed the repository with a default board and columns")
     _add_global_flags(p)
     p.set_defaults(func=handle_init)
 
