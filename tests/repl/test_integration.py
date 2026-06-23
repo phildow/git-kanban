@@ -35,6 +35,7 @@ import os
 import tempfile
 import unittest
 from contextlib import redirect_stdout
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -44,6 +45,9 @@ from services.kanban import KanbanService, TaskCreateParams
 from storage.filesystem import FilesystemRepository
 from storage.seeds import BOOTSTRAP_CONFIG
 
+def _iso(dt: str) -> datetime:
+    """Convert a datetime string to an ISO 8601 string with UTC timezone."""
+    return datetime.fromisoformat(dt).isoformat()
 
 # ---------------------------------------------------------------------------
 # Base helpers
@@ -278,12 +282,17 @@ class TestReplCreate(_InitializedReplBase):
             "create", "task", "proj/todo/new-task",
             "--assignee", "alice",
             "--priority", "high",
+            "--tag", "bug",
+            "--due-date", "2026-12-31",
             "--created-by", "mark",
         )
         fm = self._read_frontmatter("proj", "todo", "new-task")
         self.assertEqual(fm.get("assignee"), "alice")
         self.assertEqual(fm.get("priority"), "high")
         self.assertEqual(fm.get("created_by"), "mark")
+        self.assertEqual(fm.get("due_date"), _iso("2026-12-31"))
+        self.assertIn("bug", fm.get("tags", ""))
+
 
     def test_new_task_alias_creates_file(self) -> None:
         """new task (alias for create task) creates a markdown file."""
@@ -581,10 +590,14 @@ class TestReplUpdate(_InitializedReplBase):
             "--priority", "low",
             "--tag", "refactor",
             "--created-by", "mark",
+            "--due-date", "2025-01-01",
         )
         fm = self._read_frontmatter("proj", "todo", "fix-login")
         self.assertEqual(fm.get("assignee"), "bob")
         self.assertEqual(fm.get("priority"), "low")
+        self.assertEqual(fm.get("tags"), "[refactor]")
+        self.assertEqual(fm.get("due_date"), _iso("2025-01-01"))
+        self.assertEqual(fm.get("created_by"), "mark")
 
 
 # ---------------------------------------------------------------------------

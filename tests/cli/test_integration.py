@@ -31,6 +31,7 @@ import os
 import tempfile
 import unittest
 from contextlib import redirect_stdout
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -41,6 +42,9 @@ from services.kanban import KanbanService
 from storage.filesystem import FilesystemRepository
 from storage.seeds import BOOTSTRAP_CONFIG
 
+def _iso(dt: str) -> datetime:
+    """Convert a datetime string to an ISO 8601 string with UTC timezone."""
+    return datetime.fromisoformat(dt).isoformat()
 
 # ---------------------------------------------------------------------------
 # Base helpers
@@ -463,12 +467,16 @@ class TestTaskCLI(_InitializedBase):
             "task", "create", "proj/todo/new-task",
             "--assignee", "alice",
             "--priority", "high",
+            "--due-date", "2026-12-31",
             "--created-by", "mark",
+            "--tag", "bug",
         )
         fm = self._read_frontmatter("proj", "todo", "new-task")
         self.assertEqual(fm.get("assignee"), "alice")
         self.assertEqual(fm.get("priority"), "high")
+        self.assertEqual(fm.get("due_date"), _iso("2026-12-31"))
         self.assertEqual(fm.get("created_by"), "mark")
+        self.assertEqual(fm.get("tags"), "[bug]")
 
     def test_task_create_verbose_prints_output(self) -> None:
         """task create --verbose prints something."""
@@ -633,6 +641,24 @@ class TestTaskCLI(_InitializedBase):
         out = self.run_cli("task", "update", "proj/todo/fix-login",
                            "--assignee", "alice", "--verbose")
         self.assertTrue(out.strip())
+
+    def test_task_update_with_all_fields(self) -> None:
+        """update task with every optional field persists all values."""
+        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli(
+            "task", "update", "proj/todo/fix-login",
+            "--assignee", "bob",
+            "--priority", "low",
+            "--tag", "refactor",
+            "--created-by", "mark",
+            "--due-date", "2025-01-01",
+        )
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        self.assertEqual(fm.get("assignee"), "bob")
+        self.assertEqual(fm.get("priority"), "low")
+        self.assertEqual(fm.get("tags"), "[refactor]")
+        self.assertEqual(fm.get("due_date"), _iso("2025-01-01"))
+        self.assertEqual(fm.get("created_by"), "mark")
 
     # -- move -----------------------------------------------------------------
 

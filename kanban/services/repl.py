@@ -25,7 +25,7 @@ def _build_task_filter(args: argparse.Namespace) -> TaskFilter:
         tags=getattr(args, "tags", None) or [],
         due_before=_parse_date(getattr(args, "due_before", None)),
         due_after=_parse_date(getattr(args, "due_after", None)),
-        created_by=getattr(args, "created_by", None),
+        created_by=getattr(args, "created-by", None),
     )
 
 

@@ -55,12 +55,6 @@ kanban (main)>
 
 REMAINING FILESYSTEM
 
-- BUGS (from integration tests)
-- Passing a relative task path after set_board resolves it against the board context 
-- (fixed by using absolute paths)
-- update_task --due-date stores the value as a string 
-- but the storage layer calls .isoformat() on it — that's a pre-existing bug worth noting separately.
-
 - INT: check that the REPL output is never empty
 - INT: improve repl rendering - always give feedback
 - TEST: make sure repl gives recoverable error messages

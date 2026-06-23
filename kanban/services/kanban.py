@@ -34,6 +34,7 @@ class TaskUpdateParams:
     assignee:   str | None = None
     priority:   str | None = None
     tags:       list[str] | None = None
+    created_by: str | None = None
     due_date:   datetime | None = None
 
 
@@ -702,6 +703,11 @@ class KanbanService:
         # If the user wants to remove a due date, for example, they would have to pass in updates.due_date = None, but that is indistinguishable from "don't change the due date".
         # We could use a sentinel value or a separate "remove" flag for each field, but that seems cumbersome.  For now, we will just treat None as "don't change".
 
+        due_date = updates.due_date
+
+        if isinstance(due_date, str):
+            due_date = datetime.fromisoformat(due_date)
+
         if updates.title and updates.title != task.title:
             task.title = updates.title
             task.slug = kebab_case(updates.title)
@@ -712,7 +718,9 @@ class KanbanService:
         if updates.tags is not None:
             task.tags = updates.tags
         if updates.due_date is not None:
-            task.due_date = updates.due_date
+            task.due_date = due_date
+        if updates.created_by is not None:
+            task.created_by = updates.created_by
 
         updated = self.repository.update_task(task)
         self.index_service.update_task(updated)

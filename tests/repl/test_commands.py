@@ -267,6 +267,7 @@ class TestReplCommandHandlers(unittest.TestCase):
                 priority=None,
                 tags=None,
                 due_date=None,
+                created_by=None,
             ),
         )
         self.renderer.render_task_edit.assert_called_once_with(args, result)
@@ -279,6 +280,7 @@ class TestReplCommandHandlers(unittest.TestCase):
             priority="medium",
             tags=["cli"],
             due_date="2026-07-01",
+            created_by="alice",
         )
         result = object()
         self.svc.update_task.return_value = result
@@ -293,6 +295,7 @@ class TestReplCommandHandlers(unittest.TestCase):
                 priority="medium",
                 tags=["cli"],
                 due_date="2026-07-01",
+                created_by="alice",
             ),
         )
         self.renderer.render_task_edit.assert_called_once_with(args, result)

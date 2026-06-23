@@ -166,6 +166,7 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: o
 		priority=getattr(args, "priority", None),
 		tags=getattr(args, "tags", None),
 		due_date=getattr(args, "due_date", None),
+		created_by=getattr(args, "created_by", None),
 	)
 
 	result = svc.update_task(args.path, updates=updates)
