@@ -478,6 +478,20 @@ class TestTaskCLI(_InitializedBase):
         self.assertEqual(fm.get("created_by"), "mark")
         self.assertEqual(fm.get("tags"), "[bug]")
 
+    def test_task_create_multiple_tags_all_written_to_frontmatter(self) -> None:
+        """task create with multiple --tag flags writes all tags to the frontmatter."""
+        self.run_cli(
+            "task", "create", "proj/todo/new-task",
+            "--tag", "bug",
+            "--tag", "auth",
+            "--tag", "refactor",
+        )
+        fm = self._read_frontmatter("proj", "todo", "new-task")
+        tags = fm.get("tags", "")
+        self.assertIn("bug", tags)
+        self.assertIn("auth", tags)
+        self.assertIn("refactor", tags)
+
     def test_task_create_verbose_prints_output(self) -> None:
         """task create --verbose prints something."""
         out = self.run_cli("task", "create", "proj/todo/fix-login", "--verbose")
@@ -634,6 +648,21 @@ class TestTaskCLI(_InitializedBase):
         self.run_cli("task", "update", "proj/todo/fix-login", "--priority", "high")
         fm = self._read_frontmatter("proj", "todo", "fix-login")
         self.assertEqual(fm.get("priority"), "high")
+
+    def test_task_update_multiple_tags_all_written_to_frontmatter(self) -> None:
+        """task update with multiple --tag flags writes all tags to the frontmatter."""
+        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli(
+            "task", "update", "proj/todo/fix-login",
+            "--tag", "bug",
+            "--tag", "auth",
+            "--tag", "refactor",
+        )
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        tags = fm.get("tags", "")
+        self.assertIn("bug", tags)
+        self.assertIn("auth", tags)
+        self.assertIn("refactor", tags)
 
     def test_task_update_verbose_prints_output(self) -> None:
         """task update --verbose prints something."""

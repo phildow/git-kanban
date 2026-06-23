@@ -294,6 +294,22 @@ class TestReplCreate(_InitializedReplBase):
         self.assertIn("bug", fm.get("tags", ""))
 
 
+    def test_create_task_multiple_tags_all_written_to_frontmatter(self) -> None:
+        """create task with multiple --tag flags writes all tags to the frontmatter."""
+        self.repo.create_board("proj")
+        self.repo.create_column("proj", "todo")
+        self.run_repl(
+            "create", "task", "proj/todo/new-task",
+            "--tag", "bug",
+            "--tag", "auth",
+            "--tag", "refactor",
+        )
+        fm = self._read_frontmatter("proj", "todo", "new-task")
+        tags = fm.get("tags", "")
+        self.assertIn("bug", tags)
+        self.assertIn("auth", tags)
+        self.assertIn("refactor", tags)
+
     def test_new_task_alias_creates_file(self) -> None:
         """new task (alias for create task) creates a markdown file."""
         self.repo.create_board("proj")
@@ -575,6 +591,20 @@ class TestReplUpdate(_InitializedReplBase):
         self.run_repl("update", "task", "proj/todo/fix-login", "--priority", "high")
         fm = self._read_frontmatter("proj", "todo", "fix-login")
         self.assertEqual(fm.get("priority"), "high")
+
+    def test_update_task_multiple_tags_all_written_to_frontmatter(self) -> None:
+        """update task with multiple --tag flags writes all tags to the frontmatter."""
+        self.run_repl(
+            "update", "task", "proj/todo/fix-login",
+            "--tag", "bug",
+            "--tag", "auth",
+            "--tag", "refactor",
+        )
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        tags = fm.get("tags", "")
+        self.assertIn("bug", tags)
+        self.assertIn("auth", tags)
+        self.assertIn("refactor", tags)
 
     def test_update_task_produces_output(self) -> None:
         """update task prints something."""
