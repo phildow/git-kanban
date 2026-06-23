@@ -55,6 +55,39 @@ kanban (main)>
 
 REMAINING FILESYSTEM
 
+- BUGS (from integration tests)
+- Passing a relative task path after set_board resolves it against the board context 
+- (fixed by using absolute paths)
+- update_task --due-date stores the value as a string 
+- but the storage layer calls .isoformat() on it — that's a pre-existing bug worth noting separately.
+
+- INT: check that the REPL output is never empty
+- INT: improve repl rendering - always give feedback
+- TEST: make sure repl gives recoverable error messages
+
+- TEST: Create task with spaces - kebab_case
+- TEST: Create column with spaces - kebab_case
+- TEST: Create board with spaces - kebab_case
+- CHORE: computed property filename for datamodels uses slug
+
+- TEST: Check init error handling, don't overwrite a repo, don't initialize a repo that's already been created
+- TEST: Ensure memory store supports same features as filesystem (ordering)
+
+- FEAT: Correctly resolve `..` all commands that take paths not just cd
+- FEAT: Correctly tab complete `..` for all commands that take paths
+- FEAT: Resolve too many `..` to an error
+- FEAT: Use the same logic for other commands that take paths, and use resolve into components
+  taking into account relative paths and the user context
+  INT: Add integration tests for the user context and relative paths
+
+- FEAT: add closed_at metadata to a Task
+- FEAT: config: default boards that automatically set the closed_at value: None until moved to done or archived if None
+
+~
+
+- BUG: if a board is already in the current context, `create board x` doesn't work
+- BUG: `kanban (/) > ls main -al` returns no result and prompts `kanban (/) >`
+
 - FEAT: give the user the option to bootstrap from the repl
 - TEST: renaming the board or column keeps the user context in sync
 - CLAUDE: note that models are lightweight and do not include relationships, where they reference other entities they reference them by name only, always call a service layer method to get a fully qualified object
@@ -63,21 +96,8 @@ REMAINING FILESYSTEM
 - CHORE: basic refactoring to use exists methods in the filesystem, i'm sure there's more
 - CHORE: add utilty to filter for invisible files, which is used extensively in the filesystem repo
 - CHORE: Use slugs in memory repository for private indexing (add tests)
-- FEAT: move can rename a task in the current location as well as move
-- FEAT: improve repl rendering - always give feedback
 
-- FEAT: Correctly resolve `..` all commands that take paths not just cd
-- FEAT: Correctly tab complete `..` for all commands that take paths
-- FEAT: Use the same logic for other commands that take paths, and use resolve into components
-  taking into account relative paths and the user context
 
-- TEST: Create task with spaces - kebab_case
-- TEST: Create column with spaces - kebab_case
-- TEST: Create board with spaces - kebab_case
-- TEST: Check init error handling, don't overwrite a repo, don't initialize a repo that's already been created
-
-- Ensure memory store supports same features as filesystem (ordering)
-- Ensure CLI continues to support core behaviors
 
 POTENTIAL INCONSISTENCY
 - Where metadata is required, eg sort order, files may be missing or renamed directly, change not reflected in metadata file
@@ -93,14 +113,14 @@ POTENTIAL INCONSISTENCY
 - FEAT: implement user sort order for tasks
 
 - FEAT: bump command to move a board or task to the front
-- TEST: make sure repl gives recoverable error messages
+    - => think of the equivalent interaction for the TUI
+    - => press m to move and then the arrows keys to move up/down between boards, shift key to top/bottom
+    - => Use of proper names instead of slugs (filenames)
+    - => 
 
 - FEAT: tab completion for assigness and tags
 - FEAT: ooo the shell will make as few as two columns
 - FEAT: Add comments to a task which are just appended to the body
-
-- BUG: if a board is already in the current context, `create board x` doesn't work
-- BUG: `kanban (/) > ls main -al` returns no result and prompts `kanban (/) >`
 
 - CHORE: Models return a path?
 - CHORE: rename all those render methods to use parameters that reflect their types
