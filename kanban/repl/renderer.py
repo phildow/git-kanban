@@ -3,12 +3,23 @@
 from __future__ import annotations
 
 import argparse
+from functools import wraps
 import re
 import shutil
 from unittest import result
 
 from models import UserContext, Board, Column, Task
 from services.kanban import GitCommit, KanbanStatus
+
+def _requires_verbose(method):
+	@wraps(method)
+	def _wrapped(self, args: argparse.Namespace, result):
+		if not getattr(args, "verbose", False):
+			return None
+		else:
+			return method(self, args, result)
+
+	return _wrapped
 
 class Renderer:
 	def _emit(self, args: argparse.Namespace, value: object) -> None:
@@ -36,7 +47,8 @@ class Renderer:
 		else:
 			self._emit(args, "Failed to initialize Kanban system.")
 
-	def render_set_path(self, args: argparse.Namespace, result: UserContext) -> None:
+	@_requires_verbose
+	def render_change_dir(self, args: argparse.Namespace, result: UserContext) -> None:
 		"""Render a message indicating the new current context path, or that the context was cleared."""
 		board = result.board
 		column = result.column
@@ -50,6 +62,7 @@ class Renderer:
 
 		self._emit(args, "Current context cleared")
 	
+	@_requires_verbose
 	def render_change_board(self, args: argparse.Namespace, result: UserContext) -> None:
 		"""Render a message indicating the new current board, or that the board context was cleared."""
 		board = result.board
@@ -58,6 +71,7 @@ class Renderer:
 		else:
 			self._emit(args, "Board cleared")
 
+	@_requires_verbose
 	def render_change_column(self, args: argparse.Namespace, result: UserContext) -> None:
 		"""Render a message indicating the new current column, or that the column context was cleared."""
 		column = result.column

@@ -219,13 +219,38 @@ class KanbanService:
 
     def resolve_path(self, path: str | None = None) -> Path:
         """
-        Resolve a user-provided path into an absolute Path object.  
-        The path may be absolute (starting with "/") or relative to the current user context.
+        Resolve a user-provided path into an absolute Path object.
+
+        The path may be absolute (starting with "/") or relative to the
+        current user context.  ".." moves up one level; navigating above
+        root raises ValueError.  Multiple ".." segments are supported.
         """
+
+        def _resolve(components: list[str], current: Path) -> Path:
+            if not components:
+                return current
+            head, *tail = components
+            if head in ("", "."):
+                return _resolve(tail, current)
+            if head == "..":
+                if current == Path("/"):
+                    raise ValueError(
+                        f"Path traversal goes above root: "
+                        f"cannot apply '..' to '{current}'"
+                    )
+                return _resolve(tail, current.parent)
+            return _resolve(tail, current / head)
+
+        path = path or ""
         if path.startswith("/"):
-            return Path(path)
+            base = Path("/")
+            rest = path.lstrip("/")
         else:
-            return Path(self.working_path) / (path or "")
+            base = self.working_path
+            rest = path
+
+        components = [c for c in rest.split("/") if c]
+        return _resolve(components, base)
         
     def path_components(self, path: str | None = None) -> tuple[str | None, str | None, str | None]:
         """Resolve a [BOARD/][COLUMN/]TITLE path into its components."""
@@ -235,7 +260,7 @@ class KanbanService:
                parts[2] if len(parts) > 2 else None, \
                parts[3] if len(parts) > 3 else None
 
-    # TODO: this will end up replacing the path in the promt
+    # TODO: UNSUED - see CompletionEngine
     def completions_for_path(self, text: str) -> list[str]:
         """Return a list of valid path completions for the given partial text."""
         
@@ -262,8 +287,7 @@ class KanbanService:
 
         return completions
 
-    # TODO: rename to change_dir, because that's what it's doing
-    def set_path(
+    def change_dir(
         self,
         path: str | None = None,
         clear:  bool = False,
@@ -273,10 +297,13 @@ class KanbanService:
         Validates that the referenced board (and column, if given) exist before
         writing.  No git commit — context is local working state.
 
-        kanban use my-project/todo  →  set_path(path="my-project/todo")
-        kanban use my-project       →  set_path(path="my-project")
-        kanban use --clear          →  set_path(clear=True)
+        kanban use my-project/todo  →  change_dir(path="my-project/todo")
+        kanban use my-project       →  change_dir(path="my-project")
+        kanban use --clear          →  change_dir(clear=True)
         """
+
+        # TODO: should be possible to simply use path componenents to determine the new context, 
+        #       but need to handle ".." and relative paths first (NO)
 
         path = self._strip_trailing_slash(path) if path else None
         current_board = self.user_context.board
@@ -297,9 +324,10 @@ class KanbanService:
         # address the cases with ".." in the path, 
         # which have special semantics for navigating up the context levels
 
+        # TODO: raise errors for invalid use of ".."
+
         if path == "../..":
             return self.clear_user_context()
-
         if path == ".." and current_board and current_column:
             self.update_user_context(board=current_board, column=None)
             return self.user_context
@@ -326,6 +354,7 @@ class KanbanService:
                 self.update_user_context(board=board, column=None)
                 return self.user_context
 
+
         # address a relative path like "todo" or "my-project/todo", 
         # which is resolved against the current context. 
         #
@@ -334,6 +363,8 @@ class KanbanService:
 
         full_path = self.working_path / path
         board, column, task = self.path_components(str(full_path))
+
+        # board, column, task = self.path_components(path)
 
         if task:
             raise ValueError(f"Invalid path: {path} (cannot set context to a task)")

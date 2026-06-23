@@ -79,9 +79,7 @@ class _ReplBase(unittest.TestCase):
         buf = io.StringIO()
         with redirect_stdout(buf):
             args.func(args, self.svc, self.renderer)
-        out = buf.getvalue()
-        self.assertTrue(out.strip(), f"Command produced no output: {' '.join(argv)}")
-        return out
+        return buf.getvalue()
 
     @property
     def boards_dir(self) -> Path:
@@ -181,32 +179,32 @@ class TestReplContext(_InitializedReplBase):
         self.repo.create_board("proj")
         self.repo.create_column("proj", "todo")
 
-    def test_cd_board_sets_context_and_produces_output(self) -> None:
-        """cd <board> sets the board context and prints something."""
+    def test_cd_board_sets_context_and_produces_no_output(self) -> None:
+        """cd <board> sets the board context and prints nothing."""
         out = self.run_repl("cd", "proj")
-        self.assertTrue(out.strip())
+        self.assertEqual(out, "")
 
-    def test_cd_board_column_sets_context_and_produces_output(self) -> None:
-        """cd <board>/<column> sets board+column context and prints something."""
+    def test_cd_board_column_sets_context_and_produces_no_output(self) -> None:
+        """cd <board>/<column> sets board+column context and prints nothing."""
         out = self.run_repl("cd", "proj/todo")
-        self.assertTrue(out.strip())
+        self.assertEqual(out, "")
 
-    def test_cd_clear_produces_output(self) -> None:
-        """cd --clear clears the context and prints something."""
+    def test_cd_clear_produces_no_output(self) -> None:
+        """cd --clear clears the context and prints nothing."""
         self.run_repl("cd", "proj")
         out = self.run_repl("cd", "--clear")
-        self.assertTrue(out.strip())
+        self.assertEqual(out, "")
 
-    def test_board_command_produces_output(self) -> None:
-        """board <name> changes the active board and prints something."""
+    def test_board_command_produces_no_output(self) -> None:
+        """board <name> changes the active board and prints nothing."""
         out = self.run_repl("board", "proj")
-        self.assertTrue(out.strip())
+        self.assertEqual(out, "")
 
-    def test_column_command_produces_output(self) -> None:
-        """column <name> changes the active column and prints something."""
+    def test_column_command_produces_no_output(self) -> None:
+        """column <name> changes the active column and prints nothing."""
         self.run_repl("board", "proj")
         out = self.run_repl("column", "todo")
-        self.assertTrue(out.strip())
+        self.assertEqual(out, "")
 
 
 # ---------------------------------------------------------------------------

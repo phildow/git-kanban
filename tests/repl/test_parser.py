@@ -21,7 +21,7 @@ from repl.commands import (
     handle_column_rename,
     handle_delete,
     handle_list,
-    handle_set_path,
+    handle_change_dir,
     handle_task_create,
     handle_task_update,
 )
@@ -119,18 +119,18 @@ class TestParserAliases(unittest.TestCase):
         self.assertEqual(args.command, "cd")
         self.assertIsNone(args.path)
         self.assertFalse(args.clear)
-        self.assertIs(args.func, handle_set_path)
+        self.assertIs(args.func, handle_change_dir)
 
         args = parser.parse_args(["cd", "main/todo"])
         self.assertEqual(args.command, "cd")
         self.assertEqual(args.path, "main/todo")
         self.assertFalse(args.clear)
-        self.assertIs(args.func, handle_set_path)
+        self.assertIs(args.func, handle_change_dir)
 
         args = parser.parse_args(["cd", "--clear"])
         self.assertTrue(args.clear)
         self.assertIsNone(args.path)
-        self.assertIs(args.func, handle_set_path)
+        self.assertIs(args.func, handle_change_dir)
 
 
 if __name__ == "__main__":

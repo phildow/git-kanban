@@ -25,35 +25,35 @@ class TestReplCommandHandlers(unittest.TestCase):
     def _args(self, **kwargs) -> Namespace:
         return Namespace(**kwargs)
 
-    def test_handle_set_path_defaults_to_clear_without_path(self):
+    def test_handle_change_dir_defaults_to_clear_without_path(self):
         args = self._args(path=None, clear=False)
         result = object()
-        self.svc.set_path.return_value = result
+        self.svc.change_dir.return_value = result
 
-        commands.handle_set_path(args, self.svc, self.renderer)
+        commands.handle_change_dir(args, self.svc, self.renderer)
 
-        self.svc.set_path.assert_called_once_with(clear=True)
-        self.renderer.render_set_path.assert_called_once_with(args, result)
+        self.svc.change_dir.assert_called_once_with(clear=True)
+        self.renderer.render_change_dir.assert_called_once_with(args, result)
 
-    def test_handle_set_path_clear_flag(self):
+    def test_handle_change_dir_clear_flag(self):
         args = self._args(path="alpha/todo", clear=True)
         result = object()
-        self.svc.set_path.return_value = result
+        self.svc.change_dir.return_value = result
 
-        commands.handle_set_path(args, self.svc, self.renderer)
+        commands.handle_change_dir(args, self.svc, self.renderer)
 
-        self.svc.set_path.assert_called_once_with(clear=True)
-        self.renderer.render_set_path.assert_called_once_with(args, result)
+        self.svc.change_dir.assert_called_once_with(clear=True)
+        self.renderer.render_change_dir.assert_called_once_with(args, result)
 
-    def test_handle_set_path_with_path(self):
+    def test_handle_change_dir_with_path(self):
         args = self._args(path="alpha/todo", clear=False)
         result = object()
-        self.svc.set_path.return_value = result
+        self.svc.change_dir.return_value = result
 
-        commands.handle_set_path(args, self.svc, self.renderer)
+        commands.handle_change_dir(args, self.svc, self.renderer)
 
-        self.svc.set_path.assert_called_once_with(path="alpha/todo")
-        self.renderer.render_set_path.assert_called_once_with(args, result)
+        self.svc.change_dir.assert_called_once_with(path="alpha/todo")
+        self.renderer.render_change_dir.assert_called_once_with(args, result)
 
     def test_handle_board_sets_context_to_board(self):
         args = self._args(board="alpha")

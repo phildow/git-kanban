@@ -24,14 +24,14 @@ def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: object) 
 # Working context commands (use, board, column)
 # ---------------------------------------------------------------------------
 
-def handle_set_path(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_change_dir(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	if args.clear or getattr(args, "path", None) is None:
-		result = svc.set_path(clear=True)
-		renderer.render_set_path(args, result)
+		result = svc.change_dir(clear=True)
+		renderer.render_change_dir(args, result)
 		return
 
-	result = svc.set_path(path=args.path)
-	renderer.render_set_path(args, result)
+	result = svc.change_dir(path=args.path)
+	renderer.render_change_dir(args, result)
 
 
 def handle_board_change(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:

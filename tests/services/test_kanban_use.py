@@ -1,4 +1,4 @@
-"""Behavior tests for `KanbanService.set_path()` context validation."""
+"""Behavior tests for `KanbanService.change_dir()` context validation."""
 
 from __future__ import annotations
 
@@ -30,22 +30,22 @@ class TestKanbanServiceSetPath(unittest.TestCase):
         self.repo.create_board("alpha")
         self.repo.create_column("alpha", "todo")
 
-    def test_set_path_sets_existing_board_and_column(self):
-        ctx = self.svc.set_path(path="alpha/todo")
+    def test_change_dir_sets_existing_board_and_column(self):
+        ctx = self.svc.change_dir(path="alpha/todo")
         self.assertEqual(ctx.board, "alpha")
         self.assertEqual(ctx.column, "todo")
 
-    def test_set_path_raises_for_missing_board(self):
+    def test_change_dir_raises_for_missing_board(self):
         with self.assertRaises(BoardNotFound):
-            self.svc.set_path(path="missing")
+            self.svc.change_dir(path="missing")
 
-    def test_set_path_raises_for_missing_column(self):
+    def test_change_dir_raises_for_missing_column(self):
         with self.assertRaises(ColumnNotFound):
-            self.svc.set_path(path="alpha/missing")
+            self.svc.change_dir(path="alpha/missing")
 
-    def test_set_path_relative_column_uses_active_board(self):
-        self.svc.set_path(path="alpha")
-        ctx = self.svc.set_path(path="todo")
+    def test_change_dir_relative_column_uses_active_board(self):
+        self.svc.change_dir(path="alpha")
+        ctx = self.svc.change_dir(path="todo")
         self.assertEqual(ctx.board, "alpha")
         self.assertEqual(ctx.column, "todo")
 

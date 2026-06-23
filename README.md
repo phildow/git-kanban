@@ -58,17 +58,18 @@ REMAINING FILESYSTEM
 - TEST: Create task with spaces - kebab_case
 - TEST: Create column with spaces - kebab_case
 - TEST: Create board with spaces - kebab_case
-- CHORE: computed property filename for datamodels uses slug
 
 - TEST: Check init error handling, don't overwrite a repo, don't initialize a repo that's already been created
 - TEST: Ensure memory store supports same features as filesystem (ordering)
 
-- FEAT: Correctly resolve `..` all commands that take paths not just cd
-- FEAT: Correctly tab complete `..` for all commands that take paths
-- FEAT: Resolve too many `..` to an error
-- FEAT: Use the same logic for other commands that take paths, and use resolve into components
+- DIRECTORY TRAVERSAL 
+
+- Correctly resolve `..` all commands that take paths not just cd
+- Correctly tab complete `..` for all commands that take paths
+- Resolve too many `..` to an error
+- Use the same logic for other commands that take paths, and use resolve into components
   taking into account relative paths and the user context
-  INT: Add integration tests for the user context and relative paths
+- Add integration tests for the user context and relative paths
 
 - FEAT: add closed_at metadata to a Task
 - FEAT: config: default boards that automatically set the closed_at value: None until moved to done or archived if None

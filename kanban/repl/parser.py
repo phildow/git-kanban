@@ -32,7 +32,7 @@ from repl.commands import (
     handle_task_move,
     handle_task_show,
     handle_task_update,
-    handle_set_path,
+    handle_change_dir,
 )
 
 SORT_TASK_CHOICES = ["title", "priority", "due-date", "created-at", "updated-at", "created-by", "column"]
@@ -272,7 +272,7 @@ def _add_cd_parser(subparsers: argparse._SubParsersAction) -> None:
     group.add_argument("path", metavar="BOARD[/COLUMN]", nargs="?", help="Board or board/column to set active")
     group.add_argument("--clear", action="store_true", default=False, help="Clear the current context")
     _add_global_flags(p)
-    p.set_defaults(func=handle_set_path)
+    p.set_defaults(func=handle_change_dir)
 
 
 def _add_board_parser(subparsers: argparse._SubParsersAction) -> None:
