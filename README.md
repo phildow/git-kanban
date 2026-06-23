@@ -55,7 +55,11 @@ kanban (main)>
 
 REMAINING FILESYSTEM
 
+- FEAT: A JSON option for every command on the CLI, uses a separate renderer
+- TEST: renaming the board or column keeps the user context in sync
+- CLAUDE: note that models are lightweight and do not include relationships, where they reference other entities they reference them by name only, always call a service layer method to get a fully qualified object
 
+- CHORE: always pass the path to get_tasks not a reconstructed path
 - CHORE: basic refactoring to use exists methods in the filesystem, i'm sure there's more
 - CHORE: add utilty to filter for invisible files, which is used extensively in the filesystem repo
 - CHORE: Use slugs in memory repository for private indexing (add tests)

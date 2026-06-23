@@ -407,11 +407,12 @@ class KanbanService:
         UUIDs; only the directory name (and therefore the board's slug) changes.
         Updates the current context if the renamed board was the current one.
         """
-        board, _, _ = self.path_components(path)
-        board = self.repository.rename_board(board, new_name)
+        old_board, _, _ = self.path_components(path)
+        board = self.repository.rename_board(old_board, new_name)
 
         # Keep current context in sync.
-        self._user_context.board = board.name
+        if self._user_context.board == old_board:
+            self._user_context.board = board.name
 
         # Update index entries for tasks in the renamed board.
         for task in self.get_tasks(f"/{board.name}"):
