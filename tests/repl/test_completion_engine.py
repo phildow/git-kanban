@@ -171,8 +171,11 @@ class FakeKanbanService:
     def get_columns(self, board: str) -> list[_Named]:
         return [_Named(name) for name in self._BOARDS[board]]
 
-    def get_tasks(self, board: str, column: str) -> list[_Task]:
-        return [_Task(slug) for slug in self._BOARDS[board][column]]
+    def get_tasks(self, path: str | None = None) -> list[_Task]:
+        board, column, _ = self.path_components(path)
+        if board is None or column is None:
+            return []
+        return [_Task(slug) for slug in self._BOARDS.get(board, {}).get(column, [])]
 
     def path_components(self, path: str | None = None) -> tuple[str | None, str | None, str | None]:
         """Resolve path against the stored user context, mirroring KanbanService."""

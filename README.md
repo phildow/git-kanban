@@ -56,7 +56,11 @@ kanban (main)>
 ~
 
 - BUG: woah don't hide all errors!
-- BUG: update completion engine to allow task completion as well (many commands take tasks)
+
+- FEAT: think about how move should work, for example should the dest allow it to rename, or is it more natural to just give it a column
+        and use rename to rename a task, although that breaks mv dynamics (or require a mutal flag)
+        and if the dest for move is a column or board/column then autocomplet has to take that into account
+- BUG: handle path errors better
 
 - TEST: Create task with spaces - kebab_case
 - TEST: Create column with spaces - kebab_case

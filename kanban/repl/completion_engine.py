@@ -65,7 +65,7 @@ class CompletionDataSource(Protocol):
     def get_columns(self, board: str) -> list[Named]:
         ...
 
-    def get_tasks(self, board: str, column: str) -> list[Sluggable]:
+    def get_tasks(self, path: str | None = None) -> list[Sluggable]:
         ...
 
     def path_components(self, path: str | None = None) -> tuple[str | None, str | None, str | None]:
@@ -320,7 +320,7 @@ class CompletionEngine:
             names = [c.name for c in self._service.get_columns(board)]
             suffix = "/"
         else:
-            names = [t.slug for t in self._service.get_tasks(board, column)]
+            names = [t.slug for t in self._service.get_tasks(f"/{board}/{column}")]
             suffix = ""
 
         return [f"{name}{suffix}" for name in self._matching(names, partial)]
