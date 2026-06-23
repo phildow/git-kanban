@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import unittest
 from dataclasses import dataclass
+from pathlib import Path
 
 from repl.completion_engine import CompletionEngine
 
@@ -159,6 +160,15 @@ class FakeKanbanService:
 
     def get_tasks(self, board: str, column: str) -> list[_Task]:
         return [_Task(slug) for slug in self._BOARDS[board][column]]
+
+    def path_components(self, path: str | None = None) -> tuple[str | None, str | None, str | None]:
+        """Split an absolute path into (board, column, title) components."""
+        parts = Path(path or "/").resolve(strict=False).parts
+        return (
+            parts[1] if len(parts) > 1 else None,
+            parts[2] if len(parts) > 2 else None,
+            parts[3] if len(parts) > 3 else None,
+        )
 
 
 class EngineTestCase(unittest.TestCase):

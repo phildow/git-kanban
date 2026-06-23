@@ -66,6 +66,9 @@ class CompletionDataSource(Protocol):
     def get_tasks(self, board: str, column: str) -> list[Sluggable]:
         ...
 
+    def path_components(self, path: str | None = None) -> tuple[str | None, str | None, str | None]:
+        ...
+
 
 class UserContextLike(Protocol):
     """The subset of the REPL's user context that completion needs."""
@@ -300,34 +303,32 @@ class CompletionEngine:
         resulting line still reads as a full path.
         """
 
-        # TODO: use path_components here and paqss into _walk, 
-        # so that ".." and relative paths work correctly. Currently
+        slash_idx = token.rfind("/")
+        if slash_idx == -1:
+            prefix, partial = "", token
+        else:
+            prefix, partial = token[: slash_idx + 1], token[slash_idx + 1:]
 
-        override = token.startswith("/")
-        body = token[1:] if override else token
-        segments = body.split("/")
+        board, column, _ = self._service.path_components(self._absolute_prefix(prefix, context))
+        return self._walk(board, column, partial)
 
-        board = None if override else context.board
-        column = None if override else context.column
+    @staticmethod
+    def _absolute_prefix(prefix: str, context: UserContextLike) -> str:
+        """Return an absolute path string for ``prefix`` resolved against ``context``.
 
-        return self._walk(board, column, segments)
-
-    def _walk(self, board: str | None, column: str | None, segments: list[str]) -> list[str]:
-        """Descend ``segments`` from ``(board, column)``, completing the last.
-
-        All segments but the last must exactly match an existing board
-        or column to keep descending; the last segment is the partial
-        prefix to complete against whatever level is reached.
+        Called before ``path_components`` so the service never needs to
+        read the REPL's user context -- the engine supplies it directly.
+        ``/``-prefixed tokens override context exactly as on a shell.
         """
 
-        *exact, partial = segments
-        for segment in exact:
-            if board is None:
-                board = segment
-            elif column is None:
-                column = segment
-            else:
-                return []  # tasks have no children to descend into
+        if prefix.startswith("/"):
+            return prefix
+        context_parts = [p for p in [context.board, context.column] if p]
+        prefix_parts = [p for p in prefix.rstrip("/").split("/") if p]
+        return "/" + "/".join(context_parts + prefix_parts) + "/"
+
+    def _walk(self, board: str | None, column: str | None, partial: str) -> list[str]:
+        """Complete the level reached by ``(board, column)`` against ``partial``."""
 
         if board is None:
             names = [b.name for b in self._service.get_boards()]
