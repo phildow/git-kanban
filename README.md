@@ -62,13 +62,13 @@ Run:
 
 - CLAUDE: Add metadata structure to Claude document as INI
 
-- BUG: always pass the slug to the Column and Board 
+- BUG: always pass the slug to the Column and Board (tests fail when slug is not optional)
 
-- FEAT: store board title in metadata
-- FEAT: store column title in metadata
+- FEAT: [x] store board title in metadata
+- FEAT: [x] store column title in metadata
 - TEST: [x] Create task with spaces - kebab_case
-- TEST: Create column with spaces - kebab_case
-- TEST: Create board with spaces - kebab_case
+- TEST: [x] Create column with spaces - kebab_case
+- TEST: [x] Create board with spaces - kebab_case
 
 ~
 

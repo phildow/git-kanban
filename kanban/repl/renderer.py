@@ -141,18 +141,21 @@ class Renderer:
 	def render_board_create(self, args: argparse.Namespace, result: Board) -> None:
 		"""Render a message indicating that a board was created, including its name."""
 		board_name = result.name or getattr(args, "board", None)
-		self._emit(args, f"Created board: {board_name}")
+		board_slug = result.slug or getattr(args, "board", None)
+		self._emit(args, f"Created board: {board_name} ({board_slug})")
 
 	def render_board_rename(self, args: argparse.Namespace, result: Board) -> None:
 		"""Render a message indicating that a board was renamed, including the old and new names."""
 		old_name = getattr(args, "board", None)
 		new_name = result.name or getattr(args, "new_name", None)
-		self._emit(args, f"Renamed board: {old_name} -> {new_name}")
+		new_slug = result.slug or getattr(args, "new_name", None)
+		self._emit(args, f"Renamed board: {old_name} -> {new_name} ({new_slug})")
 
 	def render_board_delete(self, args: argparse.Namespace) -> None:
 		"""Render a message indicating that a board was deleted, including its name."""
 		board_name = getattr(args, "board", None)
-		self._emit(args, f"Deleted board: {board_name}")
+		board_slug = getattr(args, "slug", None)
+		self._emit(args, f"Deleted board: {board_name} ({board_slug})")
 
 # ---------------------------------------------------------------------------
 # Column rendering
@@ -221,10 +224,9 @@ class Renderer:
 		"""
 		board_name = result.board
 		column_name = result.name
-		if board_name and column_name:
-			self._emit(args, f"Column created: {board_name}/{column_name}")
-		else:
-			self._emit(args, f"Column created: {column_name}")
+		column_slug = result.slug
+		
+		self._emit(args, f"Column created: {column_name} ({column_slug})")
 
 	def render_column_rename(self, args: argparse.Namespace, result: Column) -> None:
 		"""
@@ -235,11 +237,9 @@ class Renderer:
 		old_name = path.split("/", 1)[1] if "/" in path else path
 		board_name = result.board or (path.split("/", 1)[0] if "/" in path else None)
 		new_name = result.name or getattr(args, "new_name", None)
+		new_slug = result.slug or getattr(args, "new_slug", None)
 
-		if board_name:
-			self._emit(args, f"Column renamed: {board_name}/{old_name} -> {board_name}/{new_name}")
-		else:
-			self._emit(args, f"Column renamed: {old_name} -> {new_name}")
+		self._emit(args, f"Column renamed: {old_name} -> {new_name} ({new_slug})")
 
 	def render_column_reorder(self, args: argparse.Namespace, result: list[Column]) -> None:
 		"""
@@ -265,10 +265,9 @@ class Renderer:
 		path = getattr(args, "path", "") or ""
 		column_name = path.split("/", 1)[1] if "/" in path else path
 		board_name = path.split("/", 1)[0] if "/" in path else None
-		if board_name:
-			self._emit(args, f"Column deleted: {board_name}/{column_name}")
-		else:
-			self._emit(args, f"Column deleted: {column_name}")
+		column_slug = getattr(args, "slug", None)
+		
+		self._emit(args, f"Column deleted: {column_name} ({column_slug})")
 
 # ---------------------------------------------------------------------------
 # Task rendering
@@ -361,12 +360,8 @@ class Renderer:
 		Render a message indicating that a task was created, 
 		including its slug and optionally its board/column if available.
 		"""
-		# TODO: Consider more detailed output for verbose mode, and a more concise message for non-verbose
-		# TODO: Reconsider whether board/column should be Optional
-		if result.board and result.column:
-			self._emit(args, f"Task created: {result.board}/{result.column}/{result.slug}")
-		else:
-			self._emit(args, f"Task created: {result.slug}")
+		
+		self._emit(args, f"Task created: {result.slug}")
 
 	def render_task_show(self, args: argparse.Namespace, result: Task) -> None:
 		"""Render detailed information about a single task, including all metadata and the body/description."""
