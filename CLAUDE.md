@@ -199,11 +199,24 @@ The kanban store includes a `userdata` INI file. It contains preferences specifi
 
 #### Board
 
-Board (singular) metadata is stored in a hidden `.metadata` INI file in the each board directory. It contains settings that apply to the board, for example the column order. (TODO)
+Board (singular) metadata is stored in a hidden `.metadata` extendend INI file in each board directory. It contains settings that apply to the board, for example its title and the column order:
+
+```
+[columns]
+	order =
+		todo
+		in-progress
+		in-review
+		done
+
+[fields]
+  name="Main"
+```
+
 
 #### Column
 
-Columns metadata is stored in a hidden `.metadata` INI file in each column's directory. It contains settings that apply to the column, for example the task order. (TODO)
+Columns metadata is stored in a hidden `.metadata` INI file in each column's directory. It contains settings that apply to the column, for example the task order
 
 #### Task
 

@@ -53,11 +53,13 @@ kanban (main)>
 
 0.5 - Complete filesystem
 
+- CLAUDE: Add metadata structure to Claude document as INI
+
 - BUG: woah don't hide all errors!
 
 - FEAT: store board title in metadata
 - FEAT: store column title in metadata
-- TEST: Create task with spaces - kebab_case
+- TEST: [x] Create task with spaces - kebab_case
 - TEST: Create column with spaces - kebab_case
 - TEST: Create board with spaces - kebab_case
 

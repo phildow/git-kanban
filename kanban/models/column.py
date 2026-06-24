@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 from uuid import UUID
 
@@ -16,19 +17,21 @@ class Column:
     # TODO: add slug and path properties for easier referencing in the REPL and storage layers
 
     name: str
-    # slug: str
+    # slug: str = ""
     board: str
     position: int
     task_count: int = 0
 
-    @property
-    def path(self) -> Path:
-        return Path(f"/{self.board}/{self.name}")
-
+    # TODO replace with datafield
     @property
     def slug(self) -> str:
         return self.name.lower().replace(" ", "-")
-    
+
     @property
     def filename(self) -> str:
         return self.slug
+
+    @property
+    def path(self) -> Path:
+        return Path(f"/{self.board}/{self.name}")
+    
