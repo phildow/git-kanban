@@ -37,18 +37,18 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         result = svc.initialize_kanban(Path("."), config=BOOTSTRAP_CONFIG)
 
         self.assertTrue(result)
-        self.assertTrue(repo.board_exists("main"))
+        self.assertTrue(repo.board_exists("Main"))
         self.assertEqual(
-            [c.name for c in repo.get_columns("main")],
-            ["todo", "in-progress", "in-review", "done"],
+            [c.name for c in repo.get_columns("Main")],
+            ["to-do", "in-progress", "in-review", "done"],
         )
         self.assertEqual(
-            [c.position for c in repo.get_columns("main")],
+            [c.position for c in repo.get_columns("Main")],
             [0, 1, 2, 3],
         )
 
         self.assertEqual(svc.user_context.board, "main")
-        self.assertEqual(svc.user_context.column, "todo")
+        self.assertEqual(svc.user_context.column, "to-do")
 
     def test_init_raises_when_called_twice(self):
         """Second init call raises because repository is already initialized."""
@@ -78,13 +78,13 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
 
         svc.initialize_kanban(Path("."), config=BOOTSTRAP_CONFIG)
 
-        tasks = repo.get_tasks(board="main")
+        tasks = repo.get_tasks(board="Main")
         titles = {t.title for t in tasks}
-        self.assertIn("list your boards and tasks", titles)
-        self.assertIn("create a new task", titles)
-        self.assertIn("move a task to another column", titles)
-        self.assertIn("update a task with details", titles)
-        self.assertIn("go for a bike ride", titles)
+        self.assertIn("List your boards and tasks", titles)
+        self.assertIn("Create a new task", titles)
+        self.assertIn("Move a task to another column", titles)
+        self.assertIn("Update a task with details", titles)
+        self.assertIn("Go for a bike ride", titles)
 
     def test_init_seeds_tasks_from_custom_config(self):
         """initialize_kanban accepts a custom BootstrapConfig instead of the default."""
@@ -101,9 +101,13 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
             "boards": [
                 {
                     "name": "work",
-                    "columns": ["backlog", "doing", "done"],
-                    "tasks": [
-                        {"title": "custom task", "slug": "custom-task", "column": "backlog"},
+                    "slug": "work",
+                    "columns": [
+                        {"name": "Backlog", "slug": "backlog", "tasks": [
+                            {"title": "custom task", "slug": "custom-task"},
+                        ]},
+                        {"name": "Doing", "slug": "doing", "tasks": []},
+                        {"name": "Done", "slug": "done", "tasks": []},
                     ],
                 }
             ],

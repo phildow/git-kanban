@@ -426,7 +426,7 @@ class FilesystemRepository(KanbanRepository):
         if not task_path.is_file():
             raise TaskNotFound(f"{board}/{column}/{filename}")
             
-        return self._parse_task_file(task_path, board_slug, column_slug)
+        return self._parse_task_file(task_path, board, column)
 
     def create_task(self, task: Task, filename: str) -> Task:
         column_slug = kebab_case(task.column)
@@ -474,7 +474,7 @@ class FilesystemRepository(KanbanRepository):
             order.append(f"{filename}.md")
         self._set_task_order(board_slug, column_slug, order)
         
-        return self._parse_task_file(path, board_slug, column_slug)
+        return self._parse_task_file(path, task.board, task.column)
 
     def update_task(self, task: Task) -> Task:
         board_slug = kebab_case(task.board)
@@ -528,7 +528,7 @@ class FilesystemRepository(KanbanRepository):
                 order.append(new_filename)
             self._set_task_order(board_slug, column_slug, order)
 
-        return self._parse_task_file(new_path, board_slug, column_slug)
+        return self._parse_task_file(new_path, task.board, task.column)
 
     # TODO: clean this up!
     def move_task(self, task: Task, dest: Path) -> Task:
@@ -594,7 +594,7 @@ class FilesystemRepository(KanbanRepository):
                 dest_order.append(dest_filename)
             self._set_task_order(dest_board_slug, dest_column_slug, dest_order)
 
-        return self._parse_task_file(dest_file, dest_board_slug, dest_column_slug)
+        return self._parse_task_file(dest_file, task.board, task.column)
 
     def delete_task(self, task: Task) -> None:
         board_slug = kebab_case(task.board)

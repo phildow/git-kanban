@@ -199,7 +199,7 @@ The kanban store includes a `userdata` INI file. It contains preferences specifi
 
 #### Board
 
-Board (singular) metadata is stored in a hidden `.metadata` extendend INI file in each board directory. It contains settings that apply to the board, for example its title and the column order:
+Board (singular) metadata is stored in a hidden `.metadata` extendend INI file in each board directory. It contains settings that apply to the board, for example its name, slug, and the column order:
 
 ```
 [columns]
@@ -211,16 +211,28 @@ Board (singular) metadata is stored in a hidden `.metadata` extendend INI file i
 
 [fields]
   name="Main"
+  slug="main"
 ```
-
 
 #### Column
 
-Columns metadata is stored in a hidden `.metadata` INI file in each column's directory. It contains settings that apply to the column, for example the task order
+Columns metadata is stored in a hidden `.metadata` INI file in each column's directory. It contains settings that apply to the column, for example its name, slug, and the task order:
+
+```
+[tasks]
+	order =
+		finish-git-kanban
+		go-for-a-bike-ride
+		have-a-cup-of-tea
+
+[fields]
+  name="To Do"
+  slug="to-do"
+```
 
 #### Task
 
-Taks metadata is stored in the task's markdown file as frontmatter with the following fields and format:
+Task metadata is stored in the task's markdown file as frontmatter with the following fields and format:
 
 ```
 ---  

@@ -160,24 +160,27 @@ class KanbanService:
         now = datetime.now(timezone.utc)
         
         for board_config in config["boards"]:
-            board = board_config["name"]
-            self.repository.create_board(board)
-            for col in board_config["columns"]:
-                self.repository.create_column(board, col)
-            for task_config in board_config["tasks"]:
-                task = Task(
-                    id=uuid4(),
-                    title=task_config["title"],
-                    slug=task_config["slug"],
-                    board=board,
-                    column=task_config["column"],
-                    priority=task_config.get("priority"),
-                    assignee=task_config.get("assignee"),
-                    body=task_config.get("body", ""),
-                    created_at=now,
-                    updated_at=now,
-                )
-                self.repository.create_task(task, task.slug)
+            board_name = board_config["name"]
+            board_slug = board_config["slug"]
+            self.repository.create_board(board_slug)
+            for col_config in board_config["columns"]:
+                col_name = col_config["name"]
+                col_slug = col_config["slug"]
+                self.repository.create_column(board_slug, col_slug)
+                for task_config in col_config.get("tasks", []):
+                    task = Task(
+                        id=uuid4(),
+                        title=task_config["title"],
+                        slug=task_config["slug"],
+                        board=board_name,
+                        column=col_name,
+                        priority=task_config.get("priority"),
+                        assignee=task_config.get("assignee"),
+                        body=task_config.get("body", ""),
+                        created_at=now,
+                        updated_at=now,
+                    )
+                    self.repository.create_task(task, task.slug)
         
     # ------------------------------------------------------------------
     # User Context
