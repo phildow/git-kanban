@@ -251,12 +251,15 @@ class FilesystemRepository(KanbanRepository):
         columns = []
         for i, name in enumerate(c for c in order if c in existing):
             task_count = self._column_task_count(board, name)
+            column_slug = kebab_case(name)
             name = self.get_column_metadata(board_slug, name, "fields.name") or name
-            columns.append(Column(name=name, board=board, position=i, task_count=task_count))
+            column_slug = self.get_column_metadata(board_slug, name, "fields.slug") or column_slug
+            columns.append(Column(name=name, slug=column_slug, board=board, position=i, task_count=task_count))
             
         return columns
 
     def get_column(self, board: str, name: str) -> Column:
+        column_slug = kebab_case(name)
         board_slug = kebab_case(board)
         if not self.board_exists(board_slug):
             raise BoardNotFound(board)
@@ -270,30 +273,35 @@ class FilesystemRepository(KanbanRepository):
         order = self._get_column_order(board)
         position = order.index(name) if name in order else len(order)
         name = self.get_column_metadata(board_slug, name, "fields.name") or name
+        column_slug = self.get_column_metadata(board_slug, name, "fields.slug") or column_slug
 
-        return Column(name=name, board=board, position=position, task_count=task_count)
+        return Column(name=name, slug=column_slug, board=board, position=position, task_count=task_count)
 
     def create_column(self, board: str, name: str) -> Column:
+        column_slug = kebab_case(name)
         board_slug = kebab_case(board)
-        
+
         if not self.board_exists(board_slug):
             raise BoardNotFound(board)
         
-        column_path = self.boards_dir / board_slug / name
+        column_path = self.boards_dir / board_slug / column_slug
         
         if column_path.exists():
             raise ColumnAlreadyExists(board, name)
         
-        order = self._get_column_order(board)
+        order = self._get_column_order(board_slug)
         column_path.mkdir()
         (column_path / ".metadata").touch()
         order.append(name)
         
         self.set_column_metadata(board_slug, name, "fields.name", name)
-        self._set_column_order(board, order)
-        return Column(name=name, board=board, position=len(order) - 1)
+        self.set_column_metadata(board_slug, name, "fields.slug", column_slug)
+        self._set_column_order(board_slug, order)
+
+        return Column(name=name, slug=column_slug, board=board, position=len(order) - 1)
 
     def rename_column(self, board: str, name: str, new_name: str) -> Column:
+        new_column_slug = kebab_case(new_name)
         board_slug = kebab_case(board)
         if not self.board_exists(board_slug):
             raise BoardNotFound(board)
@@ -303,13 +311,15 @@ class FilesystemRepository(KanbanRepository):
             raise ColumnAlreadyExists(board, new_name)
         
         (self.boards_dir / board_slug / name).rename(self.boards_dir / board_slug / new_name)
-        order = self._get_column_order(board)
+        order = self._get_column_order(board_slug)
         
         if name in order:
             order[order.index(name)] = new_name
         
         self.set_column_metadata(board_slug, new_name, "fields.name", new_name)
-        self._set_column_order(board, order)
+        self.set_column_metadata(board_slug, new_name, "fields.slug", new_column_slug)
+        self._set_column_order(board_slug, order)
+
         return self.get_column(board, new_name)
 
     def reorder_column(self, board: str, name: str, position: int) -> list[Column]:
@@ -320,13 +330,13 @@ class FilesystemRepository(KanbanRepository):
         if not self.column_exists(board_slug, name):
             raise ColumnNotFound(board, name)
        
-        order = self._get_column_order(board)
+        order = self._get_column_order(board_slug)
         
         if name in order:
             order.remove(name)
         order.insert(max(0, min(position, len(order))), name)
         
-        self._set_column_order(board, order)
+        self._set_column_order(board_slug, order)
         return self.get_columns(board)
 
     def delete_column(self, board: str, name: str) -> None:
@@ -342,7 +352,7 @@ class FilesystemRepository(KanbanRepository):
         if name in order:
             order.remove(name)
         
-        self._set_column_order(board, order)
+        self._set_column_order(board_slug, order)
         shutil.rmtree(self.boards_dir / board_slug / name)
 
     # ------------------------------------------------------------------

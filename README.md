@@ -62,8 +62,7 @@ Run:
 
 - CLAUDE: Add metadata structure to Claude document as INI
 
-- BUG: bootstrapping now broken
-- BUG: woah don't hide all errors!
+- BUG: always pass the slug to the Column and Board 
 
 - FEAT: store board title in metadata
 - FEAT: store column title in metadata

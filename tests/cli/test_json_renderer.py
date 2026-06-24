@@ -54,8 +54,8 @@ def _board(name: str = "main", slug: str = "main", column_count: int = 4) -> Boa
     return Board(name=name, slug=slug, columns=[object()] * column_count)
 
 
-def _column(name: str = "todo", board: str = "main", position: int = 0) -> Column:
-    return Column(name=name, board=board, position=position)
+def _column(name: str = "todo", board: str = "main", position: int = 0, slug: str = "") -> Column:
+    return Column(name=name, board=board, position=position, slug=slug)
 
 
 class TestJsonRendererBoards(unittest.TestCase):
@@ -161,6 +161,11 @@ class TestJsonRendererColumns(unittest.TestCase):
         out = _capture(lambda: self.r.render_column_list(_args(), [_column("done", "main", 2)]))
         self.assertEqual(json.loads(out)[0]["position"], 2)
 
+    def test_column_list_slug_field(self) -> None:
+        """Each column entry contains the slug."""
+        out = _capture(lambda: self.r.render_column_list(_args(), [_column("In Progress", "main", 1, "in-progress")]))
+        self.assertEqual(json.loads(out)[0]["slug"], "in-progress")
+
     def test_column_list_empty_array(self) -> None:
         """render_column_list emits an empty JSON array for an empty list."""
         out = _capture(lambda: self.r.render_column_list(_args(), []))
@@ -175,6 +180,11 @@ class TestJsonRendererColumns(unittest.TestCase):
         """render_column_create emits a JSON object with the column name when verbose."""
         out = _capture(lambda: self.r.render_column_create(_args(verbose=True), _column("review", "proj", 1)))
         self.assertEqual(json.loads(out)["name"], "review")
+
+    def test_column_create_slug_field(self) -> None:
+        """render_column_create emits the slug when verbose."""
+        out = _capture(lambda: self.r.render_column_create(_args(verbose=True), _column("In Review", "proj", 1, "in-review")))
+        self.assertEqual(json.loads(out)["slug"], "in-review")
 
     def test_column_delete_silent_without_verbose(self) -> None:
         """render_column_delete emits nothing when --verbose is not set."""
@@ -269,6 +279,11 @@ class TestJsonRendererTasks(unittest.TestCase):
         out = _capture(lambda: self.r.render_task_show(_args(), _task()))
         self.assertEqual(json.loads(out)["id"], str(_TASK_ID))
 
+    def test_task_show_slug_field(self) -> None:
+        """render_task_show emits the task slug."""
+        out = _capture(lambda: self.r.render_task_show(_args(), _task()))
+        self.assertEqual(json.loads(out)["slug"], "fix-login-bug")
+
     def test_task_show_includes_timestamps(self) -> None:
         """render_task_show includes created_at and updated_at."""
         out = _capture(lambda: self.r.render_task_show(_args(), _task()))
@@ -291,12 +306,22 @@ class TestJsonRendererTasks(unittest.TestCase):
         out = _capture(lambda: self.r.render_task_create(_args(verbose=True), _task()))
         self.assertEqual(json.loads(out)["id"], str(_TASK_ID))
 
+    def test_task_create_slug_field(self) -> None:
+        """render_task_create emits the task slug when verbose."""
+        out = _capture(lambda: self.r.render_task_create(_args(verbose=True), _task()))
+        self.assertEqual(json.loads(out)["slug"], "fix-login-bug")
+
     def test_task_create_includes_timestamps(self) -> None:
         """render_task_create includes timestamps in verbose output."""
         out = _capture(lambda: self.r.render_task_create(_args(verbose=True), _task()))
         obj = json.loads(out)
         self.assertIn("created_at", obj)
         self.assertIn("updated_at", obj)
+
+    def test_task_edit_slug_field(self) -> None:
+        """render_task_edit emits the task slug."""
+        out = _capture(lambda: self.r.render_task_edit(_args(), _task()))
+        self.assertEqual(json.loads(out)["slug"], "fix-login-bug")
 
     def test_task_move_silent_without_verbose(self) -> None:
         """render_task_move emits nothing when --verbose is not set."""

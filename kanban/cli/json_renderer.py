@@ -57,6 +57,7 @@ def _board_dict(board: Board) -> dict:
 def _column_dict(column: Column) -> dict:
     return {
         "name": column.name,
+        "slug": column.slug,
         "board": column.board,
         "position": column.position,
     }
