@@ -82,10 +82,12 @@ class InMemoryRepository(KanbanRepository):
         return name in self._boards
 
     def create_board(self, name: str) -> Board:
+        slug = kebab_case(name)
+
         if self.board_exists(name):
             raise BoardAlreadyExists(name)
 
-        board = Board(name=name)
+        board = Board(name=name, slug=slug)
         self._boards[name] = board
         return board
 
@@ -155,11 +157,12 @@ class InMemoryRepository(KanbanRepository):
         return any(column.name == name for column in board_obj.columns)
 
     def create_column(self, board: str, name: str) -> Column:
+        slug = kebab_case(name)
         board_obj = self.get_board(board)
         if any(column.name == name for column in board_obj.columns):
             raise ColumnAlreadyExists(board, name)
 
-        column = Column(name=name, board=board, position=len(board_obj.columns))
+        column = Column(name=name, slug=slug, board=board, position=len(board_obj.columns))
         board_obj.columns.append(column)
         return column
 
@@ -174,6 +177,7 @@ class InMemoryRepository(KanbanRepository):
             return column
 
         column.name = new_name
+        column.slug = kebab_case(new_name)
 
         # Keep location index in sync.
         for task_id, (task_board, task_column) in list(self._task_locations.items()):
