@@ -86,7 +86,9 @@ class FilesystemRepository(KanbanRepository):
     # ------------------------------------------------------------------
 
     def board_exists(self, name: str) -> bool:
-        board_path = self.boards_dir / name
+        slug = kebab_case(name)
+
+        board_path = self.boards_dir / slug
         return board_path.is_dir() and not name.startswith(".")
 
     # TODO: SYNC - metadata must match the name and slug of the board directory
@@ -106,8 +108,9 @@ class FilesystemRepository(KanbanRepository):
                 for f in col.iterdir()
                 if f.is_file() and not f.name.startswith(".")
             )
-            name = self.get_board_metadata(entry.name, "fields.name") or entry.name
-            slug = self.get_board_metadata(entry.name, "fields.slug") or kebab_case(entry.name)
+            slug = kebab_case(entry.name)
+            name = self.get_board_metadata(slug, "fields.name") or entry.name
+            slug = self.get_board_metadata(slug, "fields.slug") or kebab_case(entry.name)
 
             boards.append(Board(name=name, slug=slug, column_count=column_count, task_count=task_count))
         return boards
@@ -121,22 +124,22 @@ class FilesystemRepository(KanbanRepository):
         if not board_path.is_dir() or name.startswith("."):
             raise BoardNotFound(name)
         
-        name = self.get_board_metadata(name, "fields.name") or name
-        slug = self.get_board_metadata(name, "fields.slug") or slug
+        name = self.get_board_metadata(slug, "fields.name") or name
+        slug = self.get_board_metadata(slug, "fields.slug") or slug
 
         return Board(name=name, slug=slug)
 
     def create_board(self, name: str) -> Board:
         slug = kebab_case(name)
 
-        if self.board_exists(name):
+        if self.board_exists(slug):
             raise BoardAlreadyExists(name)
         
-        (self.boards_dir / name).mkdir()
-        (self.boards_dir / name / ".metadata").touch()
+        (self.boards_dir / slug).mkdir()
+        (self.boards_dir / slug / ".metadata").touch()
         
-        self.set_board_metadata(name, "fields.name", name)
-        self.set_board_metadata(name, "fields.slug", slug)
+        self.set_board_metadata(slug, "fields.name", name)
+        self.set_board_metadata(slug, "fields.slug", slug)
 
         return Board(name=name, slug=slug)
 
@@ -144,24 +147,24 @@ class FilesystemRepository(KanbanRepository):
         slug = kebab_case(name)
         new_slug = kebab_case(new_name)
 
-        if not self.board_exists(name):
+        if not self.board_exists(slug):
             raise BoardNotFound(name)
-        if self.board_exists(new_name):
+        if self.board_exists(new_slug):
             raise BoardAlreadyExists(new_name)
         
-        (self.boards_dir / name).rename(self.boards_dir / new_name)
+        (self.boards_dir / slug).rename(self.boards_dir / new_slug)
 
-        self.set_board_metadata(new_name, "fields.name", new_name)
-        self.set_board_metadata(new_name, "fields.slug", new_slug)
+        self.set_board_metadata(new_slug, "fields.name", new_name)
+        self.set_board_metadata(new_slug, "fields.slug", new_slug)
 
         return Board(name=new_name, slug=new_slug)
 
     def delete_board(self, name: str) -> None:
         slug = kebab_case(name)
 
-        if not self.board_exists(name):
+        if not self.board_exists(slug):
             raise BoardNotFound(name)
-        shutil.rmtree(self.boards_dir / name)
+        shutil.rmtree(self.boards_dir / slug)
 
     # ------------------------------------------------------------------
     # Columns operations

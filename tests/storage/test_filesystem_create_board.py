@@ -50,7 +50,7 @@ class TestFilesystemCreateBoard(unittest.TestCase):
     def test_writes_slug_to_metadata_with_spaces(self) -> None:
         """Board slug is kebab-cased from the name when the name contains spaces."""
         self.repo.create_board("my project")
-        slug = self.repo.get_board_metadata("my project", "fields.slug")
+        slug = self.repo.get_board_metadata("my-project", "fields.slug")
         self.assertEqual(slug, "my-project")
 
     def test_raises_when_board_already_exists(self) -> None:
