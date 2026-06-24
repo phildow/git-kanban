@@ -59,6 +59,26 @@ class TestFilesystemCreateColumn(unittest.TestCase):
         with self.assertRaises(ColumnAlreadyExists):
             self.repo.create_column("alpha", "todo")
 
+    def test_fields_name_written_to_metadata(self) -> None:
+        """create_column writes the column name to fields.name in the .metadata file."""
+        self.repo.create_column("alpha", "todo")
+        value = self.repo.get_column_metadata("alpha", "todo", "fields.name")
+        self.assertEqual(value, "todo")
+
+    def test_fields_name_written_for_each_column(self) -> None:
+        """fields.name is independent per column and reflects each column's name."""
+        self.repo.create_column("alpha", "todo")
+        self.repo.create_column("alpha", "in-progress")
+        self.assertEqual(self.repo.get_column_metadata("alpha", "todo", "fields.name"), "todo")
+        self.assertEqual(self.repo.get_column_metadata("alpha", "in-progress", "fields.name"), "in-progress")
+
+    def test_fields_name_survives_reload(self) -> None:
+        """fields.name is still readable from a fresh repository instance."""
+        self.repo.create_column("alpha", "todo")
+        fresh = FilesystemRepository(root=self.root)
+        value = fresh.get_column_metadata("alpha", "todo", "fields.name")
+        self.assertEqual(value, "todo")
+
 
 if __name__ == "__main__":
     unittest.main()

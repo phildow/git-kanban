@@ -251,6 +251,7 @@ class FilesystemRepository(KanbanRepository):
         columns = []
         for i, name in enumerate(c for c in order if c in existing):
             task_count = self._column_task_count(board, name)
+            name = self.get_column_metadata(board_slug, name, "fields.name") or name
             columns.append(Column(name=name, board=board, position=i, task_count=task_count))
             
         return columns
@@ -268,7 +269,8 @@ class FilesystemRepository(KanbanRepository):
         task_count = self._column_task_count(board, name)
         order = self._get_column_order(board)
         position = order.index(name) if name in order else len(order)
-        
+        name = self.get_column_metadata(board_slug, name, "fields.name") or name
+
         return Column(name=name, board=board, position=position, task_count=task_count)
 
     def create_column(self, board: str, name: str) -> Column:
@@ -287,6 +289,7 @@ class FilesystemRepository(KanbanRepository):
         (column_path / ".metadata").touch()
         order.append(name)
         
+        self.set_column_metadata(board_slug, name, "fields.name", name)
         self._set_column_order(board, order)
         return Column(name=name, board=board, position=len(order) - 1)
 
@@ -305,6 +308,7 @@ class FilesystemRepository(KanbanRepository):
         if name in order:
             order[order.index(name)] = new_name
         
+        self.set_column_metadata(board_slug, new_name, "fields.name", new_name)
         self._set_column_order(board, order)
         return self.get_column(board, new_name)
 
