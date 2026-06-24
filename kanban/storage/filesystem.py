@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 from uuid import UUID, uuid4
+import uuid
 
 from models import Task, TaskFilter, Board, Column
 from storage.kanban import KanbanRepository, BoardNotFound, BoardAlreadyExists, ColumnAlreadyExists, ColumnNotFound, TaskNotFound, TaskAlreadyExists
@@ -110,8 +111,10 @@ class FilesystemRepository(KanbanRepository):
             slug = kebab_case(entry.name)
             name = self.get_board_metadata(slug, "fields.name") or entry.name
             slug = self.get_board_metadata(slug, "fields.slug") or kebab_case(entry.name)
+            uuid = self.get_board_metadata(slug, "fields.id")   
+            # TODO: raise error if no UUID
 
-            boards.append(Board(name=name, slug=slug, column_count=column_count, task_count=task_count))
+            boards.append(Board(id=UUID(uuid), name=name, slug=slug, column_count=column_count, task_count=task_count))
         return boards
 
     # TODO: SYNC - metadata must match the name and slug of the board directory
@@ -125,11 +128,14 @@ class FilesystemRepository(KanbanRepository):
         
         name = self.get_board_metadata(slug, "fields.name") or name
         slug = self.get_board_metadata(slug, "fields.slug") or slug
+        uuid = self.get_board_metadata(slug, "fields.id")
+        # TODO: raise error if no UUID
 
-        return Board(name=name, slug=slug)
+        return Board(id=UUID(uuid), name=name, slug=slug)
 
     def create_board(self, name: str) -> Board:
         slug = kebab_case(name)
+        uuid = str(uuid4())
 
         if self.board_exists(slug):
             raise BoardAlreadyExists(name)
@@ -139,8 +145,9 @@ class FilesystemRepository(KanbanRepository):
         
         self.set_board_metadata(slug, "fields.name", name)
         self.set_board_metadata(slug, "fields.slug", slug)
+        self.set_board_metadata(slug, "fields.id", uuid)
 
-        return Board(name=name, slug=slug)
+        return Board(id=UUID(uuid), name=name, slug=slug)
 
     def rename_board(self, name: str, new_name: str) -> Board:
         slug = kebab_case(name)
@@ -156,7 +163,10 @@ class FilesystemRepository(KanbanRepository):
         self.set_board_metadata(new_slug, "fields.name", new_name)
         self.set_board_metadata(new_slug, "fields.slug", new_slug)
 
-        return Board(name=new_name, slug=new_slug)
+        uuid = self.get_board_metadata(new_slug, "fields.id")
+        # TODO: raise error if no UUID
+
+        return Board(id=UUID(uuid), name=new_name, slug=new_slug)
 
     def delete_board(self, name: str) -> None:
         slug = kebab_case(name)

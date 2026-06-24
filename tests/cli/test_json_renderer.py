@@ -50,8 +50,8 @@ def _task(**kwargs) -> Task:
     return Task(**defaults)
 
 
-def _board(name: str = "main", slug: str = "main", column_count: int = 4) -> Board:
-    return Board(name=name, slug=slug, columns=[object()] * column_count)
+def _board(uuid: UUID = uuid4(), name: str = "main", slug: str = "main", column_count: int = 4) -> Board:
+    return Board(id=uuid, name=name, slug=slug, columns=[object()] * column_count)
 
 
 def _column(name: str = "todo", board: str = "main", position: int = 0, slug: str = "") -> Column:
@@ -66,27 +66,27 @@ class TestJsonRendererBoards(unittest.TestCase):
 
     def test_board_list_is_array(self) -> None:
         """render_board_list emits a JSON array."""
-        out = _capture(lambda: self.r.render_board_list(_args(), [_board("alpha"), _board("beta")]))
+        out = _capture(lambda: self.r.render_board_list(_args(), [_board(uuid4(), "alpha"), _board(uuid4(), "beta")]))
         self.assertIsInstance(json.loads(out), list)
 
     def test_board_list_length(self) -> None:
         """render_board_list array length matches input."""
-        out = _capture(lambda: self.r.render_board_list(_args(), [_board("alpha"), _board("beta")]))
+        out = _capture(lambda: self.r.render_board_list(_args(), [_board(uuid4(), "alpha"), _board(uuid4(), "beta")]))
         self.assertEqual(len(json.loads(out)), 2)
 
     def test_board_list_name_field(self) -> None:
         """Each board entry contains the correct name."""
-        out = _capture(lambda: self.r.render_board_list(_args(), [_board("alpha")]))
+        out = _capture(lambda: self.r.render_board_list(_args(), [_board(uuid4(), "alpha")]))
         self.assertEqual(json.loads(out)[0]["name"], "alpha")
 
     def test_board_list_slug_field(self) -> None:
         """Each board entry contains the slug."""
-        out = _capture(lambda: self.r.render_board_list(_args(), [_board("My Project", "my-project")]))
+        out = _capture(lambda: self.r.render_board_list(_args(), [_board(uuid4(), "My Project", "my-project")]))
         self.assertEqual(json.loads(out)[0]["slug"], "my-project")
 
     def test_board_list_column_count_field(self) -> None:
         """Each board entry contains the correct column_count."""
-        out = _capture(lambda: self.r.render_board_list(_args(), [_board("alpha", 4)]))
+        out = _capture(lambda: self.r.render_board_list(_args(), [_board(uuid4(), "alpha", "alpha", 4)]))
         self.assertEqual(json.loads(out)[0]["column_count"], 4)
 
     def test_board_list_empty_array(self) -> None:
@@ -96,32 +96,32 @@ class TestJsonRendererBoards(unittest.TestCase):
 
     def test_board_create_silent_without_verbose(self) -> None:
         """render_board_create emits nothing when --verbose is not set."""
-        out = _capture(lambda: self.r.render_board_create(_args(verbose=False), _board()))
+        out = _capture(lambda: self.r.render_board_create(_args(verbose=False), _board(uuid4())))
         self.assertEqual(out, "")
 
     def test_board_create_name_field(self) -> None:
         """render_board_create emits a JSON object with the board name when verbose."""
-        out = _capture(lambda: self.r.render_board_create(_args(verbose=True), _board("proj")))
+        out = _capture(lambda: self.r.render_board_create(_args(verbose=True), _board(uuid4(), "proj")))
         self.assertEqual(json.loads(out)["name"], "proj")
 
     def test_board_create_slug_field(self) -> None:
         """render_board_create emits the board slug when verbose."""
-        out = _capture(lambda: self.r.render_board_create(_args(verbose=True), _board("My Project", "my-project")))
+        out = _capture(lambda: self.r.render_board_create(_args(verbose=True), _board(uuid4(), "My Project", "my-project")))
         self.assertEqual(json.loads(out)["slug"], "my-project")
 
     def test_board_rename_silent_without_verbose(self) -> None:
         """render_board_rename emits nothing when --verbose is not set."""
-        out = _capture(lambda: self.r.render_board_rename(_args(verbose=False), _board()))
+        out = _capture(lambda: self.r.render_board_rename(_args(verbose=False), _board(uuid4(), "new-name")))
         self.assertEqual(out, "")
 
     def test_board_rename_name_field(self) -> None:
         """render_board_rename emits a JSON object with the new board name when verbose."""
-        out = _capture(lambda: self.r.render_board_rename(_args(verbose=True), _board("new-name")))
+        out = _capture(lambda: self.r.render_board_rename(_args(verbose=True), _board(uuid4(), "new-name")))
         self.assertEqual(json.loads(out)["name"], "new-name")
 
     def test_board_rename_slug_field(self) -> None:
         """render_board_rename emits the new board slug when verbose."""
-        out = _capture(lambda: self.r.render_board_rename(_args(verbose=True), _board("New Name", "new-name")))
+        out = _capture(lambda: self.r.render_board_rename(_args(verbose=True), _board(uuid4(), "New Name", "new-name")))
         self.assertEqual(json.loads(out)["slug"], "new-name")
 
     def test_board_delete_silent_without_verbose(self) -> None:

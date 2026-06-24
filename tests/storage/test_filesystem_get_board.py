@@ -5,6 +5,7 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
+from uuid import uuid4
 
 from models import Board
 from storage.filesystem import FilesystemRepository
@@ -23,9 +24,17 @@ class TestFilesystemGetBoard(unittest.TestCase):
     def tearDown(self) -> None:
         self._tmp.cleanup()
 
+    def _make_board(self, slug: str, name: str | None = None) -> None:
+        """Create a board directory with the metadata fields required by get_board."""
+        (self.repo.boards_dir / slug).mkdir()
+        display_name = name or slug
+        self.repo.set_board_metadata(slug, "fields.name", display_name)
+        self.repo.set_board_metadata(slug, "fields.slug", slug)
+        self.repo.set_board_metadata(slug, "fields.id", str(uuid4()))
+
     def test_returns_board_for_existing_directory(self) -> None:
         """A board directory that exists is returned as a Board."""
-        (self.repo.boards_dir / "alpha").mkdir()
+        self._make_board("alpha")
         board = self.repo.get_board("alpha")
         self.assertIsInstance(board, Board)
         self.assertEqual(board.name, "alpha")
@@ -49,7 +58,7 @@ class TestFilesystemGetBoard(unittest.TestCase):
 
     def test_returns_board_with_empty_columns(self) -> None:
         """Returned Board has an empty columns list (columns loaded separately)."""
-        (self.repo.boards_dir / "alpha").mkdir()
+        self._make_board("alpha")
         board = self.repo.get_board("alpha")
         self.assertEqual(board.columns, [])
 

@@ -8,6 +8,7 @@ These tests document expected board CRUD semantics, including:
 
 from __future__ import annotations
 
+from os import name
 import sys
 import tempfile
 import unittest
@@ -35,7 +36,7 @@ class TestInMemoryRepositoryBoardOps(unittest.TestCase):
 
         board = self.repo.create_board("alpha")
 
-        self.assertEqual(board, Board(name="alpha", slug="alpha", columns=[]))
+        self.assertEqual(board, Board(id=board.id, name="alpha", slug="alpha", columns=[]))
         self.assertTrue(self.repo.board_exists("alpha"))
         self.assertEqual(self.repo.get_board("alpha"), board)
         self.assertEqual(self.repo.get_boards(), [board])

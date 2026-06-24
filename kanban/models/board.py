@@ -12,6 +12,7 @@ from models.column import Column
 class Board:
     """A kanban board containing an ordered list of columns."""
     
+    id:   UUID
     name: str
     slug: str
 

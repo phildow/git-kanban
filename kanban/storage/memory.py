@@ -83,11 +83,12 @@ class InMemoryRepository(KanbanRepository):
 
     def create_board(self, name: str) -> Board:
         slug = kebab_case(name)
+        uuid = uuid4()
 
         if self.board_exists(name):
             raise BoardAlreadyExists(name)
 
-        board = Board(name=name, slug=slug)
+        board = Board(id=uuid, name=name, slug=slug)
         self._boards[name] = board
         return board
 

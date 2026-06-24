@@ -5,6 +5,7 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
+from uuid import uuid4
 
 from models import Board
 from storage.filesystem import FilesystemRepository
@@ -19,10 +20,18 @@ class TestFilesystemRenameBoard(unittest.TestCase):
         self.root = Path(self._tmp.name)
         self.repo = FilesystemRepository(root=self.root)
         self.repo.init_storage()
-        (self.repo.boards_dir / "alpha").mkdir()
+        self._make_board("alpha")
 
     def tearDown(self) -> None:
         self._tmp.cleanup()
+
+    def _make_board(self, slug: str, name: str | None = None) -> None:
+        """Create a board directory with the metadata fields required by rename_board."""
+        (self.repo.boards_dir / slug).mkdir()
+        display_name = name or slug
+        self.repo.set_board_metadata(slug, "fields.name", display_name)
+        self.repo.set_board_metadata(slug, "fields.slug", slug)
+        self.repo.set_board_metadata(slug, "fields.id", str(uuid4()))
 
     def test_renames_directory(self) -> None:
         """Old directory is gone and new directory exists after rename."""
