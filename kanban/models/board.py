@@ -11,7 +11,6 @@ from models.column import Column
 @dataclass
 class Board:
     """A kanban board containing an ordered list of columns."""
-    # TODO: add slug and path properties for easier referencing in the REPL and storage layers
     
     name: str
     slug: str
@@ -32,5 +31,5 @@ class Board:
 
     @property
     def path(self) -> Path:
-        return self.slug
+        return Path(self.slug)
     

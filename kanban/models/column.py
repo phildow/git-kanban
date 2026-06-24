@@ -14,7 +14,6 @@ class Column:
 
     `position` is the zero-based display order inside the owning board.
     """
-    # TODO: add slug and path properties for easier referencing in the REPL and storage layers
 
     name: str
     slug: str
@@ -28,5 +27,5 @@ class Column:
 
     @property
     def path(self) -> Path:
-        return Path(f"/{self.board}/{self.name}")
+        return Path(self.slug)
     
