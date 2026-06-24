@@ -105,13 +105,15 @@ class FilesystemRepository(KanbanRepository):
                 for f in col.iterdir()
                 if f.is_file() and not f.name.startswith(".")
             )
-            boards.append(Board(name=entry.name, column_count=column_count, task_count=task_count))
+            name = self.get_board_metadata(entry.name, "fields.name") or entry.name
+            boards.append(Board(name=name, column_count=column_count, task_count=task_count))
         return boards
 
     def get_board(self, name: str) -> Board:
         board_path = self.boards_dir / name
         if not board_path.is_dir() or name.startswith("."):
             raise BoardNotFound(name)
+        name = self.get_board_metadata(name, "fields.name") or name
         return Board(name=name)
 
     def create_board(self, name: str) -> Board:
@@ -119,6 +121,7 @@ class FilesystemRepository(KanbanRepository):
             raise BoardAlreadyExists(name)
         (self.boards_dir / name).mkdir()
         (self.boards_dir / name / ".metadata").touch()
+        self.set_board_metadata(name, "fields.name", name)
         return Board(name=name, columns=[])
 
     def rename_board(self, name: str, new_name: str) -> Board:
@@ -127,6 +130,7 @@ class FilesystemRepository(KanbanRepository):
         if self.board_exists(new_name):
             raise BoardAlreadyExists(new_name)
         (self.boards_dir / name).rename(self.boards_dir / new_name)
+        self.set_board_metadata(new_name, "fields.name", new_name)
         return Board(name=new_name)
 
     def delete_board(self, name: str) -> None:

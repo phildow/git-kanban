@@ -35,6 +35,12 @@ class TestFilesystemCreateBoard(unittest.TestCase):
         self.assertEqual(board.name, "alpha")
         self.assertEqual(board.columns, [])
 
+    def test_writes_name_to_metadata(self) -> None:
+        """Board name is written to the fields.name key in the board .metadata file."""
+        self.repo.create_board("alpha")
+        name = self.repo.get_board_metadata("alpha", "fields.name")
+        self.assertEqual(name, "alpha")
+
     def test_raises_when_board_already_exists(self) -> None:
         """Creating a board whose directory already exists raises BoardAlreadyExists."""
         self.repo.create_board("alpha")
