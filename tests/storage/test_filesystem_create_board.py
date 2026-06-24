@@ -41,6 +41,18 @@ class TestFilesystemCreateBoard(unittest.TestCase):
         name = self.repo.get_board_metadata("alpha", "fields.name")
         self.assertEqual(name, "alpha")
 
+    def test_writes_slug_to_metadata(self) -> None:
+        """Board slug is written to the fields.slug key in the board .metadata file."""
+        self.repo.create_board("alpha")
+        slug = self.repo.get_board_metadata("alpha", "fields.slug")
+        self.assertEqual(slug, "alpha")
+
+    def test_writes_slug_to_metadata_with_spaces(self) -> None:
+        """Board slug is kebab-cased from the name when the name contains spaces."""
+        self.repo.create_board("my project")
+        slug = self.repo.get_board_metadata("my project", "fields.slug")
+        self.assertEqual(slug, "my-project")
+
     def test_raises_when_board_already_exists(self) -> None:
         """Creating a board whose directory already exists raises BoardAlreadyExists."""
         self.repo.create_board("alpha")

@@ -89,6 +89,7 @@ class FilesystemRepository(KanbanRepository):
         board_path = self.boards_dir / name
         return board_path.is_dir() and not name.startswith(".")
 
+    # TODO: SYNC - metadata must match the name and slug of the board directory
     def get_boards(self) -> list[Board]:
         boards = []
         for entry in sorted(self.boards_dir.iterdir()):
@@ -106,34 +107,58 @@ class FilesystemRepository(KanbanRepository):
                 if f.is_file() and not f.name.startswith(".")
             )
             name = self.get_board_metadata(entry.name, "fields.name") or entry.name
-            boards.append(Board(name=name, column_count=column_count, task_count=task_count))
+            slug = self.get_board_metadata(entry.name, "fields.slug") or kebab_case(entry.name)
+
+            boards.append(Board(name=name, slug=slug, column_count=column_count, task_count=task_count))
         return boards
 
+    # TODO: SYNC - metadata must match the name and slug of the board directory
+    # TODO: load the column count and task count
     def get_board(self, name: str) -> Board:
-        board_path = self.boards_dir / name
+        slug = kebab_case(name)
+        board_path = self.boards_dir / slug
+
         if not board_path.is_dir() or name.startswith("."):
             raise BoardNotFound(name)
+        
         name = self.get_board_metadata(name, "fields.name") or name
-        return Board(name=name)
+        slug = self.get_board_metadata(name, "fields.slug") or slug
+
+        return Board(name=name, slug=slug)
 
     def create_board(self, name: str) -> Board:
+        slug = kebab_case(name)
+
         if self.board_exists(name):
             raise BoardAlreadyExists(name)
+        
         (self.boards_dir / name).mkdir()
         (self.boards_dir / name / ".metadata").touch()
+        
         self.set_board_metadata(name, "fields.name", name)
-        return Board(name=name, columns=[])
+        self.set_board_metadata(name, "fields.slug", slug)
+
+        return Board(name=name, slug=slug)
 
     def rename_board(self, name: str, new_name: str) -> Board:
+        slug = kebab_case(name)
+        new_slug = kebab_case(new_name)
+
         if not self.board_exists(name):
             raise BoardNotFound(name)
         if self.board_exists(new_name):
             raise BoardAlreadyExists(new_name)
+        
         (self.boards_dir / name).rename(self.boards_dir / new_name)
+
         self.set_board_metadata(new_name, "fields.name", new_name)
-        return Board(name=new_name)
+        self.set_board_metadata(new_name, "fields.slug", new_slug)
+
+        return Board(name=new_name, slug=new_slug)
 
     def delete_board(self, name: str) -> None:
+        slug = kebab_case(name)
+
         if not self.board_exists(name):
             raise BoardNotFound(name)
         shutil.rmtree(self.boards_dir / name)

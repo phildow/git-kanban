@@ -14,7 +14,7 @@ class Board:
     # TODO: add slug and path properties for easier referencing in the REPL and storage layers
     
     name: str
-    # slug: str = ""
+    slug: str = ""
 
     # TODO: remove this: a core principle is that we do not cache filesystem state in memory
     #       or it should be a list of strings, not Column objects
@@ -27,9 +27,9 @@ class Board:
     # Maybe not since boards are more about organization than workflow?
 
     # TODO replace with datafield
-    @property
-    def slug(self) -> str:
-        return self.name.lower().replace(" ", "-")
+    # @property
+    # def slug(self) -> str:
+    #     return self.name.lower().replace(" ", "-")
 
     @property
     def filename(self) -> str:

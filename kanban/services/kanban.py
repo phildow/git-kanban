@@ -333,20 +333,25 @@ class KanbanService:
         """
         return self.repository.get_boards()
 
+    # TODO: remove default columns from the service layer; they should be defined in the bootstrap config instead
     def create_board(self, path: str, columns = ["todo", "in-progress", "in-review", "done"]) -> Board:
         """
         Create a new board directory under .kanban/boards/.  Raises
         BoardAlreadyExists if a board with that name is already present.
         Appends the new board to .kanban-store/boards/.metadata and commits.
         """
-        board, _, _ = self.path_components(path)
-        board = self.repository.create_board(board)
+        if path.startswith("/"):
+            path = path.lstrip("/")
+
+        board_name = path
+        board = self.repository.create_board(board_name)
     
         columns = [self.repository.create_column(board.name, col) for col in columns]
         board.columns = columns
 
         return board
 
+    # TODO: remove path_components from these methods
     def rename_board(self, path: str, new_name: str) -> Board:
         """
         Rename a board directory and update .kanban-store/boards/.metadata in place.  Raises

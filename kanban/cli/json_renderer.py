@@ -49,6 +49,7 @@ def _task_detail_dict(task: Task) -> dict:
 def _board_dict(board: Board) -> dict:
     return {
         "name": board.name,
+        "slug": board.slug,
         "column_count": len(board.columns),
     }
 
