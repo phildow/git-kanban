@@ -22,6 +22,7 @@ from repl.commands import (
     handle_delete,
     handle_list,
     handle_change_dir,
+    handle_task_assign,
     handle_task_create,
     handle_task_update,
 )
@@ -111,6 +112,19 @@ class TestParserAliases(unittest.TestCase):
 
         args = repl_parser.parse_args(["list", "--list"])
         self.assertTrue(args.list)
+
+    def test_assign_maps_to_assign_handler(self):
+        args = repl_parser.parse_args(["assign", "main/todo/fix-login", "alice"])
+        self.assertEqual(args.command, "assign")
+        self.assertEqual(args.path, "main/todo/fix-login")
+        self.assertEqual(args.assigned_to, "alice")
+        self.assertIs(args.func, handle_task_assign)
+
+    def test_assign_requires_path_and_user(self):
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["assign"])
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["assign", "main/todo/fix-login"])
 
     def test_cd_alias_maps_to_set_path_handler(self):
         parser = repl_parser.build_parser()

@@ -671,5 +671,34 @@ class TestReplMove(_InitializedReplBase):
         )
 
 
+class TestReplAssign(_InitializedReplBase):
+    """assign task to a user."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.repo.create_board("proj")
+        self.repo.create_column("proj", "todo")
+        self.svc.create_task("proj/todo/fix-login", TaskCreateParams())
+
+    def test_assign_writes_assigned_to_frontmatter(self) -> None:
+        """assign persists assigned_to to the task's frontmatter."""
+        self.run_repl("assign", "proj/todo/fix-login", "alice")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        self.assertEqual(fm.get("assigned_to"), "alice")
+
+    def test_assign_overwrites_previous_assignee(self) -> None:
+        """assign replaces an existing assigned_to value."""
+        self.run_repl("assign", "proj/todo/fix-login", "alice")
+        self.run_repl("assign", "proj/todo/fix-login", "bob")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        self.assertEqual(fm.get("assigned_to"), "bob")
+
+    def test_assign_produces_output(self) -> None:
+        """assign prints the new assignee."""
+        out = self.run_repl("assign", "proj/todo/fix-login", "alice")
+        self.assertTrue(out.strip())
+        self.assertIn("alice", out)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -51,6 +51,16 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
         self.index_service.update_task.assert_called_once()
         self.assertEqual(self.index_service.update_task.call_args.args[0].id, updated.id)
 
+    def test_assign_task_calls_index_update(self) -> None:
+        """Assigning a task invokes index_service.update_task with the updated task."""
+        self.svc.create_task("alpha/todo/t1", TaskCreateParams())
+        self.index_service.reset_mock()
+
+        updated = self.svc.assign_task("alpha/todo/t1", "alice")
+
+        self.index_service.update_task.assert_called_once()
+        self.assertEqual(self.index_service.update_task.call_args.args[0].id, updated.id)
+
     def test_move_task_calls_index_update(self) -> None:
         """Moving a task invokes index_service.update_task with the moved task."""
         self.svc.create_task("alpha/todo/t1", TaskCreateParams())
