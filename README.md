@@ -55,6 +55,7 @@ kanban (main)>
 
 - CLAUDE: Add metadata structure to Claude document as INI
 
+- BUG: bootstrapping now broken
 - BUG: woah don't hide all errors!
 
 - FEAT: store board title in metadata

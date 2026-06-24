@@ -29,6 +29,7 @@ BOOTSTRAP_CONFIG: BootstrapConfig = {
     "boards": [
         {
             "name": "main",
+            "slug": "main",
             "columns": ["todo", "in-progress", "in-review", "done"],
             "tasks": [
                 {

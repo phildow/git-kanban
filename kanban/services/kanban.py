@@ -141,6 +141,7 @@ class KanbanService:
         operational, so it orchestrates creation order directly: filesystem
         first, index second, git last.
         """
+
         self.repository.init_storage()
         self._bootstrap(config)
 

@@ -26,11 +26,6 @@ class Board:
     # Do I want to include created_at and created_by here? 
     # Maybe not since boards are more about organization than workflow?
 
-    # TODO replace with datafield
-    # @property
-    # def slug(self) -> str:
-    #     return self.name.lower().replace(" ", "-")
-
     @property
     def filename(self) -> str:
         return self.slug
