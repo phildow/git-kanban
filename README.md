@@ -51,23 +51,31 @@ kanban (main)>
 
 ### TODO
 
-0.6 - Complete filesystem and in memory store
+0.5 - Complete filesystem
+
+- BUG: woah don't hide all errors!
+
+- FEAT: store board title in metadata
+- FEAT: store column title in metadata
+- TEST: Create task with spaces - kebab_case
+- TEST: Create column with spaces - kebab_case
+- TEST: Create board with spaces - kebab_case
 
 ~
 
-- BUG: woah don't hide all errors!
+0.6: Complete in memory store 
+
+- Ensure memory store supports same features as filesystem (ordering)
+
+~
 
 - FEAT: think about how move should work, for example should the dest allow it to rename, or is it more natural to just give it a column
         and use rename to rename a task, although that breaks mv dynamics (or require a mutal flag)
         and if the dest for move is a column or board/column then autocomplet has to take that into account
 - BUG: handle path errors better
 
-- TEST: Create task with spaces - kebab_case
-- TEST: Create column with spaces - kebab_case
-- TEST: Create board with spaces - kebab_case
-
 - TEST: Check init error handling, don't overwrite a repo, don't initialize a repo that's already been created
-- TEST: Ensure memory store supports same features as filesystem (ordering)
+
 
 - FEAT: add closed_at metadata to a Task
 - FEAT: config: default boards that automatically set the closed_at value: None until moved to done or archived if None

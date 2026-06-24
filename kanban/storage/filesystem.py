@@ -183,6 +183,13 @@ class FilesystemRepository(KanbanRepository):
         """
         self.set_board_metadata(board, "columns.order", "\n" + "\n".join(order))
 
+    def _column_task_count(self, board: str, column: str) -> int:
+        """Return the number of tasks in a column."""
+        return sum(
+            1 for e in (self.boards_dir / board / column).iterdir()
+            if e.is_file() and not e.name.startswith(".")
+        )
+
     def column_exists(self, board: str, name: str) -> bool:
         if not self.board_exists(board):
             raise BoardNotFound(board)
@@ -200,11 +207,13 @@ class FilesystemRepository(KanbanRepository):
         }
         
         order = self._get_column_order(board)
-        
-        return [
-            Column(name=name, board=board, position=i)
-            for i, name in enumerate(c for c in order if c in existing)
-        ]
+         
+        columns = []
+        for i, name in enumerate(c for c in order if c in existing):
+            task_count = self._column_task_count(board, name)
+            columns.append(Column(name=name, board=board, position=i, task_count=task_count))
+            
+        return columns
 
     def get_column(self, board: str, name: str) -> Column:
         if not self.board_exists(board):
@@ -214,11 +223,8 @@ class FilesystemRepository(KanbanRepository):
         
         if not column_path.is_dir() or name.startswith("."):
             raise ColumnNotFound(board, name)
-        task_count = sum(
-            1 for e in column_path.iterdir()
-            if e.is_file() and not e.name.startswith(".")
-        )
         
+        task_count = self._column_task_count(board, name)
         order = self._get_column_order(board)
         position = order.index(name) if name in order else len(order)
         
