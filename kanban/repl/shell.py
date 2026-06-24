@@ -201,7 +201,7 @@ def run_repl(*, svc: KanbanService, renderer: object) -> None:
         completer.install()
         
     except ValueError as exc:
-        print(f"Value error: {exc}")
+        print(f"Error: {exc}")
 
     _load_command_history(svc)
     atexit.register(lambda: _save_command_history(svc))

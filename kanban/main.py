@@ -37,7 +37,7 @@ def main() -> None:
     try:
         args.func(args, svc, renderer, json_renderer)
     except ValueError as e:
-        print(f"Value error: {e}")
+        print(f"Error: {e}")
 
 def get_repository(typ: str) -> KanbanRepository:
     import tempfile

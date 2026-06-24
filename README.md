@@ -49,6 +49,13 @@ Finally install the local copy of `kanban` into your virtual environment and hav
 kanban (main)>
 ```
 
+Run:
+
+```
+(.venv) $ kanban init --bootstrap
+(.venv) $ kanban repl
+```
+
 ### TODO
 
 0.5 - Complete filesystem

@@ -32,5 +32,5 @@ class Board:
 
     @property
     def path(self) -> Path:
-        return Path(f"/{self.name}")
+        return self.slug
     
