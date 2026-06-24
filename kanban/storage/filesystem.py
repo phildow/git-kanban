@@ -179,12 +179,14 @@ class FilesystemRepository(KanbanRepository):
 
     def _get_task_order(self, board: str, column: str) -> list[str]:
         """Return the stored task order for a column, falling back to filesystem sort."""
+        column_slug = kebab_case(column)
         board_slug = kebab_case(board)
-        raw = self.get_column_metadata(board_slug, column, "tasks.order")
+        raw = self.get_column_metadata(board_slug, column_slug, "tasks.order")
+
         if raw:
             return [f.strip() for f in raw.split("\n") if f.strip()]
         return sorted(
-            e.name for e in (self.boards_dir / board_slug / column).iterdir()
+            e.name for e in (self.boards_dir / board_slug / column_slug).iterdir()
             if e.is_file() and not e.name.startswith(".") and e.suffix == ".md"
         )
 
@@ -196,7 +198,8 @@ class FilesystemRepository(KanbanRepository):
         them as part of the same value rather than new keys.
         """
         board_slug = kebab_case(board)
-        self.set_column_metadata(board_slug, column, "tasks.order", "\n" + "\n".join(order))
+        column_slug = kebab_case(column)
+        self.set_column_metadata(board_slug, column_slug, "tasks.order", "\n" + "\n".join(order))
 
     def _get_column_order(self, board: str) -> list[str]:
         """Return the stored column order for a board, falling back to filesystem sort."""
@@ -222,18 +225,22 @@ class FilesystemRepository(KanbanRepository):
 
     def _column_task_count(self, board: str, column: str) -> int:
         """Return the number of tasks in a column."""
+        column_slug = kebab_case(column)
         board_slug = kebab_case(board)
+        
         return sum(
-            1 for e in (self.boards_dir / board_slug / column).iterdir()
+            1 for e in (self.boards_dir / board_slug / column_slug).iterdir()
             if e.is_file() and not e.name.startswith(".")
         )
 
     def column_exists(self, board: str, name: str) -> bool:
         board_slug = kebab_case(board)
+        column_slug = kebab_case(name)
+
         if not self.board_exists(board_slug):
             raise BoardNotFound(board)
         
-        column_path = self.boards_dir / board_slug / name
+        column_path = self.boards_dir / board_slug / column_slug
         return column_path.is_dir() and not name.startswith(".")
 
     def get_columns(self, board: str) -> list[Column]:
@@ -292,32 +299,34 @@ class FilesystemRepository(KanbanRepository):
         order = self._get_column_order(board_slug)
         column_path.mkdir()
         (column_path / ".metadata").touch()
-        order.append(name)
+        order.append(column_slug)
         
-        self.set_column_metadata(board_slug, name, "fields.name", name)
-        self.set_column_metadata(board_slug, name, "fields.slug", column_slug)
+        self.set_column_metadata(board_slug, column_slug, "fields.name", name)
+        self.set_column_metadata(board_slug, column_slug, "fields.slug", column_slug)
         self._set_column_order(board_slug, order)
 
         return Column(name=name, slug=column_slug, board=board, position=len(order) - 1)
 
     def rename_column(self, board: str, name: str, new_name: str) -> Column:
         new_column_slug = kebab_case(new_name)
+        column_slug = kebab_case(name)
         board_slug = kebab_case(board)
+        
         if not self.board_exists(board_slug):
             raise BoardNotFound(board)
-        if not self.column_exists(board_slug, name):
+        if not self.column_exists(board_slug, column_slug):
             raise ColumnNotFound(board, name)
-        if self.column_exists(board_slug, new_name):
+        if self.column_exists(board_slug, new_column_slug):
             raise ColumnAlreadyExists(board, new_name)
         
-        (self.boards_dir / board_slug / name).rename(self.boards_dir / board_slug / new_name)
+        (self.boards_dir / board_slug / column_slug).rename(self.boards_dir / board_slug / new_column_slug)
         order = self._get_column_order(board_slug)
         
-        if name in order:
-            order[order.index(name)] = new_name
+        if column_slug in order:
+            order[order.index(column_slug)] = new_column_slug
         
-        self.set_column_metadata(board_slug, new_name, "fields.name", new_name)
-        self.set_column_metadata(board_slug, new_name, "fields.slug", new_column_slug)
+        self.set_column_metadata(board_slug, new_column_slug, "fields.name", new_name)
+        self.set_column_metadata(board_slug, new_column_slug, "fields.slug", new_column_slug)
         self._set_column_order(board_slug, order)
 
         return self.get_column(board, new_name)
@@ -329,31 +338,33 @@ class FilesystemRepository(KanbanRepository):
             raise BoardNotFound(board)
         if not self.column_exists(board_slug, name):
             raise ColumnNotFound(board, name)
-       
+        
+        column_slug = kebab_case(name)
         order = self._get_column_order(board_slug)
         
-        if name in order:
-            order.remove(name)
-        order.insert(max(0, min(position, len(order))), name)
+        if column_slug in order:
+            order.remove(column_slug)
+        order.insert(max(0, min(position, len(order))), column_slug)
         
         self._set_column_order(board_slug, order)
-        return self.get_columns(board)
+        return self.get_columns(board_slug)
 
     def delete_column(self, board: str, name: str) -> None:
+        column_slug = kebab_case(name)
         board_slug = kebab_case(board)
 
         if not self.board_exists(board_slug):
             raise BoardNotFound(board)
-        if not self.column_exists(board_slug, name):
+        if not self.column_exists(board_slug, column_slug):
             raise ColumnNotFound(board, name)
         
         order = self._get_column_order(board_slug)
         
-        if name in order:
-            order.remove(name)
+        if column_slug in order:
+            order.remove(column_slug)
         
         self._set_column_order(board_slug, order)
-        shutil.rmtree(self.boards_dir / board_slug / name)
+        shutil.rmtree(self.boards_dir / board_slug / column_slug)
 
     # ------------------------------------------------------------------
     # Task operations
@@ -377,7 +388,9 @@ class FilesystemRepository(KanbanRepository):
         if board is not None and column is not None and not self.column_exists(board, column):
             raise ColumnNotFound(board, column)
 
+        column_slug = kebab_case(column) if column is not None else None
         board_slug = kebab_case(board) if board is not None else None
+
         boards = [board_slug] if board_slug is not None else [
             e.name for e in sorted(self.boards_dir.iterdir())
             if e.is_dir() and not e.name.startswith(".")
@@ -386,7 +399,7 @@ class FilesystemRepository(KanbanRepository):
         tasks: list[Task] = []
         
         for b in boards:
-            columns = [column] if column is not None else [
+            columns = [column_slug] if column_slug is not None else [
                 e.name for e in sorted((self.boards_dir / b).iterdir())
                 if e.is_dir() and not e.name.startswith(".")
             ]
@@ -400,27 +413,30 @@ class FilesystemRepository(KanbanRepository):
         return tasks
 
     def get_task(self, board: str, column: str, filename: str) -> Task:
+        column_slug = kebab_case(column)
         board_slug = kebab_case(board)
+
         if not self.board_exists(board_slug):
             raise BoardNotFound(board)
-        if not self.column_exists(board_slug, column):
+        if not self.column_exists(board_slug, column_slug):
             raise ColumnNotFound(board, column)
         
-        task_path = self.boards_dir / board_slug / column / f"{filename}.md"
+        task_path = self.boards_dir / board_slug / column_slug / f"{filename}.md"
         
         if not task_path.is_file():
             raise TaskNotFound(f"{board}/{column}/{filename}")
             
-        return self._parse_task_file(task_path, board_slug, column)
+        return self._parse_task_file(task_path, board_slug, column_slug)
 
     def create_task(self, task: Task, filename: str) -> Task:
+        column_slug = kebab_case(task.column)
         board_slug = kebab_case(task.board)
 
         if not self.board_exists(board_slug):
             raise BoardNotFound(task.board)
-        if not self.column_exists(board_slug, task.column):
+        if not self.column_exists(board_slug, column_slug):
             raise ColumnNotFound(task.board, task.column)
-        if self.task_exists(board_slug, task.column, filename):
+        if self.task_exists(board_slug, column_slug, filename):
             TaskAlreadyExists(task.board, task.column, filename)
         
         path = self.boards_dir / board_slug / task.column / f"{filename}.md"
@@ -452,25 +468,26 @@ class FilesystemRepository(KanbanRepository):
             content += f"\n{task.body}\n"
         
         path.write_text(content, encoding="utf-8")
-        order = self._get_task_order(board_slug, task.column)
+        order = self._get_task_order(board_slug, column_slug)
         
         if f"{filename}.md" not in order:
             order.append(f"{filename}.md")
-        self._set_task_order(board_slug, task.column, order)
+        self._set_task_order(board_slug, column_slug, order)
         
-        return self._parse_task_file(path, board_slug, task.column)
+        return self._parse_task_file(path, board_slug, column_slug)
 
     def update_task(self, task: Task) -> Task:
         board_slug = kebab_case(task.board)
+        column_slug = kebab_case(task.column)
         current_filename = f"{task.slug}.md"
-        current_path = self.boards_dir / board_slug / task.column / current_filename
+        current_path = self.boards_dir / board_slug / column_slug / current_filename
 
         if not current_path.is_file():
             raise TaskNotFound(f"{task.board}/{task.column}/{task.slug}")
 
         new_slug = kebab_case(task.title)
         new_filename = f"{new_slug}.md"
-        new_path = self.boards_dir / board_slug / task.column / new_filename
+        new_path = self.boards_dir / board_slug / column_slug / new_filename
         renamed = new_slug != task.slug
 
         if renamed and new_path.exists():
@@ -504,14 +521,14 @@ class FilesystemRepository(KanbanRepository):
 
         if renamed:
             current_path.unlink()
-            order = self._get_task_order(board_slug, task.column)
+            order = self._get_task_order(board_slug, column_slug)
             if current_filename in order:
                 order[order.index(current_filename)] = new_filename
             else:
                 order.append(new_filename)
-            self._set_task_order(board_slug, task.column, order)
+            self._set_task_order(board_slug, column_slug, order)
 
-        return self._parse_task_file(new_path, board_slug, task.column)
+        return self._parse_task_file(new_path, board_slug, column_slug)
 
     # TODO: clean this up!
     def move_task(self, task: Task, dest: Path) -> Task:
@@ -521,12 +538,16 @@ class FilesystemRepository(KanbanRepository):
 
         src_filename = f"{task.slug}.md"
         dest_filename = f"{dest_slug}.md"
+
         src_board_slug = kebab_case(task.board)
         dest_board_slug = kebab_case(dest_board)
-        src_file = self.boards_dir / src_board_slug / task.column / src_filename
-        dest_file = self.boards_dir / dest_board_slug / dest_column / dest_filename
-        same_location = src_board_slug == dest_board_slug and task.column == dest_column and dest_slug == task.slug
-        rename_in_place = src_board_slug == dest_board_slug and task.column == dest_column and dest_slug != task.slug
+        src_column_slug = kebab_case(task.column)
+        dest_column_slug = kebab_case(dest_column)
+        
+        src_file = self.boards_dir / src_board_slug / src_column_slug / src_filename
+        dest_file = self.boards_dir / dest_board_slug / dest_column_slug / dest_filename
+        same_location = src_board_slug == dest_board_slug and src_column_slug == dest_column_slug and dest_slug == task.slug
+        rename_in_place = src_board_slug == dest_board_slug and src_column_slug == dest_column_slug and dest_slug != task.slug
 
         if not src_file.is_file():
             raise TaskNotFound(f"{task.board}/{task.column}/{task.slug}")
@@ -553,37 +574,39 @@ class FilesystemRepository(KanbanRepository):
         elif rename_in_place:
             dest_file.write_text("".join(lines), encoding="utf-8")
             src_file.unlink()
-            order = self._get_task_order(src_board_slug, task.column)
+            order = self._get_task_order(src_board_slug, src_column_slug)
             if src_filename in order:
                 order[order.index(src_filename)] = dest_filename
             else:
                 order.append(dest_filename)
-            self._set_task_order(src_board_slug, task.column, order)
+            self._set_task_order(src_board_slug, src_column_slug, order)
         else:
             dest_file.write_text("".join(lines), encoding="utf-8")
             src_file.unlink()
 
-            src_order = self._get_task_order(src_board_slug, task.column)
+            src_order = self._get_task_order(src_board_slug, src_column_slug)
             if src_filename in src_order:
                 src_order.remove(src_filename)
-            self._set_task_order(src_board_slug, task.column, src_order)
+            self._set_task_order(src_board_slug, src_column_slug, src_order)
 
             dest_order = self._get_task_order(dest_board_slug, dest_column)
             if dest_filename not in dest_order:
                 dest_order.append(dest_filename)
-            self._set_task_order(dest_board_slug, dest_column, dest_order)
+            self._set_task_order(dest_board_slug, dest_column_slug, dest_order)
 
-        return self._parse_task_file(dest_file, dest_board_slug, dest_column)
+        return self._parse_task_file(dest_file, dest_board_slug, dest_column_slug)
 
     def delete_task(self, task: Task) -> None:
         board_slug = kebab_case(task.board)
+        column_slug = kebab_case(task.column)
         filename = f"{task.slug}.md"
-        path = self.boards_dir / board_slug / task.column / filename
-        order = self._get_task_order(board_slug, task.column)
+        path = self.boards_dir / board_slug / column_slug / filename
+        order = self._get_task_order(board_slug, column_slug)
         
         if filename in order:
             order.remove(filename)
-        self._set_task_order(board_slug, task.column, order)
+
+        self._set_task_order(board_slug, column_slug, order)
         
         if not path.is_file():
             raise TaskNotFound(f"{task.board}/{task.column}/{task.slug}")
@@ -713,8 +736,9 @@ class FilesystemRepository(KanbanRepository):
 
     def _column_metadata_file(self, board: str, column: str) -> Path:
         """Return the path to the .metadata INI file for the given column."""
+        column_slug = kebab_case(column)
         board_slug = kebab_case(board)
-        return self.boards_dir / board_slug / column / ".metadata"
+        return self.boards_dir / board_slug / column_slug / ".metadata"
 
     def get_column_metadata(self, board: str, column: str, keypath: str) -> str | None:
         """Read a value from a column's .metadata INI file using a 'section.key' keypath."""
@@ -722,9 +746,10 @@ class FilesystemRepository(KanbanRepository):
             raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
         
         board_slug = kebab_case(board)
+        column_slug = kebab_case(column)
         section, key = keypath.split(".", 1)
         cfg = configparser.ConfigParser()
-        cfg.read(self._column_metadata_file(board_slug, column), encoding="utf-8")
+        cfg.read(self._column_metadata_file(board_slug, column_slug), encoding="utf-8")
         
         if section not in cfg or key not in cfg[section]:
             return None
@@ -736,8 +761,9 @@ class FilesystemRepository(KanbanRepository):
         if "." not in keypath:
             raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
         board_slug = kebab_case(board)
+        column_slug = kebab_case(column)
         section, key = keypath.split(".", 1)
-        metadata_file = self._column_metadata_file(board_slug, column)
+        metadata_file = self._column_metadata_file(board_slug, column_slug)
         cfg = configparser.ConfigParser()
         cfg.read(metadata_file, encoding="utf-8")
         
