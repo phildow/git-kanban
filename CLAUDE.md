@@ -301,6 +301,7 @@ kanban task show <board>/<column>/<task> [--format <table|plain|json>]
 kanban task edit <board>/<column>/<task>
 kanban task move <board>/<column>/<task> <dest>
 kanban task delete <board>/<column>/<task>
+kanban task assign <board>/<column>/<task> <name>
 
 kanban search <query>
     [--format <table|plain|json>]
@@ -357,11 +358,8 @@ COMMAND
   search           Full-text search across tasks
   log              Show git log for a task or scope
   status           Show repository status summary
-
-  assign           Assign a task to someone
-  top              Move a task to the top of its column
-  bottom           Moave a task to the bottom of its column
-
+  assign           Assign a task to someon
+  
 options:
   -h, --help         Show this help message
 ```

@@ -718,6 +718,20 @@ class KanbanService:
         self.index_service.delete_task(task)
         return None
 
+    def assign_task(
+        self,
+        path: str,
+        user: str,
+    ) -> Task:
+        """
+        Assign a task to a user.  Raises TaskNotFound or AmbiguousTaskReference
+        via path_components.  Updates the index and commits.
+        """
+        task = self.get_task(path)
+        task.assigned_to = user
+        updated = self.repository.update_task(task)
+        self.index_service.update_task(updated)
+        return updated
 
     # ── Search ────────────────────────────────────────────────────────────────
 

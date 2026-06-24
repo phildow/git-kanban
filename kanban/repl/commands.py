@@ -176,6 +176,11 @@ def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: obj
 	result = svc.move_task(args.path, args.column)
 	renderer.render_task_move(args, result)
 
+
+def handle_task_assign(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	result = svc.assign_task(args.path, args.assigned_to)
+	renderer.render_task_assign(args, result)
+
 # ---------------------------------------------------------------------------
 # Additional commands (search, log, status, config)
 # ---------------------------------------------------------------------------

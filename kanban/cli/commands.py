@@ -157,6 +157,11 @@ def handle_task_delete(args: argparse.Namespace, svc: KanbanService, renderer: o
 	_pick(args, renderer, json_renderer).render_task_delete(args, result)
 
 
+def handle_task_assign(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
+	result = svc.assign_task(args.path, args.assigned_to)
+	_pick(args, renderer, json_renderer).render_task_assign(args, result)
+
+
 # ---------------------------------------------------------------------------
 # Additional commands (search, log, status, config)
 # ---------------------------------------------------------------------------

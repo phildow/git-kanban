@@ -24,6 +24,7 @@ from cli.commands import (
     handle_repl,
     handle_search,
     handle_status,
+    handle_task_assign,
     handle_task_create,
     handle_task_delete,
     handle_task_edit,
@@ -236,6 +237,14 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     _add_format_arg(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_task_delete)
+
+    # task assign
+    p = task_sub.add_parser("assign", help="Assign a task to a user")
+    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
+    p.add_argument("assigned_to", metavar="USER", help="User to assign the task to")
+    _add_format_arg(p)
+    _add_global_flags(p)
+    p.set_defaults(func=handle_task_assign)
 
 
 # ---------------------------------------------------------------------------

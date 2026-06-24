@@ -27,6 +27,7 @@ from repl.commands import (
     handle_log,
     handle_search,
     handle_status,
+    handle_task_assign,
     handle_task_create,
     handle_task_edit,
     handle_task_move,
@@ -289,6 +290,13 @@ def _add_column_parser(subparsers: argparse._SubParsersAction) -> None:
     p.set_defaults(func=handle_column_change)
 
 
+def _add_assign_parser(subparsers: argparse._SubParsersAction) -> None:
+    p = subparsers.add_parser("assign", help="Assign a task to a user")
+    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
+    p.add_argument("assigned_to", metavar="USER", help="User to assign the task to")
+    _add_global_flags(p)
+    p.set_defaults(func=handle_task_assign)
+
 # ---------------------------------------------------------------------------
 # Top-level parser
 # ---------------------------------------------------------------------------
@@ -319,8 +327,6 @@ def build_parser() -> argparse.ArgumentParser:
     _add_cd_parser(subparsers)
     _add_board_parser(subparsers)
     _add_column_parser(subparsers)
-
-    # verb-first operations
     _add_create_parser(subparsers)
     _add_list_parser(subparsers)
     _add_rename_parser(subparsers)
@@ -331,6 +337,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_update_parser(subparsers)
     _add_move_parser(subparsers)
     _add_config_parser(subparsers)
+    _add_assign_parser(subparsers)
 
     # search
     p = subparsers.add_parser("search", help="Full-text search across tasks")
