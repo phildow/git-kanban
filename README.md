@@ -61,14 +61,13 @@ Run:
 0.5 - Complete filesystem
 
 - CHORE: Add a UUID to the column and board metadata
-- FEAT: Add assign command to assign a task to a person
-
 - FEAT: add mutually exlusive argument to move command to move to top or bottom: --top | --bottom | board
 - BUG: raise a services domain error if you rename to the same name
-- CHORE: special camel case for To Do -> todo not to-do
+
 - CHORE: remove default columns from the service layer
 - BUG: rename column double appending board
 
+- CHORE: special camel case for To Do -> todo not to-do
 - FEAT: consider case-conversion package for unicode compatible kebab casing (pycases)
 - FEAT: kebab_case preserves accented characters
 
