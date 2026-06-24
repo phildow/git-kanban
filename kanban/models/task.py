@@ -15,9 +15,9 @@ class Task:
     in the CLI. Other fields capture metadata rendered in the CLI and used for filtering/sorting.
     """
 
-    id: UUID
-    title: str
-    slug: str = ""
+    id:     UUID
+    title:  str
+    slug:   str
     board: Optional[str] = None
     column: Optional[str] = None
     created_by: Optional[str] = None

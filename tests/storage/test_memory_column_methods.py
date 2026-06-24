@@ -6,6 +6,7 @@ column-scoped task cleanup.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import sys
 import unittest
 import tempfile
@@ -66,7 +67,8 @@ class TestInMemoryRepositoryColumnOps(unittest.TestCase):
     def test_rename_column_updates_tasks_locations(self):
         """Renaming a column updates tasks and location index."""
         self.repo.create_column("alpha", "todo")
-        task = Task(id=uuid4(), title="task-1", board="alpha", column="todo")
+        now = datetime.now(timezone.utc)
+        task = Task(id=uuid4(), title="task-1", slug="task-1", board="alpha", column="todo", created_at=now, updated_at=now)
         self.repo._tasks_by_id[task.id] = task
         self.repo._task_locations[task.id] = ("alpha", "todo")
 
@@ -110,8 +112,9 @@ class TestInMemoryRepositoryColumnOps(unittest.TestCase):
         self.repo.create_column("alpha", "todo")
         self.repo.create_column("alpha", "doing")
 
-        todo_task = Task(id=uuid4(), title="t1", board="alpha", column="todo")
-        doing_task = Task(id=uuid4(), title="t2", board="alpha", column="doing")
+        now = datetime.now(timezone.utc)
+        todo_task = Task(id=uuid4(), title="t1", slug="t1", board="alpha", column="todo", created_at=now, updated_at=now)
+        doing_task = Task(id=uuid4(), title="t2", slug="t2", board="alpha", column="doing", created_at=now, updated_at=now)
         self.repo._tasks_by_id[todo_task.id] = todo_task
         self.repo._tasks_by_id[doing_task.id] = doing_task
         self.repo._task_locations[todo_task.id] = ("alpha", "todo")

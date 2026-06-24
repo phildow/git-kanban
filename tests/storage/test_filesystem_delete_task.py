@@ -33,8 +33,13 @@ class TestFilesystemDeleteTask(unittest.TestCase):
 
     def _task(self, title: str, slug: str) -> Task:
         now = _now()
-        return Task(id=uuid4(), title=title, slug=slug, board="proj", column="todo",
-                    created_at=now, updated_at=now)
+        return Task(id=uuid4(), 
+                    title=title, 
+                    slug=slug, 
+                    board="proj", 
+                    column="todo",
+                    created_at=now, 
+                    updated_at=now)
 
     def test_file_is_removed(self) -> None:
         """The task file no longer exists on disk after delete_task."""

@@ -56,14 +56,15 @@ class TestInMemoryRepositoryBoardOps(unittest.TestCase):
         """Renaming a board updates dependent columns and tasks."""
         board = self.repo.create_board("alpha")
         board.columns.append(Column(id=uuid4(), name="todo", slug="todo", board="alpha", position=0))
-
+        now = datetime.now(UTC)
         task = Task(
             id=uuid4(),
             title="task-1",
+            slug="task-1",
             board="alpha",
             column="todo",
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=now,
+            updated_at=now,
         )
         self.repo._tasks_by_id[task.id] = task
         self.repo._task_locations[task.id] = ("alpha", "todo")
@@ -94,8 +95,8 @@ class TestInMemoryRepositoryBoardOps(unittest.TestCase):
         self.repo.create_board("alpha")
         self.repo.create_board("beta")
 
-        task_on_alpha = Task(id=uuid4(), title="a")
-        task_on_beta = Task(id=uuid4(), title="b")
+        task_on_alpha = Task(id=uuid4(), title="a", slug="a", board="alpha", column="todo")
+        task_on_beta = Task(id=uuid4(), title="b", slug="b", board="beta", column="todo")
         self.repo._tasks_by_id[task_on_alpha.id] = task_on_alpha
         self.repo._tasks_by_id[task_on_beta.id] = task_on_beta
         self.repo._task_locations[task_on_alpha.id] = ("alpha", "todo")

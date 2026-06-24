@@ -33,8 +33,14 @@ class TestFilesystemUpdateTask(unittest.TestCase):
 
     def _task(self, title: str, slug: str, **kwargs) -> Task:
         now = _now()
-        return Task(id=uuid4(), title=title, slug=slug, board="proj", column="todo",
-                    created_at=now, updated_at=now, **kwargs)
+        return Task(id=uuid4(), 
+                    title=title, 
+                    slug=slug, 
+                    board="proj", 
+                    column="todo",
+                    created_at=now, 
+                    updated_at=now, 
+                    **kwargs)
 
     def _frontmatter(self, slug: str) -> dict[str, str]:
         """Read the frontmatter of a task file into a key/value dict."""

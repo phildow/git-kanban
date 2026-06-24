@@ -37,7 +37,8 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
         self.repo.create_column("beta", "todo")
 
     def _task(self, title: str, board: str = "alpha", column: str = "todo", **kwargs) -> Task:
-        return Task(id=uuid4(), title=title, board=board, column=column, **kwargs)
+        now = datetime.now(UTC)
+        return Task(id=uuid4(), title=title, slug=self._filename(title), board=board, column=column, created_at=now, updated_at=now, **kwargs)
 
     def _filename(self, title: str) -> str:
         return title.lower().replace(" ", "-")
@@ -82,6 +83,7 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
         updated = Task(
             id=first.id,
             title="First Updated",
+            slug="first-updated",
             board="beta",  # should be ignored by update
             column="todo",  # should be ignored by update
             assigned_to="new",
@@ -94,10 +96,10 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
         self.assertIsNotNone(result.updated_at)
 
         with self.assertRaises(TaskAlreadyExists):
-            self.repo.update_task(Task(id=first.id, title="Second"))
+            self.repo.update_task(Task(id=first.id, title="Second", slug="second", board="alpha", column="todo"))
 
         with self.assertRaises(TaskNotFound):
-            self.repo.update_task(Task(id=uuid4(), title="Missing"))
+            self.repo.update_task(Task(id=uuid4(), title="Missing", slug="missing", board="alpha", column="todo"))
 
     def test_move_task_and_delete_task(self):
         """Move validates destination and collisions; delete removes by UUID."""

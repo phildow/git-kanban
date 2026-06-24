@@ -60,7 +60,7 @@ Run:
 
 0.5 - Complete filesystem
 
-- CHORE: Add a UUID to the column and board metadata
+
 - FEAT: add mutually exlusive argument to move command to move to top or bottom: --top | --bottom | board
 - BUG: raise a services domain error if you rename to the same name
 - BUG: the task slug should not default to "" - it must be included every time as task is created

@@ -81,8 +81,13 @@ class TestFilesystemTaskOrder(unittest.TestCase):
     def _task(self, title: str, slug: str) -> Task:
         from datetime import datetime, timezone
         now = datetime.now(timezone.utc)
-        return Task(id=uuid4(), title=title, slug=slug, board="proj", column="todo",
-                    created_at=now, updated_at=now)
+        return Task(id=uuid4(), 
+                    title=title, 
+                    slug=slug, 
+                    board="proj", 
+                    column="todo",
+                    created_at=now,
+                    updated_at=now)
 
     def test_tasks_returned_in_creation_order(self) -> None:
         """get_tasks returns tasks in the order they were created."""
@@ -143,8 +148,13 @@ class TestFilesystemTaskOrderWithOtherMetadata(unittest.TestCase):
     def _task(self, title: str, slug: str) -> Task:
         from datetime import datetime, timezone
         now = datetime.now(timezone.utc)
-        return Task(id=uuid4(), title=title, slug=slug, board="proj", column="todo",
-                    created_at=now, updated_at=now)
+        return Task(id=uuid4(), 
+                    title=title, 
+                    slug=slug, 
+                    board="proj", 
+                    column="todo",
+                    created_at=now, 
+                    updated_at=now)
 
     def test_task_order_preserved_after_writing_other_metadata(self) -> None:
         """Task order is unchanged after an unrelated key is written to the same file."""

@@ -34,8 +34,13 @@ class TestFilesystemMoveTask(unittest.TestCase):
 
     def _task(self, title: str, slug: str, column: str = "todo") -> Task:
         now = _now()
-        return Task(id=uuid4(), title=title, slug=slug, board="proj", column=column,
-                    created_at=now, updated_at=now)
+        return Task(id=uuid4(), 
+                    title=title, 
+                    slug=slug, 
+                    board="proj", 
+                    column=column,
+                    created_at=now, 
+                    updated_at=now)
 
     def test_file_appears_at_destination(self) -> None:
         """Task file exists at the destination column after move_task."""
