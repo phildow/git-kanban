@@ -59,7 +59,7 @@ class CompletionDataSource(Protocol):
     a lightweight fake instead of a real service.
     """
 
-    def get_boards(self) -> list[Named]:
+    def get_boards(self) -> list[Sluggable]:
         ...
 
     def get_columns(self, board: str) -> list[Named]:
@@ -244,7 +244,7 @@ class CompletionEngine:
         if action.dest in PATH_LIKE_DESTS:
             return self._complete_path(partial)
         if action.dest == "board":
-            return self._matching([b.name for b in self._service.get_boards()], partial)
+            return self._matching([b.slug for b in self._service.get_boards()], partial)
         if action.dest == "column":
             if self._service.working_board is None:
                 return []
@@ -314,7 +314,7 @@ class CompletionEngine:
         """Complete the level reached by ``(board, column)`` against ``partial``."""
 
         if board is None:
-            names = [b.name for b in self._service.get_boards()]
+            names = [b.slug for b in self._service.get_boards()]
             suffix = "/"
         elif column is None:
             names = [c.name for c in self._service.get_columns(board)]

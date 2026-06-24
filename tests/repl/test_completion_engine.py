@@ -120,6 +120,13 @@ class _Named:
 
 
 @dataclass(frozen=True)
+class _Slugged:
+    """Minimal stand-in for Board/Column with a `.slug` attribute."""
+
+    slug: str
+
+
+@dataclass(frozen=True)
 class _Task:
     """Minimal stand-in for Task with a `.slug` attribute."""
 
@@ -165,8 +172,8 @@ class FakeKanbanService:
     def working_board(self) -> str | None:
         return self._board
 
-    def get_boards(self) -> list[_Named]:
-        return [_Named(name) for name in self._BOARDS]
+    def get_boards(self) -> list[_Slugged]:
+        return [_Slugged(slug) for slug in self._BOARDS]
 
     def get_columns(self, board: str) -> list[_Named]:
         return [_Named(name) for name in self._BOARDS[board]]
