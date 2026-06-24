@@ -31,6 +31,7 @@ from cli.commands import (
     handle_task_delete,
     handle_task_edit,
     handle_task_list,
+    handle_task_assign,
     handle_task_move,
     handle_task_show,
     handle_task_update
@@ -232,6 +233,12 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
 
         args = cli_parser.parse_args(["task", "delete", "board-a/todo/fix-parser"])
         self.assertIs(args.func, handle_task_delete)
+
+        args = cli_parser.parse_args(["task", "assign", "board-a/todo/fix-parser", "alice"])
+        self.assertEqual(args.path, "board-a/todo/fix-parser")
+        self.assertEqual(args.assigned_to, "alice")
+        self.assertEqual(args.format, "plain")
+        self.assertIs(args.func, handle_task_assign)
 
     def test_search_log_status_and_config(self):
         """Other top-level commands parse correctly and set proper handlers."""

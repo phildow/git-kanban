@@ -401,6 +401,9 @@ class Renderer:
 		else:
 			self._emit(args, "Task deleted")
 
+	def render_task_assign(self, args: argparse.Namespace, result: Task) -> None:
+		self._emit(args, f"Task assigned to: {result.assigned_to}")
+
 # ---------------------------------------------------------------------------
 # Additional rendering (search, log, status, config)
 # ---------------------------------------------------------------------------

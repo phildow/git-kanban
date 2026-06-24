@@ -715,6 +715,41 @@ class TestTaskCLI(_InitializedBase):
         out = self.run_cli("task", "move", "proj/todo/fix-login", "done")
         self.assertEqual(out, "")
 
+    # -- assign ---------------------------------------------------------------
+
+    def test_task_assign_writes_assigned_to_frontmatter(self) -> None:
+        """task assign persists assigned_to to the task's frontmatter."""
+        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "assign", "proj/todo/fix-login", "alice")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        self.assertEqual(fm.get("assigned_to"), "alice")
+
+    def test_task_assign_overwrites_previous_assignee(self) -> None:
+        """task assign replaces an existing assigned_to value."""
+        self.run_cli("task", "create", "proj/todo/fix-login", "--assigned-to", "alice")
+        self.run_cli("task", "assign", "proj/todo/fix-login", "bob")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        self.assertEqual(fm.get("assigned_to"), "bob")
+
+    def test_task_assign_verbose_prints_output(self) -> None:
+        """task assign --verbose prints something."""
+        self.run_cli("task", "create", "proj/todo/fix-login")
+        out = self.run_cli("task", "assign", "proj/todo/fix-login", "alice", "--verbose")
+        self.assertTrue(out.strip())
+
+    def test_task_assign_without_verbose_produces_no_output(self) -> None:
+        """task assign without --verbose produces no output."""
+        self.run_cli("task", "create", "proj/todo/fix-login")
+        out = self.run_cli("task", "assign", "proj/todo/fix-login", "alice")
+        self.assertEqual(out, "")
+
+    def test_task_assign_json_includes_assigned_to(self) -> None:
+        """task assign --verbose --format json includes the assigned_to field."""
+        self.run_cli("task", "create", "proj/todo/fix-login")
+        data = self.run_json("task", "assign", "proj/todo/fix-login", "alice",
+                             "--verbose", "--format", "json")
+        self.assertEqual(data["assigned_to"], "alice")
+
     # -- delete ---------------------------------------------------------------
 
     def test_task_delete_removes_file(self) -> None:

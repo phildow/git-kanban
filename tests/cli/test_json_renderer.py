@@ -323,6 +323,28 @@ class TestJsonRendererTasks(unittest.TestCase):
         out = _capture(lambda: self.r.render_task_edit(_args(), _task()))
         self.assertEqual(json.loads(out)["slug"], "fix-login-bug")
 
+    def test_task_assign_silent_without_verbose(self) -> None:
+        """render_task_assign emits nothing when --verbose is not set."""
+        out = _capture(lambda: self.r.render_task_assign(_args(verbose=False), _task()))
+        self.assertEqual(out, "")
+
+    def test_task_assign_assigned_to_field(self) -> None:
+        """render_task_assign emits the assigned_to value when verbose."""
+        out = _capture(lambda: self.r.render_task_assign(_args(verbose=True), _task(assigned_to="alice")))
+        self.assertEqual(json.loads(out)["assigned_to"], "alice")
+
+    def test_task_assign_slug_field(self) -> None:
+        """render_task_assign emits the task slug when verbose."""
+        out = _capture(lambda: self.r.render_task_assign(_args(verbose=True), _task()))
+        self.assertEqual(json.loads(out)["slug"], "fix-login-bug")
+
+    def test_task_assign_includes_timestamps(self) -> None:
+        """render_task_assign includes created_at and updated_at when verbose."""
+        out = _capture(lambda: self.r.render_task_assign(_args(verbose=True), _task()))
+        obj = json.loads(out)
+        self.assertIn("created_at", obj)
+        self.assertIn("updated_at", obj)
+
     def test_task_move_silent_without_verbose(self) -> None:
         """render_task_move emits nothing when --verbose is not set."""
         out = _capture(lambda: self.r.render_task_move(_args(verbose=False), _task()))

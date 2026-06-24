@@ -312,6 +312,17 @@ class TestCommandHandlers(unittest.TestCase):
         self.svc.move_task.assert_called_once_with("board-a/todo/fix-parser", "done")
         self.renderer.render_task_move.assert_called_once_with(args, result)
 
+    def test_handle_task_assign(self):
+        """`task assign` forwards path and user to assign_task and renders result."""
+        args = self._args(path="board-a/todo/fix-parser", assigned_to="alice")
+        result = object()
+        self.svc.assign_task.return_value = result
+
+        commands.handle_task_assign(args, self.svc, self.renderer, self.json_renderer)
+
+        self.svc.assign_task.assert_called_once_with("board-a/todo/fix-parser", "alice")
+        self.renderer.render_task_assign.assert_called_once_with(args, result)
+
     def test_handle_task_delete(self):
         """`task delete` forwards task path and renders deletion result."""
         args = self._args(path="board-a/todo/fix-parser", force=True)

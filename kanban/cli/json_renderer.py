@@ -140,6 +140,10 @@ class JsonRenderer:
         self._emit(args, json.dumps(_task_detail_dict(result), indent=2))
 
     @_requires_verbose
+    def render_task_assign(self, args: argparse.Namespace, result: Task) -> None:
+        self._emit(args, json.dumps(_task_detail_dict(result), indent=2))
+
+    @_requires_verbose
     def render_task_delete(self, args: argparse.Namespace, result: None) -> None:
         _ = result
         self._emit(args, json.dumps({"deleted": getattr(args, "path", None)}, indent=2))
