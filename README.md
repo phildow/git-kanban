@@ -60,12 +60,16 @@ Run:
 
 0.5 - Complete filesystem
 
-- BUG: give an error if you try to create a task with no board
+- BUG: raise a services domain error if you rename to the same name
 
+- CHORE: special camel case for To Do -> todo not to-do
+- CHORE: remove default columns from the service layer
 - CHORE: Add a UUID to the column and board metadata
 - BUG: rename column double appending board
+- BUG: capture no closing quotation error
 
-- Add more REPL integration tests not catching problems with renaming or move
+- FEAT: Add assign command to assign a task to a person
+- CHORE: Rename assignee assigned-to
 
 - Add documentation explaining the move only moves task from one column to another
 - Add documentation explaining that names and titles are always slugged for the filesystem, that
@@ -78,6 +82,7 @@ Run:
 0.6: Complete in memory store 
 
 - Ensure memory store supports same features as filesystem (ordering)
+- Handle special characters in slugs
 
 ~
 
@@ -129,14 +134,6 @@ POTENTIAL INCONSISTENCY
 
 - CHORE: Models return a path?
 
-FILENAME VS TITLE
-
-- rename task|column does it take the title or a slug or both
-
-VERSION 1.1
-
-- Globbing for path commands
-
 CONFIG
 
 - Tabcomplete config keys?
@@ -153,13 +150,17 @@ CONFIG
 - Once we have file storage `kanban init` this directory and start storing tasks here (dogfood) ~ almost there!
 - Which takes us to git integration
 
+VERSION 1.1
+
+- Globbing for path commands
+
 AGENT KANBAN
 
 - watches your work and manages the tasks for you via the `kanban` cli
 - Check out a task it checks out a branch and vice versa
 - Check out a branch it looks for the task to check out
 
-HISTORY
+HISTORY (TUI)
 
 - A visual representation in a view to the right when there is enough terminal size
 

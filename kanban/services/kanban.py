@@ -338,7 +338,7 @@ class KanbanService:
         return self.repository.get_boards()
 
     # TODO: remove default columns from the service layer; they should be defined in the bootstrap config instead
-    def create_board(self, path: str, columns = ["todo", "in-progress", "in-review", "done"]) -> Board:
+    def create_board(self, path: str, columns = ["To Do", "In Progress", "In Review", "Done"]) -> Board:
         """
         Create a new board directory under .kanban/boards/.  Raises
         BoardAlreadyExists if a board with that name is already present.
@@ -544,7 +544,11 @@ class KanbanService:
         with the same title slug is already present in that column.  Updates the
         index and commits.
         """
+
         board, column, title = self.path_components(path)
+
+        if board is None or column is None or title is None:
+            raise ValueError(f"No working board/column and no explicit path or title provided: {path}")
 
         assignee: str | None
         priority: str | None
@@ -592,8 +596,10 @@ class KanbanService:
         """
         board, column, title = self.path_components(path)
 
-        if not board or not column or not title:
-            raise ValueError(f"Task not found at path: {path} (must specify board, column, and title)")
+        if board is None or column is None:
+            raise ValueError(f"No working board/column and no explicit path provided: {path}")
+        if title is None:
+            raise ValueError(f"No task title provided in path: {path}")
 
         filename = kebab_case(title)
         return self.repository.get_task(board, column, filename)
@@ -692,6 +698,7 @@ class KanbanService:
         Raises TaskNotFound, AmbiguousTaskReference, BoardNotFound, or
         ColumnNotFound as appropriate.  Updates the index and commits.
         """
+        
         task = self.get_task(path)
         result = self.repository.move_task(task, column)
         self.index_service.update_task(result)
