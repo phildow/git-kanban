@@ -361,7 +361,7 @@ class Renderer:
 		including its slug and optionally its board/column if available.
 		"""
 		
-		self._emit(args, f"Task created: {result.slug}")
+		self._emit(args, f"Task created: {result.title} ({result.slug})")
 
 	def render_task_show(self, args: argparse.Namespace, result: Task) -> None:
 		"""Render detailed information about a single task, including all metadata and the body/description."""

@@ -162,11 +162,11 @@ class KanbanService:
         for board_config in config["boards"]:
             board_name = board_config["name"]
             board_slug = board_config["slug"]
-            self.repository.create_board(board_slug)
+            self.repository.create_board(board_name)
             for col_config in board_config["columns"]:
                 col_name = col_config["name"]
                 col_slug = col_config["slug"]
-                self.repository.create_column(board_slug, col_slug)
+                self.repository.create_column(board_name, col_name)
                 for task_config in col_config.get("tasks", []):
                     task = Task(
                         id=uuid4(),

@@ -408,7 +408,9 @@ class FilesystemRepository(KanbanRepository):
                 for filename in self._get_task_order(b, col):
                     entry = col_dir / filename
                     if entry.is_file():
-                        tasks.append(self._parse_task_file(entry, b, col))
+                        board_name = self._board_name_from_slug(b)
+                        column_name = self._column_name_from_slug(b, col)
+                        tasks.append(self._parse_task_file(entry, board_name, column_name))
 
         return tasks
 
@@ -425,7 +427,7 @@ class FilesystemRepository(KanbanRepository):
         
         if not task_path.is_file():
             raise TaskNotFound(f"{board}/{column}/{filename}")
-            
+        
         return self._parse_task_file(task_path, board, column)
 
     def create_task(self, task: Task, filename: str) -> Task:
@@ -439,7 +441,7 @@ class FilesystemRepository(KanbanRepository):
         if self.task_exists(board_slug, column_slug, filename):
             TaskAlreadyExists(task.board, task.column, filename)
         
-        path = self.boards_dir / board_slug / task.column / f"{filename}.md"
+        path = self.boards_dir / board_slug / column_slug / f"{filename}.md"
         now = datetime.now(timezone.utc)
         fm_lines = [
             "---",
@@ -473,7 +475,7 @@ class FilesystemRepository(KanbanRepository):
         if f"{filename}.md" not in order:
             order.append(f"{filename}.md")
         self._set_task_order(board_slug, column_slug, order)
-        
+
         return self._parse_task_file(path, task.board, task.column)
 
     def update_task(self, task: Task) -> Task:
@@ -594,7 +596,13 @@ class FilesystemRepository(KanbanRepository):
                 dest_order.append(dest_filename)
             self._set_task_order(dest_board_slug, dest_column_slug, dest_order)
 
-        return self._parse_task_file(dest_file, task.board, task.column)
+        # TODO get the board name and column name from the metadata rather than using the slug, 
+        # so that the returned task has the correct names
+
+        board_name = self.get_board_metadata(dest_board_slug, "fields.name") or dest_board
+        column_name = self.get_column_metadata(dest_board_slug, dest_column_slug, "fields.name") or dest_column
+
+        return self._parse_task_file(dest_file, board_name, column_name)    
 
     def delete_task(self, task: Task) -> None:
         board_slug = kebab_case(task.board)
@@ -691,6 +699,14 @@ class FilesystemRepository(KanbanRepository):
 
     # Board metadata
     
+    def _board_name_from_slug(self, slug: str) -> str:
+        """Return the board name from its slug, falling back to the slug if not found."""
+        return self.get_board_metadata(slug, "fields.name") or slug
+    
+    def _column_name_from_slug(self, board_slug: str, column_slug: str) -> str:
+        """Return the column name from its slug, falling back to the slug if not found."""
+        return self.get_column_metadata(board_slug, column_slug, "fields.name") or column_slug
+
     def _board_metadata_file(self, board: str) -> Path:
         """Return the path to the .metadata INI file for the given board."""
         board_slug = kebab_case(board)

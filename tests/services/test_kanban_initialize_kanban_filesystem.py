@@ -158,16 +158,30 @@ class TestKanbanInitializeKanbanFilesystemCustomBoard(unittest.TestCase):
             git_service=MagicMock(),
         )
         self.config = {
-            "usercontext": {"board": "My Project", "column": "todo"},
+            "usercontext": {
+                "board": "my-project", 
+                "column": "todo"
+            },
             "boards": [
                 {
                     "name": "My Project",
                     "slug": "my-project",
                     "columns": [
-                        {"name": "Todo", "slug": "todo", "tasks": [
-                            {"title": "first task", "slug": "first-task"},
-                        ]},
-                        {"name": "Done", "slug": "done", "tasks": []},
+                        {
+                            "name": "Todo", 
+                            "slug": "todo", 
+                            "tasks": [
+                                {
+                                    "title": "first task", 
+                                    "slug": "first-task"
+                                    },
+                            ]
+                        },
+                        {
+                            "name": "Done", 
+                            "slug": "done", 
+                            "tasks": []
+                        },
                     ],
                 }
             ],

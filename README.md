@@ -60,7 +60,17 @@ Run:
 
 0.5 - Complete filesystem
 
-- CLAUDE: Add metadata structure to Claude document as INI
+- FEAT: go back to full slug board/column or column/task with parenthis for Name
+- BUG: rename column double appending board
+- BUG: give an error if you try to move a board or task
+- BUG: give an error if you try to create a task with no board
+- BUG: restrict move so that it only moves task from one column to another (keep it simple)
+
+- Add documentation explaining the move only moves task from one column to another
+- Add documentation explaining that names and titles are always slugged for the filesystem, that
+  they are treated as slugs in the cli and repl but displayed using their names and titles with
+  the --list flag (this may be a weakness in the system or at least confusing)
+- But once we're running TUI the user won't see the underlying implementation
 
 ~
 
@@ -77,18 +87,14 @@ Run:
 
 - TEST: Check init error handling, don't overwrite a repo, don't initialize a repo that's already been created
 
-
 - FEAT: add closed_at metadata to a Task
 - FEAT: config: default boards that automatically set the closed_at value: None until moved to done or archived if None
 
 - TEST: make sure repl gives recoverable error messages
 
-~
-
 - BUG: `kanban (/) > ls main -al` returns an error probably a mutually exlusive argument `kanban (/) >`
 
 - FEAT: give the user the option to bootstrap from the repl
-- TEST: renaming the board or column keeps the user context in sync
 - CLAUDE: note that models are lightweight and do not include relationships, where they reference other entities they reference them by name only, always call a service layer method to get a fully qualified object
 
 - CHORE: always pass the path to get_tasks not a reconstructed path
@@ -121,7 +127,6 @@ POTENTIAL INCONSISTENCY
 - FEAT: Add comments to a task which are just appended to the body
 
 - CHORE: Models return a path?
-- CHORE: rename all those render methods to use parameters that reflect their types
 
 FILENAME VS TITLE
 

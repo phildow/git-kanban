@@ -40,6 +40,10 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         self.assertTrue(repo.board_exists("Main"))
         self.assertEqual(
             [c.name for c in repo.get_columns("Main")],
+            ["To Do", "In Progress", "In Review", "Done"],
+        )
+        self.assertEqual(
+            [c.slug for c in repo.get_columns("Main")],
             ["to-do", "in-progress", "in-review", "done"],
         )
         self.assertEqual(
@@ -116,7 +120,8 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         svc.initialize_kanban(Path("."), config=custom)
 
         self.assertTrue(repo.board_exists("work"))
-        self.assertEqual([c.name for c in repo.get_columns("work")], ["backlog", "doing", "done"])
+        self.assertEqual([c.name for c in repo.get_columns("work")], ["Backlog", "Doing", "Done"])
+        self.assertEqual([c.slug for c in repo.get_columns("work")], ["backlog", "doing", "done"])
         titles = {t.title for t in repo.get_tasks(board="work")}
         self.assertIn("custom task", titles)
         self.assertNotIn("list your boards and tasks", titles)
