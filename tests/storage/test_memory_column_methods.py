@@ -32,7 +32,7 @@ class TestInMemoryRepositoryColumnOps(unittest.TestCase):
 
         created = self.repo.create_column("alpha", "todo")
 
-        self.assertEqual(created, Column(name="todo", slug="todo", board="alpha", position=0))
+        self.assertEqual(created, Column(id=created.id, name="todo", slug="todo", board="alpha", position=0))
         self.assertEqual(self.repo.get_columns("alpha"), [created])
 
     def test_column_methods_raise_when_board_missing(self):

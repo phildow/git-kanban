@@ -270,7 +270,9 @@ class FilesystemRepository(KanbanRepository):
             column_slug = kebab_case(name)
             name = self.get_column_metadata(board_slug, name, "fields.name") or name
             column_slug = self.get_column_metadata(board_slug, name, "fields.slug") or column_slug
-            columns.append(Column(name=name, slug=column_slug, board=board, position=i, task_count=task_count))
+            uuid = self.get_board_metadata(board_slug, "fields.id")
+            # TODO: error if no UUID
+            columns.append(Column(id=uuid, name=name, slug=column_slug, board=board, position=i, task_count=task_count))
             
         return columns
 
@@ -290,12 +292,14 @@ class FilesystemRepository(KanbanRepository):
         position = order.index(name) if name in order else len(order)
         name = self.get_column_metadata(board_slug, name, "fields.name") or name
         column_slug = self.get_column_metadata(board_slug, name, "fields.slug") or column_slug
-
-        return Column(name=name, slug=column_slug, board=board, position=position, task_count=task_count)
+        uuid = self.get_column_metadata(board_slug, name, "fields.id")
+        # TODO: error if no UUID
+        return Column(id=UUID(uuid), name=name, slug=column_slug, board=board, position=position, task_count=task_count)
 
     def create_column(self, board: str, name: str) -> Column:
         column_slug = kebab_case(name)
         board_slug = kebab_case(board)
+        uuid = str(uuid4())
 
         if not self.board_exists(board_slug):
             raise BoardNotFound(board)
@@ -312,9 +316,10 @@ class FilesystemRepository(KanbanRepository):
         
         self.set_column_metadata(board_slug, column_slug, "fields.name", name)
         self.set_column_metadata(board_slug, column_slug, "fields.slug", column_slug)
+        self.set_column_metadata(board_slug, column_slug, "fields.id", uuid)
         self._set_column_order(board_slug, order)
 
-        return Column(name=name, slug=column_slug, board=board, position=len(order) - 1)
+        return Column(id=UUID(uuid), name=name, slug=column_slug, board=board, position=len(order) - 1)
 
     def rename_column(self, board: str, name: str, new_name: str) -> Column:
         new_column_slug = kebab_case(new_name)

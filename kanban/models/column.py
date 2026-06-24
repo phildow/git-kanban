@@ -15,10 +15,11 @@ class Column:
     `position` is the zero-based display order inside the owning board.
     """
 
-    name: str
-    slug: str
-    board: str
-    position: int
+    id:         UUID
+    name:       str
+    slug:       str
+    board:      str
+    position:   int
     task_count: int = 0
 
     @property

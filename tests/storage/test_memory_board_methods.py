@@ -55,7 +55,7 @@ class TestInMemoryRepositoryBoardOps(unittest.TestCase):
     def test_rename_board_updates_board_columns_tasks(self):
         """Renaming a board updates dependent columns and tasks."""
         board = self.repo.create_board("alpha")
-        board.columns.append(Column(name="todo", slug="todo", board="alpha", position=0))
+        board.columns.append(Column(id=uuid4(), name="todo", slug="todo", board="alpha", position=0))
 
         task = Task(
             id=uuid4(),

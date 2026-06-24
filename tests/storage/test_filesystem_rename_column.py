@@ -5,6 +5,7 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
+from uuid import uuid4
 
 from models import Column
 from storage.filesystem import FilesystemRepository
@@ -20,10 +21,18 @@ class TestFilesystemRenameColumn(unittest.TestCase):
         self.repo = FilesystemRepository(root=self.root)
         self.repo.init_storage()
         (self.repo.boards_dir / "alpha").mkdir()
-        (self.repo.boards_dir / "alpha" / "todo").mkdir()
+        self._make_column("alpha", "todo")
 
     def tearDown(self) -> None:
         self._tmp.cleanup()
+
+    def _make_column(self, board: str, slug: str, name: str | None = None) -> None:
+        """Create a column directory with the metadata fields required by rename_column."""
+        (self.repo.boards_dir / board / slug).mkdir()
+        display_name = name or slug
+        self.repo.set_column_metadata(board, slug, "fields.name", display_name)
+        self.repo.set_column_metadata(board, slug, "fields.slug", slug)
+        self.repo.set_column_metadata(board, slug, "fields.id", str(uuid4()))
 
     def test_renames_directory(self) -> None:
         """Old directory is gone and new directory exists after rename."""

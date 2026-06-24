@@ -163,7 +163,7 @@ class InMemoryRepository(KanbanRepository):
         if any(column.name == name for column in board_obj.columns):
             raise ColumnAlreadyExists(board, name)
 
-        column = Column(name=name, slug=slug, board=board, position=len(board_obj.columns))
+        column = Column(id=uuid4(), name=name, slug=slug, board=board, position=len(board_obj.columns))
         board_obj.columns.append(column)
         return column
 
