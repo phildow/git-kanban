@@ -301,13 +301,13 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.renderer.render_task_edit.assert_called_once_with(args, result)
 
     def test_handle_task_move(self):
-        args = self._args(path="alpha/todo/fix-parser", dest="alpha/done")
+        args = self._args(path="alpha/todo/fix-parser", column="done")
         result = object()
         self.svc.move_task.return_value = result
 
         commands.handle_task_move(args, self.svc, self.renderer)
 
-        self.svc.move_task.assert_called_once_with("alpha/todo/fix-parser", "alpha/done")
+        self.svc.move_task.assert_called_once_with("alpha/todo/fix-parser", "done")
         self.renderer.render_task_move.assert_called_once_with(args, result)
 
     def test_handle_search(self):

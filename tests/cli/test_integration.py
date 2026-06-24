@@ -694,25 +694,25 @@ class TestTaskCLI(_InitializedBase):
     def test_task_move_creates_file_at_destination(self) -> None:
         """task move creates the file in the destination column."""
         self.run_cli("task", "create", "proj/todo/fix-login")
-        self.run_cli("task", "move", "proj/todo/fix-login", "proj/done")
+        self.run_cli("task", "move", "proj/todo/fix-login", "done")
         self.assertTrue((self.boards_dir / "proj" / "done" / "fix-login.md").is_file())
 
     def test_task_move_removes_file_from_source(self) -> None:
         """task move removes the file from the source column."""
         self.run_cli("task", "create", "proj/todo/fix-login")
-        self.run_cli("task", "move", "proj/todo/fix-login", "proj/done")
+        self.run_cli("task", "move", "proj/todo/fix-login", "done")
         self.assertFalse((self.boards_dir / "proj" / "todo" / "fix-login.md").exists())
 
     def test_task_move_verbose_prints_output(self) -> None:
         """task move --verbose prints something."""
         self.run_cli("task", "create", "proj/todo/fix-login")
-        out = self.run_cli("task", "move", "proj/todo/fix-login", "proj/done", "--verbose")
+        out = self.run_cli("task", "move", "proj/todo/fix-login", "done", "--verbose")
         self.assertTrue(out.strip())
 
     def test_task_move_without_verbose_produces_no_output(self) -> None:
         """task move without --verbose produces no output."""
         self.run_cli("task", "create", "proj/todo/fix-login")
-        out = self.run_cli("task", "move", "proj/todo/fix-login", "proj/done")
+        out = self.run_cli("task", "move", "proj/todo/fix-login", "done")
         self.assertEqual(out, "")
 
     # -- delete ---------------------------------------------------------------

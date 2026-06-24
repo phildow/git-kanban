@@ -222,9 +222,9 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     p.set_defaults(func=handle_task_update)
 
     # task move
-    p = task_sub.add_parser("move", help="Move task to another column or board")
+    p = task_sub.add_parser("move", help="Move task to another column")
     p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
-    p.add_argument("dest", metavar="BOARD/COLUMN", help="Destination board/column path")
+    p.add_argument("column", metavar="COLUMN", help="Destination column path")
     _add_format_arg(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_task_move)

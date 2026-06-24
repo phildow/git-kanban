@@ -56,7 +56,7 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
         self.svc.create_task("alpha/todo/t1", TaskCreateParams())
         self.index_service.reset_mock()
 
-        moved = self.svc.move_task("alpha/todo/t1", "alpha/done")
+        moved = self.svc.move_task("alpha/todo/t1", "done")
 
         self.index_service.update_task.assert_called_once()
         self.assertEqual(self.index_service.update_task.call_args.args[0].id, moved.id)

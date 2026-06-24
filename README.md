@@ -60,9 +60,6 @@ Run:
 
 0.5 - Complete filesystem
 
-- FEAT: go back to full slug board/column or column/task with parenthis for Name
-- BUG: restrict move so that it only moves task from one column to another (keep it simple)
-- BUG: give an error if you try to move a board or task
 - BUG: give an error if you try to create a task with no board
 
 - CHORE: Add a UUID to the column and board metadata

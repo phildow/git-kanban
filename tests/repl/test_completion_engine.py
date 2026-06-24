@@ -91,7 +91,7 @@ def _build_fixture_parser() -> argparse.ArgumentParser:
     # move: task path + ambiguous destination (path-like per dest=="dest")
     p = subparsers.add_parser("move", aliases=["mv"])
     p.add_argument("path")
-    p.add_argument("dest")
+    p.add_argument("column")
     p.set_defaults(func=_NOOP)
 
     # search: free-text query + flags, including a board-name flag
@@ -261,21 +261,22 @@ class ContextAwarePathCompletionTests(EngineTestCase):
 
 
 class MoveDestCompletionTests(EngineTestCase):
-    """move's second positional (dest="dest") gets path-style completion."""
+    """move's second positional (column) gets column-style completion."""
 
     def test_completes_first_path_argument(self) -> None:
         self.assertEqual(self.complete("move "), ["my-project/", "ops/"])
 
-    def test_completes_destination_argument(self) -> None:
+    def test_completes_destination_argument_without_context(self) -> None:
+        """Without board context the column argument cannot be completed."""
         line = "move /my-project/todo/fix-login-bug "
-        self.assertEqual(self.complete(line), ["my-project/", "ops/"])
+        self.assertEqual(self.complete(line), [])
 
     def test_destination_respects_context(self) -> None:
         context = _Context(board="my-project")
         line = "move todo/fix-login-bug "
         self.assertEqual(
             self.complete(line, context),
-            ["done/", "in-progress/", "in-review/", "todo/"],
+            ["done", "in-progress", "in-review", "todo"],
         )
 
 

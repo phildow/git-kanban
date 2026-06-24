@@ -646,26 +646,26 @@ class TestReplMove(_InitializedReplBase):
 
     def test_move_creates_file_at_destination(self) -> None:
         """move places the task file in the destination column."""
-        self.run_repl("move", "proj/todo/fix-login", "proj/done")
+        self.run_repl("move", "proj/todo/fix-login", "done")
         self.assertTrue(
             (self.boards_dir / "proj" / "done" / "fix-login.md").is_file()
         )
 
     def test_move_removes_file_from_source(self) -> None:
         """move removes the task file from the source column."""
-        self.run_repl("move", "proj/todo/fix-login", "proj/done")
+        self.run_repl("move", "proj/todo/fix-login", "done")
         self.assertFalse(
             (self.boards_dir / "proj" / "todo" / "fix-login.md").exists()
         )
 
     def test_move_produces_output(self) -> None:
         """move prints something."""
-        out = self.run_repl("move", "proj/todo/fix-login", "proj/done")
+        out = self.run_repl("move", "proj/todo/fix-login", "done")
         self.assertTrue(out.strip())
 
     def test_mv_alias_moves_file(self) -> None:
         """mv (alias for move) places the task file in the destination column."""
-        self.run_repl("mv", "proj/todo/fix-login", "proj/done")
+        self.run_repl("mv", "proj/todo/fix-login", "done")
         self.assertTrue(
             (self.boards_dir / "proj" / "done" / "fix-login.md").is_file()
         )

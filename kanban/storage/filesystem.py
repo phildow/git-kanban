@@ -532,77 +532,47 @@ class FilesystemRepository(KanbanRepository):
 
         return self._parse_task_file(new_path, task.board, task.column)
 
-    # TODO: clean this up!
-    def move_task(self, task: Task, dest: Path) -> Task:
-        dest_board = dest.parts[0]
-        dest_column = dest.parts[1]
-        dest_slug = dest.parts[2] if len(dest.parts) > 2 else task.slug
-
-        src_filename = f"{task.slug}.md"
-        dest_filename = f"{dest_slug}.md"
-
-        src_board_slug = kebab_case(task.board)
-        dest_board_slug = kebab_case(dest_board)
+    def move_task(self, task: Task, column: str) -> Task:
+        board_slug = kebab_case(task.board)
         src_column_slug = kebab_case(task.column)
-        dest_column_slug = kebab_case(dest_column)
-        
-        src_file = self.boards_dir / src_board_slug / src_column_slug / src_filename
-        dest_file = self.boards_dir / dest_board_slug / dest_column_slug / dest_filename
-        same_location = src_board_slug == dest_board_slug and src_column_slug == dest_column_slug and dest_slug == task.slug
-        rename_in_place = src_board_slug == dest_board_slug and src_column_slug == dest_column_slug and dest_slug != task.slug
+        dest_column_slug = kebab_case(column)
+        filename = f"{task.slug}.md"
 
+        src_file = self.boards_dir / board_slug / src_column_slug / filename
+        dest_file = self.boards_dir / board_slug / dest_column_slug / filename
+    
         if not src_file.is_file():
             raise TaskNotFound(f"{task.board}/{task.column}/{task.slug}")
-        if not self.board_exists(dest_board):
-            raise BoardNotFound(dest_board)
-        if not self.column_exists(dest_board, dest_column):
-            raise ColumnNotFound(dest_board, dest_column)
-        if not same_location and dest_file.exists():
-            raise TaskAlreadyExists(dest_board, dest_column, dest_slug)
+        if not self.column_exists(task.board, column):
+            raise ColumnNotFound(task.board, column)
+        if src_column_slug != dest_column_slug and dest_file.exists():
+            raise TaskAlreadyExists(task.board, column, task.slug)
 
         now = datetime.now(timezone.utc)
         lines = src_file.read_text(encoding="utf-8").splitlines(keepends=True)
-
         for i, line in enumerate(lines):
             if line.startswith("updated_at:"):
                 lines[i] = f"updated_at: {now.isoformat()}\n"
-            elif line.startswith("slug:") and dest_slug != task.slug:
-                lines[i] = f"slug: {dest_slug}\n"
 
-        # TODO Unify this logic
-
-        if same_location:
+        if src_column_slug == dest_column_slug:
             src_file.write_text("".join(lines), encoding="utf-8")
-        elif rename_in_place:
-            dest_file.write_text("".join(lines), encoding="utf-8")
-            src_file.unlink()
-            order = self._get_task_order(src_board_slug, src_column_slug)
-            if src_filename in order:
-                order[order.index(src_filename)] = dest_filename
-            else:
-                order.append(dest_filename)
-            self._set_task_order(src_board_slug, src_column_slug, order)
         else:
             dest_file.write_text("".join(lines), encoding="utf-8")
             src_file.unlink()
 
-            src_order = self._get_task_order(src_board_slug, src_column_slug)
-            if src_filename in src_order:
-                src_order.remove(src_filename)
-            self._set_task_order(src_board_slug, src_column_slug, src_order)
+            src_order = self._get_task_order(board_slug, src_column_slug)
+            if filename in src_order:
+                src_order.remove(filename)
+            self._set_task_order(board_slug, src_column_slug, src_order)
 
-            dest_order = self._get_task_order(dest_board_slug, dest_column)
-            if dest_filename not in dest_order:
-                dest_order.append(dest_filename)
-            self._set_task_order(dest_board_slug, dest_column_slug, dest_order)
+            dest_order = self._get_task_order(board_slug, dest_column_slug)
+            if filename not in dest_order:
+                dest_order.append(filename)
+            self._set_task_order(board_slug, dest_column_slug, dest_order)
 
-        # TODO get the board name and column name from the metadata rather than using the slug, 
-        # so that the returned task has the correct names
-
-        board_name = self.get_board_metadata(dest_board_slug, "fields.name") or dest_board
-        column_name = self.get_column_metadata(dest_board_slug, dest_column_slug, "fields.name") or dest_column
-
-        return self._parse_task_file(dest_file, board_name, column_name)    
+        board_name = self.get_board_metadata(board_slug, "fields.name") or task.board
+        column_name = self.get_column_metadata(board_slug, dest_column_slug, "fields.name") or column
+        return self._parse_task_file(dest_file, board_name, column_name)
 
     def delete_task(self, task: Task) -> None:
         board_slug = kebab_case(task.board)

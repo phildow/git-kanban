@@ -226,8 +226,8 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         self.assertEqual(args.command, "tasks")
         self.assertIs(args.func, handle_task_update)
 
-        args = cli_parser.parse_args(["task", "move", "board-a/todo/fix-parser", "board-a/done"])
-        self.assertEqual(args.dest, "board-a/done")
+        args = cli_parser.parse_args(["task", "move", "board-a/todo/fix-parser", "done"])
+        self.assertEqual(args.column, "done")
         self.assertIs(args.func, handle_task_move)
 
         args = cli_parser.parse_args(["task", "delete", "board-a/todo/fix-parser"])

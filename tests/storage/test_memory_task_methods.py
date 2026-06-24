@@ -102,22 +102,20 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
     def test_move_task_and_delete_task(self):
         """Move validates destination and collisions; delete removes by UUID."""
         moved = self.repo.create_task(self._task("Move me", board="alpha", column="todo"), self._filename("Move me"))
-        self.repo.create_task(self._task("Move me", board="beta", column="todo"), self._filename("Move me"))
+        self.repo.create_task(self._task("Move me", board="alpha", column="doing"), self._filename("Move me"))
 
         with self.assertRaises(TaskAlreadyExists):
-            self.repo.move_task(moved, Path("beta") / "todo")
+            self.repo.move_task(moved, "doing")
 
-        result = self.repo.move_task(moved, Path("alpha") / "doing")
+        result = self.repo.move_task(moved, "todo")
         self.assertEqual(result.board, "alpha")
-        self.assertEqual(result.column, "doing")
+        self.assertEqual(result.column, "todo")
 
-        with self.assertRaises(BoardNotFound):
-            self.repo.move_task(moved, Path("missing") / "todo")
         with self.assertRaises(ColumnNotFound):
-            self.repo.move_task(moved, Path("alpha") / "missing")
+            self.repo.move_task(moved, "missing")
 
         self.repo.delete_task(moved)
-        
+
         with self.assertRaises(TaskNotFound):
             self.repo.delete_task(moved)
 

@@ -230,9 +230,9 @@ def _add_update_parser(subparsers: argparse._SubParsersAction) -> None:
 
 # TODO: Add a `move` subcommand to move tasks between columns or boards. This will require additional logic to handle the move operation and update the task's path accordingly.
 def _add_move_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser("move", aliases=["mv"], help="Move a task to another column or board")
+    p = subparsers.add_parser("move", aliases=["mv"], help="Move a task to another column")
     p.add_argument("path", type=str, help="The task to move")
-    p.add_argument("dest", type=str, help="The destination (column, board, or new title)")
+    p.add_argument("column", type=str, help="The destination column")
     _add_global_flags(p)
     p.set_defaults(func=handle_task_move)
 

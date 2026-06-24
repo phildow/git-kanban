@@ -591,6 +591,10 @@ class KanbanService:
         AmbiguousTaskReference if resolution fails.
         """
         board, column, title = self.path_components(path)
+
+        if not board or not column or not title:
+            raise ValueError(f"Task not found at path: {path} (must specify board, column, and title)")
+
         filename = kebab_case(title)
         return self.repository.get_task(board, column, filename)
 
@@ -680,24 +684,16 @@ class KanbanService:
     def move_task(
         self,
         path:   str,
-        dest:   str,
+        column: str,
     ) -> Task:
         """
-        Move a task's .md file to a new board/column location.  dest may be
-        "<board>/<column>" or bare "<column>", in which case the source board
-        is assumed.  Validates that the destination column exists before moving.
+        Move a task's .md file to a new column within the same board. 
+        Validates that the destination column exists before moving.
         Raises TaskNotFound, AmbiguousTaskReference, BoardNotFound, or
         ColumnNotFound as appropriate.  Updates the index and commits.
         """
-        dest_board, dest_column, dest_title = self.path_components(dest)
         task = self.get_task(path)
-
-        #TODO: dest_title should never be none in this case?
-
-        repo_dest = Path(dest_board) / dest_column
-        if dest_title:
-            repo_dest = repo_dest / dest_title
-        result = self.repository.move_task(task, repo_dest)
+        result = self.repository.move_task(task, column)
         self.index_service.update_task(result)
         return result
 

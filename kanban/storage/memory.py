@@ -335,39 +335,24 @@ class InMemoryRepository(KanbanRepository):
         task.slug = self._task_filenames[task.id]
         return task
 
-    def move_task(self, task: Task, dest: Path) -> Task:
-        dest_board = dest.parts[0]
-        dest_column = dest.parts[1]
-        dest_slug = dest.parts[2] if len(dest.parts) > 2 else None
-
+    def move_task(self, task: Task, column: str) -> Task:
         stored = self._tasks_by_id.get(task.id)
         if stored is None:
             raise TaskNotFound(str(task.id))
 
-        self.get_board(dest_board)
-        self.get_column(dest_board, dest_column)
+        self.get_column(task.board, column)
 
-        current_slug = self._task_filenames.get(task.id, kebab_case(task.title))
-        effective_dest_slug = dest_slug if dest_slug is not None else current_slug
-        same_location = (stored.board == dest_board and stored.column == dest_column
-                         and effective_dest_slug == current_slug)
-
-        if not same_location:
+        if stored.column != column:
+            slug = self._task_filenames.get(task.id, task.slug)
             for other_id, other_task in self._tasks_by_id.items():
                 if other_id == task.id:
                     continue
-                other_board, other_column = self._task_locations.get(other_id, (other_task.board, other_task.column))
-                other_filename = self._task_filenames.get(other_id, "")
-                if other_board == dest_board and other_column == dest_column and other_filename == effective_dest_slug:
-                    raise TaskAlreadyExists(dest_board, dest_column, effective_dest_slug)
+                other_column = self._task_locations.get(other_id, (None, other_task.column))[1]
+                if other_task.board == task.board and other_column == column and self._task_filenames.get(other_id) == slug:
+                    raise TaskAlreadyExists(task.board, column, slug)
 
-            stored.board = dest_board
-            stored.column = dest_column
-            self._task_locations[task.id] = (dest_board, dest_column)
-
-        if dest_slug is not None:
-            self._task_filenames[task.id] = dest_slug
-            stored.slug = dest_slug
+            stored.column = column
+            self._task_locations[task.id] = (task.board, column)
 
         stored.updated_at = datetime.now(UTC)
         return stored

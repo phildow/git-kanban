@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import argparse
 from functools import wraps
-import re
 import shutil
-from unittest import result
 
 from models import UserContext, Board, Column, Task
 from services.kanban import GitCommit, KanbanStatus
+from utils.str import kebab_case
 
 def _requires_verbose(method):
 	@wraps(method)
@@ -390,8 +389,8 @@ class Renderer:
 		self._emit(args, result)
 
 	def render_task_move(self, args: argparse.Namespace, task: Task) -> None:
-		if task.board and task.column:
-			msg = f"Task moved to: {task.board}/{task.column}/{task.slug}"
+		if task.column:
+			msg = f"Task moved to: {kebab_case(task.column)}"
 		else:
 			msg = f"Task moved: {task.slug}"
 		self._emit(args, msg)
