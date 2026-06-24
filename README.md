@@ -61,10 +61,14 @@ Run:
 0.5 - Complete filesystem
 
 - FEAT: go back to full slug board/column or column/task with parenthis for Name
-- BUG: rename column double appending board
+- BUG: restrict move so that it only moves task from one column to another (keep it simple)
 - BUG: give an error if you try to move a board or task
 - BUG: give an error if you try to create a task with no board
-- BUG: restrict move so that it only moves task from one column to another (keep it simple)
+
+- CHORE: Add a UUID to the column and board metadata
+- BUG: rename column double appending board
+
+- Add more REPL integration tests not catching problems with renaming or move
 
 - Add documentation explaining the move only moves task from one column to another
 - Add documentation explaining that names and titles are always slugged for the filesystem, that
