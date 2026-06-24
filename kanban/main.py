@@ -12,15 +12,15 @@ from services.git import GitService
 from services.kanban import KanbanService
 from services.index import IndexService
 from storage.filesystem import FilesystemRepository
+from storage.kanban import KanbanRepository
 from storage.memory import InMemoryRepository
 
 __DEBUG__ = True
-
 FILESYSTEM = "filesystem"
 MEMORY = "memory"
 
 def main() -> None:
-    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+    setup_logging(logging.DEBUG)
     
     repository = get_repository(FILESYSTEM)
     index_service = IndexService(repository=repository)
@@ -38,6 +38,17 @@ def main() -> None:
         args.func(args, svc, renderer, json_renderer)
     except ValueError as e:
         print(f"Error: {e}")
+
+def setup_logging(level: int) -> None:
+    logfile = Path("~/.kanban/kanban.log").expanduser()
+
+    if not logfile.parent.exists():
+        logfile.parent.mkdir(parents=True, exist_ok=True)
+        
+    logging.basicConfig(filename=str(logfile),
+                        filemode="a",
+                        level=level,
+                        format='%(asctime)s - %(levelname)s - %(message)s')
 
 def get_repository(typ: str) -> KanbanRepository:
     import tempfile
@@ -58,5 +69,6 @@ def get_repository(typ: str) -> KanbanRepository:
     elif typ == FILESYSTEM:
         return FilesystemRepository(root=cwd)
     
+
 if __name__ == "__main__":
     main()

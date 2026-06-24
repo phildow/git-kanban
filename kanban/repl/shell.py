@@ -201,6 +201,8 @@ def run_repl(*, svc: KanbanService, renderer: object) -> None:
         completer.install()
         
     except ValueError as exc:
+        exc_desc = str(exc) or exc.__class__.__name__
+        logging.error("Failed to initialize REPL: %s", exc_desc)
         print(f"Error: {exc}")
 
     _load_command_history(svc)
@@ -240,8 +242,14 @@ def run_repl(*, svc: KanbanService, renderer: object) -> None:
                 except SystemExit:
                     # argparse already emitted a helpful message.
                     continue
+                except Exception as exc:
+                    exc_desc = str(exc) or exc.__class__.__name__
+                    logging.error("Failed to parse command: %s", exc_desc)
+                    print(f"Failed to parse command: {exc_desc}")
+                    continue
 
                 if not hasattr(args, "func"):
+                    logging.error("No command handler registered for input: %s", raw)
                     print("No command handler registered")
                     continue
 
@@ -260,7 +268,7 @@ def run_repl(*, svc: KanbanService, renderer: object) -> None:
                     continue
                 except Exception as exc:
                     exc_desc = str(exc) or exc.__class__.__name__
-                    logging.error("Unexpected error: %s", exc_desc, exc_info=True)
+                    logging.error("Unexpected error: %s", exc_desc)
                     print(f"Unexpected error: {exc_desc}")
     except _ReplExit:
         print()

@@ -61,13 +61,13 @@ Run:
 0.5 - Complete filesystem
 
 - BUG: raise a services domain error if you rename to the same name
-- FEAT: consider case-conversion package for unicode compatible kebab casing
 - CHORE: special camel case for To Do -> todo not to-do
 - CHORE: remove default columns from the service layer
 - CHORE: Add a UUID to the column and board metadata
-- FEAT: kebab_case preserves accented characters
 - BUG: rename column double appending board
-- BUG: capture no closing quotation error
+
+- FEAT: consider case-conversion package for unicode compatible kebab casing
+- FEAT: kebab_case preserves accented characters
 
 - FEAT: Add assign command to assign a task to a person
 - CHORE: Rename assignee assigned-to? (at least in the interface)
@@ -87,6 +87,7 @@ Run:
 
 ~
 
+
 - FEAT: think about how move should work, for example should the dest allow it to rename, or is it more natural to just give it a column
         and use rename to rename a task, although that breaks mv dynamics (or require a mutal flag)
         and if the dest for move is a column or board/column then autocomplet has to take that into account
@@ -94,6 +95,7 @@ Run:
 
 - TEST: Check init error handling, don't overwrite a repo, don't initialize a repo that's already been created
 
+- FEAT: add csv export
 - FEAT: add closed_at metadata to a Task
 - FEAT: config: default boards that automatically set the closed_at value: None until moved to done or archived if None
 
