@@ -8,7 +8,6 @@ import shutil
 
 from models import UserContext, Board, Column, Task
 from services.kanban import GitCommit, KanbanStatus
-from utils.str import kebab_case
 
 def _requires_verbose(method):
 	@wraps(method)
@@ -360,7 +359,7 @@ class Renderer:
 		including its slug and optionally its board/column if available.
 		"""
 		
-		self._emit(args, f"Task created: {result.title} ({kebab_case(result.column)}/{result.slug})")
+		self._emit(args, f"Task created: {result.title} ({result.slug})")
 
 	def render_task_show(self, args: argparse.Namespace, result: Task) -> None:
 		"""Render detailed information about a single task, including all metadata and the body/description."""
@@ -390,7 +389,7 @@ class Renderer:
 
 	def render_task_move(self, args: argparse.Namespace, task: Task) -> None:
 		if task.column:
-			msg = f"Task moved to: {kebab_case(task.column)}"
+			msg = f"Task moved to: {task.column}"
 		else:
 			msg = f"Task moved: {task.slug}"
 		self._emit(args, msg)

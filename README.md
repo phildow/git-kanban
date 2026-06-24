@@ -61,15 +61,16 @@ Run:
 0.5 - Complete filesystem
 
 - BUG: raise a services domain error if you rename to the same name
-
+- FEAT: consider case-conversion package for unicode compatible kebab casing
 - CHORE: special camel case for To Do -> todo not to-do
 - CHORE: remove default columns from the service layer
 - CHORE: Add a UUID to the column and board metadata
+- FEAT: kebab_case preserves accented characters
 - BUG: rename column double appending board
 - BUG: capture no closing quotation error
 
 - FEAT: Add assign command to assign a task to a person
-- CHORE: Rename assignee assigned-to
+- CHORE: Rename assignee assigned-to? (at least in the interface)
 
 - Add documentation explaining the move only moves task from one column to another
 - Add documentation explaining that names and titles are always slugged for the filesystem, that
