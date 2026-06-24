@@ -17,10 +17,10 @@ class Column:
     # TODO: add slug and path properties for easier referencing in the REPL and storage layers
 
     name: str
+    slug: str
     board: str
     position: int
     task_count: int = 0
-    slug: str = ""
 
     @property
     def filename(self) -> str:

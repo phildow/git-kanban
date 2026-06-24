@@ -55,7 +55,7 @@ def _board(name: str = "main", slug: str = "main", column_count: int = 4) -> Boa
 
 
 def _column(name: str = "todo", board: str = "main", position: int = 0, slug: str = "") -> Column:
-    return Column(name=name, board=board, position=position, slug=slug)
+    return Column(name=name, slug=slug, board=board, position=position)
 
 
 class TestJsonRendererBoards(unittest.TestCase):
