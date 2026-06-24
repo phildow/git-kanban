@@ -60,7 +60,7 @@ def _add_list_format_and_sort_args(parser: argparse.ArgumentParser, sort_choices
 
 
 def _add_task_filter_args(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("-w", "--assignee", metavar="NAME", help="Filter by assignee")
+    parser.add_argument("-w", "--assigned-to", dest="assigned_to", metavar="NAME", help="Filter by assigned-to user")
     parser.add_argument("-p", "--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Filter by priority")
     parser.add_argument("-t","--tag", metavar="TAG", action="append", dest="tags", help="Filter by tag (repeatable)")
     parser.add_argument("--due-before", dest="due_before", metavar="DATE", help="Filter tasks due before date (YYYY-MM-DD)")
@@ -69,7 +69,7 @@ def _add_task_filter_args(parser: argparse.ArgumentParser) -> None:
 
 
 def _add_task_create_args(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("-w", "--assignee", metavar="NAME", help="Assign task to a user")
+    parser.add_argument("-w", "--assigned-to", dest="assigned_to", metavar="NAME", help="Assign task to a user")
     parser.add_argument("-p", "--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
     parser.add_argument("-t", "--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
     parser.add_argument("--due-date", dest="due_date", metavar="DATE", help="Due date (YYYY-MM-DD)")
@@ -77,7 +77,7 @@ def _add_task_create_args(parser: argparse.ArgumentParser) -> None:
 
 
 def _add_task_update_args(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("-w", "--assignee", metavar="NAME", help="Assign task to a user")
+    parser.add_argument("-w", "--assigned-to", dest="assigned_to", metavar="NAME", help="Assign task to a user")
     parser.add_argument("-p", "--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
     parser.add_argument("-t", "--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
     parser.add_argument("--due-date", dest="due_date", metavar="DATE", help="Due date (YYYY-MM-DD)")

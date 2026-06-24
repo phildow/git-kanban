@@ -65,7 +65,7 @@ def _build_fixture_parser() -> argparse.ArgumentParser:
     p = create_sub.add_parser("task")
     p.add_argument("path")  # BOARD/COLUMN/TITLE
     p.add_argument("-p", "--priority", choices=["low", "medium", "high"])
-    p.add_argument("--assignee")
+    p.add_argument("--assigned-to", dest="assigned_to")
     p.set_defaults(func=_NOOP)
 
     # rename <board|column>
@@ -338,7 +338,7 @@ class FlagCompletionTests(EngineTestCase):
         self.assertEqual(self.complete(line), ["high"])
 
     def test_free_value_flag_has_no_suggestions(self) -> None:
-        line = "create task /my-project/todo/new-task --assignee al"
+        line = "create task /my-project/todo/new-task --assigned-to al"
         self.assertEqual(self.complete(line), [])
 
     def test_board_flag_completes_existing_boards(self) -> None:

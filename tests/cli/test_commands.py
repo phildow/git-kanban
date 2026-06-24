@@ -149,7 +149,7 @@ class TestCommandHandlers(unittest.TestCase):
         """`task create` maps all optional CLI fields into `TaskCreateParams`."""
         args = self._args(
             path="board-a/todo/fix-parser",
-            assignee="philip",
+            assigned_to="philip",
             priority="high",
             tags=["cli", "tests"],
             due_date="2026-06-15",
@@ -163,7 +163,7 @@ class TestCommandHandlers(unittest.TestCase):
         self.svc.create_task.assert_called_once_with(
             "board-a/todo/fix-parser",
             TaskCreateParams(
-                assignee="philip",
+                assigned_to="philip",
                 priority="high",
                 tags=["cli", "tests"],
                 due_date="2026-06-15",
@@ -183,7 +183,7 @@ class TestCommandHandlers(unittest.TestCase):
         self.svc.create_task.assert_called_once_with(
             "board-a/todo/check-no-other-args",
             TaskCreateParams(
-                assignee=None,
+                assigned_to=None,
                 priority=None,
                 tags=[],
                 due_date=None,
@@ -196,7 +196,7 @@ class TestCommandHandlers(unittest.TestCase):
         """`task create` treats explicit `tags=None` the same as omitted tags."""
         args = self._args(
             path="board-a/todo/check-tags-none",
-            assignee="alex",
+            assigned_to="alex",
             priority=None,
             tags=None,
             due_date=None,
@@ -210,7 +210,7 @@ class TestCommandHandlers(unittest.TestCase):
         self.svc.create_task.assert_called_once_with(
             "board-a/todo/check-tags-none",
             TaskCreateParams(
-                assignee="alex",
+                assigned_to="alex",
                 priority=None,
                 tags=[],
                 due_date=None,
@@ -242,7 +242,7 @@ class TestCommandHandlers(unittest.TestCase):
             "board-a/todo/fix-parser",
             updates=TaskUpdateParams(
                 title=None,
-                assignee=None,
+                assigned_to=None,
                 priority=None,
                 tags=None,
                 due_date=None,
@@ -256,7 +256,7 @@ class TestCommandHandlers(unittest.TestCase):
         args = self._args(
             path="board-a/todo/fix-parser",
             title="fix parser robustly",
-            assignee="philip",
+            assigned_to="philip",
             priority="medium",
             tags=["cli", "refactor"],
             due_date="2026-07-01",
@@ -271,7 +271,7 @@ class TestCommandHandlers(unittest.TestCase):
             "board-a/todo/fix-parser",
             updates=TaskUpdateParams(
                 title="fix parser robustly",
-                assignee="philip",
+                assigned_to="philip",
                 priority="medium",
                 tags=["cli", "refactor"],
                 due_date="2026-07-01",
@@ -292,7 +292,7 @@ class TestCommandHandlers(unittest.TestCase):
             "board-a/todo/fix-parser",
             updates=TaskUpdateParams(
                 title=None,
-                assignee=None,
+                assigned_to=None,
                 priority=None,
                 tags=[],
                 due_date=None,

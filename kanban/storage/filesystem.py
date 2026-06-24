@@ -453,8 +453,8 @@ class FilesystemRepository(KanbanRepository):
         
         if task.priority:
             fm_lines.append(f"priority: {task.priority}")
-        if task.assignee:
-            fm_lines.append(f"assignee: {task.assignee}")
+        if task.assigned_to:
+            fm_lines.append(f"assigned_to: {task.assigned_to}")
         if task.tags:
             fm_lines.append(f"tags: [{', '.join(task.tags)}]")
         if task.due_date:
@@ -505,8 +505,8 @@ class FilesystemRepository(KanbanRepository):
         ]
         if task.priority:
             fm_lines.append(f"priority: {task.priority}")
-        if task.assignee:
-            fm_lines.append(f"assignee: {task.assignee}")
+        if task.assigned_to:
+            fm_lines.append(f"assigned_to: {task.assigned_to}")
         if task.tags:
             fm_lines.append(f"tags: [{', '.join(task.tags)}]")
         if task.due_date:
@@ -822,7 +822,7 @@ class FilesystemRepository(KanbanRepository):
             board=board,
             column=column,
             created_by=fm.get("created_by") or None,
-            assignee=fm.get("assignee") or None,
+            assigned_to=fm.get("assigned_to") or None,
             priority=fm.get("priority") or None,
             due_date=due_date,
             tags=tags,

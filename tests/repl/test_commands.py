@@ -197,7 +197,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.create_task.assert_called_once_with(
             "alpha/todo/fix-parser",
             TaskCreateParams(
-                assignee=None,
+                assigned_to=None,
                 priority=None,
                 tags=[],
                 due_date=None,
@@ -209,7 +209,7 @@ class TestReplCommandHandlers(unittest.TestCase):
     def test_handle_task_create_with_optional_fields(self):
         args = self._args(
             path="alpha/todo/fix-parser",
-            assignee="philip",
+            assigned_to="philip",
             priority="high",
             tags=["cli", "tests"],
             due_date="2026-06-17",
@@ -223,7 +223,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.create_task.assert_called_once_with(
             "alpha/todo/fix-parser",
             TaskCreateParams(
-                assignee="philip",
+                assigned_to="philip",
                 priority="high",
                 tags=["cli", "tests"],
                 due_date="2026-06-17",
@@ -263,7 +263,7 @@ class TestReplCommandHandlers(unittest.TestCase):
             "alpha/todo/fix-parser",
             updates=TaskUpdateParams(
                 title=None,
-                assignee=None,
+                assigned_to=None,
                 priority=None,
                 tags=None,
                 due_date=None,
@@ -276,7 +276,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         args = self._args(
             path="alpha/todo/fix-parser",
             title="fix parser",
-            assignee="philip",
+            assigned_to="philip",
             priority="medium",
             tags=["cli"],
             due_date="2026-07-01",
@@ -291,7 +291,7 @@ class TestReplCommandHandlers(unittest.TestCase):
             "alpha/todo/fix-parser",
             updates=TaskUpdateParams(
                 title="fix parser",
-                assignee="philip",
+                assigned_to="philip",
                 priority="medium",
                 tags=["cli"],
                 due_date="2026-07-01",

@@ -180,7 +180,7 @@ class Renderer:
 			f"Slug: {result.slug}",
 			f"ID: {result.id}",
 			f"Location: {result.board}/{result.column}" if result.board and result.column else "Location: (unscoped)",
-			f"Assignee: {result.assignee or "-"}",
+			f"Assigned To: {result.assigned_to or "-"}",
 			f"Priority: {result.priority or "-"}",
 			f"Due: {result.due_date.isoformat() if result.due_date else "-"}",
 			f"Tags: {", ".join(result.tags) if result.tags else "-"}",

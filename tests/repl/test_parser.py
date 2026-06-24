@@ -73,7 +73,7 @@ class TestParserAliases(unittest.TestCase):
             "update",
             "task",
             "main/todo/fix-parser",
-            "--assignee",
+            "--assigned-to",
             "philip",
             "--priority",
             "medium",
@@ -88,7 +88,7 @@ class TestParserAliases(unittest.TestCase):
         self.assertEqual(args.command, "update")
         self.assertEqual(args.update_subject, "task")
         self.assertEqual(args.path, "main/todo/fix-parser")
-        self.assertEqual(args.assignee, "philip")
+        self.assertEqual(args.assigned_to, "philip")
         self.assertEqual(args.priority, "medium")
         self.assertEqual(args.tags, ["cli"])
         self.assertEqual(args.due_date, "2026-06-20")

@@ -453,7 +453,7 @@ class TestTaskCLI(_InitializedBase):
         """task create with all optional flags creates the file."""
         self.run_cli(
             "task", "create", "proj/todo/new-task",
-            "--assignee", "alice",
+            "--assigned-to", "alice",
             "--priority", "high",
             "--tag", "bug",
             "--due-date", "2026-12-31",
@@ -465,14 +465,14 @@ class TestTaskCLI(_InitializedBase):
         """Optional fields passed to task create appear in the file's frontmatter."""
         self.run_cli(
             "task", "create", "proj/todo/new-task",
-            "--assignee", "alice",
+            "--assigned-to", "alice",
             "--priority", "high",
             "--due-date", "2026-12-31",
             "--created-by", "mark",
             "--tag", "bug",
         )
         fm = self._read_frontmatter("proj", "todo", "new-task")
-        self.assertEqual(fm.get("assignee"), "alice")
+        self.assertEqual(fm.get("assigned_to"), "alice")
         self.assertEqual(fm.get("priority"), "high")
         self.assertEqual(fm.get("due_date"), _iso("2026-12-31"))
         self.assertEqual(fm.get("created_by"), "mark")
@@ -554,11 +554,11 @@ class TestTaskCLI(_InitializedBase):
         self.assertIn("task-a", out)
         self.assertIn("task-b", out)
 
-    def test_task_list_filter_assignee(self) -> None:
-        """task list --assignee filters to only matching tasks."""
-        self.run_cli("task", "create", "proj/todo/task-a", "--assignee", "alice")
+    def test_task_list_filter_assigned_to(self) -> None:
+        """task list --assigned-to filters to only matching tasks."""
+        self.run_cli("task", "create", "proj/todo/task-a", "--assigned-to", "alice")
         self.run_cli("task", "create", "proj/todo/task-b")
-        out = self.run_cli("task", "list", "proj/todo", "--assignee", "alice")
+        out = self.run_cli("task", "list", "proj/todo", "--assigned-to", "alice")
         self.assertIn("task-a", out)
         self.assertNotIn("task-b", out)
 
@@ -635,12 +635,12 @@ class TestTaskCLI(_InitializedBase):
 
     # -- update ---------------------------------------------------------------
 
-    def test_task_update_writes_assignee_to_file(self) -> None:
-        """task update --assignee persists the assignee to the markdown file."""
+    def test_task_update_writes_assigned_to_file(self) -> None:
+        """task update --assigned-to persists the assigned_to to the markdown file."""
         self.run_cli("task", "create", "proj/todo/fix-login")
-        self.run_cli("task", "update", "proj/todo/fix-login", "--assignee", "alice")
+        self.run_cli("task", "update", "proj/todo/fix-login", "--assigned-to", "alice")
         fm = self._read_frontmatter("proj", "todo", "fix-login")
-        self.assertEqual(fm.get("assignee"), "alice")
+        self.assertEqual(fm.get("assigned_to"), "alice")
 
     def test_task_update_writes_priority_to_file(self) -> None:
         """task update --priority persists the priority to the markdown file."""
@@ -668,7 +668,7 @@ class TestTaskCLI(_InitializedBase):
         """task update --verbose prints something."""
         self.run_cli("task", "create", "proj/todo/fix-login")
         out = self.run_cli("task", "update", "proj/todo/fix-login",
-                           "--assignee", "alice", "--verbose")
+                           "--assigned-to", "alice", "--verbose")
         self.assertTrue(out.strip())
 
     def test_task_update_with_all_fields(self) -> None:
@@ -676,14 +676,14 @@ class TestTaskCLI(_InitializedBase):
         self.run_cli("task", "create", "proj/todo/fix-login")
         self.run_cli(
             "task", "update", "proj/todo/fix-login",
-            "--assignee", "bob",
+            "--assigned-to", "bob",
             "--priority", "low",
             "--tag", "refactor",
             "--created-by", "mark",
             "--due-date", "2025-01-01",
         )
         fm = self._read_frontmatter("proj", "todo", "fix-login")
-        self.assertEqual(fm.get("assignee"), "bob")
+        self.assertEqual(fm.get("assigned_to"), "bob")
         self.assertEqual(fm.get("priority"), "low")
         self.assertEqual(fm.get("tags"), "[refactor]")
         self.assertEqual(fm.get("due_date"), _iso("2025-01-01"))

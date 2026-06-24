@@ -94,7 +94,7 @@ def _build_task_filter(args: argparse.Namespace) -> TaskFilter:
 		return datetime.strptime(s, "%Y-%m-%d").replace(tzinfo=timezone.utc) if s else None
 
 	return TaskFilter(
-		assignee=getattr(args, "assignee", None),
+		assigned_to=getattr(args, "assigned_to", None),
 		priority=getattr(args, "priority", None),
 		tags=getattr(args, "tags", None) or [],
 		due_before=_parse_date(getattr(args, "due_before", None)),
@@ -109,9 +109,8 @@ def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: obj
 
 
 def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
-	# TODO - why can't I use args.assignee directly here? Is it because it's an optional argument on the parser?
 	params = TaskCreateParams(
-		assignee=getattr(args, "assignee", None),
+		assigned_to=getattr(args, "assigned_to", None),
 		priority=getattr(args, "priority", None),
 		tags=getattr(args, "tags", None) or [],
 		due_date=getattr(args, "due_date", None),
@@ -135,7 +134,7 @@ def handle_task_edit(args: argparse.Namespace, svc: KanbanService, renderer: obj
 def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	updates = TaskUpdateParams(
 		title=getattr(args, "title", None),
-		assignee=getattr(args, "assignee", None),
+		assigned_to=getattr(args, "assigned_to", None),
 		priority=getattr(args, "priority", None),
 		tags=getattr(args, "tags", None),
 		due_date=getattr(args, "due_date", None),

@@ -58,7 +58,7 @@ class TestFilesystemGetTask(unittest.TestCase):
             id: {_TASK_ID}
             title: Fix bug
             slug: fix-bug
-            assignee: alice
+            assigned_to: alice
             created_by: bob
             priority: high
             due_date: 2026-06-20
@@ -72,7 +72,7 @@ class TestFilesystemGetTask(unittest.TestCase):
         self.assertEqual(task.id, _TASK_ID)
         self.assertEqual(task.title, "Fix bug")
         self.assertEqual(task.slug, "fix-bug")
-        self.assertEqual(task.assignee, "alice")
+        self.assertEqual(task.assigned_to, "alice")
         self.assertEqual(task.created_by, "bob")
         self.assertEqual(task.priority, "high")
         self.assertEqual(task.due_date, datetime(2026, 6, 20, tzinfo=UTC).replace(tzinfo=task.due_date.tzinfo))

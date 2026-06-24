@@ -59,9 +59,9 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
         due_soon = datetime.now(UTC) + timedelta(days=1)
         due_later = datetime.now(UTC) + timedelta(days=10)
 
-        t1 = self.repo.create_task(self._task("A", assignee="p", priority="high", tags=["x"], due_date=due_soon), "a")
-        t2 = self.repo.create_task(self._task("B", board="alpha", column="doing", assignee="q", priority="low", tags=["y"], due_date=due_later), "b")
-        t3 = self.repo.create_task(self._task("C", board="beta", column="todo", assignee="p", priority="high", tags=["x", "z"], due_date=due_later), "c")
+        t1 = self.repo.create_task(self._task("A", assigned_to="p", priority="high", tags=["x"], due_date=due_soon), "a")
+        t2 = self.repo.create_task(self._task("B", board="alpha", column="doing", assigned_to="q", priority="low", tags=["y"], due_date=due_later), "b")
+        t3 = self.repo.create_task(self._task("C", board="beta", column="todo", assigned_to="p", priority="high", tags=["x", "z"], due_date=due_later), "c")
 
         self.assertEqual({t.id for t in self.repo.get_tasks()}, {t1.id, t2.id, t3.id})
         self.assertEqual({t.id for t in self.repo.get_tasks(board="alpha")}, {t1.id, t2.id})
@@ -84,13 +84,13 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
             title="First Updated",
             board="beta",  # should be ignored by update
             column="todo",  # should be ignored by update
-            assignee="new",
+            assigned_to="new",
         )
         result = self.repo.update_task(updated)
 
         self.assertEqual(result.board, "alpha")
         self.assertEqual(result.column, "todo")
-        self.assertEqual(result.assignee, "new")
+        self.assertEqual(result.assigned_to, "new")
         self.assertIsNotNone(result.updated_at)
 
         with self.assertRaises(TaskAlreadyExists):

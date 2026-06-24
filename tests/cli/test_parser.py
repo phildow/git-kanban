@@ -147,7 +147,7 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
             "task",
             "list",
             "board-a/todo",
-            "--assignee",
+            "--assigned-to",
             "philip",
             "--priority",
             "high",
@@ -160,7 +160,7 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
             "--reverse",
         ])
         self.assertEqual(args.path, "board-a/todo")
-        self.assertEqual(args.assignee, "philip")
+        self.assertEqual(args.assigned_to, "philip")
         self.assertEqual(args.priority, "high")
         self.assertEqual(args.tags, ["bug", "urgent"])
         self.assertEqual(args.sort, "created-at")
@@ -173,7 +173,7 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
             "task",
             "create",
             "board-a/todo/fix-parser",
-            "--assignee",
+            "--assigned-to",
             "philip",
             "--priority",
             "medium",
@@ -185,7 +185,7 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
             "philip",
         ])
         self.assertEqual(args.path, "board-a/todo/fix-parser")
-        self.assertEqual(args.assignee, "philip")
+        self.assertEqual(args.assigned_to, "philip")
         self.assertEqual(args.priority, "medium")
         self.assertEqual(args.tags, ["cli"])
         self.assertEqual(args.due_date, "2026-06-15")
@@ -203,7 +203,7 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
             "task",
             "update",
             "board-a/todo/fix-parser",
-            "--assignee",
+            "--assigned-to",
             "philip",
             "--priority",
             "medium",
@@ -215,7 +215,7 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
             "philip",
         ])
         self.assertEqual(args.path, "board-a/todo/fix-parser")
-        self.assertEqual(args.assignee, "philip")
+        self.assertEqual(args.assigned_to, "philip")
         self.assertEqual(args.priority, "medium")
         self.assertEqual(args.tags, ["cli"])
         self.assertEqual(args.due_date, "2026-06-16")

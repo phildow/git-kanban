@@ -25,7 +25,7 @@ def _task(
     board: str = "main",
     column: str = "todo",
     *,
-    assignee: str | None = None,
+    assigned_to: str | None = None,
     priority: str | None = None,
     tags: list[str] | None = None,
     due_date: datetime | None = None,
@@ -38,7 +38,7 @@ def _task(
         slug=slug,
         board=board,
         column=column,
-        assignee=assignee,
+        assigned_to=assigned_to,
         priority=priority,
         tags=tags or [],
         due_date=due_date,
@@ -61,17 +61,17 @@ class TestKanbanServiceGetTasksFilter(unittest.TestCase):
         self.svc.create_board("main", columns=["todo", "done"])
 
         self.t1 = self.repo.create_task(
-            _task("Fix login bug", assignee="alice", priority="high",
+            _task("Fix login bug", assigned_to="alice", priority="high",
                   tags=["bug"], due_date=_SOON, created_by="carol"),
             "fix-login-bug",
         )
         self.t2 = self.repo.create_task(
-            _task("Write API docs", assignee="bob", priority="low",
+            _task("Write API docs", assigned_to="bob", priority="low",
                   tags=["docs"], due_date=_LATER, created_by="dave"),
             "write-api-docs",
         )
         self.t3 = self.repo.create_task(
-            _task("Add rate limiting", assignee="alice", priority="high",
+            _task("Add rate limiting", assigned_to="alice", priority="high",
                   tags=["bug", "auth"], due_date=_SOON, created_by="carol"),
             "add-rate-limiting",
         )
@@ -81,9 +81,9 @@ class TestKanbanServiceGetTasksFilter(unittest.TestCase):
         tasks = self.svc.get_tasks(path="/main", filter=TaskFilter(), sort=None)
         self.assertEqual({t.id for t in tasks}, {self.t1.id, self.t2.id, self.t3.id})
 
-    def test_filter_by_assignee(self) -> None:
-        """assignee narrows to tasks assigned to that user."""
-        tasks = self.svc.get_tasks(path="/main", filter=TaskFilter(assignee="alice"), sort=None)
+    def test_filter_by_assigned_to(self) -> None:
+        """assigned_to narrows to tasks assigned to that user."""
+        tasks = self.svc.get_tasks(path="/main", filter=TaskFilter(assigned_to="alice"), sort=None)
         self.assertEqual({t.id for t in tasks}, {self.t1.id, self.t3.id})
 
     def test_filter_by_priority(self) -> None:
@@ -132,20 +132,20 @@ class TestKanbanServiceGetTasksFilter(unittest.TestCase):
 
     def test_combined_filter(self) -> None:
         """Multiple criteria are ANDed together."""
-        f = TaskFilter(assignee="alice", priority="high", tags=["auth"])
+        f = TaskFilter(assigned_to="alice", priority="high", tags=["auth"])
         tasks = self.svc.get_tasks(path="/main", filter=f, sort=None)
         self.assertEqual([t.id for t in tasks], [self.t3.id])
 
     def test_filter_with_no_matches_returns_empty(self) -> None:
         """A filter that matches nothing returns an empty list."""
-        tasks = self.svc.get_tasks(path="/main", filter=TaskFilter(assignee="nobody"), sort=None)
+        tasks = self.svc.get_tasks(path="/main", filter=TaskFilter(assigned_to="nobody"), sort=None)
         self.assertEqual(tasks, [])
 
     def test_filter_applied_before_sort(self) -> None:
         """Filtered tasks are sorted correctly."""
         tasks = self.svc.get_tasks(
             path="/main",
-            filter=TaskFilter(assignee="alice"),
+            filter=TaskFilter(assigned_to="alice"),
             sort="title",
         )
         self.assertEqual([t.title for t in tasks], ["Add rate limiting", "Fix login bug"])
@@ -166,7 +166,7 @@ class TestKanbanServiceGetTasksFilterNullValues(unittest.TestCase):
         self.svc.create_board("main", columns=["todo"])
 
         self.with_values = self.repo.create_task(
-            _task("Has everything", assignee="alice", priority="high",
+            _task("Has everything", assigned_to="alice", priority="high",
                   tags=["bug"], due_date=_SOON, created_by="carol"),
             "has-everything",
         )
@@ -178,9 +178,9 @@ class TestKanbanServiceGetTasksFilterNullValues(unittest.TestCase):
     def _ids(self, tasks) -> set:
         return {t.id for t in tasks}
 
-    def test_null_assignee_excluded_by_assignee_filter(self) -> None:
-        """Task with no assignee is not returned when filtering by assignee."""
-        tasks = self.svc.get_tasks(path="/main", filter=TaskFilter(assignee="alice"), sort=None)
+    def test_null_assigned_to_excluded_by_assigned_to_filter(self) -> None:
+        """Task with no assigned_to is not returned when filtering by assigned_to."""
+        tasks = self.svc.get_tasks(path="/main", filter=TaskFilter(assigned_to="alice"), sort=None)
         self.assertIn(self.with_values.id, self._ids(tasks))
         self.assertNotIn(self.no_values.id, self._ids(tasks))
 

@@ -20,7 +20,7 @@ def _build_task_filter(args: argparse.Namespace) -> TaskFilter:
         return datetime.strptime(s, "%Y-%m-%d").replace(tzinfo=timezone.utc) if s else None
 
     return TaskFilter(
-        assignee=getattr(args, "assignee", None),
+        assigned_to=getattr(args, "assigned_to", None),
         priority=getattr(args, "priority", None),
         tags=getattr(args, "tags", None) or [],
         due_before=_parse_date(getattr(args, "due_before", None)),

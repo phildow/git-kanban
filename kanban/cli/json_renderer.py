@@ -28,7 +28,7 @@ def _task_dict(task: Task) -> dict:
         "slug": task.slug,
         "board": task.board,
         "column": task.column,
-        "assignee": task.assignee,
+        "assigned_to": task.assigned_to,
         "priority": task.priority,
         "due_date": task.due_date.isoformat() if task.due_date else None,
         "tags": task.tags,

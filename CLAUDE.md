@@ -240,7 +240,7 @@ id: a3f9c2d1-8b4e-4f2a-9c1d-3e7f8a2b5c6d
 title: Fix login bug
 slug: fix-login-bug
 created_by: mark
-assignee: alice
+assigned_to: alice
 priority: high
 due_date: 2026-06-20
 tags: [bug, auth]
@@ -276,7 +276,7 @@ kanban task list <board>[/<column>]
     [--format <table|plain|json>]
     [--sort <title|priority|due-date|created-at|updated-at|created-by|<column>]
     [--reverse]
-    [--assignee <name>]
+    [--assigned-to <name>]
     [--priority <low|medium|high>]
     [--tag <tag>]
     [--due-before <date>]
@@ -284,14 +284,14 @@ kanban task list <board>[/<column>]
     [--created-by <name>]
 
 kanban task create <board>/<column>/<title>
-    [--assignee <name>]
+    [--assigned-to <name>]
     [--priority <low|medium|high>]
     [--tag <tag>]
     [--due-date <date>]
     [--created-by <name>]
 
 kanban task update <board>/<column>/<title>
-    [--assignee <name>]
+    [--assigned-to <name>]
     [--priority <low|medium|high>]
     [--tag <tag>]
     [--due-date <date>]
@@ -307,7 +307,7 @@ kanban search <query>
     [--board <board>]
     [--sort <title|priority|due-date|created-at|updated-at|created-by>|<column>]
     [--reverse]
-    [--assignee <name>]
+    [--assigned-to <name>]
     [--priority <low|medium|high>]
     [--tag <tag>]
     [--due-before <date>]
@@ -418,7 +418,7 @@ kanban (/my-project/todo)> ls
   1. Fix login bug         [high]  alice    due 2026-06-20
   2. Write API docs        [med]   bob      due 2026-06-25
 
-kanban (/my-project/todo)> new task "Add rate limiting" --priority high --assignee alice
+kanban (/my-project/todo)> new task "Add rate limiting" --priority high --assigned-to alice
 Created: Add rate limiting [a3f9c2d1]
 
 kanban (/my-project/todo)> mv "Add rate limiting" in-progress
@@ -426,7 +426,7 @@ Moved to: my-project/in-progress
 
 kanban (/my-project/todo)> history
   task list
-  task create "Add rate limiting" --priority high --assignee alice
+  task create "Add rate limiting" --priority high --assigned-to alice
   task move "Add rate limiting" in-progress
 
 kanban (/my-project/todo)> quit

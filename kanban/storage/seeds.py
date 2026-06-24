@@ -7,23 +7,23 @@ from typing import TypedDict
 
 class BootstrapSeed(TypedDict, total=False):
     """A single task entry in a bootstrap column. title and slug are required."""
-    title: str       # required
-    slug: str        # required
-    priority: str
-    assignee: str
-    body: str
+    title:       str       # required
+    slug:        str        # required
+    priority:    str
+    assigned_to: str
+    body:        str
 
 
 class BootstrapColumn(TypedDict, total=False):
     """A column entry in a bootstrap board. name and slug are required."""
-    name: str        # required
-    slug: str        # required
-    tasks: list[BootstrapSeed]
+    name:   str        # required
+    slug:   str        # required
+    tasks:  list[BootstrapSeed]
 
 
 class BootstrapConfig(TypedDict, total=False):
     """Full configuration for bootstrapping a new repository."""
-    boards: list[dict]
+    boards:      list[dict]
     usercontext: dict[str, str]
 
 
@@ -59,7 +59,7 @@ BOOTSTRAP_CONFIG: BootstrapConfig = {
                             "body": (
                                 "Create a task in the current column with `new task`:\n\n"
                                 '    new task "Fix the login bug"\n'
-                                '    new task "Write API docs" --priority High --assignee Alice'
+                                '    new task "Write API docs" --priority High --assigned-to Alice'
                             ),
                         },
                         {
@@ -81,10 +81,10 @@ BOOTSTRAP_CONFIG: BootstrapConfig = {
                             "title": "Update a task with details",
                             "slug": "update-a-task-with-details",
                             "priority": "High",
-                            "assignee": "Alice",
+                            "assigned_to": "Alice",
                             "body": (
                                 "Update a task's metadata with `update`:\n\n"
-                                '    update "update a task with details" --priority Medium --assignee Bob\n'
+                                '    update "update a task with details" --priority Medium --assigned-to Bob\n'
                                 '    update "update a task with details" --tag Bug --due-date 2026-07-01'
                             ),
                         },

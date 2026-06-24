@@ -337,7 +337,7 @@ class KanbanRepository(ABC):
     @abstractmethod
     def update_task(self, task: Task) -> Task:
         """
-        Overwrite an existing task's mutable fields (title, assignee,
+        Overwrite an existing task's mutable fields (title, assigned_to,
         priority, due_date, tags, body) and return the updated Task.
 
         Locates the task by `task.id`. If the title has changed, the

@@ -136,9 +136,8 @@ def handle_column_reorder(args: argparse.Namespace, svc: KanbanService, renderer
 # ---------------------------------------------------------------------------
 
 def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	# TODO - why can't I use args.assignee directly here? Is it because it's an optional argument on the parser?
 	params = TaskCreateParams(
-		assignee=getattr(args, "assignee", None),
+		assigned_to=getattr(args, "assigned_to", None),
 		priority=getattr(args, "priority", None),
 		tags=getattr(args, "tags", None) or [],
 		due_date=getattr(args, "due_date", None),
@@ -162,7 +161,7 @@ def handle_task_edit(args: argparse.Namespace, svc: KanbanService, renderer: obj
 def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	updates = TaskUpdateParams(
 		title=getattr(args, "title", None),
-		assignee=getattr(args, "assignee", None),
+		assigned_to=getattr(args, "assigned_to", None),
 		priority=getattr(args, "priority", None),
 		tags=getattr(args, "tags", None),
 		due_date=getattr(args, "due_date", None),

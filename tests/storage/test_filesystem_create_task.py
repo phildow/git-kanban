@@ -131,15 +131,15 @@ class TestFilesystemCreateTask(unittest.TestCase):
         self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
         self.assertNotIn("priority", self._frontmatter("alpha"))
 
-    def test_assignee_written_when_set(self) -> None:
-        """assignee appears in frontmatter when supplied."""
-        self.repo.create_task(self._task("Alpha", "alpha", assignee="alice"), "alpha")
-        self.assertEqual(self._frontmatter("alpha")["assignee"], "alice")
+    def test_assigned_to_written_when_set(self) -> None:
+        """assigned_to appears in frontmatter when supplied."""
+        self.repo.create_task(self._task("Alpha", "alpha", assigned_to="alice"), "alpha")
+        self.assertEqual(self._frontmatter("alpha")["assigned_to"], "alice")
 
-    def test_assignee_absent_when_not_set(self) -> None:
-        """assignee is omitted from frontmatter when not supplied."""
+    def test_assigned_to_absent_when_not_set(self) -> None:
+        """assigned_to is omitted from frontmatter when not supplied."""
         self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
-        self.assertNotIn("assignee", self._frontmatter("alpha"))
+        self.assertNotIn("assigned_to", self._frontmatter("alpha"))
 
     def test_tags_written_when_set(self) -> None:
         """tags appears in frontmatter when supplied."""

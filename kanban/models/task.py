@@ -21,7 +21,7 @@ class Task:
     board: Optional[str] = None
     column: Optional[str] = None
     created_by: Optional[str] = None
-    assignee: Optional[str] = None
+    assigned_to: Optional[str] = None
     priority: Optional[str] = None
     due_date: Optional[datetime] = None
     tags: list[str] = field(default_factory=list)

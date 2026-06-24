@@ -242,16 +242,16 @@ class TestJsonRendererTasks(unittest.TestCase):
         """Optional fields are present in each task entry (may be null)."""
         out = _capture(lambda: self.r.render_task_list(_args(), [_task()]))
         entry = json.loads(out)[0]
-        for field in ("assignee", "priority", "due_date", "tags", "created_by"):
+        for field in ("assigned_to", "priority", "due_date", "tags", "created_by"):
             self.assertIn(field, entry)
 
     def test_task_list_optional_field_values(self) -> None:
         """Optional fields carry their values when set."""
         due = datetime(2026, 6, 30, tzinfo=timezone.utc)
-        t = _task(assignee="alice", priority="high", tags=["bug"], due_date=due, created_by="mark")
+        t = _task(assigned_to="alice", priority="high", tags=["bug"], due_date=due, created_by="mark")
         out = _capture(lambda: self.r.render_task_list(_args(), [t]))
         entry = json.loads(out)[0]
-        self.assertEqual(entry["assignee"], "alice")
+        self.assertEqual(entry["assigned_to"], "alice")
         self.assertEqual(entry["priority"], "high")
         self.assertEqual(entry["tags"], ["bug"])
         self.assertEqual(entry["created_by"], "mark")

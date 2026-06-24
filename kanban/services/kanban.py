@@ -22,20 +22,20 @@ from utils.str import kebab_case
 class TaskCreateParams:
     # TODO: the title is supplied by the path, but should it be included here
     # title:      str
-    assignee:   str | None = None
-    priority:   str | None = None
-    tags:       list[str] = field(default_factory=list)
-    due_date:   datetime | None = None
-    created_by: str | None = None
+    assigned_to: str | None = None
+    priority:    str | None = None
+    tags:        list[str] = field(default_factory=list)
+    due_date:    datetime | None = None
+    created_by:  str | None = None
 
 @dataclass
 class TaskUpdateParams:
-    title:      str | None = None
-    assignee:   str | None = None
-    priority:   str | None = None
-    tags:       list[str] | None = None
-    created_by: str | None = None
-    due_date:   datetime | None = None
+    title:       str | None = None
+    assigned_to: str | None = None
+    priority:    str | None = None
+    tags:        list[str] | None = None
+    created_by:  str | None = None
+    due_date:    datetime | None = None
 
 
 # ── Return types ──────────────────────────────────────────────────────────────
@@ -57,7 +57,7 @@ class KanbanStatus:
 
 def _task_matches_filter(task: Task, filter: TaskFilter) -> bool:
     """Return True if task satisfies all non-None criteria in filter."""
-    if filter.assignee is not None and task.assignee != filter.assignee:
+    if filter.assigned_to is not None and task.assigned_to != filter.assigned_to:
         return False
     if filter.priority is not None and task.priority != filter.priority:
         return False
@@ -175,7 +175,7 @@ class KanbanService:
                         board=board_name,
                         column=col_name,
                         priority=task_config.get("priority"),
-                        assignee=task_config.get("assignee"),
+                        assigned_to=task_config.get("assigned_to"),
                         body=task_config.get("body", ""),
                         created_at=now,
                         updated_at=now,
@@ -550,7 +550,7 @@ class KanbanService:
         if board is None or column is None or title is None:
             raise ValueError(f"No working board/column and no explicit path or title provided: {path}")
 
-        assignee: str | None
+        assigned_to: str | None
         priority: str | None
         tags: list[str]
         due_date: datetime | None
@@ -558,7 +558,7 @@ class KanbanService:
 
         # if params.title and params.title != title:
         #    raise ValueError("Task title in params does not match task path title")
-        assignee = params.assignee
+        assigned_to = params.assigned_to
         priority = params.priority
         tags = params.tags or []
         due_date = params.due_date
@@ -573,7 +573,7 @@ class KanbanService:
             slug=kebab_case(title),
             board=board,
             column=column,
-            assignee=assignee,
+            assigned_to=assigned_to,
             priority=priority,
             tags=tags,
             due_date=due_date,
@@ -672,8 +672,8 @@ class KanbanService:
         if updates.title and updates.title != task.title:
             task.title = updates.title
             task.slug = kebab_case(updates.title)
-        if updates.assignee is not None:
-            task.assignee = updates.assignee
+        if updates.assigned_to is not None:
+            task.assigned_to = updates.assigned_to
         if updates.priority is not None:
             task.priority = updates.priority
         if updates.tags is not None:
@@ -831,7 +831,7 @@ class KanbanService:
             f"title: {task.title}",
             f"board: {task.board or ''}",
             f"column: {task.column or ''}",
-            f"assignee: {task.assignee or ''}",
+            f"assigned_to: {task.assigned_to or ''}",
             f"priority: {task.priority or ''}",
             f"due_date: {due_date}",
             f"tags: {tags}",
@@ -867,7 +867,7 @@ class KanbanService:
         body = "\n".join(lines[end_idx + 1:]).strip("\n")
 
         title = frontmatter.get("title", original.title).strip() or original.title
-        assignee = frontmatter.get("assignee", "") or None
+        assigned_to = frontmatter.get("assigned_to", "") or None
         priority = frontmatter.get("priority", "") or None
         created_by = frontmatter.get("created_by", "") or None
 
@@ -886,7 +886,7 @@ class KanbanService:
             board=original.board,
             column=original.column,
             created_by=created_by,
-            assignee=assignee,
+            assigned_to=assigned_to,
             priority=priority,
             due_date=due_date,
             tags=tags,

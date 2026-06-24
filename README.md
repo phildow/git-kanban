@@ -60,17 +60,17 @@ Run:
 
 0.5 - Complete filesystem
 
+- CHORE: Add a UUID to the column and board metadata
+
 - BUG: raise a services domain error if you rename to the same name
 - CHORE: special camel case for To Do -> todo not to-do
 - CHORE: remove default columns from the service layer
-- CHORE: Add a UUID to the column and board metadata
 - BUG: rename column double appending board
 
-- FEAT: consider case-conversion package for unicode compatible kebab casing
+- FEAT: consider case-conversion package for unicode compatible kebab casing (pycases)
 - FEAT: kebab_case preserves accented characters
 
 - FEAT: Add assign command to assign a task to a person
-- CHORE: Rename assignee assigned-to? (at least in the interface)
 
 - Add documentation explaining the move only moves task from one column to another
 - Add documentation explaining that names and titles are always slugged for the filesystem, that
@@ -146,8 +146,8 @@ CONFIG
     - eg `name=philip`
 - Allow the user to set their preferred editor?
 - Allow the user to decide what columns are shown for a given terminal size when listing tasks
-    - eg `task-cols:80=title,assignee,tags`
-    - eg `task-cols:96=title,assignee,tags,due`
+    - eg `task-cols:80=title,assigned-to,tags`
+    - eg `task-cols:96=title,assigned-to,tags,due`
 - Allowe the user to customize the default column names
 
 - Once we have file storage `kanban init` this directory and start storing tasks here (dogfood) ~ almost there!

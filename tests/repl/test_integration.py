@@ -266,7 +266,7 @@ class TestReplCreate(_InitializedReplBase):
         self.repo.create_column("proj", "todo")
         self.run_repl(
             "create", "task", "proj/todo/new-task",
-            "--assignee", "alice",
+            "--assigned-to", "alice",
             "--priority", "high",
             "--tag", "bug",
             "--due-date", "2026-12-31",
@@ -280,14 +280,14 @@ class TestReplCreate(_InitializedReplBase):
         self.repo.create_column("proj", "todo")
         self.run_repl(
             "create", "task", "proj/todo/new-task",
-            "--assignee", "alice",
+            "--assigned-to", "alice",
             "--priority", "high",
             "--tag", "bug",
             "--due-date", "2026-12-31",
             "--created-by", "mark",
         )
         fm = self._read_frontmatter("proj", "todo", "new-task")
-        self.assertEqual(fm.get("assignee"), "alice")
+        self.assertEqual(fm.get("assigned_to"), "alice")
         self.assertEqual(fm.get("priority"), "high")
         self.assertEqual(fm.get("created_by"), "mark")
         self.assertEqual(fm.get("due_date"), _iso("2026-12-31"))
@@ -379,10 +379,10 @@ class TestReplList(_InitializedReplBase):
         out = self.run_repl("list", "proj/todo", "-l")
         self.assertTrue(out.strip())
 
-    def test_list_filter_assignee(self) -> None:
-        """list --assignee filters to matching tasks."""
-        self.svc.create_task("proj/todo/task-a", TaskCreateParams(assignee="alice"))
-        out = self.run_repl("list", "proj/todo", "--assignee", "alice")
+    def test_list_filter_assigned_to(self) -> None:
+        """list --assigned-to filters to matching tasks."""
+        self.svc.create_task("proj/todo/task-a", TaskCreateParams(assigned_to="alice"))
+        out = self.run_repl("list", "proj/todo", "--assigned-to", "alice")
         self.assertIn("task-a", out)
         self.assertNotIn("fix-login", out)
 
@@ -580,11 +580,11 @@ class TestReplUpdate(_InitializedReplBase):
         self.repo.create_column("proj", "todo")
         self.svc.create_task("proj/todo/fix-login", TaskCreateParams())
 
-    def test_update_task_writes_assignee_to_file(self) -> None:
-        """update task --assignee persists the assignee to the markdown file."""
-        self.run_repl("update", "task", "proj/todo/fix-login", "--assignee", "alice")
+    def test_update_task_writes_assigned_to_to_file(self) -> None:
+        """update task --assigned-to persists the assigned_to to the markdown file."""
+        self.run_repl("update", "task", "proj/todo/fix-login", "--assigned-to", "alice")
         fm = self._read_frontmatter("proj", "todo", "fix-login")
-        self.assertEqual(fm.get("assignee"), "alice")
+        self.assertEqual(fm.get("assigned_to"), "alice")
 
     def test_update_task_writes_priority_to_file(self) -> None:
         """update task --priority persists the priority to the markdown file."""
@@ -609,21 +609,21 @@ class TestReplUpdate(_InitializedReplBase):
     def test_update_task_produces_output(self) -> None:
         """update task prints something."""
         out = self.run_repl("update", "task", "proj/todo/fix-login",
-                            "--assignee", "alice")
+                            "--assigned-to", "alice")
         self.assertTrue(out.strip())
 
     def test_update_task_with_all_fields(self) -> None:
         """update task with every optional field persists all values."""
         self.run_repl(
             "update", "task", "proj/todo/fix-login",
-            "--assignee", "bob",
+            "--assigned-to", "bob",
             "--priority", "low",
             "--tag", "refactor",
             "--created-by", "mark",
             "--due-date", "2025-01-01",
         )
         fm = self._read_frontmatter("proj", "todo", "fix-login")
-        self.assertEqual(fm.get("assignee"), "bob")
+        self.assertEqual(fm.get("assigned_to"), "bob")
         self.assertEqual(fm.get("priority"), "low")
         self.assertEqual(fm.get("tags"), "[refactor]")
         self.assertEqual(fm.get("due_date"), _iso("2025-01-01"))

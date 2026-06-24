@@ -94,7 +94,7 @@ class TestFilesystemUpdateTask(unittest.TestCase):
     def test_title_unchanged_in_frontmatter(self) -> None:
         """The title in the frontmatter is unchanged when only other fields are updated."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
-        task.assignee = "alice"
+        task.assigned_to = "alice"
         self.repo.update_task(task)
         self.assertEqual(self._frontmatter("alpha")["title"], "Alpha")
 
@@ -108,7 +108,7 @@ class TestFilesystemUpdateTask(unittest.TestCase):
     def test_slug_unchanged_in_frontmatter(self) -> None:
         """The slug in the frontmatter is unchanged when the title does not change."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
-        task.assignee = "alice"
+        task.assigned_to = "alice"
         self.repo.update_task(task)
         self.assertEqual(self._frontmatter("alpha")["slug"], "alpha")
 
@@ -129,12 +129,12 @@ class TestFilesystemUpdateTask(unittest.TestCase):
     # Optional frontmatter fields — written when set
     # ------------------------------------------------------------------
 
-    def test_assignee_written_to_frontmatter(self) -> None:
-        """assignee appears in frontmatter after being set on update."""
+    def test_assigned_to_written_to_frontmatter(self) -> None:
+        """assigned_to appears in frontmatter after being set on update."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
-        task.assignee = "alice"
+        task.assigned_to = "alice"
         self.repo.update_task(task)
-        self.assertEqual(self._frontmatter("alpha")["assignee"], "alice")
+        self.assertEqual(self._frontmatter("alpha")["assigned_to"], "alice")
 
     def test_priority_written_to_frontmatter(self) -> None:
         """priority appears in frontmatter after being set on update."""
@@ -168,12 +168,12 @@ class TestFilesystemUpdateTask(unittest.TestCase):
     # Optional frontmatter fields — absent when cleared
     # ------------------------------------------------------------------
 
-    def test_assignee_absent_when_cleared(self) -> None:
-        """assignee is omitted from frontmatter when set to None on update."""
-        task = self.repo.create_task(self._task("Alpha", "alpha", assignee="alice"), "alpha")
-        task.assignee = None
+    def test_assigned_to_absent_when_cleared(self) -> None:
+        """assigned_to is omitted from frontmatter when set to None on update."""
+        task = self.repo.create_task(self._task("Alpha", "alpha", assigned_to="alice"), "alpha")
+        task.assigned_to = None
         self.repo.update_task(task)
-        self.assertNotIn("assignee", self._frontmatter("alpha"))
+        self.assertNotIn("assigned_to", self._frontmatter("alpha"))
 
     def test_priority_absent_when_cleared(self) -> None:
         """priority is omitted from frontmatter when set to None on update."""
@@ -211,7 +211,7 @@ class TestFilesystemUpdateTask(unittest.TestCase):
     def test_board_not_in_frontmatter_after_update(self) -> None:
         """The task's board is not written to the frontmatter on update."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
-        task.assignee = "alice"
+        task.assigned_to = "alice"
         self.repo.update_task(task)
         fm = self._frontmatter("alpha")
         self.assertNotIn("board", fm)
@@ -219,7 +219,7 @@ class TestFilesystemUpdateTask(unittest.TestCase):
     def test_column_not_in_frontmatter_after_update(self) -> None:
         """The task's column is not written to the frontmatter on update."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
-        task.assignee = "alice"
+        task.assigned_to = "alice"
         self.repo.update_task(task)
         fm = self._frontmatter("alpha")
         self.assertNotIn("column", fm)
@@ -294,13 +294,13 @@ class TestFilesystemUpdateTask(unittest.TestCase):
     # ------------------------------------------------------------------
 
     def test_mutable_fields_written(self) -> None:
-        """Assignee, priority, and tags are reflected in the frontmatter after update."""
+        """Assigned_to, priority, and tags are reflected in the frontmatter after update."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
-        task.assignee = "alice"
+        task.assigned_to = "alice"
         task.priority = "high"
         task.tags = ["bug", "auth"]
         updated = self.repo.update_task(task)
-        self.assertEqual(updated.assignee, "alice")
+        self.assertEqual(updated.assigned_to, "alice")
         self.assertEqual(updated.priority, "high")
         self.assertEqual(updated.tags, ["bug", "auth"])
 
