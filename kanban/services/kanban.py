@@ -477,6 +477,9 @@ class KanbanService:
 
     # ── Tasks ─────────────────────────────────────────────────────────────────
 
+    # TODO: get_boards and get_columns take names not paths why is get_tasks different?  
+    # Should it take a path or a board/column pair?  If it takes a path, should it be able to take a task path and return just that task?
+
     def get_tasks(
         self,
         path:    str | None = None,
