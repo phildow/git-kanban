@@ -113,13 +113,6 @@ def _build_fixture_parser() -> argparse.ArgumentParser:
 
 
 @dataclass(frozen=True)
-class _Named:
-    """Minimal stand-in for Board/Column with a `.name` attribute."""
-
-    name: str
-
-
-@dataclass(frozen=True)
 class _Slugged:
     """Minimal stand-in for Board/Column with a `.slug` attribute."""
 
@@ -175,8 +168,8 @@ class FakeKanbanService:
     def get_boards(self) -> list[_Slugged]:
         return [_Slugged(slug) for slug in self._BOARDS]
 
-    def get_columns(self, board: str) -> list[_Named]:
-        return [_Named(name) for name in self._BOARDS[board]]
+    def get_columns(self, board: str) -> list[_Slugged]:
+        return [_Slugged(slug) for slug in self._BOARDS[board]]
 
     def get_tasks(self, path: str | None = None) -> list[_Task]:
         board, column, _ = self.path_components(path)

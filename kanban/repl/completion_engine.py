@@ -39,12 +39,6 @@ from typing import Protocol
 PATH_LIKE_DESTS = frozenset({"path", "dest"})
 
 
-class Named(Protocol):
-    """An object completion can read a display name from."""
-
-    name: str
-
-
 class Sluggable(Protocol):
     """A task-like object completion can read a filename slug from."""
 
@@ -62,7 +56,7 @@ class CompletionDataSource(Protocol):
     def get_boards(self) -> list[Sluggable]:
         ...
 
-    def get_columns(self, board: str) -> list[Named]:
+    def get_columns(self, board: str) -> list[Sluggable]:
         ...
 
     def get_tasks(self, path: str | None = None) -> list[Sluggable]:
@@ -249,7 +243,7 @@ class CompletionEngine:
             if self._service.working_board is None:
                 return []
             return self._matching(
-                [c.name for c in self._service.get_columns(self._service.working_board)], partial
+                [c.slug for c in self._service.get_columns(self._service.working_board)], partial
             )
         return []  # free text: no suggestions
 
@@ -317,7 +311,7 @@ class CompletionEngine:
             names = [b.slug for b in self._service.get_boards()]
             suffix = "/"
         elif column is None:
-            names = [c.name for c in self._service.get_columns(board)]
+            names = [c.slug for c in self._service.get_columns(board)]
             suffix = "/"
         else:
             names = [t.slug for t in self._service.get_tasks(f"/{board}/{column}")]
