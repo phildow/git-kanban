@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
 from pathlib import Path
-from typing import Optional
 from uuid import UUID
 
 from models.column import Column
+from models.slug import Slug
 
 @dataclass
 class Board:
@@ -14,17 +13,17 @@ class Board:
     
     id:   UUID
     name: str
-    slug: str
+    slug: Slug
+
+    column_count: int = 0
+    task_count: int = 0
+
+    # created_at: datetime | None = None
+    # created_by: str | None = None
 
     # TODO: remove this: a core principle is that we do not cache filesystem state in memory
     #       or it should be a list of strings, not Column objects
     columns: list[Column] = field(default_factory=list)
-    
-    column_count: int = 0
-    task_count: int = 0
-
-    # Do I want to include created_at and created_by here? 
-    # Maybe not since boards are more about organization than workflow?
 
     @property
     def filename(self) -> str:

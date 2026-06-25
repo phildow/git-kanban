@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
 from pathlib import Path
-from typing import Optional
 from uuid import UUID
 
+from models.slug import Slug
 
 @dataclass
 class Column:
@@ -17,9 +16,10 @@ class Column:
 
     id:         UUID
     name:       str
-    slug:       str
-    board:      str
+    slug:       Slug
+    board:      Slug
     position:   int
+    
     task_count: int = 0
 
     @property
@@ -28,5 +28,5 @@ class Column:
 
     @property
     def path(self) -> Path:
-        return Path(self.slug)
+        return Path(f"/{self.board}/{self.slug}")
     
