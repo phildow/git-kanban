@@ -60,49 +60,49 @@ Run:
 
 0.5 - Complete filesystem
 
-- TEST: create board, column, and task names with spaces
 - CHORE: remove default columns from the service layer
+- CHORE: special camel case for To Do -> todo not to-do
+- CHORE: add utilty to filter for invisible files
+- BUG: default "To Do" slug -> todo
+- BUG: getting tasks sets the board and column to the name not the slug (include name fields) - or use helper to get name from slug
 
-- FEAT: add mutually exlusive argument to move command to move to top or bottom: --top | --bottom | board
+- TEST: Check init error handling, don't overwrite a repo, don't initialize a repo that's already been created
+- BUG: `kanban (/) > ls main -al` returns an error probably a mutually exlusive argument `kanban (/) >`
+- FEAT: add mutually exlusive argument to move command to move to top or bottom: column | --top | --bottom | --up | --down
 - BUG: raise a services domain error if you rename to the same name
 - BUG: rename column double appending board
+- TEST: make sure repl gives recoverable error message
+- BUG: handle path errors better
 
-- CHORE: special camel case for To Do -> todo not to-do
 - FEAT: consider case-conversion package for unicode compatible kebab casing (pycases)
 - FEAT: kebab_case preserves accented characters
+
+- Once we have file storage `kanban init` this directory and start storing tasks here (dogfood) ~ almost there!
 
 ~
 
 0.6: Complete in memory store 
 
 - Ensure memory store supports same features as filesystem (ordering)
-- Handle special characters in slugs
+- CHORE: Use slugs in memory repository for private indexing (add tests)
+- FEAT: ooo the shell will make as few as two columns
+- FEAT: add csv export
+
+- FEAT: Add comments to a task which are just appended to the body
+    - CLI: `task comment <board/column/task> <comment>`
+    - REPL: `comment <task> <comment>`
+    - Need to note who left it
 
 ~
 
-
-- FEAT: think about how move should work, for example should the dest allow it to rename, or is it more natural to just give it a column
-        and use rename to rename a task, although that breaks mv dynamics (or require a mutal flag)
-        and if the dest for move is a column or board/column then autocomplet has to take that into account
-- BUG: handle path errors better
-
-- TEST: Check init error handling, don't overwrite a repo, don't initialize a repo that's already been created
-
-- FEAT: add csv export
 - FEAT: add closed_at metadata to a Task
-- FEAT: config: default boards that automatically set the closed_at value: None until moved to done or archived if None
-
-- TEST: make sure repl gives recoverable error messages
-
-- BUG: `kanban (/) > ls main -al` returns an error probably a mutually exlusive argument `kanban (/) >`
+- FEAT: config: default boards that automatically set the closed_at value: None until moved to done or archived if Nones
 
 - FEAT: give the user the option to bootstrap from the repl
 - CLAUDE: note that models are lightweight and do not include relationships, where they reference other entities they reference them by name only, always call a service layer method to get a fully qualified object
 
 - CHORE: always pass the path to get_tasks not a reconstructed path
 - CHORE: basic refactoring to use exists methods in the filesystem, i'm sure there's more
-- CHORE: add utilty to filter for invisible files, which is used extensively in the filesystem repo
-- CHORE: Use slugs in memory repository for private indexing (add tests)
 
 POTENTIAL INCONSISTENCY
 
@@ -115,20 +115,14 @@ POTENTIAL INCONSISTENCY
 -   Filesystem -> cache | metadata
 -   Filesystme <-> git
 
-- FEAT: implement user sort order for columns
-- FEAT: implement user sort order for tasks
-
-- FEAT: bump command to move a board or task to the front
-    - => think of the equivalent interaction for the TUI
-    - => press m to move and then the arrows keys to move up/down between boards, shift key to top/bottom
-    - => Use of proper names instead of slugs (filenames)
-    - => 
+INDEXING
 
 - FEAT: tab completion for assigness and tags
-- FEAT: ooo the shell will make as few as two columns
-- FEAT: Add comments to a task which are just appended to the body
 
-- CHORE: Models return a path?
+TUI
+
+- FEAT: implement user sort order for columns
+- FEAT: implement user sort order for tasks
 
 CONFIG
 
@@ -141,10 +135,7 @@ CONFIG
 - Allow the user to decide what columns are shown for a given terminal size when listing tasks
     - eg `task-cols:80=title,assigned-to,tags`
     - eg `task-cols:96=title,assigned-to,tags,due`
-- Allowe the user to customize the default column names
-
-- Once we have file storage `kanban init` this directory and start storing tasks here (dogfood) ~ almost there!
-- Which takes us to git integration
+- Allow the user to customize the default column names
 
 VERSION 1.1
 

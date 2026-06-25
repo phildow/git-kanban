@@ -39,36 +39,50 @@ A description of the architecture follows. Each layer interacts only with the la
 ```
 CLI | REPL | TUI
   ↓
-KanbanService (coordinating facade)
-  ↓
-  ↓ -> Domain Services
+Kanban Service (coordinating facade)
+  ↓      ↓
+  ↓   Domain Services
   ↓      ↓
 Repositories (ABC)
   ↓
 Storage (filesystem + SQLite) / Git
 ```
 
+An individual layer can be broken down into more detail. For example the CLI looks like:
+
+```
+Parser
+  ↓
+Command Handler 
+  ↓      ↓
+  ↓   Renderer
+  ↓
+Kanban Service
+```
+
+Once again each layer only interacts with the layers below it.
+
 ### The Filesystem is the Source of Truth
 
-The filesystem is the single source of truth. Layers do not cache results from the layer below them. (Data model objects do not model their relationships - or these aren't cached, ie only use names or paths). Every time the `KanbanService` needs data from a domain service or the respository, it asks for it. Every time a repository needs data from storage, it asks for it, which means querying the filesystem.
+The filesystem is the single source of truth. Layers do not cache results from the layer below them. Data model objects do not have access to the objects they contain or which contain them. Every time the `KanbanService` needs data from a domain service or the respository, it asks for it. Every time a repository needs data from storage, it asks for it, which means querying the filesystem.
 
-The index does cache data from the filesystem for search. It is updated by the `KanbanServie` after every interaction with the repository, read or write.
+The index does cache data from the filesystem for search. It is updated by the `KanbanService` after every interaction with the repository.
 
 **CLI Layer**
 
 - Handles terminal input/output and argument parsing only
-- Two consumers of the facade: a plain CLI for scriptable per-invocation commands, and an optional lightweight TUI subcommand (e.g. `kanban ui`)
+- Three consumers of the facade: a plain CLI for scriptable per-invocation commands, a REPL for interactive commands in a loop (e.g. `kanban repl`), and an optional lightweight TUI subcommand (e.g. `kanban tui`)
 
 **Coordinating Facade (KanbanService)**
 
-- Single object called by the CLI
-- Orchestrates across domain services, index, and git
+- Single object called by the CLI/REPL/TUI
+- Orchestrates across domain services, storage, the index, and git
 - Sequences operations, handles cross-domain validation, manages partial failure
 - Only orchestrates — never contains domain logic
 
 **Domain Services**
 
-- One class per domain: `BoardService`, `TaskService`, `SearchService`, `GitService`, `IndexService`
+- One class per domain: `BoardService`, `TaskService`, `SearchService`, `GitService`, `IndexService`. In practice the datamodel services are handled by the `KanbanService`.
 - Return rich domain dataclasses (`Task`, `Board`, `Column`) never formatted strings
 - Raise domain exceptions (`TaskNotFound`, `BoardAlreadyExists`) never storage exceptions
 - Never touch storage directly — call repository methods only
@@ -89,7 +103,7 @@ The index does cache data from the filesystem for search. It is updated by the `
 - Tasks = `.md` files
 - `pathlib` for all path and file operations
 - `shutil` for moves and recursive deletes
-- `python-frontmatter` for parsing markdown files into domain dataclasses
+- `python-frontmatter` for parsing markdown files into domain dataclasses. In practice frontmatter is parsed manually.
 
 **Indexing**
 
@@ -108,58 +122,34 @@ The index does cache data from the filesystem for search. It is updated by the `
 For filesystem storage the directory layout has the following structure in the root project directory:
 
 ```
-project-root
+root-directory
 ├── .kanban
 │   ├── config
 │   ├── history
 │   └── index.db
 │   └── userdata
-└── .kanban-store
-    └── boards
-        ├── .metadata
-        └── main
-            ├── .metadata
-            ├── done
-            ├── in-progress
-            │   └── .metadata
-            │   └── go-for-a-bike-ride.md
-            ├── in-review
-            └── todo
-                └── .metadata
-                └── create-your-first-todo.md
-                └── try-making-another-board.md
+├── .kanban-store
+│   └── boards
+│       ├── .metadata
+│       ├── main
+│       │   ├── .metadata
+│       │   ├── todo
+│       │   │   └── .metadata
+│       │   │   └── complete-this-task.md
+│       │   │   └── and-this-task.md
+│       │   ├── in-progress
+│       │   │   └── .metadata.metadata
+│       │   ├── in-review
+│       │   │   └── .metadata.metadata
+│       │   └── done
+│       │       └── .metadata.metadata
+│       └── another-board
+│           ...
+└── project-files
+    ...
 ```
 
-```
-root-directory/
-  .kanban/
-    config
-    history
-    index.db
-    userdata
-  .kanban-store/
-    boards/
-      .metadata
-      my-project/
-        .metadata
-        todo/
-          .metadata
-          complete-this-task.md
-          also-thistask.md
-        in-progress/
-        in-review/
-        done/
-      ops/
-        .metadata
-        backlog/
-        todo/
-        in-progress/
-        done/
-  project-files/
-  ...
-```
-
-`.kanban/` contains local machine state (config, cache) that should probably never be committed at all, while  `.kanban-store/` contains the shared board state that git is tracking. Information about boards and columnts that is not stored in the files themselves, such as their original names and sort order, is kept in a `.metadata` INI file local to each folder.
+`.kanban/` contains local machine state (config, cache) that should not be commited to git, while  `.kanban-store/` contains the shared board state that git is tracking. Information about boards and columns that is not stored in the files themselves, such as their original names and sort order, is kept in a `.metadata` INI file local to each folder.
 
 ### Git
 
@@ -190,7 +180,8 @@ The kanban store includes a `userdata` INI file. It contains preferences specifi
 
 ```
 [user-context]
-  board = main
+    board = main
+    column = todo
 ```
 
 #### Boards
@@ -203,11 +194,11 @@ Board (singular) metadata is stored in a hidden `.metadata` extendend INI file i
 
 ```
 [columns]
-	order =
-		todo
-		in-progress
-		in-review
-		done
+    order =
+        todo
+        in-progress
+        in-review
+        done
 
 [fields]
   name="Main"
@@ -220,14 +211,14 @@ Columns metadata is stored in a hidden `.metadata` INI file in each column's dir
 
 ```
 [tasks]
-	order =
-		finish-git-kanban
-		go-for-a-bike-ride
-		have-a-cup-of-tea
+    order =
+        finish-git-kanban
+        go-for-a-bike-ride
+        have-a-cup-of-tea
 
 [fields]
-  name="To Do"
-  slug="todo"
+    name="To Do"
+    slug="todo"
 ```
 
 #### Task
@@ -251,6 +242,11 @@ updated_at: 2026-06-12T10:00:00Z
 # Descrtion  
   
 ...
+
+# Comments
+
+...
+
 ```
 
 ### The Data Model
@@ -259,7 +255,7 @@ There are three core types: the board, column, and task. A board contains column
 
 #### Identity
 
-There are three ways of identifying a board, column or task: by id, name, or slug.
+There are three ways of identifying a board, column, or task: by id, name, or slug.
 
 The `id` is the unique identifier. It is created once with the object, and it remains the same for the lifetime of the object. It is used when checking for changes made directly to the filesystem outside of the kanban application.
 
@@ -275,7 +271,7 @@ Because of its importance the slug is typed:
 Slug = NewType('Slug', str)
 ```
 
-The data model follows:
+The data model follows. Note the lightweight relationships between the types:
 
 #### The Board
 
@@ -312,9 +308,9 @@ class Task:
     id:             UUID
     title:          str
     slug:           str
-
     board:          Slug
     column:         Slug
+
     created_by:     str | None = None
     assigned_to:    str | None = None
     priority:       str | None = None
@@ -397,13 +393,6 @@ kanban config get <key>            # key: name
 #   --quiet
 ```
 
-The `[]` brackets indicate optional path components that are inferred from the user context or index search. Path resolution for all commands follows:
-
-1. Explicit path
-2. User context
-3. Index search (scoped to active board if set)
-4. Error on ambiguity
-
 ## The REPL
 
 The REPL is the Read-Evaulate-Print-Loop that runs the command line application in an interactive loop. By default the REPL uses a verb first command structure with a more limited vocabulary.
@@ -417,24 +406,30 @@ COMMAND
   cd               Set the active board and column
   board            Set the active board
   column           Set the active column
-  create (new, n)  Create a board, column, or task
-  list (ls)        List all boards, columns, or tasks in the current context or at a specified path
+  create           Create a board, column, or task
+  list             List all boards, columns, or tasks in the current context or at a specified path
   rename           Rename a board or column
-  delete (rm)      Delete a board, column, or task
-  reorder          Reorder columns or tasks
-  show (view)      Show task details
+  delete           Delete a board, column, or task
+  show             Show task details
   edit             Edit a task in the default editor
   update           Update a task
-  move (mv)        Move a task to another column or board
+  move             Move a task to another column or up/down in it its column
   config           List, get, or set configuration values
   search           Full-text search across tasks
   log              Show git log for a task or scope
   status           Show repository status summary
-  assign           Assign a task to someon
+  assign           Assign a task to someone
   
 options:
   -h, --help         Show this help message
 ```
+
+The `[]` brackets indicate optional path components that are inferred from the user context or index search. Path resolution for all commands follows:
+
+1. Explicit path
+2. User context
+3. Index search (scoped to active board if set)
+4. Error on ambiguity
 
 The following aliases are added by default. The user may remove them or define their own:
 
