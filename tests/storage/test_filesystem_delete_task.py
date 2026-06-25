@@ -68,7 +68,15 @@ class TestFilesystemDeleteTask(unittest.TestCase):
 
     def test_raises_for_unknown_task(self) -> None:
         """Raises TaskNotFound when no task with the given UUID exists."""
-        missing_task = Task(id=uuid4(), title="Missing", slug="missing", board="proj", column="todo", created_at=_now(), updated_at=_now())
+        missing_task = Task(
+            id=uuid4(), 
+            title="Missing",
+            slug="missing",
+            board="proj",
+            column="todo",
+            created_at=_now(),
+            updated_at=_now())
+            
         with self.assertRaises(TaskNotFound):
             self.repo.delete_task(missing_task)
 

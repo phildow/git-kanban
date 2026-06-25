@@ -21,9 +21,16 @@ class BootstrapColumn(TypedDict, total=False):
     tasks:  list[BootstrapSeed]
 
 
+class BootstrapBoard(TypedDict, total=False):
+    """A board entry in a bootstrap config. name and slug are required."""
+    name:    str        # required
+    slug:    str        # required
+    columns: list[BootstrapColumn]
+
+
 class BootstrapConfig(TypedDict, total=False):
     """Full configuration for bootstrapping a new repository."""
-    boards:      list[dict]
+    boards:      list[BootstrapBoard]
     usercontext: dict[str, str]
 
 

@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
+from models import TaskFilter
 from models import Task
 from storage.kanban import KanbanRepository
 
@@ -45,7 +46,7 @@ class IndexService:
         """Scaffold for removing a single task from the index cache."""
         _ = task
 
-    def search_tasks(self, query: str, filter: Optional[TaskFilter] = None) -> list[Task]:
+    def search_tasks(self, query: str, filter: TaskFilter | None = None) -> list[Task]:
         raise NotImplementedError()
 
     def get_state(self) -> IndexState:

@@ -10,7 +10,6 @@ import signal
 
 from argparse import Namespace
 from contextlib import contextmanager
-from pathlib import Path
 
 from repl.completion_engine import CompletionEngine
 from repl.parser import build_parser

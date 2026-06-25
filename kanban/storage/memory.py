@@ -4,11 +4,8 @@ from datetime import datetime, UTC
 from hashlib import new
 from os import name
 from pathlib import Path
-import random
-import re
 from uuid import UUID, uuid4
 
-from kanban.models import board
 from models import Slug, Task, Board, Column
 from storage.kanban import (
     KanbanRepository,

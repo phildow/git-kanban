@@ -6,7 +6,6 @@ Path arguments are explicit and fully specified by the caller.
 
 import argparse
 
-from repl.renderer import Renderer as REPLRenderer
 from cli.commands import (
     handle_board_create,
     handle_board_delete,
