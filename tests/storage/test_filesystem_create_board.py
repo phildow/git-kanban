@@ -33,7 +33,7 @@ class TestFilesystemCreateBoard(unittest.TestCase):
         board = self.repo.create_board("alpha")
         self.assertIsInstance(board, Board)
         self.assertEqual(board.name, "alpha")
-        self.assertEqual(board.columns, [])
+        self.assertEqual(board.column_count, 0)
 
     def test_writes_name_to_metadata(self) -> None:
         """Board name is written to the fields.name key in the board .metadata file."""

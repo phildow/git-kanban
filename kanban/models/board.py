@@ -21,15 +21,11 @@ class Board:
     # created_at: datetime | None = None
     # created_by: str | None = None
 
-    # TODO: remove this: a core principle is that we do not cache filesystem state in memory
-    #       or it should be a list of strings, not Column objects
-    columns: list[Column] = field(default_factory=list)
-
     @property
     def filename(self) -> str:
         return self.slug
 
     @property
     def path(self) -> Path:
-        return Path(self.slug)
+        return Path(f"/{self.slug}")
     

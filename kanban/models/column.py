@@ -28,5 +28,5 @@ class Column:
 
     @property
     def path(self) -> Path:
-        return Path(f"/{self.board}/{self.slug}")
+        return Path(f"{self.board}/{self.slug}")
     

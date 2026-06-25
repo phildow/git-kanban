@@ -50,8 +50,8 @@ def _task(**kwargs) -> Task:
     return Task(**defaults)
 
 
-def _board(name: str = "main", slug: str = "main", column_count: int = 4, id: UUID | None = None) -> Board:
-    return Board(id=id or uuid4(), name=name, slug=slug, columns=[object()] * column_count)
+def _board(name: str = "main", slug: str = "main", column_count: int = 4, task_count: int = 0, id: UUID | None = None) -> Board:
+    return Board(id=id or uuid4(), name=name, slug=slug, column_count=column_count, task_count=task_count)
 
 
 def _column(name: str = "todo", board: str = "main", position: int = 0, slug: str = "", id: UUID | None = None) -> Column:

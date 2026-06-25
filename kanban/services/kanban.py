@@ -351,7 +351,7 @@ class KanbanService:
         board = self.repository.create_board(board_name)
     
         columns = [self.repository.create_column(board.name, col) for col in columns]
-        board.columns = columns
+        board.column_count = len(columns)
 
         return board
 

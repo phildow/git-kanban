@@ -60,7 +60,7 @@ class TestFilesystemGetBoard(unittest.TestCase):
         """Returned Board has an empty columns list (columns loaded separately)."""
         self._make_board("alpha")
         board = self.repo.get_board("alpha")
-        self.assertEqual(board.columns, [])
+        self.assertEqual(board.column_count, 0)
 
 
 if __name__ == "__main__":

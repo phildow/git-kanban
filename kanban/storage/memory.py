@@ -21,7 +21,8 @@ from utils.str import kebab_case
 
 
 class InMemoryRepository(KanbanRepository):
-    """In-memory repository scaffold.
+    """
+    In-memory repository scaffold.
 
     Uses simple dict/list containers so behavior can be filled in incrementally
     without touching calling code.
@@ -30,6 +31,7 @@ class InMemoryRepository(KanbanRepository):
     def __init__(self, root: Path) -> None:
         super().__init__(root)
         self._boards: dict[str, Board] = {}
+        self._columns: dict[str, list[Column]] = {}
         self._tasks_by_id: dict[UUID, Task] = {}
         self._task_locations: dict[UUID, tuple[str, str]] = {}
         self._task_filenames: dict[UUID, str] = {}
@@ -90,6 +92,7 @@ class InMemoryRepository(KanbanRepository):
 
         board = Board(id=uuid, name=name, slug=slug)
         self._boards[name] = board
+        self._columns[name] = []
         return board
 
     def rename_board(self, name: str, new_name: str) -> Board:
@@ -106,8 +109,10 @@ class InMemoryRepository(KanbanRepository):
         # Remove and reinsert under new key to preserve relative order.
         del self._boards[name]
         board.name = new_name
-        for column in board.columns:
+        columns = self._columns.pop(name, [])
+        for column in columns:
             column.board = new_name
+        self._columns[new_name] = columns
         self._boards[new_name] = board
 
         # Update board part of task locations.
@@ -127,6 +132,7 @@ class InMemoryRepository(KanbanRepository):
             raise BoardNotFound(name)
 
         del self._boards[name]
+        self._columns.pop(name, None)
 
         # Remove all tasks belonging to this board.
         ids_to_delete = [
@@ -144,34 +150,37 @@ class InMemoryRepository(KanbanRepository):
     # ------------------------------------------------------------------
 
     def get_columns(self, board: str) -> list[Column]:
-        return list(self.get_board(board).columns)
+        self.get_board(board)
+        return list(self._columns.get(board, []))
 
     def get_column(self, board: str, name: str) -> Column:
-        board_obj = self.get_board(board)
-        for column in board_obj.columns:
+        self.get_board(board)
+        for column in self._columns.get(board, []):
             if column.name == name:
                 return column
         raise ColumnNotFound(board, name)
 
     def column_exists(self, board: str, name: str) -> bool:
-        board_obj = self.get_board(board)
-        return any(column.name == name for column in board_obj.columns)
+        self.get_board(board)
+        return any(column.name == name for column in self._columns.get(board, []))
 
     def create_column(self, board: str, name: str) -> Column:
         slug = kebab_case(name)
-        board_obj = self.get_board(board)
-        if any(column.name == name for column in board_obj.columns):
+        self.get_board(board)
+        columns = self._columns.setdefault(board, [])
+        if any(column.name == name for column in columns):
             raise ColumnAlreadyExists(board, name)
 
-        column = Column(id=uuid4(), name=name, slug=slug, board=board, position=len(board_obj.columns))
-        board_obj.columns.append(column)
+        column = Column(id=uuid4(), name=name, slug=slug, board=board, position=len(columns))
+        columns.append(column)
         return column
 
     def rename_column(self, board: str, name: str, new_name: str) -> Column:
-        board_obj = self.get_board(board)
+        self.get_board(board)
         column = self.get_column(board, name)
+        columns = self._columns.get(board, [])
 
-        if new_name != name and any(c.name == new_name for c in board_obj.columns):
+        if new_name != name and any(c.name == new_name for c in columns):
             raise ColumnAlreadyExists(board, new_name)
 
         if new_name == name:
@@ -193,34 +202,36 @@ class InMemoryRepository(KanbanRepository):
         return column
 
     def reorder_column(self, board: str, name: str, position: int) -> list[Column]:
-        board_obj = self.get_board(board)
+        self.get_board(board)
+        columns = self._columns.get(board, [])
 
-        current_index = next((i for i, c in enumerate(board_obj.columns) if c.name == name), None)
+        current_index = next((i for i, c in enumerate(columns) if c.name == name), None)
         if current_index is None:
             raise ColumnNotFound(board, name)
 
-        if not board_obj.columns:
-            return board_obj.columns
+        if not columns:
+            return columns
 
-        clamped_position = max(0, min(position, len(board_obj.columns) - 1))
-        column = board_obj.columns.pop(current_index)
-        board_obj.columns.insert(clamped_position, column)
+        clamped_position = max(0, min(position, len(columns) - 1))
+        column = columns.pop(current_index)
+        columns.insert(clamped_position, column)
 
-        for i, col in enumerate(board_obj.columns):
+        for i, col in enumerate(columns):
             col.position = i
 
-        return list(board_obj.columns)
+        return list(columns)
 
     def delete_column(self, board: str, name: str) -> None:
-        board_obj = self.get_board(board)
+        self.get_board(board)
+        columns = self._columns.get(board, [])
 
-        index = next((i for i, c in enumerate(board_obj.columns) if c.name == name), None)
+        index = next((i for i, c in enumerate(columns) if c.name == name), None)
         if index is None:
             raise ColumnNotFound(board, name)
 
-        board_obj.columns.pop(index)
+        columns.pop(index)
 
-        for i, col in enumerate(board_obj.columns):
+        for i, col in enumerate(columns):
             col.position = i
 
         # Remove tasks in this column.

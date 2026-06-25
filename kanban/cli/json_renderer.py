@@ -50,7 +50,8 @@ def _board_dict(board: Board) -> dict:
     return {
         "name": board.name,
         "slug": board.slug,
-        "column_count": len(board.columns),
+        "column_count": board.column_count,
+        "task_count": board.task_count,
     }
 
 

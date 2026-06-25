@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 from uuid import UUID
 
 from models.slug import Slug
@@ -31,7 +32,7 @@ class Task:
 
     @property
     def path(self) -> Path:
-        return Path(f"/{self.board}/{self.column}/{self.slug}")
+        return Path(f"/{self.board}/{self.column}/{self.slug}.md")
     
     def filename(self) -> str:
         """Return the filename for this task, based on its slug."""

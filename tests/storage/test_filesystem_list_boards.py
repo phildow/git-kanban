@@ -68,7 +68,7 @@ class TestFilesystemListBoards(unittest.TestCase):
         self._make_board("alpha")
         boards = self.repo.get_boards()
         self.assertIsInstance(boards[0], Board)
-        self.assertEqual(boards[0].columns, [])
+        self.assertEqual(boards[0].column_count, 0)
 
 
 if __name__ == "__main__":

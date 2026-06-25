@@ -36,7 +36,7 @@ class TestInMemoryRepositoryBoardOps(unittest.TestCase):
 
         board = self.repo.create_board("alpha")
 
-        self.assertEqual(board, Board(id=board.id, name="alpha", slug="alpha", columns=[]))
+        self.assertEqual(board, Board(id=board.id, name="alpha", slug="alpha"))
         self.assertTrue(self.repo.board_exists("alpha"))
         self.assertEqual(self.repo.get_board("alpha"), board)
         self.assertEqual(self.repo.get_boards(), [board])
@@ -55,7 +55,8 @@ class TestInMemoryRepositoryBoardOps(unittest.TestCase):
     def test_rename_board_updates_board_columns_tasks(self):
         """Renaming a board updates dependent columns and tasks."""
         board = self.repo.create_board("alpha")
-        board.columns.append(Column(id=uuid4(), name="todo", slug="todo", board="alpha", position=0))
+        column = self.repo.create_column("alpha", "todo")
+        
         now = datetime.now(UTC)
         task = Task(
             id=uuid4(),
@@ -74,9 +75,14 @@ class TestInMemoryRepositoryBoardOps(unittest.TestCase):
         self.assertEqual(renamed.name, "beta")
         self.assertFalse(self.repo.board_exists("alpha"))
         self.assertTrue(self.repo.board_exists("beta"))
-        self.assertEqual(self.repo.get_board("beta").columns[0].board, "beta")
         self.assertEqual(self.repo._task_locations[task.id], ("beta", "todo"))
         self.assertEqual(self.repo._tasks_by_id[task.id].board, "beta")
+
+        columns = self.repo.get_columns("beta")
+        self.assertEqual(len(columns), 1)
+        self.assertEqual(columns[0].board, "beta")
+
+
 
     def test_rename_board_raises_when_source_missing(self):
         """Renaming a non-existent board raises `BoardNotFound`."""

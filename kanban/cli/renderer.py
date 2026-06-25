@@ -56,7 +56,7 @@ class Renderer:
 
 		lines = ["Boards", "------"]
 		for board in result:
-			lines.append(f"{board.name} ({len(board.columns)} columns)")
+			lines.append(f"{board.name} ({board.column_count} columns)")
 		self._emit(args, "\n".join(lines))
 
 	@_requires_verbose
