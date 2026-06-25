@@ -709,7 +709,6 @@ class KanbanService:
         self.index_service.update_task(result)
         return result
 
-    # ----- TODO: TEST -----
     def reorder_task(
         self,
         path: str,

@@ -71,6 +71,27 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
         self.index_service.update_task.assert_called_once()
         self.assertEqual(self.index_service.update_task.call_args.args[0].id, moved.id)
 
+    def test_reorder_task_calls_index_update(self) -> None:
+        """Reordering a task invokes index_service.update_task with the reordered task."""
+        self.svc.create_task("alpha/todo/t1", TaskCreateParams())
+        self.svc.create_task("alpha/todo/t2", TaskCreateParams())
+        self.index_service.reset_mock()
+
+        result = self.svc.reorder_task("alpha/todo/t2", "up")
+
+        self.index_service.update_task.assert_called_once()
+        self.assertEqual(self.index_service.update_task.call_args.args[0].id, result.id)
+
+    def test_reorder_task_index_update_not_called_for_invalid_op(self) -> None:
+        """index_service.update_task is not called when reorder_task raises for an invalid op."""
+        self.svc.create_task("alpha/todo/t1", TaskCreateParams())
+        self.index_service.reset_mock()
+
+        with self.assertRaises(ValueError):
+            self.svc.reorder_task("alpha/todo/t1", "sideways")
+
+        self.index_service.update_task.assert_not_called()
+
     def test_delete_task_calls_index_delete(self) -> None:
         """Deleting a task invokes index_service.delete_task with the deleted task."""
         created = self.svc.create_task("alpha/todo/t1", TaskCreateParams())
