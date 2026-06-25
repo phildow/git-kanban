@@ -350,7 +350,7 @@ class KanbanService:
         slug = slug_it(name)
         board = self.repository.create_board(name, slug)
     
-        columns = [self.repository.create_column(board.name, col, slug_it(col)) for col in columns]
+        columns = [self.repository.create_column(board.slug, col, slug_it(col)) for col in columns]
         board.column_count = len(columns)
 
         return board
@@ -370,10 +370,10 @@ class KanbanService:
 
         # Keep current context in sync.
         if self._user_context.board == old_board:
-            self._user_context.board = board.name
+            self._user_context.board = board.slug
 
         # Update index entries for tasks in the renamed board.
-        for task in self.get_tasks(f"/{board.name}"):
+        for task in self.get_tasks(f"/{board.slug}"):
             self.index_service.update_task(task)
 
         return board
@@ -446,10 +446,10 @@ class KanbanService:
 
         # Update current context if it points at the renamed column.
         if self._user_context.board == board and self._user_context.column == column:
-            self._user_context.column = renamed_column.name
+            self._user_context.column = renamed_column.slug
 
         # Update index entries for tasks in the renamed column.
-        for task in self.get_tasks(f"{board}/{new_name}"):
+        for task in self.get_tasks(f"/{board}/{new_slug}"):
             self.index_service.update_task(task)
 
         return renamed_column

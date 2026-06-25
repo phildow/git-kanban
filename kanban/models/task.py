@@ -9,7 +9,8 @@ from models.slug import Slug
 
 @dataclass
 class Task:
-    """Canonical task entity used by repository and service layers.
+    """
+    Canonical task entity used by repository and service layers.
 
     `board` and `column` describe the task's current location and are not saved 
     or restored from the repository.  They are only used for rendering and filtering 

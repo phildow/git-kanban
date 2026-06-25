@@ -109,6 +109,7 @@ class InMemoryRepository(KanbanRepository):
         # Remove and reinsert under new key to preserve relative order.
         del self._boards[slug]
         board.name = new_name
+        board.slug = new_slug
         columns = self._columns.pop(slug, [])
         for column in columns:
             column.board = new_slug

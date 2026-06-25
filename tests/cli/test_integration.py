@@ -772,5 +772,134 @@ class TestTaskCLI(_InitializedBase):
         self.assertEqual(out, "")
 
 
+# ---------------------------------------------------------------------------
+# English names (name / slug distinction)
+# ---------------------------------------------------------------------------
+
+class TestBoardCLIEnglishNames(_InitializedBase):
+    """Board subcommands with multi-word English display names."""
+
+    def test_create_uses_slug_for_directory(self) -> None:
+        """board create with a space-containing name creates a directory at the kebab slug."""
+        self.run_cli("board", "create", "My Project")
+        self.assertTrue((self.boards_dir / "my-project").is_dir())
+
+    def test_create_json_name(self) -> None:
+        """board create --format json --verbose emits the full display name."""
+        data = self.run_json("board", "create", "My Project", "--format", "json", "--verbose")
+        self.assertEqual(data["name"], "My Project")
+
+    def test_create_json_slug(self) -> None:
+        """board create --format json --verbose emits the kebab-case slug."""
+        data = self.run_json("board", "create", "My Project", "--format", "json", "--verbose")
+        self.assertEqual(data["slug"], "my-project")
+
+    def test_rename_uses_new_slug_for_directory(self) -> None:
+        """board rename moves the directory to the slug derived from the new display name."""
+        self.run_cli("board", "create", "My Project")
+        self.run_cli("board", "rename", "my-project", "My Renamed Project")
+        self.assertTrue((self.boards_dir / "my-renamed-project").is_dir())
+
+    def test_rename_removes_old_slug_directory(self) -> None:
+        """board rename removes the old slug directory."""
+        self.run_cli("board", "create", "My Project")
+        self.run_cli("board", "rename", "my-project", "My Renamed Project")
+        self.assertFalse((self.boards_dir / "my-project").exists())
+
+    def test_rename_json_name(self) -> None:
+        """board rename --format json --verbose emits the new full display name."""
+        self.run_cli("board", "create", "My Project")
+        data = self.run_json("board", "rename", "my-project", "My Renamed Project",
+                             "--format", "json", "--verbose")
+        self.assertEqual(data["name"], "My Renamed Project")
+
+    def test_rename_json_slug(self) -> None:
+        """board rename --format json --verbose emits the new kebab-case slug."""
+        self.run_cli("board", "create", "My Project")
+        data = self.run_json("board", "rename", "my-project", "My Renamed Project",
+                             "--format", "json", "--verbose")
+        self.assertEqual(data["slug"], "my-renamed-project")
+
+
+class TestColumnCLIEnglishNames(_InitializedBase):
+    """Column subcommands with multi-word English display names."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        # Create with no default columns so later column create tests don't collide.
+        self.svc.create_board("My Project", columns=[])
+
+    def test_create_uses_slug_for_directory(self) -> None:
+        """column create with a space-containing name creates a directory at the kebab slug."""
+        self.run_cli("column", "create", "my-project/On Hold")
+        self.assertTrue((self.boards_dir / "my-project" / "on-hold").is_dir())
+
+    def test_create_json_name(self) -> None:
+        """column create --format json --verbose emits the full display name."""
+        data = self.run_json("column", "create", "my-project/On Hold",
+                             "--format", "json", "--verbose")
+        self.assertEqual(data["name"], "On Hold")
+
+    def test_create_json_slug(self) -> None:
+        """column create --format json --verbose emits the kebab-case slug."""
+        data = self.run_json("column", "create", "my-project/On Hold",
+                             "--format", "json", "--verbose")
+        self.assertEqual(data["slug"], "on-hold")
+
+    def test_rename_uses_new_slug_for_directory(self) -> None:
+        """column rename moves the directory to the slug derived from the new display name."""
+        self.run_cli("column", "create", "my-project/backlog")
+        self.run_cli("column", "rename", "my-project/backlog", "Work Queue")
+        self.assertTrue((self.boards_dir / "my-project" / "work-queue").is_dir())
+
+    def test_rename_removes_old_slug_directory(self) -> None:
+        """column rename removes the old slug directory."""
+        self.run_cli("column", "create", "my-project/backlog")
+        self.run_cli("column", "rename", "my-project/backlog", "Work Queue")
+        self.assertFalse((self.boards_dir / "my-project" / "backlog").exists())
+
+    def test_rename_json_name(self) -> None:
+        """column rename --format json --verbose emits the new full display name."""
+        self.run_cli("column", "create", "my-project/backlog")
+        data = self.run_json("column", "rename", "my-project/backlog", "Work Queue",
+                             "--format", "json", "--verbose")
+        self.assertEqual(data["name"], "Work Queue")
+
+    def test_rename_json_slug(self) -> None:
+        """column rename --format json --verbose emits the new kebab-case slug."""
+        self.run_cli("column", "create", "my-project/backlog")
+        data = self.run_json("column", "rename", "my-project/backlog", "Work Queue",
+                             "--format", "json", "--verbose")
+        self.assertEqual(data["slug"], "work-queue")
+
+
+class TestTaskCLIEnglishNames(_InitializedBase):
+    """Task subcommands with multi-word English display names."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        # board create adds default columns including "To Do" (slug "to-do").
+        self.run_cli("board", "create", "My Project")
+
+    def test_create_uses_slug_for_filename(self) -> None:
+        """task create with a space-containing title creates a file at the kebab slug."""
+        self.run_cli("task", "create", "my-project/to-do/Fix Login Bug")
+        self.assertTrue(
+            (self.boards_dir / "my-project" / "to-do" / "fix-login-bug.md").is_file()
+        )
+
+    def test_create_json_title(self) -> None:
+        """task create --format json --verbose emits the full display title."""
+        data = self.run_json("task", "create", "my-project/to-do/Fix Login Bug",
+                             "--format", "json", "--verbose")
+        self.assertEqual(data["title"], "Fix Login Bug")
+
+    def test_create_json_slug(self) -> None:
+        """task create --format json --verbose emits the kebab-case slug."""
+        data = self.run_json("task", "create", "my-project/to-do/Fix Login Bug",
+                             "--format", "json", "--verbose")
+        self.assertEqual(data["slug"], "fix-login-bug")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -7,10 +7,17 @@ import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import UUID, uuid4
-import uuid
 
 from models import Slug, Task, Board, Column
-from storage.kanban import KanbanRepository, BoardNotFound, BoardAlreadyExists, ColumnAlreadyExists, ColumnNotFound, TaskNotFound, TaskAlreadyExists
+from storage.kanban import (
+    KanbanRepository, 
+    BoardNotFound, 
+    BoardAlreadyExists,
+    ColumnAlreadyExists, 
+    ColumnNotFound, 
+    TaskNotFound, 
+    TaskAlreadyExists
+)
 
 
 class FilesystemRepository(KanbanRepository):
@@ -241,35 +248,34 @@ class FilesystemRepository(KanbanRepository):
         order = self._get_column_order(board)
          
         columns = []
-        for i, name in enumerate(c for c in order if c in existing):
-            task_count = self._column_task_count(board, name)
-            column_slug = name
-            
-            name = self.get_column_metadata(board, name, "fields.name") or name
-            column_slug = self.get_column_metadata(board, name, "fields.slug") or column_slug
-            uuid = self.get_board_metadata(board, "fields.id")
+        for i, slug in enumerate(c for c in order if c in existing):
+            task_count = self._column_task_count(board, slug)
+
+            name = self.get_column_metadata(board, slug, "fields.name") or slug
+            column_slug = self.get_column_metadata(board, slug, "fields.slug") or slug
+            uuid = self.get_column_metadata(board, slug, "fields.id")
             # TODO: error if fields missing
 
-            columns.append(Column(id=uuid, name=name, slug=column_slug, board=board, position=i, task_count=task_count))
+            columns.append(Column(id=UUID(uuid), name=name, slug=column_slug, board=board, position=i, task_count=task_count))
             
         return columns
 
-    def get_column(self, board: Slug, name: Slug) -> Column:
+    def get_column(self, board: Slug, slug: Slug) -> Column:
         if not self.board_exists(board):
             raise BoardNotFound(board)
-        
-        column_path = self.boards_dir / board / name
-        
-        if not column_path.is_dir() or name.startswith("."):
-            raise ColumnNotFound(board, name)
-        
-        task_count = self._column_task_count(board, name)
-        order = self._get_column_order(board)
-        position = order.index(name) if name in order else len(order)
 
-        name = self.get_column_metadata(board, name, "fields.name") or name
-        column_slug = self.get_column_metadata(board, name, "fields.slug") or name
-        uuid = self.get_column_metadata(board, name, "fields.id")
+        column_path = self.boards_dir / board / slug
+
+        if not column_path.is_dir() or slug.startswith("."):
+            raise ColumnNotFound(board, slug)
+
+        task_count = self._column_task_count(board, slug)
+        order = self._get_column_order(board)
+        position = order.index(slug) if slug in order else len(order)
+
+        name = self.get_column_metadata(board, slug, "fields.name") or slug
+        column_slug = self.get_column_metadata(board, slug, "fields.slug") or slug
+        uuid = self.get_column_metadata(board, slug, "fields.id")
         # TODO: error if missing fields
 
         return Column(id=UUID(uuid), name=name, slug=column_slug, board=board, position=position, task_count=task_count)
@@ -315,7 +321,7 @@ class FilesystemRepository(KanbanRepository):
         self.set_column_metadata(board, new_slug, "fields.slug", new_slug)
         self._set_column_order(board, order)
 
-        return self.get_column(board, new_name)
+        return self.get_column(board, new_slug)
 
     def reorder_column(self, board: Slug, slug: Slug, position: int) -> list[Column]:
         if not self.board_exists(board):

@@ -700,5 +700,126 @@ class TestReplAssign(_InitializedReplBase):
         self.assertIn("alice", out)
 
 
+# ---------------------------------------------------------------------------
+# English names (name / slug distinction)
+# ---------------------------------------------------------------------------
+
+class TestReplBoardEnglishNames(_InitializedReplBase):
+    """Board commands with multi-word English display names."""
+
+    def test_create_uses_slug_for_directory(self) -> None:
+        """create board with a space-containing name creates a directory at the kebab slug."""
+        self.run_repl("create", "board", "My Project")
+        self.assertTrue((self.boards_dir / "my-project").is_dir())
+
+    def test_create_output_contains_name(self) -> None:
+        """create board prints the full display name."""
+        out = self.run_repl("create", "board", "My Project")
+        self.assertIn("My Project", out)
+
+    def test_create_output_contains_slug(self) -> None:
+        """create board prints the derived slug."""
+        out = self.run_repl("create", "board", "My Project")
+        self.assertIn("my-project", out)
+
+    def test_rename_uses_new_slug_for_directory(self) -> None:
+        """rename board moves the directory to the slug derived from the new display name."""
+        self.run_repl("create", "board", "My Project")
+        self.run_repl("rename", "board", "my-project", "My Renamed Project")
+        self.assertTrue((self.boards_dir / "my-renamed-project").is_dir())
+
+    def test_rename_removes_old_slug_directory(self) -> None:
+        """rename board removes the old slug directory."""
+        self.run_repl("create", "board", "My Project")
+        self.run_repl("rename", "board", "my-project", "My Renamed Project")
+        self.assertFalse((self.boards_dir / "my-project").exists())
+
+    def test_rename_output_contains_new_name(self) -> None:
+        """rename board prints the new display name."""
+        self.run_repl("create", "board", "My Project")
+        out = self.run_repl("rename", "board", "my-project", "My Renamed Project")
+        self.assertIn("My Renamed Project", out)
+
+    def test_rename_output_contains_new_slug(self) -> None:
+        """rename board prints the new derived slug."""
+        self.run_repl("create", "board", "My Project")
+        out = self.run_repl("rename", "board", "my-project", "My Renamed Project")
+        self.assertIn("my-renamed-project", out)
+
+
+class TestReplColumnEnglishNames(_InitializedReplBase):
+    """Column commands with multi-word English display names."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        # Create with no default columns so later column create tests don't collide.
+        self.svc.create_board("My Project", columns=[])
+
+    def test_create_uses_slug_for_directory(self) -> None:
+        """create column with a space-containing name creates a directory at the kebab slug."""
+        self.run_repl("create", "column", "my-project/On Hold")
+        self.assertTrue((self.boards_dir / "my-project" / "on-hold").is_dir())
+
+    def test_create_output_contains_name(self) -> None:
+        """create column prints the full display name."""
+        out = self.run_repl("create", "column", "my-project/On Hold")
+        self.assertIn("On Hold", out)
+
+    def test_create_output_contains_slug(self) -> None:
+        """create column prints the derived slug."""
+        out = self.run_repl("create", "column", "my-project/On Hold")
+        self.assertIn("on-hold", out)
+
+    def test_rename_uses_new_slug_for_directory(self) -> None:
+        """rename column moves the directory to the slug derived from the new display name."""
+        self.run_repl("create", "column", "my-project/backlog")
+        self.run_repl("rename", "column", "my-project/backlog", "Work Queue")
+        self.assertTrue((self.boards_dir / "my-project" / "work-queue").is_dir())
+
+    def test_rename_removes_old_slug_directory(self) -> None:
+        """rename column removes the old slug directory."""
+        self.run_repl("create", "column", "my-project/backlog")
+        self.run_repl("rename", "column", "my-project/backlog", "Work Queue")
+        self.assertFalse((self.boards_dir / "my-project" / "backlog").exists())
+
+    def test_rename_output_contains_new_name(self) -> None:
+        """rename column prints the new display name."""
+        self.run_repl("create", "column", "my-project/backlog")
+        out = self.run_repl("rename", "column", "my-project/backlog", "Work Queue")
+        self.assertIn("Work Queue", out)
+
+    def test_rename_output_contains_new_slug(self) -> None:
+        """rename column prints the new derived slug."""
+        self.run_repl("create", "column", "my-project/backlog")
+        out = self.run_repl("rename", "column", "my-project/backlog", "Work Queue")
+        self.assertIn("work-queue", out)
+
+
+class TestReplTaskEnglishNames(_InitializedReplBase):
+    """Task commands with multi-word English display names."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        # board create adds default columns including "To Do" (slug "to-do").
+        self.run_repl("create", "board", "My Project")
+
+    def test_create_uses_slug_for_filename(self) -> None:
+        """create task with a space-containing title creates a file at the kebab slug."""
+        self.run_repl("create", "task", "my-project/to-do/Fix Login Bug")
+        self.assertTrue(
+            (self.boards_dir / "my-project" / "to-do" / "fix-login-bug.md").is_file()
+        )
+
+    def test_create_output_contains_title(self) -> None:
+        """create task prints the full display title."""
+        out = self.run_repl("create", "task", "my-project/to-do/Fix Login Bug")
+        self.assertIn("Fix Login Bug", out)
+
+    def test_create_output_contains_slug(self) -> None:
+        """create task prints the derived slug."""
+        out = self.run_repl("create", "task", "my-project/to-do/Fix Login Bug")
+        self.assertIn("fix-login-bug", out)
+
+
 if __name__ == "__main__":
     unittest.main()
