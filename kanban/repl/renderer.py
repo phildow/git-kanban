@@ -7,6 +7,7 @@ from functools import wraps
 import shutil
 
 from models import UserContext, Board, Column, Task
+from repl.render_helper import RenderHelper
 from services.kanban import GitCommit, KanbanStatus
 
 def _requires_verbose(method):
@@ -20,6 +21,9 @@ def _requires_verbose(method):
 	return _wrapped
 
 class Renderer:
+	def __init__(self, render_helper: RenderHelper):
+		self.render_helper = render_helper
+
 	def _emit(self, args: argparse.Namespace, value: object) -> None:
 		if getattr(args, "quiet", False):
 			return
@@ -335,9 +339,10 @@ class Renderer:
 
 		for task in result:	
 			tags = ", ".join(task.tags) if task.tags else None
+			column_name = self.render_helper.column_name_from_slug(task.board, task.column)
 			elems = [
 				f"{self._clamped(task.title, 32-1):<32}", 
-				*(f"{self._clamped(task.column or "-", 16-1):<16}" if include_board else []), 
+				*(f"{self._clamped(column_name or "-", 16-1):<16}" if include_board else []), 
 				f"{self._clamped(task.assigned_to or "-", 16-1):<16}", 
 				f"{self._clamped(task.priority or "-", 16-1):<16}", 
 				*(f"{self._clamped(tags or "-", 16-1):<16}" if include_tags else []),

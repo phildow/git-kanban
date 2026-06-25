@@ -193,7 +193,8 @@ def handle_config_get(args: argparse.Namespace, svc: KanbanService, renderer: ob
 
 def handle_repl(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	_ = args, json_renderer
+	from repl.render_helper import RenderHelper
 	from repl.renderer import Renderer as REPLRenderer
 	from repl import run_repl
-	renderer = REPLRenderer()
+	renderer = REPLRenderer(render_helper=RenderHelper(service=svc))
 	run_repl(svc=svc, renderer=renderer)

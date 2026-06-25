@@ -11,7 +11,7 @@ import argparse
 from datetime import datetime, timezone
 
 from models import Board, Column, Task, TaskFilter
-from services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
+from services.kanban import KanbanService
 from utils.shell import prompt_for_confirmation
 
 def _build_task_filter(args: argparse.Namespace) -> TaskFilter:

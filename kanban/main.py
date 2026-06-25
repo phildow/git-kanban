@@ -7,7 +7,7 @@ from cli.parser import parse_args
 from cli.renderer import Renderer
 from cli.json_renderer import JsonRenderer
 
-from models import UserContext
+from repl.render_helper import RenderHelper
 from services.git import GitService
 from services.kanban import KanbanService
 from services.index import IndexService

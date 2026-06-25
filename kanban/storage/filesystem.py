@@ -388,7 +388,7 @@ class FilesystemRepository(KanbanRepository):
                     if entry.is_file():
                         board_name = self._board_name_from_slug(b)
                         column_name = self._column_name_from_slug(b, col)
-                        tasks.append(self._parse_task_file(entry, board_name, column_name))
+                        tasks.append(self._parse_task_file(entry, b, col))
 
         return tasks
 
@@ -735,7 +735,7 @@ class FilesystemRepository(KanbanRepository):
     # Task file parsing and utilities
     # ------------------------------------------------------------------
 
-    def _parse_task_file(self, path: Path, board: str, column: str) -> Task:
+    def _parse_task_file(self, path: Path, board: Slug, column: Slug) -> Task:
         
         def _parse_dt(raw: str) -> datetime:
             dt = datetime.fromisoformat(raw)

@@ -39,6 +39,7 @@ from datetime import datetime
 from pathlib import Path
 from unittest.mock import MagicMock
 
+from kanban.repl.render_helper import RenderHelper
 from repl.parser import parse_args
 from repl.renderer import Renderer as REPLRenderer
 from services.kanban import KanbanService, TaskCreateParams
@@ -67,7 +68,7 @@ class _ReplBase(unittest.TestCase):
             index_service=MagicMock(),
             git_service=MagicMock(),
         )
-        self.renderer = REPLRenderer()
+        self.renderer = REPLRenderer(render_helper=RenderHelper(service=self.svc))
 
     def tearDown(self) -> None:
         os.chdir(self._prev_cwd)
