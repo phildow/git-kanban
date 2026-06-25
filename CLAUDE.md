@@ -227,7 +227,7 @@ Columns metadata is stored in a hidden `.metadata` INI file in each column's dir
 
 [fields]
   name="To Do"
-  slug="to-do"
+  slug="todo"
 ```
 
 #### Task
@@ -251,6 +251,78 @@ updated_at: 2026-06-12T10:00:00Z
 # Descrtion  
   
 ...
+```
+
+### The Data Model
+
+There are three core types: the board, column, and task. A board contains columns, and a column contains tasks. A task belongs to a single column. A column belongs to a single board.
+
+#### Identity
+
+There are three ways of identifying a board, column or task: by id, name, or slug.
+
+The `id` is the unique identifier. It is created once with the object, and it remains the same for the lifetime of the object and is used when checking for changes made directly to the filesystem.
+
+The `name` is given to the object by the user. It is the display name for the object and appears in the TUI and when using the `-a` flag in the REPL. The name maybe changed.
+
+The `slug` is derived from the name. It identifies the file or folder on disk and is used to contsruct paths. It is unique in its context. Slugging is owned by the service layer, and a slug is only created or updated when the object is created or updated. No other layer creates slugs, but consumers of the kanban service may provide a custom slug when creating or updating an object.
+
+In practice the slug functions as the identifer for an object in memory. Once created in the service layer, an object always includes its slug. The interface layer (CLI/REPL/TUI) uses the slug to identify an object when making additional calls to the service layer.
+
+Because of its importance the slug is typed:
+
+```
+Slug = NewType('Slug', str)
+```
+
+The data model follows:
+
+#### The Board
+
+```
+@dataclass
+class Board:
+    id:   UUID
+    name: str
+    slug: Slug
+
+    column_count: int = 0
+    task_count: int = 0
+```
+
+#### The Column
+
+```
+@dataclass
+class Column:
+    id:         UUID
+    name:       str
+    slug:       Slug
+    board:      str
+    position:   int
+
+    task_count: int = 0
+```
+
+#### The Task
+
+```
+@dataclass
+class Task:
+    id:             UUID
+    title:          str
+    slug:           str
+
+    board:          Slug
+    column:         Slug
+    created_by:     str | None = None
+    assigned_to:    str | None = None
+    priority:       str | None = None
+    due_date:       datetime | None = None
+    tags:           list[str] = field(default_factory=list)
+    created_at:     datetime | None = None
+    updated_at:     datetime | None = None
+    body:           str = ""
 ```
 
 ### The CLI

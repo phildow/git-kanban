@@ -60,12 +60,16 @@ Run:
 
 0.5 - Complete filesystem
 
+- MAJOR: Specify the data model, clarify use of slugs as source of truth, created once,
+    - slugs owned by service layer
+
+- CHORE: slug_it and only done once in the service layer at creation!
+- TYPE: slug
+- CHORE: remove default columns from the service layer
+- BUG: task.board and task.column are ambiguious - are the names or slugs
 
 - FEAT: add mutually exlusive argument to move command to move to top or bottom: --top | --bottom | board
 - BUG: raise a services domain error if you rename to the same name
-- BUG: the task slug should not default to "" - it must be included every time as task is created
-
-- CHORE: remove default columns from the service layer
 - BUG: rename column double appending board
 
 - CHORE: special camel case for To Do -> todo not to-do
