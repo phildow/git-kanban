@@ -20,8 +20,9 @@ class Task:
     id:             UUID
     title:          str
     slug:           Slug
-    board:          Slug | None = None
-    column:         Slug | None = None
+    board:          Slug
+    column:         Slug
+    
     created_by:     str | None = None
     assigned_to:    str | None = None
     priority:       str | None = None
