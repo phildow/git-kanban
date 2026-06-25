@@ -549,7 +549,6 @@ class FilesystemRepository(KanbanRepository):
         column_name = self.get_column_metadata(board_slug, dest_column_slug, "fields.name") or column
         return self._parse_task_file(dest_file, board_name, column_name)
 
-    # ----- TODO: TEST -----
     def reorder_task(self, task: Task, op: str) -> Task:
         board_slug = task.board
         column_slug = task.column

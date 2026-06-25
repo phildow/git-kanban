@@ -33,6 +33,7 @@ class InMemoryRepository(KanbanRepository):
         self._tasks_by_id: dict[UUID, Task] = {}
         self._task_locations: dict[UUID, tuple[str, str]] = {}
         self._task_filenames: dict[UUID, str] = {}
+        self._task_order: dict[tuple[str, str], list[str]] = {}
         self._config: dict[str, str] = {}
         self._userdata: dict[str, str] = {}
 
@@ -123,6 +124,11 @@ class InMemoryRepository(KanbanRepository):
             if task.board == slug:
                 task.board = new_slug
 
+        # Remap task order keys to the new board slug.
+        for (order_board, order_column) in list(self._task_order.keys()):
+            if order_board == slug:
+                self._task_order[(new_slug, order_column)] = self._task_order.pop((order_board, order_column))
+
         return board
 
     def delete_board(self, slug: Slug) -> None:
@@ -142,6 +148,9 @@ class InMemoryRepository(KanbanRepository):
             del self._tasks_by_id[task_id]
             self._task_locations.pop(task_id, None)
             self._task_filenames.pop(task_id, None)
+
+        for key in [k for k in self._task_order if k[0] == slug]:
+            del self._task_order[key]
 
     # ------------------------------------------------------------------
     # Columns operations
@@ -200,6 +209,10 @@ class InMemoryRepository(KanbanRepository):
             if task.board == board and task.column == slug:
                 task.column = new_slug
 
+        # Remap task order key to the new column slug.
+        if (board, slug) in self._task_order:
+            self._task_order[(board, new_slug)] = self._task_order.pop((board, slug))
+
         return column
 
     def reorder_column(self, board: Slug, slug: Slug, position: int) -> list[Column]:
@@ -246,6 +259,8 @@ class InMemoryRepository(KanbanRepository):
             self._task_locations.pop(task_id, None)
             self._task_filenames.pop(task_id, None)
 
+        self._task_order.pop((board, slug), None)
+
     # ------------------------------------------------------------------
     # Task operations
     # ------------------------------------------------------------------
@@ -256,14 +271,22 @@ class InMemoryRepository(KanbanRepository):
             if column is not None:
                 self.get_column(board, column)
 
-        tasks: list[Task] = []
+        # Build a lookup: (board, column, slug) → Task for ordered retrieval.
+        by_location: dict[tuple[str, str, str], Task] = {}
         for task_id, task in self._tasks_by_id.items():
             task_board, task_column = self._task_locations.get(task_id, (task.board, task.column))
-            if board is not None and task_board != board:
-                continue
-            if column is not None and task_column != column:
-                continue
-            tasks.append(task)
+            task_slug = self._task_filenames.get(task_id, task.slug)
+            by_location[(task_board, task_column, task_slug)] = task
+
+        boards = [board] if board is not None else list(self._boards)
+        tasks: list[Task] = []
+        for b in boards:
+            columns = [column] if column is not None else [c.slug for c in self._columns.get(b, [])]
+            for col in columns:
+                for slug in self._task_order.get((b, col), []):
+                    task = by_location.get((b, col, slug))
+                    if task is not None:
+                        tasks.append(task)
 
         return tasks
 
@@ -311,7 +334,8 @@ class InMemoryRepository(KanbanRepository):
         self._tasks_by_id[task.id] = task
         self._task_locations[task.id] = (task.board, task.column)
         self._task_filenames[task.id] = slug
-        task.slug = slug    
+        task.slug = slug
+        self._task_order.setdefault((task.board, task.column), []).append(slug)
         return task
 
     def update_task(self, task: Task, slug: Slug) -> Task:
@@ -338,10 +362,17 @@ class InMemoryRepository(KanbanRepository):
         task.created_at = existing.created_at
         task.updated_at = datetime.now(UTC)
 
+        old_slug = self._task_filenames.get(task.id)
         self._tasks_by_id[task.id] = task
         self._task_locations[task.id] = (existing_board, existing_column)
         self._task_filenames[task.id] = task.slug
         task.slug = self._task_filenames[task.id]
+
+        if old_slug is not None and old_slug != task.slug:
+            order = self._task_order.get((existing_board, existing_column), [])
+            if old_slug in order:
+                order[order.index(old_slug)] = task.slug
+
         return task
 
     def move_task(self, task: Task, column: Slug) -> Task:
@@ -360,13 +391,17 @@ class InMemoryRepository(KanbanRepository):
                 if other_task.board == task.board and other_column == column and self._task_filenames.get(other_id) == slug:
                     raise TaskAlreadyExists(task.board, column, slug)
 
+            src_order = self._task_order.get((task.board, stored.column), [])
+            if slug in src_order:
+                src_order.remove(slug)
+            self._task_order.setdefault((task.board, column), []).append(slug)
+
             stored.column = column
             self._task_locations[task.id] = (task.board, column)
 
         stored.updated_at = datetime.now(UTC)
         return stored
 
-    # ----- TODO: TEST -----
     def reorder_task(self, task: Task, op: str) -> Task:
         stored = self._tasks_by_id.get(task.id)
         if stored is None:
@@ -377,36 +412,27 @@ class InMemoryRepository(KanbanRepository):
         if board is None or column is None:
             raise TaskNotFound(str(task.id))
 
-        tasks_in_column = [
-            t for t in self._tasks_by_id.values() if t.board == board and t.column == column
-        ]
-        tasks_in_column.sort(key=lambda t: t.priority)
+        slug = self._task_filenames.get(task.id, task.slug)
+        order = self._task_order.get((board, column), [])
 
-        current_index = next((i for i, t in enumerate(tasks_in_column) if t.id == task.id), None)
-        if current_index is None:
-            raise TaskNotFound(str(task.id))
+        if slug not in order:
+            raise TaskNotFound(f"{board}/{column}/{slug}")
 
-        if op == "up" and current_index > 0:
-            tasks_in_column[current_index], tasks_in_column[current_index - 1] = (
-                tasks_in_column[current_index - 1],
-                tasks_in_column[current_index],
-            )
-        elif op == "down" and current_index < len(tasks_in_column) - 1:
-            tasks_in_column[current_index], tasks_in_column[current_index + 1] = (
-                tasks_in_column[current_index + 1],
-                tasks_in_column[current_index],
-            )
+        current_index = order.index(slug)
+
+        if op == "up":
+            new_index = max(0, current_index - 1)
+        elif op == "down":
+            new_index = min(len(order) - 1, current_index + 1)
         elif op == "top":
-            task_to_move = tasks_in_column.pop(current_index)
-            tasks_in_column.insert(0, task_to_move)
+            new_index = 0
         elif op == "bottom":
-            task_to_move = tasks_in_column.pop(current_index)
-            tasks_in_column.append(task_to_move)
+            new_index = len(order) - 1
         else:
             raise ValueError(f"Invalid operation '{op}': must be one of 'up', 'down', 'top', 'bottom'")
 
-        for i, t in enumerate(tasks_in_column):
-            t.priority = i
+        if new_index != current_index:
+            order.insert(new_index, order.pop(current_index))
 
         stored.updated_at = datetime.now(UTC)
         return stored
@@ -415,6 +441,12 @@ class InMemoryRepository(KanbanRepository):
         task_id = task.id
         if task_id not in self._tasks_by_id:
             raise TaskNotFound(str(task_id))
+
+        board, column = self._task_locations.get(task_id, (task.board, task.column))
+        slug = self._task_filenames.get(task_id, task.slug)
+        order = self._task_order.get((board, column), [])
+        if slug in order:
+            order.remove(slug)
 
         del self._tasks_by_id[task_id]
         self._task_locations.pop(task_id, None)
