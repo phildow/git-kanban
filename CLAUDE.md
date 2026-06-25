@@ -408,7 +408,7 @@ COMMAND
   column           Set the active column
   create           Create a board, column, or task
   list             List all boards, columns, or tasks in the current context or at a specified path
-  rename           Rename a board or column
+  rename           Rename a board, column, or task
   delete           Delete a board, column, or task
   show             Show task details
   edit             Edit a task in the default editor

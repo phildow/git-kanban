@@ -162,6 +162,7 @@ def _add_delete_parser(subparsers: argparse._SubParsersAction) -> None:
     p.set_defaults(func=handle_delete)
 
 
+# TODO: Major update to rename to support renaming columns, dispatch to command helper
 def _add_rename_parser(subparsers: argparse._SubParsersAction) -> None:
     rename_parser = subparsers.add_parser("rename", help="Rename a board or column")
     _add_global_flags(rename_parser)

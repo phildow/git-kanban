@@ -60,22 +60,24 @@ Run:
 
 0.5 - Complete filesystem
 
+- FEAT: rename renames a task as well
+    - Flag not required
+    - But we should be able to just give the slug and from the path determine what we are renaming, dispatch accordingly
+    - CLI & REPL
+
+- FEAT: add mutually exlusive argument to move command to move to top or bottom: column | --top | --bottom | --up | --down
+
+- BUG: update completion engine to work with leading quotes (I think you just strip them)
 - CHORE: remove default columns from the service layer
-- CHORE: special camel case for To Do -> todo not to-do
-- CHORE: add utilty to filter for invisible files
 - BUG: default "To Do" slug -> todo
-- BUG: getting tasks sets the board and column to the name not the slug (include name fields) - or use helper to get name from slug
 
 - TEST: Check init error handling, don't overwrite a repo, don't initialize a repo that's already been created
-- BUG: `kanban (/) > ls main -al` returns an error probably a mutually exlusive argument `kanban (/) >`
-- FEAT: add mutually exlusive argument to move command to move to top or bottom: column | --top | --bottom | --up | --down
-- BUG: raise a services domain error if you rename to the same name
-- BUG: rename column double appending board
 - TEST: make sure repl gives recoverable error message
-- BUG: handle path errors better
 
 - FEAT: consider case-conversion package for unicode compatible kebab casing (pycases)
 - FEAT: kebab_case preserves accented characters
+
+~
 
 - Once we have file storage `kanban init` this directory and start storing tasks here (dogfood) ~ almost there!
 
@@ -83,10 +85,14 @@ Run:
 
 0.6: Complete in memory store 
 
-- Ensure memory store supports same features as filesystem (ordering)
+- TEST: Ensure memory store supports same features as filesystem (ordering)
+- TEST: handle path errors better
+- FEAT: `--exlude` flag to list when `--all` flag to exlude a column (support multiple)
 - CHORE: Use slugs in memory repository for private indexing (add tests)
+- CHORE: add utilty to filter for invisible files
 - FEAT: ooo the shell will make as few as two columns
 - FEAT: add csv export
+- BUG: raise a services domain error if you rename to the same name
 
 - FEAT: Add comments to a task which are just appended to the body
     - CLI: `task comment <board/column/task> <comment>`
