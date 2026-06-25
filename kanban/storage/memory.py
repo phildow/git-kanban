@@ -17,7 +17,7 @@ from storage.kanban import (
     TaskNotFound,
     TaskAlreadyExists,
 )
-from utils.str import kebab_case
+from utils.str import slug_it
 
 
 class InMemoryRepository(KanbanRepository):
@@ -84,7 +84,7 @@ class InMemoryRepository(KanbanRepository):
         return name in self._boards
 
     def create_board(self, name: str) -> Board:
-        slug = kebab_case(name)
+        slug = slug_it(name)
         uuid = uuid4()
 
         if self.board_exists(name):
@@ -165,7 +165,7 @@ class InMemoryRepository(KanbanRepository):
         return any(column.name == name for column in self._columns.get(board, []))
 
     def create_column(self, board: str, name: str) -> Column:
-        slug = kebab_case(name)
+        slug = slug_it(name)
         self.get_board(board)
         columns = self._columns.setdefault(board, [])
         if any(column.name == name for column in columns):
@@ -187,7 +187,7 @@ class InMemoryRepository(KanbanRepository):
             return column
 
         column.name = new_name
-        column.slug = kebab_case(new_name)
+        column.slug = slug_it(new_name)
 
         # Keep location index in sync.
         for task_id, (task_board, task_column) in list(self._task_locations.items()):
@@ -332,7 +332,7 @@ class InMemoryRepository(KanbanRepository):
                 continue
             other_board, other_column = self._task_locations.get(other_id, (other_task.board, other_task.column))
             other_filename = self._task_filenames.get(other_id, "")
-            new_filename = kebab_case(task.title)
+            new_filename = slug_it(task.title)
             if other_board == existing_board and other_column == existing_column and other_filename == new_filename:
                 raise TaskAlreadyExists(existing_board, existing_column, new_filename)
 
@@ -343,7 +343,7 @@ class InMemoryRepository(KanbanRepository):
 
         self._tasks_by_id[task.id] = task
         self._task_locations[task.id] = (existing_board, existing_column)
-        self._task_filenames[task.id] = kebab_case(task.title)
+        self._task_filenames[task.id] = slug_it(task.title)
         task.slug = self._task_filenames[task.id]
         return task
 

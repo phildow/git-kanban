@@ -13,7 +13,7 @@ from storage.kanban import KanbanRepository, ColumnNotFound, BoardNotFound
 from storage.seeds import BootstrapConfig
 from services.git import GitService
 from services.index import IndexService
-from utils.str import kebab_case
+from utils.str import slug_it
 
 
 # ── Params ────────────────────────────────────────────────────────────────────
@@ -563,6 +563,7 @@ class KanbanService:
         tags = params.tags or []
         due_date = params.due_date
         created_by = params.created_by
+        slug = slug_it(title)
 
         if isinstance(due_date, str):
             due_date = datetime.fromisoformat(due_date)
@@ -570,7 +571,7 @@ class KanbanService:
         task = Task(
             id=uuid4(),
             title=title,
-            slug=kebab_case(title),
+            slug=slug,
             board=board,
             column=column,
             assigned_to=assigned_to,
@@ -601,7 +602,7 @@ class KanbanService:
         if title is None:
             raise ValueError(f"No task title provided in path: {path}")
 
-        filename = kebab_case(title)
+        filename = slug_it(title)
         return self.repository.get_task(board, column, filename)
 
     def edit_task(
@@ -671,7 +672,7 @@ class KanbanService:
 
         if updates.title and updates.title != task.title:
             task.title = updates.title
-            task.slug = kebab_case(updates.title)
+            task.slug = slug_it(updates.title)
         if updates.assigned_to is not None:
             task.assigned_to = updates.assigned_to
         if updates.priority is not None:

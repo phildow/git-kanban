@@ -11,7 +11,7 @@ import uuid
 
 from models import Task, TaskFilter, Board, Column
 from storage.kanban import KanbanRepository, BoardNotFound, BoardAlreadyExists, ColumnAlreadyExists, ColumnNotFound, TaskNotFound, TaskAlreadyExists
-from utils.str import kebab_case
+from utils.str import slug_it
 
 
 class FilesystemRepository(KanbanRepository):
@@ -86,7 +86,7 @@ class FilesystemRepository(KanbanRepository):
     # ------------------------------------------------------------------
 
     def board_exists(self, name: str) -> bool:
-        slug = kebab_case(name)
+        slug = slug_it(name)
 
         board_path = self.boards_dir / slug
         return board_path.is_dir() and not name.startswith(".")
@@ -108,9 +108,9 @@ class FilesystemRepository(KanbanRepository):
                 for f in col.iterdir()
                 if f.is_file() and not f.name.startswith(".")
             )
-            slug = kebab_case(entry.name)
+            slug = slug_it(entry.name)
             name = self.get_board_metadata(slug, "fields.name") or entry.name
-            slug = self.get_board_metadata(slug, "fields.slug") or kebab_case(entry.name)
+            slug = self.get_board_metadata(slug, "fields.slug") or slug_it(entry.name)
             uuid = self.get_board_metadata(slug, "fields.id")   
             # TODO: raise error if no UUID
 
@@ -120,7 +120,7 @@ class FilesystemRepository(KanbanRepository):
     # TODO: SYNC - metadata must match the name and slug of the board directory
     # TODO: load the column count and task count
     def get_board(self, name: str) -> Board:
-        slug = kebab_case(name)
+        slug = slug_it(name)
         board_path = self.boards_dir / slug
 
         if not board_path.is_dir() or name.startswith("."):
@@ -134,7 +134,7 @@ class FilesystemRepository(KanbanRepository):
         return Board(id=UUID(uuid), name=name, slug=slug)
 
     def create_board(self, name: str) -> Board:
-        slug = kebab_case(name)
+        slug = slug_it(name)
         uuid = str(uuid4())
 
         if self.board_exists(slug):
@@ -150,8 +150,8 @@ class FilesystemRepository(KanbanRepository):
         return Board(id=UUID(uuid), name=name, slug=slug)
 
     def rename_board(self, name: str, new_name: str) -> Board:
-        slug = kebab_case(name)
-        new_slug = kebab_case(new_name)
+        slug = slug_it(name)
+        new_slug = slug_it(new_name)
 
         if not self.board_exists(slug):
             raise BoardNotFound(name)
@@ -169,7 +169,7 @@ class FilesystemRepository(KanbanRepository):
         return Board(id=UUID(uuid), name=new_name, slug=new_slug)
 
     def delete_board(self, name: str) -> None:
-        slug = kebab_case(name)
+        slug = slug_it(name)
 
         if not self.board_exists(slug):
             raise BoardNotFound(name)
@@ -188,8 +188,8 @@ class FilesystemRepository(KanbanRepository):
 
     def _get_task_order(self, board: str, column: str) -> list[str]:
         """Return the stored task order for a column, falling back to filesystem sort."""
-        column_slug = kebab_case(column)
-        board_slug = kebab_case(board)
+        column_slug = slug_it(column)
+        board_slug = slug_it(board)
         raw = self.get_column_metadata(board_slug, column_slug, "tasks.order")
 
         if raw:
@@ -206,13 +206,13 @@ class FilesystemRepository(KanbanRepository):
         value support: continuation lines are indented, so configparser treats
         them as part of the same value rather than new keys.
         """
-        board_slug = kebab_case(board)
-        column_slug = kebab_case(column)
+        board_slug = slug_it(board)
+        column_slug = slug_it(column)
         self.set_column_metadata(board_slug, column_slug, "tasks.order", "\n" + "\n".join(order))
 
     def _get_column_order(self, board: str) -> list[str]:
         """Return the stored column order for a board, falling back to filesystem sort."""
-        board_slug = kebab_case(board)
+        board_slug = slug_it(board)
 
         raw = self.get_board_metadata(board_slug, "columns.order")
         if raw:
@@ -229,13 +229,13 @@ class FilesystemRepository(KanbanRepository):
         multi-line value support: continuation lines are indented, so
         configparser treats them as part of the same value rather than new keys.
         """
-        board_slug = kebab_case(board)
+        board_slug = slug_it(board)
         self.set_board_metadata(board_slug, "columns.order", "\n" + "\n".join(order))
 
     def _column_task_count(self, board: str, column: str) -> int:
         """Return the number of tasks in a column."""
-        column_slug = kebab_case(column)
-        board_slug = kebab_case(board)
+        column_slug = slug_it(column)
+        board_slug = slug_it(board)
         
         return sum(
             1 for e in (self.boards_dir / board_slug / column_slug).iterdir()
@@ -243,8 +243,8 @@ class FilesystemRepository(KanbanRepository):
         )
 
     def column_exists(self, board: str, name: str) -> bool:
-        board_slug = kebab_case(board)
-        column_slug = kebab_case(name)
+        board_slug = slug_it(board)
+        column_slug = slug_it(name)
 
         if not self.board_exists(board_slug):
             raise BoardNotFound(board)
@@ -253,7 +253,7 @@ class FilesystemRepository(KanbanRepository):
         return column_path.is_dir() and not name.startswith(".")
 
     def get_columns(self, board: str) -> list[Column]:
-        board_slug = kebab_case(board)
+        board_slug = slug_it(board)
         if not self.board_exists(board_slug):
             raise BoardNotFound(board)
         
@@ -267,7 +267,7 @@ class FilesystemRepository(KanbanRepository):
         columns = []
         for i, name in enumerate(c for c in order if c in existing):
             task_count = self._column_task_count(board, name)
-            column_slug = kebab_case(name)
+            column_slug = slug_it(name)
             name = self.get_column_metadata(board_slug, name, "fields.name") or name
             column_slug = self.get_column_metadata(board_slug, name, "fields.slug") or column_slug
             uuid = self.get_board_metadata(board_slug, "fields.id")
@@ -277,8 +277,8 @@ class FilesystemRepository(KanbanRepository):
         return columns
 
     def get_column(self, board: str, name: str) -> Column:
-        column_slug = kebab_case(name)
-        board_slug = kebab_case(board)
+        column_slug = slug_it(name)
+        board_slug = slug_it(board)
         if not self.board_exists(board_slug):
             raise BoardNotFound(board)
         
@@ -297,8 +297,8 @@ class FilesystemRepository(KanbanRepository):
         return Column(id=UUID(uuid), name=name, slug=column_slug, board=board, position=position, task_count=task_count)
 
     def create_column(self, board: str, name: str) -> Column:
-        column_slug = kebab_case(name)
-        board_slug = kebab_case(board)
+        column_slug = slug_it(name)
+        board_slug = slug_it(board)
         uuid = str(uuid4())
 
         if not self.board_exists(board_slug):
@@ -322,9 +322,9 @@ class FilesystemRepository(KanbanRepository):
         return Column(id=UUID(uuid), name=name, slug=column_slug, board=board, position=len(order) - 1)
 
     def rename_column(self, board: str, name: str, new_name: str) -> Column:
-        new_column_slug = kebab_case(new_name)
-        column_slug = kebab_case(name)
-        board_slug = kebab_case(board)
+        new_column_slug = slug_it(new_name)
+        column_slug = slug_it(name)
+        board_slug = slug_it(board)
         
         if not self.board_exists(board_slug):
             raise BoardNotFound(board)
@@ -346,14 +346,14 @@ class FilesystemRepository(KanbanRepository):
         return self.get_column(board, new_name)
 
     def reorder_column(self, board: str, name: str, position: int) -> list[Column]:
-        board_slug = kebab_case(board)
+        board_slug = slug_it(board)
 
         if not self.board_exists(board_slug):
             raise BoardNotFound(board)
         if not self.column_exists(board_slug, name):
             raise ColumnNotFound(board, name)
         
-        column_slug = kebab_case(name)
+        column_slug = slug_it(name)
         order = self._get_column_order(board_slug)
         
         if column_slug in order:
@@ -364,8 +364,8 @@ class FilesystemRepository(KanbanRepository):
         return self.get_columns(board_slug)
 
     def delete_column(self, board: str, name: str) -> None:
-        column_slug = kebab_case(name)
-        board_slug = kebab_case(board)
+        column_slug = slug_it(name)
+        board_slug = slug_it(board)
 
         if not self.board_exists(board_slug):
             raise BoardNotFound(board)
@@ -385,7 +385,7 @@ class FilesystemRepository(KanbanRepository):
     # ------------------------------------------------------------------
     
     def task_exists(self, board: str, column: str, filename: str) -> bool:
-        board_slug = kebab_case(board)
+        board_slug = slug_it(board)
         path = self.boards_dir / board_slug / column / f"{filename}.md"
         return path.is_file()
 
@@ -402,8 +402,8 @@ class FilesystemRepository(KanbanRepository):
         if board is not None and column is not None and not self.column_exists(board, column):
             raise ColumnNotFound(board, column)
 
-        column_slug = kebab_case(column) if column is not None else None
-        board_slug = kebab_case(board) if board is not None else None
+        column_slug = slug_it(column) if column is not None else None
+        board_slug = slug_it(board) if board is not None else None
 
         boards = [board_slug] if board_slug is not None else [
             e.name for e in sorted(self.boards_dir.iterdir())
@@ -429,8 +429,8 @@ class FilesystemRepository(KanbanRepository):
         return tasks
 
     def get_task(self, board: str, column: str, filename: str) -> Task:
-        column_slug = kebab_case(column)
-        board_slug = kebab_case(board)
+        column_slug = slug_it(column)
+        board_slug = slug_it(board)
 
         if not self.board_exists(board_slug):
             raise BoardNotFound(board)
@@ -445,8 +445,8 @@ class FilesystemRepository(KanbanRepository):
         return self._parse_task_file(task_path, board, column)
 
     def create_task(self, task: Task, filename: str) -> Task:
-        column_slug = kebab_case(task.column)
-        board_slug = kebab_case(task.board)
+        column_slug = slug_it(task.column)
+        board_slug = slug_it(task.board)
 
         if not self.board_exists(board_slug):
             raise BoardNotFound(task.board)
@@ -493,15 +493,15 @@ class FilesystemRepository(KanbanRepository):
         return self._parse_task_file(path, task.board, task.column)
 
     def update_task(self, task: Task) -> Task:
-        board_slug = kebab_case(task.board)
-        column_slug = kebab_case(task.column)
+        board_slug = slug_it(task.board)
+        column_slug = slug_it(task.column)
         current_filename = f"{task.slug}.md"
         current_path = self.boards_dir / board_slug / column_slug / current_filename
 
         if not current_path.is_file():
             raise TaskNotFound(f"{task.board}/{task.column}/{task.slug}")
 
-        new_slug = kebab_case(task.title)
+        new_slug = slug_it(task.title)
         new_filename = f"{new_slug}.md"
         new_path = self.boards_dir / board_slug / column_slug / new_filename
         renamed = new_slug != task.slug
@@ -547,9 +547,9 @@ class FilesystemRepository(KanbanRepository):
         return self._parse_task_file(new_path, task.board, task.column)
 
     def move_task(self, task: Task, column: str) -> Task:
-        board_slug = kebab_case(task.board)
-        src_column_slug = kebab_case(task.column)
-        dest_column_slug = kebab_case(column)
+        board_slug = slug_it(task.board)
+        src_column_slug = slug_it(task.column)
+        dest_column_slug = slug_it(column)
         filename = f"{task.slug}.md"
 
         src_file = self.boards_dir / board_slug / src_column_slug / filename
@@ -589,8 +589,8 @@ class FilesystemRepository(KanbanRepository):
         return self._parse_task_file(dest_file, board_name, column_name)
 
     def delete_task(self, task: Task) -> None:
-        board_slug = kebab_case(task.board)
-        column_slug = kebab_case(task.column)
+        board_slug = slug_it(task.board)
+        column_slug = slug_it(task.column)
         filename = f"{task.slug}.md"
         path = self.boards_dir / board_slug / column_slug / filename
         order = self._get_task_order(board_slug, column_slug)
@@ -693,7 +693,7 @@ class FilesystemRepository(KanbanRepository):
 
     def _board_metadata_file(self, board: str) -> Path:
         """Return the path to the .metadata INI file for the given board."""
-        board_slug = kebab_case(board)
+        board_slug = slug_it(board)
         return self.boards_dir / board_slug / ".metadata"
 
     def get_board_metadata(self, board: str, keypath: str) -> str | None:
@@ -701,7 +701,7 @@ class FilesystemRepository(KanbanRepository):
         if "." not in keypath:
             raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
 
-        board_slug = kebab_case(board)
+        board_slug = slug_it(board)
         section, key = keypath.split(".", 1)
         cfg = configparser.ConfigParser()
         cfg.read(self._board_metadata_file(board_slug), encoding="utf-8")
@@ -716,7 +716,7 @@ class FilesystemRepository(KanbanRepository):
         if "." not in keypath:
             raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
 
-        board_slug = kebab_case(board)
+        board_slug = slug_it(board)
         section, key = keypath.split(".", 1)
         metadata_file = self._board_metadata_file(board_slug)
         cfg = configparser.ConfigParser()
@@ -736,8 +736,8 @@ class FilesystemRepository(KanbanRepository):
 
     def _column_metadata_file(self, board: str, column: str) -> Path:
         """Return the path to the .metadata INI file for the given column."""
-        column_slug = kebab_case(column)
-        board_slug = kebab_case(board)
+        column_slug = slug_it(column)
+        board_slug = slug_it(board)
         return self.boards_dir / board_slug / column_slug / ".metadata"
 
     def get_column_metadata(self, board: str, column: str, keypath: str) -> str | None:
@@ -745,8 +745,8 @@ class FilesystemRepository(KanbanRepository):
         if "." not in keypath:
             raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
         
-        board_slug = kebab_case(board)
-        column_slug = kebab_case(column)
+        board_slug = slug_it(board)
+        column_slug = slug_it(column)
         section, key = keypath.split(".", 1)
         cfg = configparser.ConfigParser()
         cfg.read(self._column_metadata_file(board_slug, column_slug), encoding="utf-8")
@@ -760,8 +760,8 @@ class FilesystemRepository(KanbanRepository):
         """Write a value to a column's .metadata INI file using a 'section.key' keypath."""
         if "." not in keypath:
             raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
-        board_slug = kebab_case(board)
-        column_slug = kebab_case(column)
+        board_slug = slug_it(board)
+        column_slug = slug_it(column)
         section, key = keypath.split(".", 1)
         metadata_file = self._column_metadata_file(board_slug, column_slug)
         cfg = configparser.ConfigParser()

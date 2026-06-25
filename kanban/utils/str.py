@@ -2,7 +2,16 @@
 import unicodedata
 import re
 
-def kebab_case(s: str) -> str:
+from models.slug import Slug
+
+def slug_it(s: str) -> Slug:
+    """
+    Convert free-form title text into a slug. 
+    Encapsulates the _kebab_case function and returns a Slug type.
+    """
+    return Slug(_kebab_case(s))
+
+def _kebab_case(s: str) -> str:
     """Convert free-form title text into a kebab-case filename slug."""
     # strip leading and trailing whitespace
     s = s.strip()
