@@ -230,7 +230,7 @@ def _add_update_parser(subparsers: argparse._SubParsersAction) -> None:
     _add_global_flags(p)
     p.set_defaults(func=handle_task_update)
 
-# ----- TODO: TEST -----
+
 def _add_move_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("move", aliases=["mv"], help="Move a task to another column")
     p.add_argument("path", type=str, help="The task to move")
@@ -242,6 +242,7 @@ def _add_move_parser(subparsers: argparse._SubParsersAction) -> None:
     group.add_argument("--down", action="store_true", default=False, help="Move the task down within the current column")
     _add_global_flags(p)
     p.set_defaults(func=handle_task_move)
+
 
 def _add_config_parser(subparsers: argparse._SubParsersAction) -> None:
     config_parser = subparsers.add_parser("config", help="List, get, or set configuration values")

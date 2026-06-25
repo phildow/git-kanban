@@ -267,6 +267,73 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         self.assertIs(args.func, handle_config_get)
 
 
+    def test_task_move_path_and_handler(self) -> None:
+        """task move binds path and the handle_task_move handler."""
+        args = cli_parser.parse_args(["task", "move", "board-a/todo/fix-parser", "done"])
+        self.assertEqual(args.path, "board-a/todo/fix-parser")
+        self.assertIs(args.func, handle_task_move)
+
+    def test_task_move_column_arg(self) -> None:
+        """task move with a positional column sets column and leaves flags False."""
+        args = cli_parser.parse_args(["task", "move", "board-a/todo/fix-parser", "done"])
+        self.assertEqual(args.column, "done")
+        self.assertFalse(args.top)
+        self.assertFalse(args.bottom)
+        self.assertFalse(args.up)
+        self.assertFalse(args.down)
+
+    def test_task_move_top_flag(self) -> None:
+        """task move --top sets top=True and leaves other flags False and column None."""
+        args = cli_parser.parse_args(["task", "move", "board-a/todo/fix-parser", "--top"])
+        self.assertTrue(args.top)
+        self.assertIsNone(args.column)
+        self.assertFalse(args.bottom)
+        self.assertFalse(args.up)
+        self.assertFalse(args.down)
+
+    def test_task_move_bottom_flag(self) -> None:
+        """task move --bottom sets bottom=True and leaves other flags False and column None."""
+        args = cli_parser.parse_args(["task", "move", "board-a/todo/fix-parser", "--bottom"])
+        self.assertTrue(args.bottom)
+        self.assertIsNone(args.column)
+        self.assertFalse(args.top)
+        self.assertFalse(args.up)
+        self.assertFalse(args.down)
+
+    def test_task_move_up_flag(self) -> None:
+        """task move --up sets up=True and leaves other flags False and column None."""
+        args = cli_parser.parse_args(["task", "move", "board-a/todo/fix-parser", "--up"])
+        self.assertTrue(args.up)
+        self.assertIsNone(args.column)
+        self.assertFalse(args.top)
+        self.assertFalse(args.bottom)
+        self.assertFalse(args.down)
+
+    def test_task_move_down_flag(self) -> None:
+        """task move --down sets down=True and leaves other flags False and column None."""
+        args = cli_parser.parse_args(["task", "move", "board-a/todo/fix-parser", "--down"])
+        self.assertTrue(args.down)
+        self.assertIsNone(args.column)
+        self.assertFalse(args.top)
+        self.assertFalse(args.bottom)
+        self.assertFalse(args.up)
+
+    def test_task_move_no_destination_defaults(self) -> None:
+        """task move with only a path sets column=None and all flags False."""
+        args = cli_parser.parse_args(["task", "move", "board-a/todo/fix-parser"])
+        self.assertIsNone(args.column)
+        self.assertFalse(args.top)
+        self.assertFalse(args.bottom)
+        self.assertFalse(args.up)
+        self.assertFalse(args.down)
+
+    def test_task_move_mutual_exclusion(self) -> None:
+        """task move rejects more than one destination argument at once."""
+        with self.assertRaises(SystemExit):
+            cli_parser.parse_args(["task", "move", "board-a/todo/fix-parser", "--top", "--bottom"])
+        with self.assertRaises(SystemExit):
+            cli_parser.parse_args(["task", "move", "board-a/todo/fix-parser", "--up", "--down"])
+
     def test_required_subparsers_raise(self):
         """Missing required subcommands trigger parser exit errors."""
         with self.assertRaises(SystemExit):

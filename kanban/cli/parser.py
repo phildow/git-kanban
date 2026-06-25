@@ -229,7 +229,6 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     _add_global_flags(p)
     p.set_defaults(func=handle_task_delete)
 
-    # ----- TODO: TEST -----
     # task move
     p = task_sub.add_parser("move", help="Move task to another column")
     p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")

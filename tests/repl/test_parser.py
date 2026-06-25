@@ -24,6 +24,7 @@ from repl.commands import (
     handle_change_dir,
     handle_task_assign,
     handle_task_create,
+    handle_task_move,
     handle_task_update,
 )
 
@@ -125,6 +126,80 @@ class TestParserAliases(unittest.TestCase):
             repl_parser.parse_args(["assign"])
         with self.assertRaises(SystemExit):
             repl_parser.parse_args(["assign", "main/todo/fix-login"])
+
+    def test_move_path_and_handler(self) -> None:
+        """move binds the path argument and the handle_task_move handler."""
+        args = repl_parser.parse_args(["move", "todo/fix-parser", "done"])
+        self.assertEqual(args.path, "todo/fix-parser")
+        self.assertIs(args.func, handle_task_move)
+
+    def test_move_column_arg(self) -> None:
+        """move with a positional column sets column and leaves flags at their defaults."""
+        args = repl_parser.parse_args(["move", "todo/fix-parser", "done"])
+        self.assertEqual(args.column, "done")
+        self.assertFalse(args.top)
+        self.assertFalse(args.bottom)
+        self.assertFalse(args.up)
+        self.assertFalse(args.down)
+
+    def test_move_top_flag(self) -> None:
+        """move --top sets top=True and leaves column None and other flags False."""
+        args = repl_parser.parse_args(["move", "todo/fix-parser", "--top"])
+        self.assertTrue(args.top)
+        self.assertIsNone(args.column)
+        self.assertFalse(args.bottom)
+        self.assertFalse(args.up)
+        self.assertFalse(args.down)
+
+    def test_move_bottom_flag(self) -> None:
+        """move --bottom sets bottom=True and leaves column None and other flags False."""
+        args = repl_parser.parse_args(["move", "todo/fix-parser", "--bottom"])
+        self.assertTrue(args.bottom)
+        self.assertIsNone(args.column)
+        self.assertFalse(args.top)
+        self.assertFalse(args.up)
+        self.assertFalse(args.down)
+
+    def test_move_up_flag(self) -> None:
+        """move --up sets up=True and leaves column None and other flags False."""
+        args = repl_parser.parse_args(["move", "todo/fix-parser", "--up"])
+        self.assertTrue(args.up)
+        self.assertIsNone(args.column)
+        self.assertFalse(args.top)
+        self.assertFalse(args.bottom)
+        self.assertFalse(args.down)
+
+    def test_move_down_flag(self) -> None:
+        """move --down sets down=True and leaves column None and other flags False."""
+        args = repl_parser.parse_args(["move", "todo/fix-parser", "--down"])
+        self.assertTrue(args.down)
+        self.assertIsNone(args.column)
+        self.assertFalse(args.top)
+        self.assertFalse(args.bottom)
+        self.assertFalse(args.up)
+
+    def test_move_no_destination_defaults(self) -> None:
+        """move with only a path leaves column=None and all flags False."""
+        args = repl_parser.parse_args(["move", "todo/fix-parser"])
+        self.assertIsNone(args.column)
+        self.assertFalse(args.top)
+        self.assertFalse(args.bottom)
+        self.assertFalse(args.up)
+        self.assertFalse(args.down)
+
+    def test_mv_alias_maps_to_move_handler(self) -> None:
+        """mv is an alias for move and binds the same handler."""
+        args = repl_parser.parse_args(["mv", "todo/fix-parser", "--up"])
+        self.assertEqual(args.command, "mv")
+        self.assertTrue(args.up)
+        self.assertIs(args.func, handle_task_move)
+
+    def test_move_mutual_exclusion(self) -> None:
+        """move rejects more than one destination argument at once."""
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["move", "todo/fix-parser", "--top", "--bottom"])
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["move", "todo/fix-parser", "--up", "--down"])
 
     def test_cd_alias_maps_to_set_path_handler(self):
         parser = repl_parser.build_parser()
