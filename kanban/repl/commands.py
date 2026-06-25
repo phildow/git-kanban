@@ -84,7 +84,7 @@ def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: object
 		raise ValueError("Unexpected result type from handle_delete: {}".format(typ))
 
 
-	# TODO: Currenty unused, can only move tasks right now
+# TODO: Currenty unused, can only move tasks right now
 def handle_move(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	typ, result = handle_move_helper(args, svc)
 	
@@ -171,10 +171,15 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: o
 	result = svc.update_task(args.path, updates=updates)
 	renderer.render_task_edit(args, result)
 
-
+# ----- TODO: TEST -----
 def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	result = svc.move_task(args.path, args.column)
-	renderer.render_task_move(args, result)
+	if args.column is not None:
+		result = svc.move_task(args.path, args.column)
+		renderer.render_task_move(args, result)
+	else:
+		op = "top" if args.top else "bottom" if args.bottom else "up" if args.up else "down"
+		result = svc.reorder_task(args.path, op)
+		renderer.render_task_reorder(args, (result, op))
 
 
 def handle_task_assign(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:

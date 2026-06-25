@@ -392,13 +392,24 @@ class Renderer:
 	def render_task_edit(self, args: argparse.Namespace, result: Task) -> None:
 		self._emit(args, result)
 
-	def render_task_move(self, args: argparse.Namespace, task: Task) -> None:
-		if task.column:
-			msg = f"Task moved to: {task.column}"
+	def render_task_move(self, args: argparse.Namespace, result: Task) -> None:
+		if result.column:
+			msg = f"Task moved to: {result.column}"
 		else:
-			msg = f"Task moved: {task.slug}"
+			msg = f"Task moved: {result.slug}"
 		self._emit(args, msg)
 	
+	# ----- TODO: TEST -----
+	def render_task_reorder(self, args: argparse.Namespace, task_op: tuple[Task, str]) -> None:
+		result, op = task_op
+		if result.column and op in ["top", "bottom"]:
+			msg = f"Task moved to {op} in {result.column}"
+		elif result.column and op in ["up", "down"]:
+			msg = f"Task moved {op} in {result.column}"
+		else:
+			msg = f"Task reordered: {result.slug} ({op})"
+		self._emit(args, msg)
+
 	def render_task_delete(self, args: argparse.Namespace) -> None:
 		path = getattr(args, "path", None)
 		if path:

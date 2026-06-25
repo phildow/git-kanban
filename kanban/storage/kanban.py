@@ -370,6 +370,15 @@ class KanbanRepository(ABC):
         """
 
     @abstractmethod
+    def reorder_task(self, path: str, op: str) -> Task:
+        """
+        Bump a task's priority up or down or to the top or bottom.
+        
+        Validates that the new priority is valid. Raises TaskNotFound or 
+        if the task does not exist.
+        """
+
+    @abstractmethod
     def delete_task(self, task: Task) -> None:
         """
         Delete a task.

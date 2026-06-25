@@ -18,6 +18,8 @@ class Column:
     name:       str
     slug:       Slug
     board:      Slug
+    # TODO: why does the col have a position but the task doesn't?  
+    # Shouldn't the task have a position too? Or remove this
     position:   int
     
     task_count: int = 0

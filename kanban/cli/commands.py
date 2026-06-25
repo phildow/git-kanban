@@ -145,9 +145,15 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: o
 	_pick(args, renderer, json_renderer).render_task_edit(args, result)
 
 
+# ----- TODO: TEST -----
 def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
-	result = svc.move_task(args.path, args.column)
-	_pick(args, renderer, json_renderer).render_task_move(args, result)
+	if args.column is not None:
+		result = svc.move_task(args.path, args.column)
+		_pick(args, renderer, json_renderer).render_task_move(args, result)
+	else:
+		op = "top" if args.top else "bottom" if args.bottom else "up" if args.up else "down"
+		result = svc.reorder_task(args.path, op)
+		_pick(args, renderer, json_renderer).render_task_reorder(args, (result, op))
 
 
 def handle_task_delete(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:

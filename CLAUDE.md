@@ -365,9 +365,15 @@ kanban task update <board>/<column>/<title>
     [--due-date <date>]
     [--created-by <name>]
 
+kanban task move <board>/<column>/<task> 
+    [<column>]
+    [--top]
+    [--bottom]
+    [--up]
+    [--down]
+
 kanban task show <board>/<column>/<task> [--format <table|plain|json>]
 kanban task edit <board>/<column>/<task>
-kanban task move <board>/<column>/<task> <dest>
 kanban task delete <board>/<column>/<task>
 kanban task assign <board>/<column>/<task> <name>
 
@@ -413,7 +419,7 @@ COMMAND
   show             Show task details
   edit             Edit a task in the default editor
   update           Update a task
-  move             Move a task to another column or up/down in it its column
+  move             Move a task to another column or up/down within a column
   config           List, get, or set configuration values
   search           Full-text search across tasks
   log              Show git log for a task or scope

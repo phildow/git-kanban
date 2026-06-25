@@ -195,6 +195,18 @@ class Renderer:
 	def render_task_move(self, args: argparse.Namespace, result: Task) -> None:
 		self._emit(args, result)
 
+	# ----- TODO: TEST -----
+	@_requires_verbose
+	def render_task_reorder(self, args: argparse.Namespace, task_op: tuple[Task, str]) -> None:
+		result, op = task_op
+		if result.column and op in ["top", "bottom"]:
+			msg = f"Task moved to {op} in {result.column}"
+		elif result.column and op in ["up", "down"]:
+			msg = f"Task moved {op} in {result.column}"
+		else:
+			msg = f"Task reordered: {result.slug} ({op})"
+		self._emit(args, msg)
+
 	@_requires_verbose
 	def render_task_delete(self, args: argparse.Namespace, result: None) -> None:
 		_ = result

@@ -549,6 +549,39 @@ class FilesystemRepository(KanbanRepository):
         column_name = self.get_column_metadata(board_slug, dest_column_slug, "fields.name") or column
         return self._parse_task_file(dest_file, board_name, column_name)
 
+    # ----- TODO: TEST -----
+    def reorder_task(self, task: Task, op: str) -> Task:
+        board_slug = task.board
+        column_slug = task.column
+        filename = f"{task.slug}.md"
+        order = self._get_task_order(board_slug, column_slug)
+
+        if filename not in order:
+            raise TaskNotFound(f"{task.board}/{task.column}/{task.slug}")
+
+        current_index = order.index(filename)
+        new_index = current_index
+
+        if op == "up":
+            new_index = max(0, current_index - 1)
+        elif op == "down":
+            new_index = min(len(order) - 1, current_index + 1)
+        elif op == "top":
+            new_index = 0
+        elif op == "bottom":
+            new_index = len(order) - 1
+        else:
+            raise ValueError(f"Invalid operation '{op}': must be one of 'up', 'down', 'top', 'bottom'")
+
+        if new_index != current_index:
+            order.insert(new_index, order.pop(current_index))
+            self._set_task_order(board_slug, column_slug, order)
+
+        task.updated_at = datetime.now(timezone.utc)
+        self.update_task(task, task.slug)
+
+        return self.get_task(board_slug, column_slug, task.slug)
+
     def delete_task(self, task: Task) -> None:
         board_slug = task.board
         column_slug = task.column

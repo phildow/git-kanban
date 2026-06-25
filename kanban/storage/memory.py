@@ -366,6 +366,51 @@ class InMemoryRepository(KanbanRepository):
         stored.updated_at = datetime.now(UTC)
         return stored
 
+    # ----- TODO: TEST -----
+    def reorder_task(self, task: Task, op: str) -> Task:
+        stored = self._tasks_by_id.get(task.id)
+        if stored is None:
+            raise TaskNotFound(str(task.id))
+
+        board = stored.board
+        column = stored.column
+        if board is None or column is None:
+            raise TaskNotFound(str(task.id))
+
+        tasks_in_column = [
+            t for t in self._tasks_by_id.values() if t.board == board and t.column == column
+        ]
+        tasks_in_column.sort(key=lambda t: t.priority)
+
+        current_index = next((i for i, t in enumerate(tasks_in_column) if t.id == task.id), None)
+        if current_index is None:
+            raise TaskNotFound(str(task.id))
+
+        if op == "up" and current_index > 0:
+            tasks_in_column[current_index], tasks_in_column[current_index - 1] = (
+                tasks_in_column[current_index - 1],
+                tasks_in_column[current_index],
+            )
+        elif op == "down" and current_index < len(tasks_in_column) - 1:
+            tasks_in_column[current_index], tasks_in_column[current_index + 1] = (
+                tasks_in_column[current_index + 1],
+                tasks_in_column[current_index],
+            )
+        elif op == "top":
+            task_to_move = tasks_in_column.pop(current_index)
+            tasks_in_column.insert(0, task_to_move)
+        elif op == "bottom":
+            task_to_move = tasks_in_column.pop(current_index)
+            tasks_in_column.append(task_to_move)
+        else:
+            raise ValueError(f"Invalid operation '{op}': must be one of 'up', 'down', 'top', 'bottom'")
+
+        for i, t in enumerate(tasks_in_column):
+            t.priority = i
+
+        stored.updated_at = datetime.now(UTC)
+        return stored
+    
     def delete_task(self, task: Task) -> None:
         task_id = task.id
         if task_id not in self._tasks_by_id:

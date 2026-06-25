@@ -37,6 +37,7 @@ class TaskUpdateParams:
     due_date:    datetime | None = None
 
 
+
 # ── Return types ──────────────────────────────────────────────────────────────
 
 @dataclass
@@ -596,7 +597,7 @@ class KanbanService:
         Resolve and return a single task by title slug.  Delegates
         location resolution to resolve_path, which applies the
         explicit → context → index-search chain and raises TaskNotFound or
-        AmbiguousTaskReference if resolution fails.
+        if resolution fails.
         """
         board, column, title = self.path_components(path)
 
@@ -613,8 +614,9 @@ class KanbanService:
     ) -> Task:
         """Open's the task's .md file in an editor, then reads the updated 
         content and metadata and applies changes to the task.  Raises 
-        TaskNotFound or AmbiguousTaskReference if the task cannot be resolved.  
-        Updates the index and commits."""
+        TaskNotFound if the task cannot be resolved.  
+        Updates the index and commits.
+        """
         task = self.get_task(path)
         markdown = self._task_to_markdown(task)
 
@@ -658,8 +660,7 @@ class KanbanService:
         Apply TaskUpdateParams to an existing task's frontmatter and body,
         updating updated_at automatically.  If updates.title differs from the
         current title, the file is renamed to match the new slug.  Raises
-        TaskNotFound or AmbiguousTaskReference via path_components.
-        Updates the index entry and commits.
+        TaskNotFound via path_components. Updates the index entry and commits.
         """
         task = self.get_task(path)
 
@@ -699,12 +700,28 @@ class KanbanService:
         """
         Move a task's .md file to a new column within the same board. 
         Validates that the destination column exists before moving.
-        Raises TaskNotFound, AmbiguousTaskReference, BoardNotFound, or
-        ColumnNotFound as appropriate.  Updates the index and commits.
+        Raises TaskNotFound, BoardNotFound, or ColumnNotFound as appropriate.  
+        Updates the index and commits.
         """
-        
         task = self.get_task(path)
+        column = Slug(column)
         result = self.repository.move_task(task, column)
+        self.index_service.update_task(result)
+        return result
+
+    # ----- TODO: TEST -----
+    def reorder_task(
+        self,
+        path: str,
+        op:   str,
+    ) -> Task:
+        """
+        Bump a task's priority up/down or to top/bottom.  Validates that the 
+        new priority is valid.  Raises TaskNotFound via path_components.
+        Updates the index and commits.
+        """
+        task = self.get_task(path)
+        result = self.repository.reorder_task(task, op)
         self.index_service.update_task(result)
         return result
 
@@ -714,8 +731,7 @@ class KanbanService:
     ) -> None:
         """
         Delete a task's .md file from disk.  Raises TaskNotFound or
-        AmbiguousTaskReference via path_components.  Removes the task's
-        index entry and commits.
+        via path_components.  Removes the task's index entry and commits.
         """
         task = self.get_task(path)
         self.repository.delete_task(task)
@@ -728,8 +744,8 @@ class KanbanService:
         user: str,
     ) -> Task:
         """
-        Assign a task to a user.  Raises TaskNotFound or AmbiguousTaskReference
-        via path_components.  Updates the index and commits.
+        Assign a task to a user.  Raises TaskNotFound via path_components.  
+        Updates the index and commits.
         """
         task = self.get_task(path)
         task.assigned_to = user

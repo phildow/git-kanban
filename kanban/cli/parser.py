@@ -221,14 +221,6 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     _add_global_flags(p)
     p.set_defaults(func=handle_task_update)
 
-    # task move
-    p = task_sub.add_parser("move", help="Move task to another column")
-    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
-    p.add_argument("column", metavar="COLUMN", help="Destination column path")
-    _add_format_arg(p)
-    _add_global_flags(p)
-    p.set_defaults(func=handle_task_move)
-
     # task delete
     p = task_sub.add_parser("delete", help="Delete a task")
     p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
@@ -236,6 +228,20 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     _add_format_arg(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_task_delete)
+
+    # ----- TODO: TEST -----
+    # task move
+    p = task_sub.add_parser("move", help="Move task to another column")
+    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
+    group = p.add_mutually_exclusive_group()
+    group.add_argument("column", type=str, nargs="?", help="The destination column")
+    group.add_argument("--top", action="store_true", default=False, help="The top of the current column")
+    group.add_argument("--bottom", action="store_true", default=False, help="The bottom of the current column")
+    group.add_argument("--up", action="store_true", default=False, help="Move the task up within the current column")
+    group.add_argument("--down", action="store_true", default=False, help="Move the task down within the current column")
+    _add_format_arg(p)
+    _add_global_flags(p)
+    p.set_defaults(func=handle_task_move)
 
     # task assign
     p = task_sub.add_parser("assign", help="Assign a task to a user")

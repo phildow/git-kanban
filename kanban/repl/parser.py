@@ -230,24 +230,18 @@ def _add_update_parser(subparsers: argparse._SubParsersAction) -> None:
     _add_global_flags(p)
     p.set_defaults(func=handle_task_update)
 
-# TODO: Add a `move` subcommand to move tasks between columns or boards. This will require additional logic to handle the move operation and update the task's path accordingly.
+# ----- TODO: TEST -----
 def _add_move_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("move", aliases=["mv"], help="Move a task to another column")
     p.add_argument("path", type=str, help="The task to move")
-    p.add_argument("column", type=str, help="The destination column")
+    group = p.add_mutually_exclusive_group()
+    group.add_argument("column", type=str, nargs="?", help="The destination column")
+    group.add_argument("--top", action="store_true", default=False, help="The top of the current column")
+    group.add_argument("--bottom", action="store_true", default=False, help="The bottom of the current column")
+    group.add_argument("--up", action="store_true", default=False, help="Move the task up within the current column")
+    group.add_argument("--down", action="store_true", default=False, help="Move the task down within the current column")
     _add_global_flags(p)
     p.set_defaults(func=handle_task_move)
-
-    # move_sub = move_parser.add_subparsers(dest="move_subject", metavar="SUBJECT")
-    # move_sub.required = True
-    
-    # # move task
-    # p = move_sub.add_parser("task", help="Move task to another column on the same board")
-    # p.add_argument("path", metavar="TASK", help="The task to move, specified by its title or a fully qualified path relative to the current context")
-    # p.add_argument("dest", metavar="[BOARD/]COLUMN", help="Destination board/column path")
-    # _add_global_flags(p)
-    # p.set_defaults(func=handle_task_move)
-
 
 def _add_config_parser(subparsers: argparse._SubParsersAction) -> None:
     config_parser = subparsers.add_parser("config", help="List, get, or set configuration values")
