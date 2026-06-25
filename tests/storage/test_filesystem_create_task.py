@@ -24,8 +24,8 @@ class TestFilesystemCreateTask(unittest.TestCase):
         self.root = Path(self._tmp.name)
         self.repo = FilesystemRepository(root=self.root)
         self.repo.init_storage()
-        self.repo.create_board("proj")
-        self.repo.create_column("proj", "todo")
+        self.repo.create_board("proj", slug="proj")
+        self.repo.create_column("proj", "todo", slug="todo")
 
     def tearDown(self) -> None:
         self._tmp.cleanup()

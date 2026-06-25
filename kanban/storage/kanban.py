@@ -26,9 +26,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Optional
 
-from models import UserContext, Board, Column, Task, TaskFilter
+from models import Board, Column, Slug, Task
 
 
 # ---------------------------------------------------------------------------
@@ -164,7 +163,7 @@ class KanbanRepository(ABC):
         """
 
     @abstractmethod
-    def get_board(self, name: str) -> Board:
+    def get_board(self, slug: Slug) -> Board:
         """
         Return the Board with its ordered column list.
 
@@ -172,11 +171,11 @@ class KanbanRepository(ABC):
         """
 
     @abstractmethod
-    def board_exists(self, name: str) -> bool:
-        """Return True when a board with this name exists, else False."""
+    def board_exists(self, slug: Slug) -> bool:
+        """Return True when a board with this slug exists, else False."""
 
     @abstractmethod
-    def create_board(self, name: str) -> Board:
+    def create_board(self, name: str, slug: Slug) -> Board:
         """
         Create and return an empty board (no columns).
         
@@ -184,7 +183,7 @@ class KanbanRepository(ABC):
         """
 
     @abstractmethod
-    def rename_board(self, name: str, new_name: str) -> Board:
+    def rename_board(self, slug: Slug, new_name: str, new_slug: Slug) -> Board:
         """
         Rename a board and return the updated Board.
 
@@ -195,7 +194,7 @@ class KanbanRepository(ABC):
         """
 
     @abstractmethod
-    def delete_board(self, name: str) -> None:
+    def delete_board(self, slug: Slug) -> None:
         """
         Delete a board and all its columns and tasks.
 
@@ -207,7 +206,7 @@ class KanbanRepository(ABC):
     # ------------------------------------------------------------------
 
     @abstractmethod
-    def get_columns(self, board: str) -> list[Column]:
+    def get_columns(self, board: Slug) -> list[Column]:
         """
         Return columns for the given board in display order.
 
@@ -216,7 +215,7 @@ class KanbanRepository(ABC):
         """
 
     @abstractmethod
-    def get_column(self, board: str, name: str) -> Column:
+    def get_column(self, board: Slug, slug: Slug) -> Column:
         """
         Return a single Column by board and column name.
 
@@ -225,7 +224,7 @@ class KanbanRepository(ABC):
         """
 
     @abstractmethod
-    def column_exists(self, board: str, name: str) -> bool:
+    def column_exists(self, board: Slug, slug: Slug) -> bool:
         """
         Return True when the named column exists on the board, else False.
 
@@ -233,16 +232,16 @@ class KanbanRepository(ABC):
         """
 
     @abstractmethod
-    def create_column(self, board: str, name: str) -> Column:
+    def create_column(self, board: Slug, name: str, slug: Slug) -> Column:
         """
         Append a column to the end of the board's column list and return it.
-
+    
         Raises BoardNotFound if the board does not exist.
         Raises ColumnAlreadyExists if the name is taken on that board.
         """
 
     @abstractmethod
-    def rename_column(self, board: str, name: str, new_name: str) -> Column:
+    def rename_column(self, board: Slug, slug: Slug, new_name: str, new_slug: Slug) -> Column:
         """
         Rename a column and return the updated Column.
 
@@ -254,7 +253,7 @@ class KanbanRepository(ABC):
         """
 
     @abstractmethod
-    def reorder_column(self, board: str, name: str, position: int) -> list[Column]:
+    def reorder_column(self, board: Slug, slug: Slug, position: int) -> list[Column]:
         """
         Move the column to the given 0-based position and return the full
         updated column list in new display order.
@@ -266,7 +265,7 @@ class KanbanRepository(ABC):
         """
 
     @abstractmethod
-    def delete_column(self, board: str, name: str) -> None:
+    def delete_column(self, board: Slug, slug: Slug) -> None:
         """
         Delete a column and all its tasks.
 
@@ -279,11 +278,7 @@ class KanbanRepository(ABC):
     # ------------------------------------------------------------------
 
     @abstractmethod
-    def get_tasks(
-        self,
-        board: Optional[str] = None,
-        column: Optional[str] = None,
-    ) -> list[Task]:
+    def get_tasks(self, board: Slug | None = None, column: Slug | None = None) -> list[Task]:
         """
         Return tasks matching the given scope.
 
@@ -298,7 +293,7 @@ class KanbanRepository(ABC):
         """
 
     @abstractmethod
-    def get_task(self, board: str, column: str, filename: str) -> Task:
+    def get_task(self, board: Slug, column: Slug, filename: str) -> Task:
         """
         Return a single task by its exact board/column/filename path.
 
@@ -309,16 +304,16 @@ class KanbanRepository(ABC):
 
     # TODO: unused
     @abstractmethod
-    def task_exists(self, board: str, column: str, filename: str) -> bool:
+    def task_exists(self, board: Slug, column: Slug, slug: Slug) -> bool:
         """
         Return True when a task at this exact path exists, else False.
 
         Raises BoardNotFound if the board does not exist.
         Raises ColumnNotFound if the column does not exist on that board.
         """
-
+        
     @abstractmethod
-    def create_task(self, task: Task, filename: str) -> Task:
+    def create_task(self, task: Task, slug: Slug) -> Task:
         """
         Persist a new task and return it with any storage-assigned fields
         populated (e.g. created_at / updated_at if the caller left them None).
@@ -326,25 +321,28 @@ class KanbanRepository(ABC):
         The `task.id` must be set by the caller before calling this method.
         The `task.board` and `task.column` must reference an existing board
         and column.
-        `filename` is the storage slug (kebab-case) derived from title.
+        `slug` is the storage slug (kebab-case) derived from title.
 
         Raises BoardNotFound if the board does not exist.
         Raises ColumnNotFound if the column does not exist on that board.
-        Raises TaskAlreadyExists if a task with the same filename already
-        exists in that column. (Filenames must be unique within a column directory.)
+        Raises TaskAlreadyExists if a task with the same slug already
+        exists in that column. (Slugs must be unique within a column directory.)
         """
 
     @abstractmethod
-    def update_task(self, task: Task) -> Task:
+    def update_task(self, task: Task, slug: Slug) -> Task:
         """
         Overwrite an existing task's mutable fields (title, assigned_to,
         priority, due_date, tags, body) and return the updated Task.
 
-        Locates the task by `task.id`. If the title has changed, the
+        Locates the task by the slug. If the title has changed, the
         underlying filename is renamed to match.
 
         `task.board` and `task.column` are treated as read-only here;
         use move_task to change location.
+
+        If the task title has changed, it is the caller's responsibility 
+        to update `task.slug` to the new slug
 
         `updated_at` is set to the current UTC time by the repository.
 
@@ -354,11 +352,7 @@ class KanbanRepository(ABC):
         """
 
     @abstractmethod
-    def move_task(
-        self,
-        task:   Task,
-        column: str,
-    ) -> Task:
+    def move_task(self, task: Task, column: Slug) -> Task:
         """
         Move a task to a different column within the same board
         and return the updated Task.
@@ -378,7 +372,7 @@ class KanbanRepository(ABC):
     @abstractmethod
     def delete_task(self, task: Task) -> None:
         """
-        Delete a taskD.
+        Delete a task.
 
         Raises TaskNotFound if the task does not exist.
         """

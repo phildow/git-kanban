@@ -35,32 +35,32 @@ class TestFilesystemRenameBoard(unittest.TestCase):
 
     def test_renames_directory(self) -> None:
         """Old directory is gone and new directory exists after rename."""
-        self.repo.rename_board("alpha", "beta")
+        self.repo.rename_board("alpha", "beta", new_slug="beta")
         self.assertFalse((self.repo.boards_dir / "alpha").exists())
         self.assertTrue((self.repo.boards_dir / "beta").is_dir())
 
     def test_returns_board_with_new_name(self) -> None:
         """Returns a Board with the new name."""
-        board = self.repo.rename_board("alpha", "beta")
+        board = self.repo.rename_board("alpha", "beta", new_slug="beta")
         self.assertIsInstance(board, Board)
         self.assertEqual(board.name, "beta")
 
     def test_raises_when_source_missing(self) -> None:
         """Raises BoardNotFound when the source board does not exist."""
         with self.assertRaises(BoardNotFound):
-            self.repo.rename_board("missing", "beta")
+            self.repo.rename_board("missing", "beta", new_slug="beta")
 
     def test_raises_when_target_exists(self) -> None:
         """Raises BoardAlreadyExists when a board with the new name already exists."""
         (self.repo.boards_dir / "beta").mkdir()
         with self.assertRaises(BoardAlreadyExists):
-            self.repo.rename_board("alpha", "beta")
+            self.repo.rename_board("alpha", "beta", new_slug="beta")
 
     def test_preserves_column_directories(self) -> None:
         """Column subdirectories are preserved under the renamed board."""
         (self.repo.boards_dir / "alpha" / "todo").mkdir()
         (self.repo.boards_dir / "alpha" / "done").mkdir()
-        self.repo.rename_board("alpha", "beta")
+        self.repo.rename_board("alpha", "beta", new_slug="beta")
         self.assertTrue((self.repo.boards_dir / "beta" / "todo").is_dir())
         self.assertTrue((self.repo.boards_dir / "beta" / "done").is_dir())
 

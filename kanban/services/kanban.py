@@ -2,13 +2,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from datetime import datetime, timezone
 import os
-import re
 import shlex
 import subprocess
 import tempfile
-from uuid import UUID, uuid4
+from uuid import uuid4
 
-from models import Task, TaskFilter, Board, Column, UserContext
+from models import Board, Column, Slug, Task, TaskFilter, UserContext
 from storage.kanban import KanbanRepository, ColumnNotFound, BoardNotFound
 from storage.seeds import BootstrapConfig
 from services.git import GitService
@@ -162,18 +161,18 @@ class KanbanService:
         for board_config in config["boards"]:
             board_name = board_config["name"]
             board_slug = board_config["slug"]
-            self.repository.create_board(board_name)
+            self.repository.create_board(board_name, board_slug)
             for col_config in board_config["columns"]:
                 col_name = col_config["name"]
                 col_slug = col_config["slug"]
-                self.repository.create_column(board_name, col_name)
+                self.repository.create_column(board_slug, col_name, col_slug)
                 for task_config in col_config.get("tasks", []):
                     task = Task(
                         id=uuid4(),
                         title=task_config["title"],
                         slug=task_config["slug"],
-                        board=board_name,
-                        column=col_name,
+                        board=board_slug,
+                        column=col_slug,
                         priority=task_config.get("priority"),
                         assigned_to=task_config.get("assigned_to"),
                         body=task_config.get("body", ""),
@@ -196,14 +195,14 @@ class KanbanService:
         return self.user_context.path
     
     @property
-    def working_board(self) -> str | None:
+    def working_board(self) -> Slug | None:
         return self.user_context.board
     
     @property
-    def working_column(self) -> str | None:
+    def working_column(self) -> Slug | None:
         return self.user_context.column
     
-    def update_user_context(self, board: str | None, column: str | None) -> UserContext:
+    def update_user_context(self, board: Slug | None, column: Slug | None) -> UserContext:
         """Set the board/column context"""
         self._user_context.board = board
         self._user_context.column = column
@@ -222,11 +221,11 @@ class KanbanService:
     # Path Resolution and Completions
     # ------------------------------------------------------------------
 
-    def _board_exists(self, board: str) -> bool:
+    def _board_exists(self, board: Slug) -> bool:
         """Return True if the given board exists in the repository, False if not."""
         return self.repository.board_exists(board)
 
-    def _column_exists(self, board: str, column: str) -> bool:
+    def _column_exists(self, board: Slug, column: Slug) -> bool:
         """Return True if the given column exists in the repository, False if not."""
         return self.repository.column_exists(board, column)
 
@@ -251,7 +250,7 @@ class KanbanService:
         resolved_path = base.joinpath(*components).resolve(strict=False)
         return resolved_path
         
-    def path_components(self, path: str | None = None) -> tuple[str | None, str | None, str | None]:
+    def path_components(self, path: str | None = None) -> tuple[Slug | None, Slug | None, Slug | None]:
         """Resolve a [BOARD/][COLUMN/]TITLE path into its components."""
         path = self.resolve_path(path)
         parts = path.parts # ["/", board|None, column|None, title|None]
@@ -261,8 +260,8 @@ class KanbanService:
 
     def change_dir(
         self,
-        path: str | None = None,
-        clear:  bool = False,
+        path:  str | None = None,
+        clear: bool = False,
     ) -> UserContext:
         """
         Set or clear the current board/column context stored in .kanban/config.
@@ -305,7 +304,7 @@ class KanbanService:
         if not board:
             raise BoardNotFound(board)
 
-        self.update_user_context(board=board.name, column=None)
+        self.update_user_context(board=board.slug, column=None)
         return self.user_context
 
     def set_column(self, column: str) -> UserContext:
@@ -320,7 +319,7 @@ class KanbanService:
         if not column:
             raise ColumnNotFound(board, column)
 
-        self.update_user_context(board=board, column=column.name)
+        self.update_user_context(board=board, column=column.slug)
         return self.user_context
 
     # ── Boards ────────────────────────────────────────────────────────────────
@@ -347,10 +346,11 @@ class KanbanService:
         if path.startswith("/"):
             path = path.lstrip("/")
 
-        board_name = path
-        board = self.repository.create_board(board_name)
+        name = path
+        slug = slug_it(name)
+        board = self.repository.create_board(name, slug)
     
-        columns = [self.repository.create_column(board.name, col) for col in columns]
+        columns = [self.repository.create_column(board.name, col, slug_it(col)) for col in columns]
         board.column_count = len(columns)
 
         return board
@@ -365,7 +365,8 @@ class KanbanService:
         Updates the current context if the renamed board was the current one.
         """
         old_board, _, _ = self.path_components(path)
-        board = self.repository.rename_board(old_board, new_name)
+        new_slug = slug_it(new_name)
+        board = self.repository.rename_board(old_board, new_name, new_slug=new_slug)
 
         # Keep current context in sync.
         if self._user_context.board == old_board:
@@ -428,7 +429,8 @@ class KanbanService:
         column to the board's .metadata file and commits.
         """
         board, column, _ = self.path_components(path)
-        return self.repository.create_column(board, column)
+        slug = slug_it(column)
+        return self.repository.create_column(board, column, slug)
 
     def rename_column(self, path: str, new_name: str) -> Column:
         """
@@ -439,7 +441,8 @@ class KanbanService:
         context if the renamed column was the current one.
         """
         board, column, _ = self.path_components(path)
-        renamed_column = self.repository.rename_column(board, column, new_name)
+        new_slug = slug_it(new_name)
+        renamed_column = self.repository.rename_column(board, column, new_name, new_slug=new_slug)
 
         # Update current context if it points at the renamed column.
         if self._user_context.board == board and self._user_context.column == column:
@@ -602,8 +605,7 @@ class KanbanService:
         if title is None:
             raise ValueError(f"No task title provided in path: {path}")
 
-        filename = slug_it(title)
-        return self.repository.get_task(board, column, filename)
+        return self.repository.get_task(board, column, title)
 
     def edit_task(
         self,
@@ -637,7 +639,7 @@ class KanbanService:
                 edited_text = f.read()
 
             edited_task = self._task_from_markdown(edited_text, original=task)
-            updated = self.repository.update_task(edited_task)
+            updated = self.repository.update_task(edited_task, slug=task.slug)
             self.index_service.update_task(updated)
             return updated
         finally:
@@ -666,6 +668,7 @@ class KanbanService:
         # We could use a sentinel value or a separate "remove" flag for each field, but that seems cumbersome.  For now, we will just treat None as "don't change".
 
         due_date = updates.due_date
+        slug = task.slug
 
         if isinstance(due_date, str):
             due_date = datetime.fromisoformat(due_date)
@@ -684,7 +687,7 @@ class KanbanService:
         if updates.created_by is not None:
             task.created_by = updates.created_by
 
-        updated = self.repository.update_task(task)
+        updated = self.repository.update_task(task, slug=slug)
         self.index_service.update_task(updated)
         return updated
 
@@ -730,7 +733,7 @@ class KanbanService:
         """
         task = self.get_task(path)
         task.assigned_to = user
-        updated = self.repository.update_task(task)
+        updated = self.repository.update_task(task, slug=task.slug)
         self.index_service.update_task(updated)
         return updated
 

@@ -27,8 +27,8 @@ class TestKanbanServiceChangeDir(unittest.TestCase):
             index_service=IndexService(repository=self.repo),
             git_service=GitService(),
         )
-        self.repo.create_board("alpha")
-        self.repo.create_column("alpha", "todo")
+        self.repo.create_board("alpha", slug="alpha")
+        self.repo.create_column("alpha", "todo", slug="todo")
 
     def test_change_dir_sets_existing_board_and_column(self):
         ctx = self.svc.change_dir(path="alpha/todo")

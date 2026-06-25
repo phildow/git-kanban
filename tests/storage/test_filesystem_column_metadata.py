@@ -19,8 +19,8 @@ class TestFilesystemColumnMetadata(unittest.TestCase):
         self.root = Path(self._tmp.name)
         self.repo = FilesystemRepository(root=self.root)
         self.repo.init_storage()
-        self.repo.create_board("alpha")
-        self.repo.create_column("alpha", "todo")
+        self.repo.create_board("alpha", slug="alpha")
+        self.repo.create_column("alpha", "todo", slug="todo")
 
     def tearDown(self) -> None:
         self._tmp.cleanup()
@@ -52,7 +52,7 @@ class TestFilesystemColumnMetadata(unittest.TestCase):
 
     def test_metadata_scoped_to_column(self) -> None:
         """Metadata written for one column is not visible in another column."""
-        self.repo.create_column("alpha", "done")
+        self.repo.create_column("alpha", "done", slug="done")
         self.repo.set_column_metadata("alpha", "todo", "display.color", "blue")
         self.assertIsNone(self.repo.get_column_metadata("alpha", "done", "display.color"))
 
@@ -72,8 +72,8 @@ class TestFilesystemTaskOrder(unittest.TestCase):
         self.root = Path(self._tmp.name)
         self.repo = FilesystemRepository(root=self.root)
         self.repo.init_storage()
-        self.repo.create_board("proj")
-        self.repo.create_column("proj", "todo")
+        self.repo.create_board("proj", slug="proj")
+        self.repo.create_column("proj", "todo", slug="todo")
 
     def tearDown(self) -> None:
         self._tmp.cleanup()
@@ -139,8 +139,8 @@ class TestFilesystemTaskOrderWithOtherMetadata(unittest.TestCase):
         self.root = Path(self._tmp.name)
         self.repo = FilesystemRepository(root=self.root)
         self.repo.init_storage()
-        self.repo.create_board("proj")
-        self.repo.create_column("proj", "todo")
+        self.repo.create_board("proj", slug="proj")
+        self.repo.create_column("proj", "todo", slug="todo")
 
     def tearDown(self) -> None:
         self._tmp.cleanup()

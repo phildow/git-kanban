@@ -36,13 +36,13 @@ class TestFilesystemRenameColumn(unittest.TestCase):
 
     def test_renames_directory(self) -> None:
         """Old directory is gone and new directory exists after rename."""
-        self.repo.rename_column("alpha", "todo", "backlog")
+        self.repo.rename_column("alpha", "todo", "backlog", new_slug="backlog")
         self.assertFalse((self.repo.boards_dir / "alpha" / "todo").exists())
         self.assertTrue((self.repo.boards_dir / "alpha" / "backlog").is_dir())
 
     def test_returns_column_with_new_name(self) -> None:
         """Returns a Column with the new name and correct board."""
-        col = self.repo.rename_column("alpha", "todo", "backlog")
+        col = self.repo.rename_column("alpha", "todo", "backlog", new_slug="backlog")
         self.assertIsInstance(col, Column)
         self.assertEqual(col.name, "backlog")
         self.assertEqual(col.board, "alpha")
@@ -50,24 +50,24 @@ class TestFilesystemRenameColumn(unittest.TestCase):
     def test_preserves_task_files(self) -> None:
         """Task files inside the column are preserved under the new name."""
         (self.repo.boards_dir / "alpha" / "todo" / "fix-bug.md").touch()
-        self.repo.rename_column("alpha", "todo", "backlog")
+        self.repo.rename_column("alpha", "todo", "backlog", new_slug="backlog")
         self.assertTrue((self.repo.boards_dir / "alpha" / "backlog" / "fix-bug.md").is_file())
 
     def test_raises_when_board_missing(self) -> None:
         """Raises BoardNotFound when the board does not exist."""
         with self.assertRaises(BoardNotFound):
-            self.repo.rename_column("missing", "todo", "backlog")
+            self.repo.rename_column("missing", "todo", "backlog", new_slug="backlog")
 
     def test_raises_when_source_column_missing(self) -> None:
         """Raises ColumnNotFound when the source column does not exist."""
         with self.assertRaises(ColumnNotFound):
-            self.repo.rename_column("alpha", "missing", "backlog")
+            self.repo.rename_column("alpha", "missing", "backlog", new_slug="backlog")
 
     def test_raises_when_target_column_exists(self) -> None:
         """Raises ColumnAlreadyExists when a column with the new name already exists."""
         (self.repo.boards_dir / "alpha" / "done").mkdir()
         with self.assertRaises(ColumnAlreadyExists):
-            self.repo.rename_column("alpha", "todo", "done")
+            self.repo.rename_column("alpha", "todo", "done", new_slug="done")
 
 
 if __name__ == "__main__":

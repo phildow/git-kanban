@@ -261,11 +261,11 @@ There are three core types: the board, column, and task. A board contains column
 
 There are three ways of identifying a board, column or task: by id, name, or slug.
 
-The `id` is the unique identifier. It is created once with the object, and it remains the same for the lifetime of the object and is used when checking for changes made directly to the filesystem.
+The `id` is the unique identifier. It is created once with the object, and it remains the same for the lifetime of the object. It is used when checking for changes made directly to the filesystem outside of the kanban application.
 
-The `name` is given to the object by the user. It is the display name for the object and appears in the TUI and when using the `-a` flag in the REPL. The name maybe changed.
+The `name` is the display name given to the object by the user. It appears in the TUI and when using the `-a` flag in the REPL. The name maybe changed.
 
-The `slug` is derived from the name. It identifies the file or folder on disk and is used to contsruct paths. It is unique in its context. Slugging is owned by the service layer, and a slug is only created or updated when the object is created or updated. No other layer creates slugs, but consumers of the kanban service may provide a custom slug when creating or updating an object.
+The `slug` is derived from the name. It identifies the file or folder on disk and is used to construct filepaths. It is unique in its context. Slugging is owned by the service layer, and a slug is only created or updated when the object is created or updated. No other layer creates slugs, but consumers of the kanban service may provide a custom slug when creating or updating an object. Repository methods take slugs as parameters but do not create slugs themselves.
 
 In practice the slug functions as the identifer for an object in memory. Once created in the service layer, an object always includes its slug. The interface layer (CLI/REPL/TUI) uses the slug to identify an object when making additional calls to the service layer.
 

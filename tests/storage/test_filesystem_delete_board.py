@@ -18,7 +18,7 @@ class TestFilesystemDeleteBoard(unittest.TestCase):
         self.root = Path(self._tmp.name)
         self.repo = FilesystemRepository(root=self.root)
         self.repo.init_storage()
-        self.repo.create_board("alpha")
+        self.repo.create_board("alpha", slug="alpha")
 
     def tearDown(self) -> None:
         self._tmp.cleanup()

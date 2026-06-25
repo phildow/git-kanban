@@ -30,7 +30,7 @@ class BootstrapConfig(TypedDict, total=False):
 BOOTSTRAP_CONFIG: BootstrapConfig = {
     "usercontext": {
         "board": "main",
-        "column": "to-do",
+        "column": "todo",
     },
     "boards": [
         {
@@ -39,7 +39,7 @@ BOOTSTRAP_CONFIG: BootstrapConfig = {
             "columns": [
                 {
                     "name": "To Do",
-                    "slug": "to-do",
+                    "slug": "todo",
                     "tasks": [
                         {
                             "title": "List your boards and tasks",

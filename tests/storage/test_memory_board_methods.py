@@ -34,7 +34,7 @@ class TestInMemoryRepositoryBoardOps(unittest.TestCase):
         """Creates a board and verifies basic lookup/list/existence behavior."""
         self.assertFalse(self.repo.board_exists("alpha"))
 
-        board = self.repo.create_board("alpha")
+        board = self.repo.create_board("alpha", slug="alpha")
 
         self.assertEqual(board, Board(id=board.id, name="alpha", slug="alpha"))
         self.assertTrue(self.repo.board_exists("alpha"))
@@ -43,9 +43,9 @@ class TestInMemoryRepositoryBoardOps(unittest.TestCase):
 
     def test_create_board_raises_when_duplicate(self):
         """Creating a board with an existing name raises `BoardAlreadyExists`."""
-        self.repo.create_board("alpha")
+        self.repo.create_board("alpha", slug="alpha")
         with self.assertRaises(BoardAlreadyExists):
-            self.repo.create_board("alpha")
+            self.repo.create_board("alpha", slug="alpha")
 
     def test_get_board_raises_when_missing(self):
         """Fetching a missing board raises `BoardNotFound`."""
@@ -54,8 +54,8 @@ class TestInMemoryRepositoryBoardOps(unittest.TestCase):
 
     def test_rename_board_updates_board_columns_tasks(self):
         """Renaming a board updates dependent columns and tasks."""
-        board = self.repo.create_board("alpha")
-        column = self.repo.create_column("alpha", "todo")
+        board = self.repo.create_board("alpha", slug="alpha")
+        column = self.repo.create_column("alpha", "todo", slug="todo")
         
         now = datetime.now(UTC)
         task = Task(
@@ -70,7 +70,7 @@ class TestInMemoryRepositoryBoardOps(unittest.TestCase):
         self.repo._tasks_by_id[task.id] = task
         self.repo._task_locations[task.id] = ("alpha", "todo")
 
-        renamed = self.repo.rename_board("alpha", "beta")
+        renamed = self.repo.rename_board("alpha", "beta", new_slug="beta")
 
         self.assertEqual(renamed.name, "beta")
         self.assertFalse(self.repo.board_exists("alpha"))
@@ -87,19 +87,19 @@ class TestInMemoryRepositoryBoardOps(unittest.TestCase):
     def test_rename_board_raises_when_source_missing(self):
         """Renaming a non-existent board raises `BoardNotFound`."""
         with self.assertRaises(BoardNotFound):
-            self.repo.rename_board("missing", "new")
+            self.repo.rename_board("missing", "new", new_slug="new")
 
     def test_rename_board_raises_when_target_exists(self):
         """Renaming to an already-used board name raises `BoardAlreadyExists`."""
-        self.repo.create_board("alpha")
-        self.repo.create_board("beta")
+        self.repo.create_board("alpha", slug="alpha")
+        self.repo.create_board("beta", slug="beta")
         with self.assertRaises(BoardAlreadyExists):
-            self.repo.rename_board("alpha", "beta")
+            self.repo.rename_board("alpha", "beta", new_slug="beta")
 
     def test_delete_board_removes_board_tasks(self):
         """Deleting a board removes its tasks."""
-        self.repo.create_board("alpha")
-        self.repo.create_board("beta")
+        self.repo.create_board("alpha", slug="alpha")
+        self.repo.create_board("beta", slug="beta")
 
         task_on_alpha = Task(id=uuid4(), title="a", slug="a", board="alpha", column="todo")
         task_on_beta = Task(id=uuid4(), title="b", slug="b", board="beta", column="todo")

@@ -79,9 +79,9 @@ class TestKanbanInitializeKanbanFilesystem(unittest.TestCase):
     # ------------------------------------------------------------------
 
     def test_todo_column_directory_exists(self) -> None:
-        """to-do column directory is created under the main board."""
+        """todo column directory is created under the main board."""
         self.svc.initialize_kanban(config=BOOTSTRAP_CONFIG)
-        self.assertTrue((self.root / ".kanban-store" / "boards" / "main" / "to-do").is_dir())
+        self.assertTrue((self.root / ".kanban-store" / "boards" / "main" / "todo").is_dir())
 
     def test_in_progress_column_directory_exists(self) -> None:
         """in-progress column directory is created under the main board."""
@@ -103,9 +103,9 @@ class TestKanbanInitializeKanbanFilesystem(unittest.TestCase):
     # ------------------------------------------------------------------
 
     def test_seed_task_file_exists_in_todo(self) -> None:
-        """Seed task file list-your-boards-and-tasks.md is created in to-do."""
+        """Seed task file list-your-boards-and-tasks.md is created in todo."""
         self.svc.initialize_kanban(config=BOOTSTRAP_CONFIG)
-        path = self.root / ".kanban-store" / "boards" / "main" / "to-do" / "list-your-boards-and-tasks.md"
+        path = self.root / ".kanban-store" / "boards" / "main" / "todo" / "list-your-boards-and-tasks.md"
         self.assertTrue(path.is_file())
 
     def test_seed_task_file_exists_in_in_progress(self) -> None:
@@ -130,9 +130,9 @@ class TestKanbanInitializeKanbanFilesystem(unittest.TestCase):
         self.assertEqual(self.svc.user_context.board, "main")
 
     def test_user_context_column_is_set(self) -> None:
-        """User context column is set to to-do after bootstrap."""
+        """User context column is set to todo after bootstrap."""
         self.svc.initialize_kanban(config=BOOTSTRAP_CONFIG)
-        self.assertEqual(self.svc.user_context.column, "to-do")
+        self.assertEqual(self.svc.user_context.column, "todo")
 
     def test_userdata_file_records_board(self) -> None:
         """User context board is persisted to .kanban/userdata."""
@@ -142,7 +142,7 @@ class TestKanbanInitializeKanbanFilesystem(unittest.TestCase):
     def test_userdata_file_records_column(self) -> None:
         """User context column is persisted to .kanban/userdata."""
         self.svc.initialize_kanban(config=BOOTSTRAP_CONFIG)
-        self.assertEqual(self.repo.get_userdata("user-context.column"), "to-do")
+        self.assertEqual(self.repo.get_userdata("user-context.column"), "todo")
 
 
 class TestKanbanInitializeKanbanFilesystemCustomBoard(unittest.TestCase):

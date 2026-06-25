@@ -60,13 +60,8 @@ Run:
 
 0.5 - Complete filesystem
 
-- MAJOR: Specify the data model, clarify use of slugs as source of truth, created once,
-    - slugs owned by service layer
-
-- CHORE: slug_it and only done once in the service layer at creation!
-- TYPE: slug
+- TEST: create board, column, and task names with spaces
 - CHORE: remove default columns from the service layer
-- BUG: task.board and task.column are ambiguious - are the names or slugs
 
 - FEAT: add mutually exlusive argument to move command to move to top or bottom: --top | --bottom | board
 - BUG: raise a services domain error if you rename to the same name
@@ -75,12 +70,6 @@ Run:
 - CHORE: special camel case for To Do -> todo not to-do
 - FEAT: consider case-conversion package for unicode compatible kebab casing (pycases)
 - FEAT: kebab_case preserves accented characters
-
-- Add documentation explaining the move only moves task from one column to another
-- Add documentation explaining that names and titles are always slugged for the filesystem, that
-  they are treated as slugs in the cli and repl but displayed using their names and titles with
-  the --list flag (this may be a weakness in the system or at least confusing)
-- But once we're running TUI the user won't see the underlying implementation
 
 ~
 

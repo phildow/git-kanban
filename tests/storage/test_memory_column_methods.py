@@ -25,13 +25,13 @@ class TestInMemoryRepositoryColumnOps(unittest.TestCase):
         temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
         temp_dir.mkdir()
         self.repo = InMemoryRepository(root=temp_dir)
-        self.repo.create_board("alpha")
+        self.repo.create_board("alpha", slug="alpha")
 
     def test_get_columns_and_create_column(self):
         """Creates a column and verifies list output and default position."""
         self.assertEqual(self.repo.get_columns("alpha"), [])
 
-        created = self.repo.create_column("alpha", "todo")
+        created = self.repo.create_column("alpha", "todo", slug="todo")
 
         self.assertEqual(created, Column(id=created.id, name="todo", slug="todo", board="alpha", position=0))
         self.assertEqual(self.repo.get_columns("alpha"), [created])
@@ -45,11 +45,11 @@ class TestInMemoryRepositoryColumnOps(unittest.TestCase):
         with self.assertRaises(BoardNotFound):
             self.repo.column_exists("missing", "todo")
         with self.assertRaises(BoardNotFound):
-            self.repo.create_column("missing", "todo")
+            self.repo.create_column("missing", "todo", slug="todo")
 
     def test_get_and_exists(self):
         """Verifies column existence checks and direct lookup behavior."""
-        self.repo.create_column("alpha", "todo")
+        self.repo.create_column("alpha", "todo", slug="todo")
 
         self.assertTrue(self.repo.column_exists("alpha", "todo"))
         self.assertFalse(self.repo.column_exists("alpha", "done"))
@@ -60,19 +60,19 @@ class TestInMemoryRepositoryColumnOps(unittest.TestCase):
 
     def test_create_column_duplicate_raises(self):
         """Creating a duplicate column name raises `ColumnAlreadyExists`."""
-        self.repo.create_column("alpha", "todo")
+        self.repo.create_column("alpha", "todo", slug="todo")
         with self.assertRaises(ColumnAlreadyExists):
-            self.repo.create_column("alpha", "todo")
+            self.repo.create_column("alpha", "todo", slug="todo")
 
     def test_rename_column_updates_tasks_locations(self):
         """Renaming a column updates tasks and location index."""
-        self.repo.create_column("alpha", "todo")
+        self.repo.create_column("alpha", "todo", slug="todo")
         now = datetime.now(timezone.utc)
         task = Task(id=uuid4(), title="task-1", slug="task-1", board="alpha", column="todo", created_at=now, updated_at=now)
         self.repo._tasks_by_id[task.id] = task
         self.repo._task_locations[task.id] = ("alpha", "todo")
 
-        renamed = self.repo.rename_column("alpha", "todo", "doing")
+        renamed = self.repo.rename_column("alpha", "todo", "doing", new_slug="doing")
 
         self.assertEqual(renamed.name, "doing")
         self.assertEqual(self.repo.get_column("alpha", "doing").position, 0)
@@ -81,20 +81,20 @@ class TestInMemoryRepositoryColumnOps(unittest.TestCase):
 
     def test_rename_column_raises_for_missing_or_duplicate(self):
         """Rename rejects missing sources and duplicate destination names."""
-        self.repo.create_column("alpha", "todo")
-        self.repo.create_column("alpha", "done")
+        self.repo.create_column("alpha", "todo", slug="todo")
+        self.repo.create_column("alpha", "done", slug="done")
 
         with self.assertRaises(ColumnNotFound):
-            self.repo.rename_column("alpha", "missing", "x")
+            self.repo.rename_column("alpha", "missing", "x", new_slug="x")
 
         with self.assertRaises(ColumnAlreadyExists):
-            self.repo.rename_column("alpha", "todo", "done")
+            self.repo.rename_column("alpha", "todo", "done", new_slug="done")
 
     def test_reorder_column_and_positions(self):
         """Reordering columns updates order and normalized position values."""
-        self.repo.create_column("alpha", "todo")
-        self.repo.create_column("alpha", "doing")
-        self.repo.create_column("alpha", "done")
+        self.repo.create_column("alpha", "todo", slug="todo")
+        self.repo.create_column("alpha", "doing", slug="doing")
+        self.repo.create_column("alpha", "done", slug="done")
 
         ordered = self.repo.reorder_column("alpha", "done", 0)
         self.assertEqual([c.name for c in ordered], ["done", "todo", "doing"])
@@ -109,8 +109,8 @@ class TestInMemoryRepositoryColumnOps(unittest.TestCase):
 
     def test_delete_column_removes_tasks_and_updates_positions(self):
         """Deleting a column removes scoped tasks and updates positions."""
-        self.repo.create_column("alpha", "todo")
-        self.repo.create_column("alpha", "doing")
+        self.repo.create_column("alpha", "todo", slug="todo")
+        self.repo.create_column("alpha", "doing", slug="doing")
 
         now = datetime.now(timezone.utc)
         todo_task = Task(id=uuid4(), title="t1", slug="t1", board="alpha", column="todo", created_at=now, updated_at=now)

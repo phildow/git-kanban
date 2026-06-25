@@ -1,13 +1,15 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, UTC
+from datetime import datetime, UTC
+from hashlib import new
+from os import name
 from pathlib import Path
 import random
 import re
-from typing import Optional
 from uuid import UUID, uuid4
 
-from models import Task, TaskFilter, Board, Column, UserContext
+from kanban.models import board
+from models import Slug, Task, Board, Column
 from storage.kanban import (
     KanbanRepository,
     BoardNotFound,
@@ -17,7 +19,6 @@ from storage.kanban import (
     TaskNotFound,
     TaskAlreadyExists,
 )
-from utils.str import slug_it
 
 
 class InMemoryRepository(KanbanRepository):
@@ -74,71 +75,70 @@ class InMemoryRepository(KanbanRepository):
     def get_boards(self) -> list[Board]:
         return list(self._boards.values())
 
-    def get_board(self, name: str) -> Board:
-        board = self._boards.get(name)
+    def get_board(self, slug: Slug) -> Board:
+        board = self._boards.get(slug)
         if board is None:
-            raise BoardNotFound(name)
+            raise BoardNotFound(slug)
         return board
 
-    def board_exists(self, name: str) -> bool:
-        return name in self._boards
+    def board_exists(self, slug: Slug) -> bool:
+        return slug in self._boards
 
-    def create_board(self, name: str) -> Board:
-        slug = slug_it(name)
+    def create_board(self, name: str, slug: Slug) -> Board:
         uuid = uuid4()
 
-        if self.board_exists(name):
-            raise BoardAlreadyExists(name)
+        if self.board_exists(slug):
+            raise BoardAlreadyExists(slug)
 
         board = Board(id=uuid, name=name, slug=slug)
-        self._boards[name] = board
-        self._columns[name] = []
+        self._boards[slug] = board
+        self._columns[slug] = []
         return board
 
-    def rename_board(self, name: str, new_name: str) -> Board:
-        board = self._boards.get(name)
+    def rename_board(self, slug: Slug, new_name: str, new_slug: Slug) -> Board:
+        board = self._boards.get(slug)
         if board is None:
-            raise BoardNotFound(name)
-        if new_name != name and self.board_exists(new_name):
-            raise BoardAlreadyExists(new_name)
+            raise BoardNotFound(slug)
+        if new_slug != slug and self.board_exists(new_slug):
+            raise BoardAlreadyExists(new_slug)
 
         # No-op rename is valid and keeps insertion order intact.
-        if new_name == name:
+        if new_name == board.name:
             return board
 
         # Remove and reinsert under new key to preserve relative order.
-        del self._boards[name]
+        del self._boards[slug]
         board.name = new_name
-        columns = self._columns.pop(name, [])
+        columns = self._columns.pop(slug, [])
         for column in columns:
-            column.board = new_name
-        self._columns[new_name] = columns
-        self._boards[new_name] = board
+            column.board = new_slug
+        self._columns[new_slug] = columns
+        self._boards[new_slug] = board
 
         # Update board part of task locations.
         for task_id, (task_board, task_column) in list(self._task_locations.items()):
-            if task_board == name:
-                self._task_locations[task_id] = (new_name, task_column)
+            if task_board == slug:
+                self._task_locations[task_id] = (new_slug, task_column)
 
         # Keep Task.board in sync for tasks that carry location fields.
         for task in self._tasks_by_id.values():
-            if task.board == name:
-                task.board = new_name
+            if task.board == slug:
+                task.board = new_slug
 
         return board
 
-    def delete_board(self, name: str) -> None:
-        if not self.board_exists(name):
-            raise BoardNotFound(name)
+    def delete_board(self, slug: Slug) -> None:
+        if not self.board_exists(slug):
+            raise BoardNotFound(slug)
 
-        del self._boards[name]
-        self._columns.pop(name, None)
+        del self._boards[slug]
+        self._columns.pop(slug, None)
 
         # Remove all tasks belonging to this board.
         ids_to_delete = [
             task_id
             for task_id, (task_board, _task_column) in self._task_locations.items()
-            if task_board == name
+            if task_board == slug
         ]
         for task_id in ids_to_delete:
             del self._tasks_by_id[task_id]
@@ -149,65 +149,68 @@ class InMemoryRepository(KanbanRepository):
     # Columns operations
     # ------------------------------------------------------------------
 
-    def get_columns(self, board: str) -> list[Column]:
+    def get_columns(self, board: Slug) -> list[Column]:
         self.get_board(board)
         return list(self._columns.get(board, []))
 
-    def get_column(self, board: str, name: str) -> Column:
+    def get_column(self, board: Slug, slug: Slug) -> Column:
         self.get_board(board)
+        
         for column in self._columns.get(board, []):
-            if column.name == name:
+            if column.slug == slug:
                 return column
-        raise ColumnNotFound(board, name)
+        
+        raise ColumnNotFound(board, slug)
 
-    def column_exists(self, board: str, name: str) -> bool:
+    def column_exists(self, board: Slug, slug: Slug) -> bool:
         self.get_board(board)
-        return any(column.name == name for column in self._columns.get(board, []))
+        return any(column.slug == slug for column in self._columns.get(board, []))
 
-    def create_column(self, board: str, name: str) -> Column:
-        slug = slug_it(name)
+    def create_column(self, board: Slug, name: str, slug: Slug) -> Column:
         self.get_board(board)
         columns = self._columns.setdefault(board, [])
+        
         if any(column.name == name for column in columns):
             raise ColumnAlreadyExists(board, name)
 
         column = Column(id=uuid4(), name=name, slug=slug, board=board, position=len(columns))
         columns.append(column)
+        
         return column
 
-    def rename_column(self, board: str, name: str, new_name: str) -> Column:
+    def rename_column(self, board: Slug, slug: Slug, new_name: str, new_slug: Slug) -> Column:
         self.get_board(board)
-        column = self.get_column(board, name)
+        column = self.get_column(board, slug)
         columns = self._columns.get(board, [])
 
-        if new_name != name and any(c.name == new_name for c in columns):
+        if new_name != column.name and any(c.name == new_name for c in columns):
             raise ColumnAlreadyExists(board, new_name)
 
-        if new_name == name:
+        if new_name == column.name:
             return column
 
         column.name = new_name
-        column.slug = slug_it(new_name)
+        column.slug = new_slug
 
         # Keep location index in sync.
         for task_id, (task_board, task_column) in list(self._task_locations.items()):
-            if task_board == board and task_column == name:
-                self._task_locations[task_id] = (board, new_name)
+            if task_board == board and task_column == slug:
+                self._task_locations[task_id] = (board, new_slug)
 
         # Keep Task.column in sync when present.
         for task in self._tasks_by_id.values():
-            if task.board == board and task.column == name:
-                task.column = new_name
+            if task.board == board and task.column == slug:
+                task.column = new_slug
 
         return column
 
-    def reorder_column(self, board: str, name: str, position: int) -> list[Column]:
+    def reorder_column(self, board: Slug, slug: Slug, position: int) -> list[Column]:
         self.get_board(board)
         columns = self._columns.get(board, [])
 
-        current_index = next((i for i, c in enumerate(columns) if c.name == name), None)
+        current_index = next((i for i, c in enumerate(columns) if c.slug == slug), None)
         if current_index is None:
-            raise ColumnNotFound(board, name)
+            raise ColumnNotFound(board, slug)
 
         if not columns:
             return columns
@@ -221,13 +224,13 @@ class InMemoryRepository(KanbanRepository):
 
         return list(columns)
 
-    def delete_column(self, board: str, name: str) -> None:
+    def delete_column(self, board: Slug, slug: Slug) -> None:
         self.get_board(board)
         columns = self._columns.get(board, [])
 
-        index = next((i for i, c in enumerate(columns) if c.name == name), None)
+        index = next((i for i, c in enumerate(columns) if c.slug == slug), None)
         if index is None:
-            raise ColumnNotFound(board, name)
+            raise ColumnNotFound(board, slug)
 
         columns.pop(index)
 
@@ -238,7 +241,7 @@ class InMemoryRepository(KanbanRepository):
         ids_to_delete = [
             task_id
             for task_id, (task_board, task_column) in self._task_locations.items()
-            if task_board == board and task_column == name
+            if task_board == board and task_column == slug
         ]
         for task_id in ids_to_delete:
             del self._tasks_by_id[task_id]
@@ -249,11 +252,7 @@ class InMemoryRepository(KanbanRepository):
     # Task operations
     # ------------------------------------------------------------------
 
-    def get_tasks(
-        self,
-        board: Optional[str] = None,
-        column: Optional[str] = None,
-    ) -> list[Task]:
+    def get_tasks(self, board: Slug | None = None, column: Slug | None = None) -> list[Task]:
         if board is not None:
             self.get_board(board)
             if column is not None:
@@ -270,7 +269,7 @@ class InMemoryRepository(KanbanRepository):
 
         return tasks
 
-    def get_task(self, board: str, column: str, filename: str) -> Task:
+    def get_task(self, board: Slug, column: Slug, filename: Slug) -> Task:
         self.get_board(board)
         self.get_column(board, column)
 
@@ -282,7 +281,7 @@ class InMemoryRepository(KanbanRepository):
 
         raise TaskNotFound(f"{board}/{column}/{filename}")
 
-    def task_exists(self, board: str, column: str, filename: str) -> bool:
+    def task_exists(self, board: Slug, column: Slug, filename: Slug) -> bool:
         self.get_board(board)
         self.get_column(board, column)
 
@@ -293,7 +292,7 @@ class InMemoryRepository(KanbanRepository):
                 return True
         return False
 
-    def create_task(self, task: Task, filename: str) -> Task:
+    def create_task(self, task: Task, slug: Slug) -> Task:
         if task.board is None:
             raise BoardNotFound("None")
         if task.column is None:
@@ -302,8 +301,8 @@ class InMemoryRepository(KanbanRepository):
         self.get_board(task.board)
         self.get_column(task.board, task.column)
 
-        if self.task_exists(task.board, task.column, filename):
-            raise TaskAlreadyExists(task.board, task.column, filename)
+        if self.task_exists(task.board, task.column, slug):
+            raise TaskAlreadyExists(task.board, task.column, slug)
 
         now = datetime.now(UTC)
         if task.created_at is None:
@@ -313,11 +312,11 @@ class InMemoryRepository(KanbanRepository):
 
         self._tasks_by_id[task.id] = task
         self._task_locations[task.id] = (task.board, task.column)
-        self._task_filenames[task.id] = filename
-        task.slug = filename
+        self._task_filenames[task.id] = slug
+        task.slug = slug    
         return task
 
-    def update_task(self, task: Task) -> Task:
+    def update_task(self, task: Task, slug: Slug) -> Task:
         existing = self._tasks_by_id.get(task.id)
         if existing is None:
             raise TaskNotFound(str(task.id))
@@ -332,7 +331,7 @@ class InMemoryRepository(KanbanRepository):
                 continue
             other_board, other_column = self._task_locations.get(other_id, (other_task.board, other_task.column))
             other_filename = self._task_filenames.get(other_id, "")
-            new_filename = slug_it(task.title)
+            new_filename = task.slug
             if other_board == existing_board and other_column == existing_column and other_filename == new_filename:
                 raise TaskAlreadyExists(existing_board, existing_column, new_filename)
 
@@ -343,11 +342,11 @@ class InMemoryRepository(KanbanRepository):
 
         self._tasks_by_id[task.id] = task
         self._task_locations[task.id] = (existing_board, existing_column)
-        self._task_filenames[task.id] = slug_it(task.title)
+        self._task_filenames[task.id] = task.slug
         task.slug = self._task_filenames[task.id]
         return task
 
-    def move_task(self, task: Task, column: str) -> Task:
+    def move_task(self, task: Task, column: Slug) -> Task:
         stored = self._tasks_by_id.get(task.id)
         if stored is None:
             raise TaskNotFound(str(task.id))

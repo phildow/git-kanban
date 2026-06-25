@@ -25,8 +25,8 @@ class TestFilesystemUpdateTask(unittest.TestCase):
         self.root = Path(self._tmp.name)
         self.repo = FilesystemRepository(root=self.root)
         self.repo.init_storage()
-        self.repo.create_board("proj")
-        self.repo.create_column("proj", "todo")
+        self.repo.create_board("proj", slug="proj")
+        self.repo.create_column("proj", "todo", slug="todo")
 
     def tearDown(self) -> None:
         self._tmp.cleanup()
@@ -77,7 +77,7 @@ class TestFilesystemUpdateTask(unittest.TestCase):
     def test_file_still_exists_after_update(self) -> None:
         """File remains on disk at the same path when the title does not change."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
-        self.repo.update_task(task)
+        self.repo.update_task(task, slug="alpha")
         self.assertTrue((self.repo.boards_dir / "proj" / "todo" / "alpha.md").is_file())
 
     # ------------------------------------------------------------------
@@ -87,48 +87,50 @@ class TestFilesystemUpdateTask(unittest.TestCase):
     def test_id_preserved_in_frontmatter(self) -> None:
         """The original task UUID is unchanged in the frontmatter after update."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
-        self.repo.update_task(task)
+        self.repo.update_task(task, slug="alpha")
         self.assertEqual(self._frontmatter("alpha")["id"], str(task.id))
 
     def test_title_updated_in_frontmatter(self) -> None:
         """The new title is written to the frontmatter when it changes."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
         task.title = "Alpha Renamed"
-        self.repo.update_task(task)
+        task.slug = "alpha-renamed"
+        self.repo.update_task(task, slug="alpha")
         self.assertEqual(self._frontmatter("alpha-renamed")["title"], "Alpha Renamed")
 
     def test_title_unchanged_in_frontmatter(self) -> None:
         """The title in the frontmatter is unchanged when only other fields are updated."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
         task.assigned_to = "alice"
-        self.repo.update_task(task)
+        self.repo.update_task(task, slug="alpha")
         self.assertEqual(self._frontmatter("alpha")["title"], "Alpha")
 
     def test_slug_updated_in_frontmatter_on_rename(self) -> None:
         """The slug in the frontmatter reflects the new title after a rename."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
         task.title = "Alpha Renamed"
-        self.repo.update_task(task)
+        task.slug = "alpha-renamed"
+        self.repo.update_task(task, slug="alpha")
         self.assertEqual(self._frontmatter("alpha-renamed")["slug"], "alpha-renamed")
 
     def test_slug_unchanged_in_frontmatter(self) -> None:
         """The slug in the frontmatter is unchanged when the title does not change."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
         task.assigned_to = "alice"
-        self.repo.update_task(task)
+        self.repo.update_task(task, slug="alpha")
         self.assertEqual(self._frontmatter("alpha")["slug"], "alpha")
 
     def test_created_at_preserved_in_frontmatter(self) -> None:
         """created_at is not overwritten during an update."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
         original_created_at = self._frontmatter("alpha")["created_at"]
-        self.repo.update_task(task)
+        self.repo.update_task(task, slug="alpha")
         self.assertEqual(self._frontmatter("alpha")["created_at"], original_created_at)
 
     def test_updated_at_present_in_frontmatter(self) -> None:
         """updated_at is present in the frontmatter after update."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
-        self.repo.update_task(task)
+        self.repo.update_task(task, slug="alpha")
         self.assertIn("updated_at", self._frontmatter("alpha"))
 
     # ------------------------------------------------------------------
@@ -139,35 +141,35 @@ class TestFilesystemUpdateTask(unittest.TestCase):
         """assigned_to appears in frontmatter after being set on update."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
         task.assigned_to = "alice"
-        self.repo.update_task(task)
+        self.repo.update_task(task, slug="alpha")
         self.assertEqual(self._frontmatter("alpha")["assigned_to"], "alice")
 
     def test_priority_written_to_frontmatter(self) -> None:
         """priority appears in frontmatter after being set on update."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
         task.priority = "high"
-        self.repo.update_task(task)
+        self.repo.update_task(task, slug="alpha")
         self.assertEqual(self._frontmatter("alpha")["priority"], "high")
 
     def test_tags_written_to_frontmatter(self) -> None:
         """tags appears in frontmatter after being set on update."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
         task.tags = ["bug", "auth"]
-        self.repo.update_task(task)
+        self.repo.update_task(task, slug="alpha")
         self.assertIn("tags", self._frontmatter("alpha"))
 
     def test_due_date_written_to_frontmatter(self) -> None:
         """due_date appears in frontmatter after being set on update."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
         task.due_date = datetime(2026, 12, 31, tzinfo=timezone.utc)
-        self.repo.update_task(task)
+        self.repo.update_task(task, slug="alpha")
         self.assertIn("due_date", self._frontmatter("alpha"))
 
     def test_created_by_written_to_frontmatter(self) -> None:
         """created_by appears in frontmatter after being set on update."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
         task.created_by = "mark"
-        self.repo.update_task(task)
+        self.repo.update_task(task, slug="alpha")
         self.assertEqual(self._frontmatter("alpha")["created_by"], "mark")
 
     # ------------------------------------------------------------------
@@ -178,21 +180,21 @@ class TestFilesystemUpdateTask(unittest.TestCase):
         """assigned_to is omitted from frontmatter when set to None on update."""
         task = self.repo.create_task(self._task("Alpha", "alpha", assigned_to="alice"), "alpha")
         task.assigned_to = None
-        self.repo.update_task(task)
+        self.repo.update_task(task, slug="alpha")
         self.assertNotIn("assigned_to", self._frontmatter("alpha"))
 
     def test_priority_absent_when_cleared(self) -> None:
         """priority is omitted from frontmatter when set to None on update."""
         task = self.repo.create_task(self._task("Alpha", "alpha", priority="high"), "alpha")
         task.priority = None
-        self.repo.update_task(task)
+        self.repo.update_task(task, slug="alpha")
         self.assertNotIn("priority", self._frontmatter("alpha"))
 
     def test_tags_absent_when_cleared(self) -> None:
         """tags is omitted from frontmatter when set to an empty list on update."""
         task = self.repo.create_task(self._task("Alpha", "alpha", tags=["bug"]), "alpha")
         task.tags = []
-        self.repo.update_task(task)
+        self.repo.update_task(task, slug="alpha")
         self.assertNotIn("tags", self._frontmatter("alpha"))
 
     def test_due_date_absent_when_cleared(self) -> None:
@@ -200,14 +202,14 @@ class TestFilesystemUpdateTask(unittest.TestCase):
         due = datetime(2026, 12, 31, tzinfo=timezone.utc)
         task = self.repo.create_task(self._task("Alpha", "alpha", due_date=due), "alpha")
         task.due_date = None
-        self.repo.update_task(task)
+        self.repo.update_task(task, slug="alpha")
         self.assertNotIn("due_date", self._frontmatter("alpha"))
 
     def test_created_by_absent_when_cleared(self) -> None:
         """created_by is omitted from frontmatter when set to None on update."""
         task = self.repo.create_task(self._task("Alpha", "alpha", created_by="mark"), "alpha")
         task.created_by = None
-        self.repo.update_task(task)
+        self.repo.update_task(task, slug="alpha")
         self.assertNotIn("created_by", self._frontmatter("alpha"))
 
     # ------------------------------------------------------------------
@@ -218,7 +220,7 @@ class TestFilesystemUpdateTask(unittest.TestCase):
         """The task's board is not written to the frontmatter on update."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
         task.assigned_to = "alice"
-        self.repo.update_task(task)
+        self.repo.update_task(task, slug="alpha")
         fm = self._frontmatter("alpha")
         self.assertNotIn("board", fm)
 
@@ -226,7 +228,7 @@ class TestFilesystemUpdateTask(unittest.TestCase):
         """The task's column is not written to the frontmatter on update."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
         task.assigned_to = "alice"
-        self.repo.update_task(task)
+        self.repo.update_task(task, slug="alpha")
         fm = self._frontmatter("alpha")
         self.assertNotIn("column", fm)
 
@@ -234,7 +236,8 @@ class TestFilesystemUpdateTask(unittest.TestCase):
         """The task's board is not written to the frontmatter when the title changes."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
         task.title = "Alpha Renamed"
-        self.repo.update_task(task)
+        task.slug = "alpha-renamed"
+        self.repo.update_task(task, slug="alpha")
         fm = self._frontmatter("alpha-renamed")
         self.assertNotIn("board", fm)
 
@@ -242,7 +245,8 @@ class TestFilesystemUpdateTask(unittest.TestCase):
         """The task's column is not written to the frontmatter when the title changes."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
         task.title = "Alpha Renamed"
-        self.repo.update_task(task)
+        task.slug = "alpha-renamed"
+        self.repo.update_task(task, slug="alpha")
         fm = self._frontmatter("alpha-renamed")
         self.assertNotIn("column", fm)
 
@@ -254,14 +258,14 @@ class TestFilesystemUpdateTask(unittest.TestCase):
         """Updated body text is written after the closing frontmatter fence."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
         task.body = "Updated notes."
-        self.repo.update_task(task)
+        self.repo.update_task(task, slug="alpha")
         self.assertEqual(self._body("alpha"), "Updated notes.")
 
     def test_body_absent_when_cleared(self) -> None:
         """No body content appears in the file when task.body is cleared."""
         task = self.repo.create_task(self._task("Alpha", "alpha", body="Old notes."), "alpha")
         task.body = ""
-        self.repo.update_task(task)
+        self.repo.update_task(task, slug="alpha")
         self.assertEqual(self._body("alpha"), "")
 
     # ------------------------------------------------------------------
@@ -271,27 +275,29 @@ class TestFilesystemUpdateTask(unittest.TestCase):
     def test_returns_task_with_same_id(self) -> None:
         """update_task returns a Task whose id matches the original."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
-        updated = self.repo.update_task(task)
+        updated = self.repo.update_task(task, slug="alpha")
         self.assertEqual(updated.id, task.id)
 
     def test_returns_task_with_updated_title(self) -> None:
         """update_task returns a Task reflecting the new title."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
         task.title = "Alpha Renamed"
-        updated = self.repo.update_task(task)
+        task.slug = "alpha-renamed"
+        updated = self.repo.update_task(task, slug="alpha")
         self.assertEqual(updated.title, "Alpha Renamed")
 
     def test_returns_task_with_updated_slug(self) -> None:
         """update_task returns a Task with the new slug after a rename."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
         task.title = "Alpha Renamed"
-        updated = self.repo.update_task(task)
+        task.slug = "alpha-renamed"
+        updated = self.repo.update_task(task, slug="alpha")
         self.assertEqual(updated.slug, "alpha-renamed")
 
     def test_returns_task_with_correct_location(self) -> None:
         """update_task returns a Task with board and column from the file's location."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
-        updated = self.repo.update_task(task)
+        updated = self.repo.update_task(task, slug="alpha")
         self.assertEqual(updated.board, "proj")
         self.assertEqual(updated.column, "todo")
 
@@ -305,7 +311,7 @@ class TestFilesystemUpdateTask(unittest.TestCase):
         task.assigned_to = "alice"
         task.priority = "high"
         task.tags = ["bug", "auth"]
-        updated = self.repo.update_task(task)
+        updated = self.repo.update_task(task, slug="alpha")
         self.assertEqual(updated.assigned_to, "alice")
         self.assertEqual(updated.priority, "high")
         self.assertEqual(updated.tags, ["bug", "auth"])
@@ -313,7 +319,7 @@ class TestFilesystemUpdateTask(unittest.TestCase):
     def test_updated_at_refreshed(self) -> None:
         """updated_at is later than the original after an update."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
-        updated = self.repo.update_task(task)
+        updated = self.repo.update_task(task, slug="alpha")
         self.assertGreaterEqual(updated.updated_at, task.updated_at)
 
     # ------------------------------------------------------------------
@@ -324,14 +330,16 @@ class TestFilesystemUpdateTask(unittest.TestCase):
         """After a title change the new file exists on disk."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
         task.title = "Alpha Renamed"
-        self.repo.update_task(task)
+        task.slug = "alpha-renamed"
+        self.repo.update_task(task, slug="alpha")
         self.assertTrue((self.repo.boards_dir / "proj" / "todo" / "alpha-renamed.md").is_file())
 
     def test_rename_old_file_gone(self) -> None:
         """After a title change the old file is removed from disk."""
         task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
         task.title = "Alpha Renamed"
-        self.repo.update_task(task)
+        task.slug = "alpha-renamed"
+        self.repo.update_task(task, slug="alpha")
         self.assertFalse((self.repo.boards_dir / "proj" / "todo" / "alpha.md").exists())
 
     def test_rename_preserves_order_position(self) -> None:
@@ -340,7 +348,8 @@ class TestFilesystemUpdateTask(unittest.TestCase):
         t2 = self.repo.create_task(self._task("Beta", "beta"), "beta")
         t3 = self.repo.create_task(self._task("Gamma", "gamma"), "gamma")
         t2.title = "Beta Renamed"
-        self.repo.update_task(t2)
+        t2.slug = "beta-renamed"
+        self.repo.update_task(t2, slug="beta")
         slugs = [t.slug for t in self.repo.get_tasks(board="proj", column="todo")]
         self.assertEqual(slugs, ["alpha", "beta-renamed", "gamma"])
 
@@ -352,15 +361,16 @@ class TestFilesystemUpdateTask(unittest.TestCase):
         """Raises TaskNotFound when no file matches the task's current slug."""
         phantom = self._task("Ghost", "ghost")
         with self.assertRaises(TaskNotFound):
-            self.repo.update_task(phantom)
+            self.repo.update_task(phantom, slug="ghost")
 
     def test_raises_task_already_exists_on_rename_collision(self) -> None:
         """Raises TaskAlreadyExists when the new title's slug collides with an existing task."""
         t1 = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
         t2 = self.repo.create_task(self._task("Beta", "beta"), "beta")
         t1.title = "Beta"
+        t1.slug = "beta"
         with self.assertRaises(TaskAlreadyExists):
-            self.repo.update_task(t1)
+            self.repo.update_task(t1, slug="alpha")
 
 
 if __name__ == "__main__":

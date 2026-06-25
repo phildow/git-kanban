@@ -30,11 +30,11 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
         temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
         temp_dir.mkdir()
         self.repo = InMemoryRepository(root=temp_dir)
-        self.repo.create_board("alpha")
-        self.repo.create_board("beta")
-        self.repo.create_column("alpha", "todo")
-        self.repo.create_column("alpha", "doing")
-        self.repo.create_column("beta", "todo")
+        self.repo.create_board("alpha", slug="alpha")
+        self.repo.create_board("beta", slug="beta")
+        self.repo.create_column("alpha", "todo", slug="todo")
+        self.repo.create_column("alpha", "doing", slug="doing")
+        self.repo.create_column("beta", "todo", slug="todo")
 
     def _task(self, title: str, board: str = "alpha", column: str = "todo", **kwargs) -> Task:
         now = datetime.now(UTC)
@@ -88,7 +88,7 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
             column="todo",  # should be ignored by update
             assigned_to="new",
         )
-        result = self.repo.update_task(updated)
+        result = self.repo.update_task(updated, slug="first")
 
         self.assertEqual(result.board, "alpha")
         self.assertEqual(result.column, "todo")
@@ -96,10 +96,12 @@ class TestInMemoryRepositoryTaskOps(unittest.TestCase):
         self.assertIsNotNone(result.updated_at)
 
         with self.assertRaises(TaskAlreadyExists):
-            self.repo.update_task(Task(id=first.id, title="Second", slug="second", board="alpha", column="todo"))
+            task = Task(id=first.id, title="Second", slug="second", board="alpha", column="todo")
+            self.repo.update_task(task, slug="first")
 
         with self.assertRaises(TaskNotFound):
-            self.repo.update_task(Task(id=uuid4(), title="Missing", slug="missing", board="alpha", column="todo"))
+            task = Task(id=uuid4(), title="Missing", slug="missing", board="alpha", column="todo")
+            self.repo.update_task(task, slug="missing")
 
     def test_move_task_and_delete_task(self):
         """Move validates destination and collisions; delete removes by UUID."""

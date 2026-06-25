@@ -17,7 +17,7 @@ class TestFilesystemBoardMetadata(unittest.TestCase):
         self.root = Path(self._tmp.name)
         self.repo = FilesystemRepository(root=self.root)
         self.repo.init_storage()
-        self.repo.create_board("alpha")
+        self.repo.create_board("alpha", slug="alpha")
 
     def tearDown(self) -> None:
         self._tmp.cleanup()
@@ -64,7 +64,7 @@ class TestFilesystemBoardMetadata(unittest.TestCase):
 
     def test_metadata_is_scoped_to_board(self) -> None:
         """Metadata written for one board is not visible on another board."""
-        self.repo.create_board("beta")
+        self.repo.create_board("beta", slug="beta")
         self.repo.set_board_metadata("alpha", "info.display-name", "Alpha")
         self.assertIsNone(self.repo.get_board_metadata("beta", "info.display-name"))
 
@@ -84,7 +84,7 @@ class TestFilesystemColumnOrderWithOtherMetadata(unittest.TestCase):
         self.root = Path(self._tmp.name)
         self.repo = FilesystemRepository(root=self.root)
         self.repo.init_storage()
-        self.repo.create_board("proj")
+        self.repo.create_board("proj", slug="proj")
 
     def tearDown(self) -> None:
         self._tmp.cleanup()
@@ -92,7 +92,7 @@ class TestFilesystemColumnOrderWithOtherMetadata(unittest.TestCase):
     def test_column_order_preserved_after_writing_other_metadata(self) -> None:
         """Column order is unchanged after an unrelated key is written to the same file."""
         for col in ("todo", "in-progress", "done"):
-            self.repo.create_column("proj", col)
+            self.repo.create_column("proj", col, slug=col)
         self.repo.set_board_metadata("proj", "info.display-name", "My Project")
         columns = [c.name for c in self.repo.get_columns("proj")]
         self.assertEqual(columns, ["todo", "in-progress", "done"])
@@ -100,17 +100,17 @@ class TestFilesystemColumnOrderWithOtherMetadata(unittest.TestCase):
     def test_other_metadata_preserved_after_adding_column(self) -> None:
         """An unrelated metadata key is unchanged after a new column is created."""
         self.repo.set_board_metadata("proj", "info.display-name", "My Project")
-        self.repo.create_column("proj", "todo")
-        self.repo.create_column("proj", "done")
+        self.repo.create_column("proj", "todo", slug="todo")
+        self.repo.create_column("proj", "done", slug="done")
         self.assertEqual(self.repo.get_board_metadata("proj", "info.display-name"), "My Project")
 
     def test_column_order_preserved_across_multiple_write_cycles(self) -> None:
         """Column order survives interleaved writes from both column ops and other metadata."""
-        self.repo.create_column("proj", "todo")
+        self.repo.create_column("proj", "todo", slug="todo")
         self.repo.set_board_metadata("proj", "info.color", "blue")
-        self.repo.create_column("proj", "in-progress")
+        self.repo.create_column("proj", "in-progress", slug="in-progress")
         self.repo.set_board_metadata("proj", "info.color", "green")
-        self.repo.create_column("proj", "done")
+        self.repo.create_column("proj", "done", slug="done")
         columns = [c.name for c in self.repo.get_columns("proj")]
         self.assertEqual(columns, ["todo", "in-progress", "done"])
         self.assertEqual(self.repo.get_board_metadata("proj", "info.color"), "green")
@@ -118,7 +118,7 @@ class TestFilesystemColumnOrderWithOtherMetadata(unittest.TestCase):
     def test_column_order_preserved_with_multiple_other_sections(self) -> None:
         """Column order is correct when several other sections exist in the metadata file."""
         for col in ("todo", "in-progress", "done"):
-            self.repo.create_column("proj", col)
+            self.repo.create_column("proj", col, slug=col)
         self.repo.set_board_metadata("proj", "info.display-name", "My Project")
         self.repo.set_board_metadata("proj", "settings.color", "blue")
         self.repo.set_board_metadata("proj", "access.owner", "alice")
@@ -128,7 +128,7 @@ class TestFilesystemColumnOrderWithOtherMetadata(unittest.TestCase):
     def test_reorder_column_preserved_alongside_other_metadata(self) -> None:
         """reorder_column produces the correct order even when other keys are present."""
         for col in ("todo", "in-progress", "done"):
-            self.repo.create_column("proj", col)
+            self.repo.create_column("proj", col, slug=col)
         self.repo.set_board_metadata("proj", "info.display-name", "My Project")
         self.repo.reorder_column("proj", "done", 0)
         columns = [c.name for c in self.repo.get_columns("proj")]

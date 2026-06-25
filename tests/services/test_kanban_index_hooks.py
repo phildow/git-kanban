@@ -30,9 +30,9 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
             git_service=GitService(),
         )
 
-        self.repo.create_board("alpha")
-        self.repo.create_column("alpha", "todo")
-        self.repo.create_column("alpha", "done")
+        self.repo.create_board("alpha", slug="alpha")
+        self.repo.create_column("alpha", "todo", slug="todo")
+        self.repo.create_column("alpha", "done", slug="done")
 
     def test_create_task_calls_index_update(self) -> None:
         """Creating a task invokes index_service.update_task with the created task."""

@@ -25,8 +25,8 @@ class TestKanbanServiceAssignTask(unittest.TestCase):
             index_service=MagicMock(),
             git_service=GitService(),
         )
-        self.repo.create_board("alpha")
-        self.repo.create_column("alpha", "todo")
+        self.repo.create_board("alpha", slug="alpha")
+        self.repo.create_column("alpha", "todo", slug="todo")
         self.svc.create_task("alpha/todo/fix-login", TaskCreateParams())
 
     def test_returns_task_with_new_assignee(self) -> None:

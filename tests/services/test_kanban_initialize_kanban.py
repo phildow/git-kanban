@@ -37,22 +37,22 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         result = svc.initialize_kanban(Path("."), config=BOOTSTRAP_CONFIG)
 
         self.assertTrue(result)
-        self.assertTrue(repo.board_exists("Main"))
+        self.assertTrue(repo.board_exists("main"))
         self.assertEqual(
-            [c.name for c in repo.get_columns("Main")],
+            [c.name for c in repo.get_columns("main")],
             ["To Do", "In Progress", "In Review", "Done"],
         )
         self.assertEqual(
-            [c.slug for c in repo.get_columns("Main")],
-            ["to-do", "in-progress", "in-review", "done"],
+            [c.slug for c in repo.get_columns("main")],
+            ["todo", "in-progress", "in-review", "done"],
         )
         self.assertEqual(
-            [c.position for c in repo.get_columns("Main")],
+            [c.position for c in repo.get_columns("main")],
             [0, 1, 2, 3],
         )
 
         self.assertEqual(svc.user_context.board, "main")
-        self.assertEqual(svc.user_context.column, "to-do")
+        self.assertEqual(svc.user_context.column, "todo")
 
     def test_init_raises_when_called_twice(self):
         """Second init call raises because repository is already initialized."""
@@ -82,7 +82,7 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
 
         svc.initialize_kanban(Path("."), config=BOOTSTRAP_CONFIG)
 
-        tasks = repo.get_tasks(board="Main")
+        tasks = repo.get_tasks(board="main")
         titles = {t.title for t in tasks}
         self.assertIn("List your boards and tasks", titles)
         self.assertIn("Create a new task", titles)

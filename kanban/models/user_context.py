@@ -1,18 +1,16 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import datetime
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
-from uuid import UUID
 
+from models import Slug
 
 @dataclass
 class UserContext:
     """Persisted current board/column scope used by CLI commands."""
 
-    board: Optional[str] = None
-    column: Optional[str] = None
+    board:  Slug | None = None
+    column: Slug | None = None
 
     @property
     def is_empty(self) -> bool:

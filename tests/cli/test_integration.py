@@ -198,31 +198,31 @@ class TestBoardCLI(_InitializedBase):
 
     def test_board_list_plain_includes_board_name(self) -> None:
         """board list (plain) includes the created board name."""
-        self.repo.create_board("proj")
+        self.repo.create_board("proj", slug="proj")
         out = self.run_cli("board", "list")
         self.assertIn("proj", out)
 
     def test_board_list_table_prints_output(self) -> None:
         """board list --format table produces output."""
-        self.repo.create_board("proj")
+        self.repo.create_board("proj", slug="proj")
         out = self.run_cli("board", "list", "--format", "table")
         self.assertTrue(out.strip())
 
     def test_board_list_json_is_array(self) -> None:
         """board list --format json emits a JSON array."""
-        self.repo.create_board("proj")
+        self.repo.create_board("proj", slug="proj")
         data = self.run_json("board", "list", "--format", "json")
         self.assertIsInstance(data, list)
 
     def test_board_list_json_name_field(self) -> None:
         """board list --format json includes a name field for each board."""
-        self.repo.create_board("proj")
+        self.repo.create_board("proj", slug="proj")
         data = self.run_json("board", "list", "--format", "json")
         self.assertEqual(data[0]["name"], "proj")
 
     def test_board_list_json_column_count_field(self) -> None:
         """board list --format json includes a column_count field."""
-        self.repo.create_board("proj")
+        self.repo.create_board("proj", slug="proj")
         data = self.run_json("board", "list", "--format", "json")
         self.assertIn("column_count", data[0])
 
@@ -233,59 +233,59 @@ class TestBoardCLI(_InitializedBase):
 
     def test_board_list_sort(self) -> None:
         """board list --sort title includes all boards."""
-        self.repo.create_board("alpha")
-        self.repo.create_board("beta")
+        self.repo.create_board("alpha", slug="alpha")
+        self.repo.create_board("beta", slug="beta")
         out = self.run_cli("board", "list", "--sort", "title")
         self.assertIn("alpha", out)
         self.assertIn("beta", out)
 
     def test_board_list_reverse(self) -> None:
         """board list --reverse includes all boards."""
-        self.repo.create_board("alpha")
-        self.repo.create_board("beta")
+        self.repo.create_board("alpha", slug="alpha")
+        self.repo.create_board("beta", slug="beta")
         out = self.run_cli("board", "list", "--reverse")
         self.assertIn("alpha", out)
         self.assertIn("beta", out)
 
     def test_board_rename_creates_new_directory(self) -> None:
         """board rename creates the destination directory."""
-        self.repo.create_board("proj")
+        self.repo.create_board("proj", slug="proj")
         self.run_cli("board", "rename", "proj", "work")
         self.assertTrue((self.boards_dir / "work").is_dir())
 
     def test_board_rename_removes_old_directory(self) -> None:
         """board rename removes the source directory."""
-        self.repo.create_board("proj")
+        self.repo.create_board("proj", slug="proj")
         self.run_cli("board", "rename", "proj", "work")
         self.assertFalse((self.boards_dir / "proj").exists())
 
     def test_board_rename_verbose_prints_output(self) -> None:
         """board rename --verbose prints something."""
-        self.repo.create_board("proj")
+        self.repo.create_board("proj", slug="proj")
         out = self.run_cli("board", "rename", "proj", "work", "--verbose")
         self.assertTrue(out.strip())
 
     def test_board_rename_without_verbose_produces_no_output(self) -> None:
         """board rename without --verbose produces no output."""
-        self.repo.create_board("proj")
+        self.repo.create_board("proj", slug="proj")
         out = self.run_cli("board", "rename", "proj", "work")
         self.assertEqual(out, "")
 
     def test_board_delete_removes_directory(self) -> None:
         """board delete removes the board directory."""
-        self.repo.create_board("proj")
+        self.repo.create_board("proj", slug="proj")
         self.run_cli("board", "delete", "proj", "--force")
         self.assertFalse((self.boards_dir / "proj").exists())
 
     def test_board_delete_verbose_prints_output(self) -> None:
         """board delete --verbose prints something."""
-        self.repo.create_board("proj")
+        self.repo.create_board("proj", slug="proj")
         out = self.run_cli("board", "delete", "proj", "--force", "--verbose")
         self.assertTrue(out.strip())
 
     def test_board_delete_without_verbose_produces_no_output(self) -> None:
         """board delete without --verbose produces no output."""
-        self.repo.create_board("proj")
+        self.repo.create_board("proj", slug="proj")
         out = self.run_cli("board", "delete", "proj", "--force")
         self.assertEqual(out, "")
 
@@ -299,7 +299,7 @@ class TestColumnCLI(_InitializedBase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.repo.create_board("proj")
+        self.repo.create_board("proj", slug="proj")
 
     def test_column_create_creates_directory(self) -> None:
         """column create creates a column directory."""
@@ -323,108 +323,108 @@ class TestColumnCLI(_InitializedBase):
 
     def test_column_list_plain_includes_column_name(self) -> None:
         """column list (plain) includes the column name."""
-        self.repo.create_column("proj", "todo")
+        self.repo.create_column("proj", "todo", slug="todo")
         out = self.run_cli("column", "list", "proj")
         self.assertIn("todo", out)
 
     def test_column_list_table_prints_output(self) -> None:
         """column list --format table produces output."""
-        self.repo.create_column("proj", "todo")
+        self.repo.create_column("proj", "todo", slug="todo")
         out = self.run_cli("column", "list", "proj", "--format", "table")
         self.assertTrue(out.strip())
 
     def test_column_list_json_is_array(self) -> None:
         """column list --format json emits a JSON array."""
-        self.repo.create_column("proj", "todo")
+        self.repo.create_column("proj", "todo", slug="todo")
         data = self.run_json("column", "list", "proj", "--format", "json")
         self.assertIsInstance(data, list)
 
     def test_column_list_json_name_field(self) -> None:
         """column list --format json includes the column name."""
-        self.repo.create_column("proj", "todo")
+        self.repo.create_column("proj", "todo", slug="todo")
         data = self.run_json("column", "list", "proj", "--format", "json")
         self.assertEqual(data[0]["name"], "todo")
 
     def test_column_list_json_board_field(self) -> None:
         """column list --format json includes the owning board."""
-        self.repo.create_column("proj", "todo")
+        self.repo.create_column("proj", "todo", slug="todo")
         data = self.run_json("column", "list", "proj", "--format", "json")
         self.assertEqual(data[0]["board"], "proj")
 
     def test_column_list_json_position_field(self) -> None:
         """column list --format json includes the position field."""
-        self.repo.create_column("proj", "todo")
+        self.repo.create_column("proj", "todo", slug="todo")
         data = self.run_json("column", "list", "proj", "--format", "json")
         self.assertIn("position", data[0])
 
     def test_column_list_sort(self) -> None:
         """column list --sort title includes all columns."""
-        self.repo.create_column("proj", "todo")
-        self.repo.create_column("proj", "done")
+        self.repo.create_column("proj", "todo", slug="todo")
+        self.repo.create_column("proj", "done", slug="done")
         out = self.run_cli("column", "list", "proj", "--sort", "title")
         self.assertIn("todo", out)
         self.assertIn("done", out)
 
     def test_column_rename_creates_new_directory(self) -> None:
         """column rename creates the destination directory."""
-        self.repo.create_column("proj", "todo")
+        self.repo.create_column("proj", "todo", slug="todo")
         self.run_cli("column", "rename", "proj/todo", "doing")
         self.assertTrue((self.boards_dir / "proj" / "doing").is_dir())
 
     def test_column_rename_removes_old_directory(self) -> None:
         """column rename removes the source directory."""
-        self.repo.create_column("proj", "todo")
+        self.repo.create_column("proj", "todo", slug="todo")
         self.run_cli("column", "rename", "proj/todo", "doing")
         self.assertFalse((self.boards_dir / "proj" / "todo").exists())
 
     def test_column_rename_verbose_prints_output(self) -> None:
         """column rename --verbose prints something."""
-        self.repo.create_column("proj", "todo")
+        self.repo.create_column("proj", "todo", slug="todo")
         out = self.run_cli("column", "rename", "proj/todo", "doing", "--verbose")
         self.assertTrue(out.strip())
 
     def test_column_rename_without_verbose_produces_no_output(self) -> None:
         """column rename without --verbose produces no output."""
-        self.repo.create_column("proj", "todo")
+        self.repo.create_column("proj", "todo", slug="todo")
         out = self.run_cli("column", "rename", "proj/todo", "doing")
         self.assertEqual(out, "")
 
     def test_column_reorder_column_still_exists(self) -> None:
         """column reorder does not remove the column."""
-        self.repo.create_column("proj", "todo")
-        self.repo.create_column("proj", "done")
+        self.repo.create_column("proj", "todo", slug="todo")
+        self.repo.create_column("proj", "done", slug="done")
         self.run_cli("column", "reorder", "proj/done", "0")
         self.assertTrue((self.boards_dir / "proj" / "done").is_dir())
 
     def test_column_reorder_verbose_prints_output(self) -> None:
         """column reorder --verbose prints something."""
-        self.repo.create_column("proj", "todo")
-        self.repo.create_column("proj", "done")
+        self.repo.create_column("proj", "todo", slug="todo")
+        self.repo.create_column("proj", "done", slug="done")
         out = self.run_cli("column", "reorder", "proj/done", "0", "--verbose")
         self.assertTrue(out.strip())
 
     def test_column_reorder_without_verbose_produces_no_output(self) -> None:
         """column reorder without --verbose produces no output."""
-        self.repo.create_column("proj", "todo")
-        self.repo.create_column("proj", "done")
+        self.repo.create_column("proj", "todo", slug="todo")
+        self.repo.create_column("proj", "done", slug="done")
         out = self.run_cli("column", "reorder", "proj/done", "0")
         self.assertEqual(out, "")
 
     def test_column_delete_removes_directory(self) -> None:
         """column delete removes the column directory."""
-        self.repo.create_column("proj", "todo")
+        self.repo.create_column("proj", "todo", slug="todo")
         self.run_cli("column", "delete", "proj/todo", "--force")
         self.assertFalse((self.boards_dir / "proj" / "todo").exists())
 
     def test_column_delete_verbose_prints_output(self) -> None:
         """column delete --verbose prints something."""
-        self.repo.create_column("proj", "todo")
+        self.repo.create_column("proj", "todo", slug="todo")
         out = self.run_cli("column", "delete", "proj/todo", "--force", "--verbose")
         self.assertTrue(out.strip())
 
     def test_column_delete_without_verbose_produces_no_output(self) -> None:
         """column delete without --verbose produces no output."""
-        self.repo.create_column("proj", "todo")
+        self.repo.create_column("proj", "todo", slug="todo")
         out = self.run_cli("column", "delete", "proj/todo", "--force")
         self.assertEqual(out, "")
 
@@ -438,9 +438,9 @@ class TestTaskCLI(_InitializedBase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.repo.create_board("proj")
-        self.repo.create_column("proj", "todo")
-        self.repo.create_column("proj", "done")
+        self.repo.create_board("proj", slug="proj")
+        self.repo.create_column("proj", "todo", slug="todo")
+        self.repo.create_column("proj", "done", slug="done")
 
     # -- create ---------------------------------------------------------------
 

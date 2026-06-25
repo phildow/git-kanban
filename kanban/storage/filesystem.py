@@ -1,17 +1,16 @@
 from __future__ import annotations
 
 import configparser
+from os import name
 import shutil
 
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 from uuid import UUID, uuid4
 import uuid
 
-from models import Task, TaskFilter, Board, Column
+from models import Slug, Task, Board, Column
 from storage.kanban import KanbanRepository, BoardNotFound, BoardAlreadyExists, ColumnAlreadyExists, ColumnNotFound, TaskNotFound, TaskAlreadyExists
-from utils.str import slug_it
 
 
 class FilesystemRepository(KanbanRepository):
@@ -85,11 +84,9 @@ class FilesystemRepository(KanbanRepository):
     # Board operations
     # ------------------------------------------------------------------
 
-    def board_exists(self, name: str) -> bool:
-        slug = slug_it(name)
-
+    def board_exists(self, slug: Slug) -> bool:
         board_path = self.boards_dir / slug
-        return board_path.is_dir() and not name.startswith(".")
+        return board_path.is_dir() and not slug.startswith(".")
 
     # TODO: SYNC - metadata must match the name and slug of the board directory
     def get_boards(self) -> list[Board]:
@@ -108,33 +105,31 @@ class FilesystemRepository(KanbanRepository):
                 for f in col.iterdir()
                 if f.is_file() and not f.name.startswith(".")
             )
-            slug = slug_it(entry.name)
-            name = self.get_board_metadata(slug, "fields.name") or entry.name
-            slug = self.get_board_metadata(slug, "fields.slug") or slug_it(entry.name)
+            slug = entry.name
+            name = self.get_board_metadata(slug, "fields.name")
+            slug = self.get_board_metadata(slug, "fields.slug")
             uuid = self.get_board_metadata(slug, "fields.id")   
-            # TODO: raise error if no UUID
+            # TODO: raise error if fields missing or out of sync with directory name
 
             boards.append(Board(id=UUID(uuid), name=name, slug=slug, column_count=column_count, task_count=task_count))
         return boards
 
     # TODO: SYNC - metadata must match the name and slug of the board directory
     # TODO: load the column count and task count
-    def get_board(self, name: str) -> Board:
-        slug = slug_it(name)
+    def get_board(self, slug: Slug) -> Board:
         board_path = self.boards_dir / slug
 
-        if not board_path.is_dir() or name.startswith("."):
-            raise BoardNotFound(name)
+        if not board_path.is_dir() or slug.startswith("."):
+            raise BoardNotFound(slug)
         
-        name = self.get_board_metadata(slug, "fields.name") or name
-        slug = self.get_board_metadata(slug, "fields.slug") or slug
+        name = self.get_board_metadata(slug, "fields.name")
+        slug = self.get_board_metadata(slug, "fields.slug")
         uuid = self.get_board_metadata(slug, "fields.id")
-        # TODO: raise error if no UUID
+        # TODO: raise error if fields missing or out of sync with directory name
 
         return Board(id=UUID(uuid), name=name, slug=slug)
 
-    def create_board(self, name: str) -> Board:
-        slug = slug_it(name)
+    def create_board(self, name: str, slug: Slug) -> Board:
         uuid = str(uuid4())
 
         if self.board_exists(slug):
@@ -149,10 +144,7 @@ class FilesystemRepository(KanbanRepository):
 
         return Board(id=UUID(uuid), name=name, slug=slug)
 
-    def rename_board(self, name: str, new_name: str) -> Board:
-        slug = slug_it(name)
-        new_slug = slug_it(new_name)
-
+    def rename_board(self, slug: Slug, new_name: str, new_slug: Slug) -> Board:
         if not self.board_exists(slug):
             raise BoardNotFound(name)
         if self.board_exists(new_slug):
@@ -168,11 +160,9 @@ class FilesystemRepository(KanbanRepository):
 
         return Board(id=UUID(uuid), name=new_name, slug=new_slug)
 
-    def delete_board(self, name: str) -> None:
-        slug = slug_it(name)
-
+    def delete_board(self, slug: Slug) -> None:
         if not self.board_exists(slug):
-            raise BoardNotFound(name)
+            raise BoardNotFound(slug )
         shutil.rmtree(self.boards_dir / slug)
 
     # ------------------------------------------------------------------
@@ -186,79 +176,65 @@ class FilesystemRepository(KanbanRepository):
     
     # TODO: move these methods
 
-    def _get_task_order(self, board: str, column: str) -> list[str]:
+    def _get_task_order(self, board: Slug, column: Slug) -> list[str]:
         """Return the stored task order for a column, falling back to filesystem sort."""
-        column_slug = slug_it(column)
-        board_slug = slug_it(board)
-        raw = self.get_column_metadata(board_slug, column_slug, "tasks.order")
+        raw = self.get_column_metadata(board, column, "tasks.order")
 
         if raw:
             return [f.strip() for f in raw.split("\n") if f.strip()]
         return sorted(
-            e.name for e in (self.boards_dir / board_slug / column_slug).iterdir()
+            e.name for e in (self.boards_dir / board / column).iterdir()
             if e.is_file() and not e.name.startswith(".") and e.suffix == ".md"
         )
 
-    def _set_task_order(self, board: str, column: str, order: list[str]) -> None:
+    def _set_task_order(self, board: Slug, column: Slug, order: list[str]) -> None:
         """Persist the task order for a column to its .metadata file.
 
         Each filename is stored on its own line using configparser's multi-line
         value support: continuation lines are indented, so configparser treats
         them as part of the same value rather than new keys.
         """
-        board_slug = slug_it(board)
-        column_slug = slug_it(column)
-        self.set_column_metadata(board_slug, column_slug, "tasks.order", "\n" + "\n".join(order))
+        self.set_column_metadata(board, column, "tasks.order", "\n" + "\n".join(order))
 
-    def _get_column_order(self, board: str) -> list[str]:
+    def _get_column_order(self, board: Slug) -> list[str]:
         """Return the stored column order for a board, falling back to filesystem sort."""
-        board_slug = slug_it(board)
-
-        raw = self.get_board_metadata(board_slug, "columns.order")
+        raw = self.get_board_metadata(board, "columns.order")
         if raw:
             return [c.strip() for c in raw.split("\n") if c.strip()]
         return sorted(
-            e.name for e in (self.boards_dir / board_slug).iterdir()
+            e.name for e in (self.boards_dir / board).iterdir()
             if e.is_dir() and not e.name.startswith(".")
         )
 
-    def _set_column_order(self, board: str, order: list[str]) -> None:
+    def _set_column_order(self, board: Slug, order: list[str]) -> None:
         """Persist the column order for a board to its metadata file.
 
         Each directory name is stored on its own line using configparser's
         multi-line value support: continuation lines are indented, so
         configparser treats them as part of the same value rather than new keys.
         """
-        board_slug = slug_it(board)
-        self.set_board_metadata(board_slug, "columns.order", "\n" + "\n".join(order))
+        self.set_board_metadata(board, "columns.order", "\n" + "\n".join(order))
 
-    def _column_task_count(self, board: str, column: str) -> int:
+    def _column_task_count(self, board: Slug, column: Slug) -> int:
         """Return the number of tasks in a column."""
-        column_slug = slug_it(column)
-        board_slug = slug_it(board)
-        
         return sum(
-            1 for e in (self.boards_dir / board_slug / column_slug).iterdir()
+            1 for e in (self.boards_dir / board / column).iterdir()
             if e.is_file() and not e.name.startswith(".")
         )
 
-    def column_exists(self, board: str, name: str) -> bool:
-        board_slug = slug_it(board)
-        column_slug = slug_it(name)
-
-        if not self.board_exists(board_slug):
+    def column_exists(self, board: Slug, slug: Slug) -> bool:
+        if not self.board_exists(board):
             raise BoardNotFound(board)
         
-        column_path = self.boards_dir / board_slug / column_slug
-        return column_path.is_dir() and not name.startswith(".")
+        column_path = self.boards_dir / board / slug
+        return column_path.is_dir() and not slug.startswith(".")
 
-    def get_columns(self, board: str) -> list[Column]:
-        board_slug = slug_it(board)
-        if not self.board_exists(board_slug):
+    def get_columns(self, board: Slug) -> list[Column]:
+        if not self.board_exists(board):
             raise BoardNotFound(board)
         
         existing = {
-            e.name for e in (self.boards_dir / board_slug).iterdir()
+            e.name for e in (self.boards_dir / board).iterdir()
             if e.is_dir() and not e.name.startswith(".")
         }
         
@@ -267,22 +243,22 @@ class FilesystemRepository(KanbanRepository):
         columns = []
         for i, name in enumerate(c for c in order if c in existing):
             task_count = self._column_task_count(board, name)
-            column_slug = slug_it(name)
-            name = self.get_column_metadata(board_slug, name, "fields.name") or name
-            column_slug = self.get_column_metadata(board_slug, name, "fields.slug") or column_slug
-            uuid = self.get_board_metadata(board_slug, "fields.id")
-            # TODO: error if no UUID
+            column_slug = name
+            
+            name = self.get_column_metadata(board, name, "fields.name") or name
+            column_slug = self.get_column_metadata(board, name, "fields.slug") or column_slug
+            uuid = self.get_board_metadata(board, "fields.id")
+            # TODO: error if fields missing
+
             columns.append(Column(id=uuid, name=name, slug=column_slug, board=board, position=i, task_count=task_count))
             
         return columns
 
-    def get_column(self, board: str, name: str) -> Column:
-        column_slug = slug_it(name)
-        board_slug = slug_it(board)
-        if not self.board_exists(board_slug):
+    def get_column(self, board: Slug, name: Slug) -> Column:
+        if not self.board_exists(board):
             raise BoardNotFound(board)
         
-        column_path = self.boards_dir / board_slug / name
+        column_path = self.boards_dir / board / name
         
         if not column_path.is_dir() or name.startswith("."):
             raise ColumnNotFound(board, name)
@@ -290,110 +266,95 @@ class FilesystemRepository(KanbanRepository):
         task_count = self._column_task_count(board, name)
         order = self._get_column_order(board)
         position = order.index(name) if name in order else len(order)
-        name = self.get_column_metadata(board_slug, name, "fields.name") or name
-        column_slug = self.get_column_metadata(board_slug, name, "fields.slug") or column_slug
-        uuid = self.get_column_metadata(board_slug, name, "fields.id")
-        # TODO: error if no UUID
+
+        name = self.get_column_metadata(board, name, "fields.name") or name
+        column_slug = self.get_column_metadata(board, name, "fields.slug") or name
+        uuid = self.get_column_metadata(board, name, "fields.id")
+        # TODO: error if missing fields
+
         return Column(id=UUID(uuid), name=name, slug=column_slug, board=board, position=position, task_count=task_count)
 
-    def create_column(self, board: str, name: str) -> Column:
-        column_slug = slug_it(name)
-        board_slug = slug_it(board)
+    def create_column(self, board: Slug, name: str, slug: Slug) -> Column:
         uuid = str(uuid4())
 
-        if not self.board_exists(board_slug):
+        if not self.board_exists(board):
             raise BoardNotFound(board)
         
-        column_path = self.boards_dir / board_slug / column_slug
+        column_path = self.boards_dir / board / slug
         
         if column_path.exists():
             raise ColumnAlreadyExists(board, name)
         
-        order = self._get_column_order(board_slug)
+        order = self._get_column_order(board)
         column_path.mkdir()
         (column_path / ".metadata").touch()
-        order.append(column_slug)
+        order.append(slug)
         
-        self.set_column_metadata(board_slug, column_slug, "fields.name", name)
-        self.set_column_metadata(board_slug, column_slug, "fields.slug", column_slug)
-        self.set_column_metadata(board_slug, column_slug, "fields.id", uuid)
-        self._set_column_order(board_slug, order)
+        self.set_column_metadata(board, slug, "fields.name", name)
+        self.set_column_metadata(board, slug, "fields.slug", slug)
+        self.set_column_metadata(board, slug, "fields.id", uuid)
+        self._set_column_order(board, order)
 
-        return Column(id=UUID(uuid), name=name, slug=column_slug, board=board, position=len(order) - 1)
+        return Column(id=UUID(uuid), name=name, slug=slug, board=board, position=len(order) - 1)
 
-    def rename_column(self, board: str, name: str, new_name: str) -> Column:
-        new_column_slug = slug_it(new_name)
-        column_slug = slug_it(name)
-        board_slug = slug_it(board)
-        
-        if not self.board_exists(board_slug):
+    def rename_column(self, board: Slug, slug: Slug, new_name: str, new_slug: Slug) -> Column:
+        if not self.board_exists(board):
             raise BoardNotFound(board)
-        if not self.column_exists(board_slug, column_slug):
-            raise ColumnNotFound(board, name)
-        if self.column_exists(board_slug, new_column_slug):
+        if not self.column_exists(board, slug):
+            raise ColumnNotFound(board, slug)
+        if self.column_exists(board, new_slug):
             raise ColumnAlreadyExists(board, new_name)
         
-        (self.boards_dir / board_slug / column_slug).rename(self.boards_dir / board_slug / new_column_slug)
-        order = self._get_column_order(board_slug)
+        (self.boards_dir / board / slug).rename(self.boards_dir / board / new_slug)
+        order = self._get_column_order(board)
         
-        if column_slug in order:
-            order[order.index(column_slug)] = new_column_slug
+        if slug in order:
+            order[order.index(slug)] = new_slug
         
-        self.set_column_metadata(board_slug, new_column_slug, "fields.name", new_name)
-        self.set_column_metadata(board_slug, new_column_slug, "fields.slug", new_column_slug)
-        self._set_column_order(board_slug, order)
+        self.set_column_metadata(board, new_slug, "fields.name", new_name)
+        self.set_column_metadata(board, new_slug, "fields.slug", new_slug)
+        self._set_column_order(board, order)
 
         return self.get_column(board, new_name)
 
-    def reorder_column(self, board: str, name: str, position: int) -> list[Column]:
-        board_slug = slug_it(board)
-
-        if not self.board_exists(board_slug):
+    def reorder_column(self, board: Slug, slug: Slug, position: int) -> list[Column]:
+        if not self.board_exists(board):
             raise BoardNotFound(board)
-        if not self.column_exists(board_slug, name):
-            raise ColumnNotFound(board, name)
+        if not self.column_exists(board, slug):
+            raise ColumnNotFound(board, slug)
         
-        column_slug = slug_it(name)
-        order = self._get_column_order(board_slug)
+        order = self._get_column_order(board)
         
-        if column_slug in order:
-            order.remove(column_slug)
-        order.insert(max(0, min(position, len(order))), column_slug)
+        if slug in order:
+            order.remove(slug)
+        order.insert(max(0, min(position, len(order))), slug)
         
-        self._set_column_order(board_slug, order)
-        return self.get_columns(board_slug)
+        self._set_column_order(board, order)
+        return self.get_columns(board)
 
-    def delete_column(self, board: str, name: str) -> None:
-        column_slug = slug_it(name)
-        board_slug = slug_it(board)
-
-        if not self.board_exists(board_slug):
+    def delete_column(self, board: Slug, slug: Slug) -> None:
+        if not self.board_exists(board):
             raise BoardNotFound(board)
-        if not self.column_exists(board_slug, column_slug):
-            raise ColumnNotFound(board, name)
+        if not self.column_exists(board, slug):
+            raise ColumnNotFound(board, slug)
         
-        order = self._get_column_order(board_slug)
+        order = self._get_column_order(board)
         
-        if column_slug in order:
-            order.remove(column_slug)
+        if slug in order:
+            order.remove(slug)
         
-        self._set_column_order(board_slug, order)
-        shutil.rmtree(self.boards_dir / board_slug / column_slug)
+        self._set_column_order(board, order)
+        shutil.rmtree(self.boards_dir / board / slug)
 
     # ------------------------------------------------------------------
     # Task operations
     # ------------------------------------------------------------------
     
-    def task_exists(self, board: str, column: str, filename: str) -> bool:
-        board_slug = slug_it(board)
-        path = self.boards_dir / board_slug / column / f"{filename}.md"
+    def task_exists(self, board: Slug, column: Slug, slug: Slug) -> bool:
+        path = self.boards_dir / board / column / f"{slug}.md"
         return path.is_file()
 
-    def get_tasks(
-        self,
-        board: Optional[str] = None,
-        column: Optional[str] = None,
-    ) -> list[Task]:
+    def get_tasks(self, board: Slug | None = None, column: Slug | None = None ) -> list[Task]:
         if board is None and column is not None:
             raise ValueError("Cannot filter by column without a board: {}".format(column))
 
@@ -402,18 +363,15 @@ class FilesystemRepository(KanbanRepository):
         if board is not None and column is not None and not self.column_exists(board, column):
             raise ColumnNotFound(board, column)
 
-        column_slug = slug_it(column) if column is not None else None
-        board_slug = slug_it(board) if board is not None else None
+        tasks: list[Task] = []
 
-        boards = [board_slug] if board_slug is not None else [
+        boards = [board] if board is not None else [
             e.name for e in sorted(self.boards_dir.iterdir())
             if e.is_dir() and not e.name.startswith(".")
         ]
 
-        tasks: list[Task] = []
-        
         for b in boards:
-            columns = [column_slug] if column_slug is not None else [
+            columns = [column] if column is not None else [
                 e.name for e in sorted((self.boards_dir / b).iterdir())
                 if e.is_dir() and not e.name.startswith(".")
             ]
@@ -428,40 +386,37 @@ class FilesystemRepository(KanbanRepository):
 
         return tasks
 
-    def get_task(self, board: str, column: str, filename: str) -> Task:
-        column_slug = slug_it(column)
-        board_slug = slug_it(board)
-
-        if not self.board_exists(board_slug):
+    def get_task(self, board: Slug, column: Slug, filename: Slug) -> Task:
+        if not self.board_exists(board):
             raise BoardNotFound(board)
-        if not self.column_exists(board_slug, column_slug):
+        if not self.column_exists(board, column):
             raise ColumnNotFound(board, column)
         
-        task_path = self.boards_dir / board_slug / column_slug / f"{filename}.md"
+        task_path = self.boards_dir / board / column / f"{filename}.md"
         
         if not task_path.is_file():
             raise TaskNotFound(f"{board}/{column}/{filename}")
         
         return self._parse_task_file(task_path, board, column)
 
-    def create_task(self, task: Task, filename: str) -> Task:
-        column_slug = slug_it(task.column)
-        board_slug = slug_it(task.board)
+    def create_task(self, task: Task, slug: Slug) -> Task:
+        column_slug = task.column
+        board_slug = task.board
 
         if not self.board_exists(board_slug):
             raise BoardNotFound(task.board)
         if not self.column_exists(board_slug, column_slug):
             raise ColumnNotFound(task.board, task.column)
-        if self.task_exists(board_slug, column_slug, filename):
-            TaskAlreadyExists(task.board, task.column, filename)
+        if self.task_exists(board_slug, column_slug, slug):
+            raise TaskAlreadyExists(task.board, task.column, slug)
         
-        path = self.boards_dir / board_slug / column_slug / f"{filename}.md"
+        path = self.boards_dir / board_slug / column_slug / f"{slug}.md"
         now = datetime.now(timezone.utc)
         fm_lines = [
             "---",
             f"id: {task.id}",
             f"title: {task.title}",
-            f"slug: {task.slug}",
+            f"slug: {slug}",
             f"created_at: {(task.created_at or now).isoformat()}",
             f"updated_at: {(task.updated_at or now).isoformat()}",
         ]
@@ -486,25 +441,25 @@ class FilesystemRepository(KanbanRepository):
         path.write_text(content, encoding="utf-8")
         order = self._get_task_order(board_slug, column_slug)
         
-        if f"{filename}.md" not in order:
-            order.append(f"{filename}.md")
+        if f"{slug}.md" not in order:
+            order.append(f"{slug}.md")
         self._set_task_order(board_slug, column_slug, order)
 
         return self._parse_task_file(path, task.board, task.column)
 
-    def update_task(self, task: Task) -> Task:
-        board_slug = slug_it(task.board)
-        column_slug = slug_it(task.column)
-        current_filename = f"{task.slug}.md"
+    def update_task(self, task: Task, slug: Slug) -> Task:
+        board_slug = task.board
+        column_slug = task.column
+        current_filename = f"{slug}.md"
         current_path = self.boards_dir / board_slug / column_slug / current_filename
 
         if not current_path.is_file():
-            raise TaskNotFound(f"{task.board}/{task.column}/{task.slug}")
+            raise TaskNotFound(f"{task.board}/{task.column}/{slug}")
 
-        new_slug = slug_it(task.title)
+        new_slug = task.slug
         new_filename = f"{new_slug}.md"
         new_path = self.boards_dir / board_slug / column_slug / new_filename
-        renamed = new_slug != task.slug
+        renamed = new_slug != slug
 
         if renamed and new_path.exists():
             raise TaskAlreadyExists(task.board, task.column, new_slug)
@@ -546,10 +501,10 @@ class FilesystemRepository(KanbanRepository):
 
         return self._parse_task_file(new_path, task.board, task.column)
 
-    def move_task(self, task: Task, column: str) -> Task:
-        board_slug = slug_it(task.board)
-        src_column_slug = slug_it(task.column)
-        dest_column_slug = slug_it(column)
+    def move_task(self, task: Task, column: Slug) -> Task:
+        board_slug = task.board
+        src_column_slug = task.column
+        dest_column_slug = column
         filename = f"{task.slug}.md"
 
         src_file = self.boards_dir / board_slug / src_column_slug / filename
@@ -589,8 +544,8 @@ class FilesystemRepository(KanbanRepository):
         return self._parse_task_file(dest_file, board_name, column_name)
 
     def delete_task(self, task: Task) -> None:
-        board_slug = slug_it(task.board)
-        column_slug = slug_it(task.column)
+        board_slug = task.board
+        column_slug = task.column
         filename = f"{task.slug}.md"
         path = self.boards_dir / board_slug / column_slug / filename
         order = self._get_task_order(board_slug, column_slug)
@@ -683,42 +638,39 @@ class FilesystemRepository(KanbanRepository):
 
     # Board metadata
     
-    def _board_name_from_slug(self, slug: str) -> str:
+    def _board_name_from_slug(self, slug: Slug) -> str:
         """Return the board name from its slug, falling back to the slug if not found."""
         return self.get_board_metadata(slug, "fields.name") or slug
     
-    def _column_name_from_slug(self, board_slug: str, column_slug: str) -> str:
+    def _column_name_from_slug(self, board_slug: Slug, column_slug: Slug) -> str:
         """Return the column name from its slug, falling back to the slug if not found."""
         return self.get_column_metadata(board_slug, column_slug, "fields.name") or column_slug
 
-    def _board_metadata_file(self, board: str) -> Path:
-        """Return the path to the .metadata INI file for the given board."""
-        board_slug = slug_it(board)
-        return self.boards_dir / board_slug / ".metadata"
+    def _board_metadata_file(self, board: Slug) -> Path:
+        """Return the path to the .metadata INI file for the given board.""" 
+        return self.boards_dir / board / ".metadata"
 
-    def get_board_metadata(self, board: str, keypath: str) -> str | None:
+    def get_board_metadata(self, board: Slug, keypath: str) -> str | None:
         """Read a value from a board's .metadata INI file using a 'section.key' keypath."""
         if "." not in keypath:
             raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
 
-        board_slug = slug_it(board)
         section, key = keypath.split(".", 1)
         cfg = configparser.ConfigParser()
-        cfg.read(self._board_metadata_file(board_slug), encoding="utf-8")
+        cfg.read(self._board_metadata_file(board), encoding="utf-8")
 
         if section not in cfg or key not in cfg[section]:
             return None
 
         return cfg[section][key]
 
-    def set_board_metadata(self, board: str, keypath: str, value: str | None) -> None:
+    def set_board_metadata(self, board: Slug, keypath: str, value: str | None) -> None:
         """Write a value to a board's .metadata INI file using a 'section.key' keypath."""
         if "." not in keypath:
             raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
-
-        board_slug = slug_it(board)
+        
         section, key = keypath.split(".", 1)
-        metadata_file = self._board_metadata_file(board_slug)
+        metadata_file = self._board_metadata_file(board)
         cfg = configparser.ConfigParser()
         cfg.read(metadata_file, encoding="utf-8")
 
@@ -734,36 +686,30 @@ class FilesystemRepository(KanbanRepository):
 
     # Column metadata
 
-    def _column_metadata_file(self, board: str, column: str) -> Path:
+    def _column_metadata_file(self, board: Slug, column: Slug) -> Path:
         """Return the path to the .metadata INI file for the given column."""
-        column_slug = slug_it(column)
-        board_slug = slug_it(board)
-        return self.boards_dir / board_slug / column_slug / ".metadata"
+        return self.boards_dir / board / column / ".metadata"
 
-    def get_column_metadata(self, board: str, column: str, keypath: str) -> str | None:
+    def get_column_metadata(self, board: Slug, column: Slug, keypath: str) -> str | None:
         """Read a value from a column's .metadata INI file using a 'section.key' keypath."""
         if "." not in keypath:
             raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
         
-        board_slug = slug_it(board)
-        column_slug = slug_it(column)
         section, key = keypath.split(".", 1)
         cfg = configparser.ConfigParser()
-        cfg.read(self._column_metadata_file(board_slug, column_slug), encoding="utf-8")
+        cfg.read(self._column_metadata_file(board, column), encoding="utf-8")
         
         if section not in cfg or key not in cfg[section]:
             return None
         
         return cfg[section][key]
 
-    def set_column_metadata(self, board: str, column: str, keypath: str, value: str | None) -> None:
+    def set_column_metadata(self, board: Slug, column: Slug, keypath: str, value: str | None) -> None:
         """Write a value to a column's .metadata INI file using a 'section.key' keypath."""
         if "." not in keypath:
             raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
-        board_slug = slug_it(board)
-        column_slug = slug_it(column)
         section, key = keypath.split(".", 1)
-        metadata_file = self._column_metadata_file(board_slug, column_slug)
+        metadata_file = self._column_metadata_file(board, column)
         cfg = configparser.ConfigParser()
         cfg.read(metadata_file, encoding="utf-8")
         
