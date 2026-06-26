@@ -92,7 +92,9 @@ def handle_delete_helper(args: argparse.Namespace, svc: KanbanService) -> type:
     return None
     
 
-def handle_move_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[type, Task | Column | Board]:
+# TODO: ==== TEST ====
+# TODO: REMOVE UNUSED
+def handle_move_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[type, Board | Column | Task]:
     """
     Move the entity at the given path to a new location.  This is the main
     entry point for all move commands in the REPL, which pass a user-provided
@@ -106,15 +108,39 @@ def handle_move_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[ty
     board, column, task = svc.path_components(path)
     dest_board, dest_column, dest_task = svc.path_components(dest)
 
+    # TODO: Is this logic right? We have undefined methods. 
+
     if board and column and task:
         svc.move_task(path=f"/{board}/{column}/{task}", dest_board=dest_board, dest_column=dest_column)
         return Task, svc.get_task(path=f"/{board}/{column}/{task}")
     elif board and column and not task:
         svc.move_column(path=f"/{board}/{column}", dest_board=dest_board)
-        return Column, svc.get_column(path=f"/{board}/{column}")
+        return Column, svc.get_column(board=dest_board, column=dest_column)
     elif board and not column and not task:
         svc.move_task(path=f"/{board}/{task}", dest_board=dest_board)
         return Task, svc.get_task(path=f"/{board}/{task}")
     elif not board and not column and not task:
         raise ValueError("Cannot move without a board name: {}".format(path))
     
+# TODO: ==== TEST ====
+def handle_rename_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[type, Board | Column | Task]:
+    """
+    Rename the entity at the given path to a new name.  This is the main
+    entry point for all rename commands in the REPL, which pass a user-provided
+    """
+    path = getattr(args, "path", "") or ""
+    new_name = getattr(args, "new_name", None)
+
+    if not new_name:
+        raise ValueError("New name must be provided for rename operation")
+
+    board, column, task = svc.path_components(path)
+
+    if board and column and task:
+        return Task, svc.rename_task(path=f"/{board}/{column}/{task}", new_title=new_name)
+    elif board and column:
+        return Column, svc.rename_column(path=f"/{board}/{column}", new_name=new_name)
+    elif board:
+        return Board, svc.rename_board(path=f"/{board}", new_name=new_name)
+    else:
+        raise ValueError("Cannot rename without a board name: {}".format(path))

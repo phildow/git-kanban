@@ -60,7 +60,11 @@ Run:
 
 0.5 - Complete filesystem
 
+- LAST: reorg project structure (see emails)
+
 - FEAT: rename renames a task as well
+    - Add `task rename` to CLI
+    - Update REPL to accept tasks
     - Flag not required
     - But we should be able to just give the slug and from the path determine what we are renaming, dispatch accordingly
     - CLI & REPL

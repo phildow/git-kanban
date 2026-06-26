@@ -20,7 +20,7 @@ TestReplInit            `init` and `init --bootstrap` on a fresh repo
 TestReplContext         `cd`, `board`, `column` context commands
 TestReplCreate          `create`/`new`/`n` for boards, columns, and tasks
 TestReplList            `list`/`ls` with paths, filters, sort, and -l flag
-TestReplRename          `rename board` and `rename column`
+TestReplRename          `rename` for boards, columns, and tasks
 TestReplDelete          `delete`/`del`/`rm` for boards, columns, and tasks
 TestReplReorder         `reorder column`
 TestReplShow            `show`/`view`/`v`/`s` aliases
@@ -432,32 +432,32 @@ class TestReplRename(_InitializedReplBase):
 
     def test_rename_board_creates_new_directory(self) -> None:
         """rename board creates the destination directory."""
-        self.run_repl("rename", "board", "proj", "work")
+        self.run_repl("rename", "/proj", "work")
         self.assertTrue((self.boards_dir / "work").is_dir())
 
     def test_rename_board_removes_old_directory(self) -> None:
         """rename board removes the source directory."""
-        self.run_repl("rename", "board", "proj", "work")
+        self.run_repl("rename", "/proj", "work")
         self.assertFalse((self.boards_dir / "proj").exists())
 
     def test_rename_board_produces_output(self) -> None:
         """rename board prints something."""
-        out = self.run_repl("rename", "board", "proj", "work")
+        out = self.run_repl("rename", "/proj", "work")
         self.assertTrue(out.strip())
 
     def test_rename_column_creates_new_directory(self) -> None:
         """rename column creates the destination directory."""
-        self.run_repl("rename", "column", "proj/todo", "doing")
+        self.run_repl("rename", "/proj/todo", "doing")
         self.assertTrue((self.boards_dir / "proj" / "doing").is_dir())
 
     def test_rename_column_removes_old_directory(self) -> None:
         """rename column removes the source directory."""
-        self.run_repl("rename", "column", "proj/todo", "doing")
+        self.run_repl("rename", "/proj/todo", "doing")
         self.assertFalse((self.boards_dir / "proj" / "todo").exists())
 
     def test_rename_column_produces_output(self) -> None:
         """rename column prints something."""
-        out = self.run_repl("rename", "column", "proj/todo", "doing")
+        out = self.run_repl("rename", "/proj/todo", "doing")
         self.assertTrue(out.strip())
 
 
@@ -776,25 +776,25 @@ class TestReplBoardEnglishNames(_InitializedReplBase):
     def test_rename_uses_new_slug_for_directory(self) -> None:
         """rename board moves the directory to the slug derived from the new display name."""
         self.run_repl("create", "board", "My Project")
-        self.run_repl("rename", "board", "my-project", "My Renamed Project")
+        self.run_repl("rename", "/my-project", "My Renamed Project")
         self.assertTrue((self.boards_dir / "my-renamed-project").is_dir())
 
     def test_rename_removes_old_slug_directory(self) -> None:
         """rename board removes the old slug directory."""
         self.run_repl("create", "board", "My Project")
-        self.run_repl("rename", "board", "my-project", "My Renamed Project")
+        self.run_repl("rename", "/my-project", "My Renamed Project")
         self.assertFalse((self.boards_dir / "my-project").exists())
 
     def test_rename_output_contains_new_name(self) -> None:
         """rename board prints the new display name."""
         self.run_repl("create", "board", "My Project")
-        out = self.run_repl("rename", "board", "my-project", "My Renamed Project")
+        out = self.run_repl("rename", "/my-project", "My Renamed Project")
         self.assertIn("My Renamed Project", out)
 
     def test_rename_output_contains_new_slug(self) -> None:
         """rename board prints the new derived slug."""
         self.run_repl("create", "board", "My Project")
-        out = self.run_repl("rename", "board", "my-project", "My Renamed Project")
+        out = self.run_repl("rename", "/my-project", "My Renamed Project")
         self.assertIn("my-renamed-project", out)
 
 
@@ -824,25 +824,25 @@ class TestReplColumnEnglishNames(_InitializedReplBase):
     def test_rename_uses_new_slug_for_directory(self) -> None:
         """rename column moves the directory to the slug derived from the new display name."""
         self.run_repl("create", "column", "my-project/backlog")
-        self.run_repl("rename", "column", "my-project/backlog", "Work Queue")
+        self.run_repl("rename", "/my-project/backlog", "Work Queue")
         self.assertTrue((self.boards_dir / "my-project" / "work-queue").is_dir())
 
     def test_rename_removes_old_slug_directory(self) -> None:
         """rename column removes the old slug directory."""
         self.run_repl("create", "column", "my-project/backlog")
-        self.run_repl("rename", "column", "my-project/backlog", "Work Queue")
+        self.run_repl("rename", "/my-project/backlog", "Work Queue")
         self.assertFalse((self.boards_dir / "my-project" / "backlog").exists())
 
     def test_rename_output_contains_new_name(self) -> None:
         """rename column prints the new display name."""
         self.run_repl("create", "column", "my-project/backlog")
-        out = self.run_repl("rename", "column", "my-project/backlog", "Work Queue")
+        out = self.run_repl("rename", "/my-project/backlog", "Work Queue")
         self.assertIn("Work Queue", out)
 
     def test_rename_output_contains_new_slug(self) -> None:
         """rename column prints the new derived slug."""
         self.run_repl("create", "column", "my-project/backlog")
-        out = self.run_repl("rename", "column", "my-project/backlog", "Work Queue")
+        out = self.run_repl("rename", "/my-project/backlog", "Work Queue")
         self.assertIn("work-queue", out)
 
 

@@ -136,6 +136,11 @@ class JsonRenderer:
     def render_task_edit(self, args: argparse.Namespace, result: Task) -> None:
         self._emit(args, json.dumps(_task_detail_dict(result), indent=2))
 
+    # TODO: ==== TEST ====
+    @_requires_verbose
+    def render_task_update(self, args: argparse.Namespace, result: Task) -> None:
+        self._emit(args, json.dumps(_task_detail_dict(result), indent=2))
+
     @_requires_verbose
     def render_task_move(self, args: argparse.Namespace, result: Task) -> None:
         self._emit(args, json.dumps(_task_detail_dict(result), indent=2))

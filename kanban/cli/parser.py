@@ -29,6 +29,7 @@ from cli.commands import (
     handle_task_edit,
     handle_task_list,
     handle_task_move,
+    handle_task_rename,
     handle_task_show,
     handle_task_update,
 )
@@ -228,6 +229,14 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     _add_format_arg(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_task_delete)
+
+    # task reneame
+    p = task_sub.add_parser("rename", help="Rename a task")
+    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
+    p.add_argument("new_name", metavar="NEW-NAME", help="New task name")
+    _add_format_arg(p)
+    _add_global_flags(p)
+    p.set_defaults(func=handle_task_rename)
 
     # task move
     p = task_sub.add_parser("move", help="Move task to another column")

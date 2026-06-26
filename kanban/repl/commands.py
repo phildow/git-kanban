@@ -7,7 +7,7 @@ from __future__ import annotations
 import argparse
 
 from models import Board, Column, Task
-from repl.command_helpers import handle_list_helper, handle_delete_helper, handle_move_helper
+from repl.command_helpers import handle_list_helper, handle_delete_helper, handle_move_helper, handle_rename_helper
 from services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
 from storage.seeds import BOOTSTRAP_CONFIG
 
@@ -84,6 +84,22 @@ def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: object
 		raise ValueError("Unexpected result type from handle_delete: {}".format(typ))
 
 
+# TODO: ==== TEST ====
+def handle_rename(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	typ, result = handle_rename_helper(args, svc)
+
+	if typ is None:
+		# user declined rename
+		return
+	elif typ is Board:
+		renderer.render_board_rename(args, result)
+	elif typ is Column:
+		renderer.render_column_rename(args, result)
+	elif typ is Task:
+		renderer.render_task_rename(args, result)
+	else:
+		raise ValueError("Unexpected result type from handle_rename: {}".format(typ))
+
 # TODO: Currenty unused, can only move tasks right now
 def handle_move(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	typ, result = handle_move_helper(args, svc)
@@ -109,6 +125,7 @@ def handle_board_create(args: argparse.Namespace, svc: KanbanService, renderer: 
 	renderer.render_board_create(args, result)
 
 
+# TODO: REMOVE
 def handle_board_rename(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	result = svc.rename_board(args.board, args.new_name)
 	renderer.render_board_rename(args, result)
@@ -122,6 +139,7 @@ def handle_column_create(args: argparse.Namespace, svc: KanbanService, renderer:
 	renderer.render_column_create(args, result)
 
 
+# TODO: REMOVE
 def handle_column_rename(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	result = svc.rename_column(args.path, args.new_name)
 	renderer.render_column_rename(args, result)
@@ -170,6 +188,12 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: o
 
 	result = svc.update_task(args.path, updates=updates)
 	renderer.render_task_edit(args, result)
+
+
+# TODO: REMOVE
+def handle_task_rename(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	result = svc.rename_task(args.path, args.new_name)
+	renderer.render_task_rename(args, result)
 
 
 def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:

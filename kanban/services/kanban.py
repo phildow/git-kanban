@@ -337,6 +337,10 @@ class KanbanService:
         """
         return self.repository.get_boards()
 
+    def get_board(self, board: str) -> Board | None:
+        """Return the board with the given name, or None if not found."""
+        return self.repository.get_board(board)
+
     # TODO: remove default columns from the service layer; they should be defined in the bootstrap config instead
     def create_board(self, path: str, columns = ["To Do", "In Progress", "In Review", "Done"]) -> Board:
         """
@@ -356,7 +360,6 @@ class KanbanService:
 
         return board
 
-    # TODO: remove path_components from these methods
     def rename_board(self, path: str, new_name: str) -> Board:
         """
         Rename a board directory and update .kanban-store/boards/.metadata in place.  Raises
@@ -386,9 +389,6 @@ class KanbanService:
         index entries for tasks that belonged to the board and clears the current
         context if it pointed at the deleted board.
         """
-
-        # TODO: do not allow the user to delete a board that has tasks in it, or at least require a --force flag
-        # TODO: do not allow the user to delete a board that is the current context
 
         board, _, _ = self.path_components(path)
         tasks = self.get_tasks(path)
@@ -421,6 +421,10 @@ class KanbanService:
         """
         board, _, _ = self.path_components(board)
         return self.repository.get_columns(board)
+
+    def get_column(self, board: str, column: str) -> Column | None:
+        """Return the column with the given name in the given board, or None if not found."""
+        return self.repository.get_column(board, column)
 
     def create_column(self, path: str) -> Column:
         """
@@ -607,6 +611,33 @@ class KanbanService:
             raise ValueError(f"No task title provided in path: {path}")
 
         return self.repository.get_task(board, column, title)
+
+    # TODO: ==== TEST ====
+    def rename_task(
+        self,
+        path: str,
+        new_title: str,
+    ) -> Task:
+        """
+        Rename a task's .md file and update its frontmatter.  Raises
+        BoardNotFound, ColumnNotFound, or TaskNotFound if the task cannot be
+        resolved, and TaskAlreadyExists if the new title slug is already taken
+        in that column.  Updates the index and commits.
+        """
+        board, column, title = self.path_components(path)
+        if board is None or column is None or title is None:
+            raise ValueError(f"Unable to locate task at: {path}")
+
+        task = self.get_task(path)
+        slug = task.slug
+
+        new_slug = slug_it(new_title)
+        task.title = new_title
+        task.slug = new_slug
+
+        renamed_task = self.repository.update_task(task, slug=slug)
+        self.index_service.update_task(renamed_task)
+        return renamed_task
 
     def edit_task(
         self,

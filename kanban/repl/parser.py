@@ -15,22 +15,27 @@ from repl.commands import (
     handle_board_change,
     handle_column_change,
     handle_board_create,
+    # TODO: REMOVE
     handle_board_rename,
     handle_init,
     handle_list,
     handle_delete,
     handle_column_create,
+    # TODO: REMOVE
     handle_column_rename,
     handle_column_reorder,
     handle_config_get,
     handle_config_set,
     handle_log,
+    handle_rename,
     handle_search,
     handle_status,
     handle_task_assign,
     handle_task_create,
     handle_task_edit,
     handle_task_move,
+    # TODO: REMOVE
+    handle_task_rename,
     handle_task_show,
     handle_task_update,
     handle_change_dir,
@@ -162,26 +167,30 @@ def _add_delete_parser(subparsers: argparse._SubParsersAction) -> None:
     p.set_defaults(func=handle_delete)
 
 
-# TODO: Major update to rename to support renaming columns, dispatch to command helper
+# TODO: ==== TEST ====
 def _add_rename_parser(subparsers: argparse._SubParsersAction) -> None:
-    rename_parser = subparsers.add_parser("rename", help="Rename a board or column")
+    rename_parser = subparsers.add_parser("rename", help="Rename a board, column, or task")
+    rename_parser.add_argument("path", metavar="BOARD/COLUMN/TASK", help="The board, column, or task to rename")
+    rename_parser.add_argument("new_name", metavar="NEW-NAME", help="The new name for the board, column, or task")
     _add_global_flags(rename_parser)
-    rename_sub = rename_parser.add_subparsers(dest="rename_subject", metavar="SUBJECT")
-    rename_sub.required = True
+    rename_parser.set_defaults(func=handle_rename)
+
+    # rename_sub = rename_parser.add_subparsers(dest="rename_subject", metavar="SUBJECT")
+    # rename_sub.required = True
 
     # rename board
-    p = rename_sub.add_parser("board", help="Rename a board")
-    p.add_argument("board", metavar="BOARD", help="Current board name")
-    p.add_argument("new_name", metavar="NEW-NAME", help="New board name")
-    _add_global_flags(p)
-    p.set_defaults(func=handle_board_rename)
+    # p = rename_sub.add_parser("board", help="Rename a board")
+    # p.add_argument("board", metavar="BOARD", help="Current board name")
+    # p.add_argument("new_name", metavar="NEW-NAME", help="New board name")
+    # _add_global_flags(p)
+    # p.set_defaults(func=handle_board_rename)
 
     # rename column
-    p = rename_sub.add_parser("column", help="Rename a column")
-    p.add_argument("path", metavar="BOARD/COLUMN", help="Column path")
-    p.add_argument("new_name", metavar="NEW-NAME", help="New column name")
-    _add_global_flags(p)
-    p.set_defaults(func=handle_column_rename)
+    # p = rename_sub.add_parser("column", help="Rename a column")
+    # p.add_argument("path", metavar="BOARD/COLUMN", help="Column path")
+    # p.add_argument("new_name", metavar="NEW-NAME", help="New column name")
+    # _add_global_flags(p)
+    # p.set_defaults(func=handle_column_rename)
 
 
 def _add_reorder_parser(subparsers: argparse._SubParsersAction) -> None:
