@@ -312,6 +312,50 @@ class TestCommandHandlers(unittest.TestCase):
         self.svc.move_task.assert_called_once_with("board-a/todo/fix-parser", "done")
         self.renderer.render_task_move.assert_called_once_with(args, result)
 
+    def test_handle_task_move_top(self):
+        """`task move --top` calls reorder_task with "top" and renders via render_task_reorder."""
+        args = self._args(path="board-a/todo/fix-parser", column=None, top=True, bottom=False, up=False, down=False)
+        result = object()
+        self.svc.reorder_task.return_value = result
+
+        commands.handle_task_move(args, self.svc, self.renderer, self.json_renderer)
+
+        self.svc.reorder_task.assert_called_once_with("board-a/todo/fix-parser", "top")
+        self.renderer.render_task_reorder.assert_called_once_with(args, (result, "top"))
+
+    def test_handle_task_move_bottom(self):
+        """`task move --bottom` calls reorder_task with "bottom" and renders via render_task_reorder."""
+        args = self._args(path="board-a/todo/fix-parser", column=None, top=False, bottom=True, up=False, down=False)
+        result = object()
+        self.svc.reorder_task.return_value = result
+
+        commands.handle_task_move(args, self.svc, self.renderer, self.json_renderer)
+
+        self.svc.reorder_task.assert_called_once_with("board-a/todo/fix-parser", "bottom")
+        self.renderer.render_task_reorder.assert_called_once_with(args, (result, "bottom"))
+
+    def test_handle_task_move_up(self):
+        """`task move --up` calls reorder_task with "up" and renders via render_task_reorder."""
+        args = self._args(path="board-a/todo/fix-parser", column=None, top=False, bottom=False, up=True, down=False)
+        result = object()
+        self.svc.reorder_task.return_value = result
+
+        commands.handle_task_move(args, self.svc, self.renderer, self.json_renderer)
+
+        self.svc.reorder_task.assert_called_once_with("board-a/todo/fix-parser", "up")
+        self.renderer.render_task_reorder.assert_called_once_with(args, (result, "up"))
+
+    def test_handle_task_move_down(self):
+        """`task move --down` calls reorder_task with "down" and renders via render_task_reorder."""
+        args = self._args(path="board-a/todo/fix-parser", column=None, top=False, bottom=False, up=False, down=True)
+        result = object()
+        self.svc.reorder_task.return_value = result
+
+        commands.handle_task_move(args, self.svc, self.renderer, self.json_renderer)
+
+        self.svc.reorder_task.assert_called_once_with("board-a/todo/fix-parser", "down")
+        self.renderer.render_task_reorder.assert_called_once_with(args, (result, "down"))
+
     def test_handle_task_assign(self):
         """`task assign` forwards path and user to assign_task and renders result."""
         args = self._args(path="board-a/todo/fix-parser", assigned_to="alice")

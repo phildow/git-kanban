@@ -301,6 +301,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.renderer.render_task_edit.assert_called_once_with(args, result)
 
     def test_handle_task_move(self):
+        """`move` with a column forwards path and column to move_task and renders via render_task_move."""
         args = self._args(path="alpha/todo/fix-parser", column="done")
         result = object()
         self.svc.move_task.return_value = result
@@ -309,6 +310,50 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         self.svc.move_task.assert_called_once_with("alpha/todo/fix-parser", "done")
         self.renderer.render_task_move.assert_called_once_with(args, result)
+
+    def test_handle_task_move_top(self):
+        """`move --top` calls reorder_task with "top" and renders via render_task_reorder."""
+        args = self._args(path="alpha/todo/fix-parser", column=None, top=True, bottom=False, up=False, down=False)
+        result = object()
+        self.svc.reorder_task.return_value = result
+
+        commands.handle_task_move(args, self.svc, self.renderer)
+
+        self.svc.reorder_task.assert_called_once_with("alpha/todo/fix-parser", "top")
+        self.renderer.render_task_reorder.assert_called_once_with(args, (result, "top"))
+
+    def test_handle_task_move_bottom(self):
+        """`move --bottom` calls reorder_task with "bottom" and renders via render_task_reorder."""
+        args = self._args(path="alpha/todo/fix-parser", column=None, top=False, bottom=True, up=False, down=False)
+        result = object()
+        self.svc.reorder_task.return_value = result
+
+        commands.handle_task_move(args, self.svc, self.renderer)
+
+        self.svc.reorder_task.assert_called_once_with("alpha/todo/fix-parser", "bottom")
+        self.renderer.render_task_reorder.assert_called_once_with(args, (result, "bottom"))
+
+    def test_handle_task_move_up(self):
+        """`move --up` calls reorder_task with "up" and renders via render_task_reorder."""
+        args = self._args(path="alpha/todo/fix-parser", column=None, top=False, bottom=False, up=True, down=False)
+        result = object()
+        self.svc.reorder_task.return_value = result
+
+        commands.handle_task_move(args, self.svc, self.renderer)
+
+        self.svc.reorder_task.assert_called_once_with("alpha/todo/fix-parser", "up")
+        self.renderer.render_task_reorder.assert_called_once_with(args, (result, "up"))
+
+    def test_handle_task_move_down(self):
+        """`move --down` calls reorder_task with "down" and renders via render_task_reorder."""
+        args = self._args(path="alpha/todo/fix-parser", column=None, top=False, bottom=False, up=False, down=True)
+        result = object()
+        self.svc.reorder_task.return_value = result
+
+        commands.handle_task_move(args, self.svc, self.renderer)
+
+        self.svc.reorder_task.assert_called_once_with("alpha/todo/fix-parser", "down")
+        self.renderer.render_task_reorder.assert_called_once_with(args, (result, "down"))
 
     def test_handle_task_assign(self):
         """`assign` forwards path and user to assign_task and renders result."""
