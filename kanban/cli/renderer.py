@@ -188,6 +188,13 @@ class Renderer:
 		]
 		self._emit(args, "\n".join(lines))
 
+	# TODO: ==== TEST ====
+	@_requires_verbose
+	def render_task_rename(self, args: argparse.Namespace, result: Task) -> None:
+		old_slug = getattr(args, "path", "") or ""
+		new_slug = result.slug
+		self._emit(args, f"Task renamed: {result.title}: {old_slug} -> {new_slug}")
+
 	def render_task_edit(self, args: argparse.Namespace, result: Task) -> None:
 		self._emit(args, result)
 

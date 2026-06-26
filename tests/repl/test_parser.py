@@ -22,6 +22,7 @@ from repl.commands import (
     handle_delete,
     handle_list,
     handle_change_dir,
+    handle_rename,
     handle_task_assign,
     handle_task_create,
     handle_task_move,
@@ -186,6 +187,34 @@ class TestParserAliases(unittest.TestCase):
         self.assertFalse(args.bottom)
         self.assertFalse(args.up)
         self.assertFalse(args.down)
+
+    def test_rename_path_new_name_and_handler(self) -> None:
+        """rename binds path, new_name, and the handle_rename handler."""
+        args = repl_parser.parse_args(["rename", "proj", "Work"])
+        self.assertEqual(args.path, "proj")
+        self.assertEqual(args.new_name, "Work")
+        self.assertIs(args.func, handle_rename)
+
+    def test_rename_column_path_binds_handler(self) -> None:
+        """rename with a board/column path still binds handle_rename."""
+        args = repl_parser.parse_args(["rename", "proj/todo", "Doing"])
+        self.assertEqual(args.path, "proj/todo")
+        self.assertEqual(args.new_name, "Doing")
+        self.assertIs(args.func, handle_rename)
+
+    def test_rename_task_path_binds_handler(self) -> None:
+        """rename with a board/column/task path still binds handle_rename."""
+        args = repl_parser.parse_args(["rename", "proj/todo/fix-parser", "Fixed Parser"])
+        self.assertEqual(args.path, "proj/todo/fix-parser")
+        self.assertEqual(args.new_name, "Fixed Parser")
+        self.assertIs(args.func, handle_rename)
+
+    def test_rename_requires_path_and_new_name(self) -> None:
+        """rename raises SystemExit when path or new_name is missing."""
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["rename"])
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["rename", "proj"])
 
     def test_mv_alias_maps_to_move_handler(self) -> None:
         """mv is an alias for move and binds the same handler."""

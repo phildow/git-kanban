@@ -33,6 +33,7 @@ from cli.commands import (
     handle_task_list,
     handle_task_assign,
     handle_task_move,
+    handle_task_rename,
     handle_task_show,
     handle_task_update
 )
@@ -73,7 +74,7 @@ class TestParserStructure(unittest.TestCase):
         self.assertEqual(set(column.keys()), {"list", "create", "rename", "reorder", "delete"})
 
         task = self._subparser_choices(top["task"], "task_command")
-        self.assertEqual(set(task.keys()), {"list", "create", "show", "edit", "update", "move", "delete", "assign"})
+        self.assertEqual(set(task.keys()), {"list", "create", "show", "edit", "update", "move", "delete", "assign", "rename"})
 
         config = self._subparser_choices(top["config"], "config_command")
         self.assertEqual(set(config.keys()), {"get", "set"})
@@ -266,6 +267,23 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         self.assertEqual(args.key, "name")
         self.assertIs(args.func, handle_config_get)
 
+
+    def test_task_rename_path_new_name_and_handler(self) -> None:
+        """task rename binds path, new_name, and the handle_task_rename handler."""
+        args = cli_parser.parse_args(["task", "rename", "board-a/todo/fix-parser", "Fixed Parser"])
+        self.assertEqual(args.path, "board-a/todo/fix-parser")
+        self.assertEqual(args.new_name, "Fixed Parser")
+        self.assertIs(args.func, handle_task_rename)
+
+    def test_task_rename_format_default(self) -> None:
+        """task rename defaults to plain format."""
+        args = cli_parser.parse_args(["task", "rename", "board-a/todo/fix-parser", "Fixed Parser"])
+        self.assertEqual(args.format, "plain")
+
+    def test_task_rename_format_json(self) -> None:
+        """task rename accepts --format json."""
+        args = cli_parser.parse_args(["task", "rename", "board-a/todo/fix-parser", "Fixed Parser", "--format", "json"])
+        self.assertEqual(args.format, "json")
 
     def test_task_move_path_and_handler(self) -> None:
         """task move binds path and the handle_task_move handler."""

@@ -823,6 +823,60 @@ class TestTaskCLI(_InitializedBase):
                              "--verbose", "--format", "json")
         self.assertEqual(data["assigned_to"], "alice")
 
+    # -- rename ---------------------------------------------------------------
+
+    def test_task_rename_creates_new_file(self) -> None:
+        """task rename creates a file at the new slug path."""
+        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "rename", "proj/todo/fix-login", "Fix Login Bug")
+        self.assertTrue((self.boards_dir / "proj" / "todo" / "fix-login-bug.md").is_file())
+
+    def test_task_rename_removes_old_file(self) -> None:
+        """task rename removes the file at the old slug path."""
+        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "rename", "proj/todo/fix-login", "Fix Login Bug")
+        self.assertFalse((self.boards_dir / "proj" / "todo" / "fix-login.md").exists())
+
+    def test_task_rename_updates_title_in_frontmatter(self) -> None:
+        """task rename writes the new title to the frontmatter."""
+        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "rename", "proj/todo/fix-login", "Fix Login Bug")
+        fm = self._read_frontmatter("proj", "todo", "fix-login-bug")
+        self.assertEqual(fm.get("title"), "Fix Login Bug")
+
+    def test_task_rename_updates_slug_in_frontmatter(self) -> None:
+        """task rename writes the new slug to the frontmatter."""
+        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "rename", "proj/todo/fix-login", "Fix Login Bug")
+        fm = self._read_frontmatter("proj", "todo", "fix-login-bug")
+        self.assertEqual(fm.get("slug"), "fix-login-bug")
+
+    def test_task_rename_verbose_prints_output(self) -> None:
+        """task rename --verbose prints something."""
+        self.run_cli("task", "create", "proj/todo/fix-login")
+        out = self.run_cli("task", "rename", "proj/todo/fix-login", "Fix Login Bug", "--verbose")
+        self.assertTrue(out.strip())
+
+    def test_task_rename_without_verbose_produces_no_output(self) -> None:
+        """task rename without --verbose produces no output."""
+        self.run_cli("task", "create", "proj/todo/fix-login")
+        out = self.run_cli("task", "rename", "proj/todo/fix-login", "Fix Login Bug")
+        self.assertEqual(out, "")
+
+    def test_task_rename_json_verbose_includes_new_slug(self) -> None:
+        """task rename --verbose --format json includes the new slug."""
+        self.run_cli("task", "create", "proj/todo/fix-login")
+        data = self.run_json("task", "rename", "proj/todo/fix-login", "Fix Login Bug",
+                             "--verbose", "--format", "json")
+        self.assertEqual(data["slug"], "fix-login-bug")
+
+    def test_task_rename_json_verbose_includes_new_title(self) -> None:
+        """task rename --verbose --format json includes the new title."""
+        self.run_cli("task", "create", "proj/todo/fix-login")
+        data = self.run_json("task", "rename", "proj/todo/fix-login", "Fix Login Bug",
+                             "--verbose", "--format", "json")
+        self.assertEqual(data["title"], "Fix Login Bug")
+
     # -- delete ---------------------------------------------------------------
 
     def test_task_delete_removes_file(self) -> None:
