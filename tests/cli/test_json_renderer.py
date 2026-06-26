@@ -355,6 +355,50 @@ class TestJsonRendererTasks(unittest.TestCase):
         out = _capture(lambda: self.r.render_task_move(_args(verbose=True), _task()))
         self.assertEqual(json.loads(out)["slug"], "fix-login-bug")
 
+    def test_task_move_column_field(self) -> None:
+        """render_task_move emits the task's new column when verbose."""
+        out = _capture(lambda: self.r.render_task_move(_args(verbose=True), _task(column="done")))
+        self.assertEqual(json.loads(out)["column"], "done")
+
+    def test_task_move_includes_timestamps(self) -> None:
+        """render_task_move includes created_at and updated_at when verbose."""
+        out = _capture(lambda: self.r.render_task_move(_args(verbose=True), _task()))
+        obj = json.loads(out)
+        self.assertEqual(obj["created_at"], _CREATED_AT.isoformat())
+        self.assertEqual(obj["updated_at"], _UPDATED_AT.isoformat())
+
+    def test_task_reorder_silent_without_verbose(self) -> None:
+        """render_task_reorder emits nothing when --verbose is not set."""
+        out = _capture(lambda: self.r.render_task_reorder(_args(verbose=False), (_task(), "up")))
+        self.assertEqual(out, "")
+
+    def test_task_reorder_is_object(self) -> None:
+        """render_task_reorder emits a JSON object when verbose."""
+        out = _capture(lambda: self.r.render_task_reorder(_args(verbose=True), (_task(), "up")))
+        self.assertIsInstance(json.loads(out), dict)
+
+    def test_task_reorder_slug_field(self) -> None:
+        """render_task_reorder emits the task's slug when verbose."""
+        out = _capture(lambda: self.r.render_task_reorder(_args(verbose=True), (_task(), "top")))
+        self.assertEqual(json.loads(out)["slug"], "fix-login-bug")
+
+    def test_task_reorder_column_field(self) -> None:
+        """render_task_reorder emits the task's column (unchanged by reorder) when verbose."""
+        out = _capture(lambda: self.r.render_task_reorder(_args(verbose=True), (_task(column="todo"), "down")))
+        self.assertEqual(json.loads(out)["column"], "todo")
+
+    def test_task_reorder_includes_timestamps(self) -> None:
+        """render_task_reorder includes created_at and updated_at when verbose."""
+        out = _capture(lambda: self.r.render_task_reorder(_args(verbose=True), (_task(), "bottom")))
+        obj = json.loads(out)
+        self.assertEqual(obj["created_at"], _CREATED_AT.isoformat())
+        self.assertEqual(obj["updated_at"], _UPDATED_AT.isoformat())
+
+    def test_task_reorder_id_field(self) -> None:
+        """render_task_reorder emits the task UUID when verbose."""
+        out = _capture(lambda: self.r.render_task_reorder(_args(verbose=True), (_task(), "up")))
+        self.assertEqual(json.loads(out)["id"], str(_TASK_ID))
+
     def test_task_delete_silent_without_verbose(self) -> None:
         """render_task_delete emits nothing when --verbose is not set."""
         out = _capture(lambda: self.r.render_task_delete(_args(verbose=False, path="main/todo/fix-login-bug"), None))
