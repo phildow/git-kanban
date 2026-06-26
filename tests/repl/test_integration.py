@@ -460,6 +460,24 @@ class TestReplRename(_InitializedReplBase):
         out = self.run_repl("rename", "/proj/todo", "doing")
         self.assertTrue(out.strip())
 
+    def test_rename_task_creates_new_file(self) -> None:
+        """rename task creates a file with the new slug."""
+        self.svc.create_task("proj/todo/alpha task", TaskCreateParams())
+        self.run_repl("rename", "/proj/todo/alpha-task", "Beta Task")
+        self.assertTrue((self.boards_dir / "proj" / "todo" / "beta-task.md").is_file())
+
+    def test_rename_task_removes_old_file(self) -> None:
+        """rename task removes the file with the old slug."""
+        self.svc.create_task("proj/todo/alpha task", TaskCreateParams())
+        self.run_repl("rename", "/proj/todo/alpha-task", "Beta Task")
+        self.assertFalse((self.boards_dir / "proj" / "todo" / "alpha-task.md").exists())
+
+    def test_rename_task_produces_output(self) -> None:
+        """rename task prints something."""
+        self.svc.create_task("proj/todo/alpha task", TaskCreateParams())
+        out = self.run_repl("rename", "/proj/todo/alpha-task", "Beta Task")
+        self.assertTrue(out.strip())
+
 
 # ---------------------------------------------------------------------------
 # delete (and aliases del, rm)

@@ -63,6 +63,7 @@ Run:
 - LAST: reorg project structure (see emails)
 
 - FEAT: rename renames a task as well
+    - TEST: autocomplete
     - Add `task rename` to CLI
     - Update REPL to accept tasks
     - Flag not required

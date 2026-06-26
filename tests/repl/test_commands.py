@@ -165,6 +165,42 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.rename_board.assert_called_once_with("alpha", "beta")
         self.renderer.render_board_rename.assert_called_once_with(args, result)
 
+    def test_handle_rename_board(self) -> None:
+        """`rename` with a board-only path calls rename_board and renders the result."""
+        self.svc.path_components.return_value = ("proj", None, None)
+        result = object()
+        self.svc.rename_board.return_value = result
+        args = self._args(path="proj", new_name="Work")
+
+        commands.handle_rename(args, self.svc, self.renderer)
+
+        self.svc.rename_board.assert_called_once_with(path="/proj", new_name="Work")
+        self.renderer.render_board_rename.assert_called_once_with(args, result)
+
+    def test_handle_rename_column(self) -> None:
+        """`rename` with a board/column path calls rename_column and renders the result."""
+        self.svc.path_components.return_value = ("proj", "todo", None)
+        result = object()
+        self.svc.rename_column.return_value = result
+        args = self._args(path="proj/todo", new_name="Doing")
+
+        commands.handle_rename(args, self.svc, self.renderer)
+
+        self.svc.rename_column.assert_called_once_with(path="/proj/todo", new_name="Doing")
+        self.renderer.render_column_rename.assert_called_once_with(args, result)
+
+    def test_handle_rename_task(self) -> None:
+        """`rename` with a board/column/task path calls rename_task and renders the result."""
+        self.svc.path_components.return_value = ("proj", "todo", "fix-parser")
+        result = object()
+        self.svc.rename_task.return_value = result
+        args = self._args(path="proj/todo/fix-parser", new_name="Fixed Parser")
+
+        commands.handle_rename(args, self.svc, self.renderer)
+
+        self.svc.rename_task.assert_called_once_with(path="/proj/todo/fix-parser", new_title="Fixed Parser")
+        self.renderer.render_task_rename.assert_called_once_with(args, result)
+
     def test_column_handlers(self):
         args = self._args(path="alpha/todo")
         result = object()
