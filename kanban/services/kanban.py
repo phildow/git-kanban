@@ -612,7 +612,6 @@ class KanbanService:
 
         return self.repository.get_task(board, column, title)
 
-    # TODO: ==== TEST ====
     def rename_task(
         self,
         path: str,

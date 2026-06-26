@@ -399,7 +399,6 @@ class Renderer:
 			msg = f"Task moved: {result.slug}"
 		self._emit(args, msg)
 	
-	# TODO: ==== TEST ====
 	def render_task_rename(self, args: argparse.Namespace, result: Task) -> None:
 		old_slug = getattr(args, "path", "") or ""
 		new_slug = result.slug

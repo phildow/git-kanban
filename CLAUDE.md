@@ -376,6 +376,7 @@ kanban task show <board>/<column>/<task> [--format <table|plain|json>]
 kanban task edit <board>/<column>/<task>
 kanban task delete <board>/<column>/<task>
 kanban task assign <board>/<column>/<task> <name>
+kanban task rename <board><column>/task <new-name>
 
 kanban search <query>
     [--format <table|plain|json>]

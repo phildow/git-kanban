@@ -7,7 +7,7 @@ from __future__ import annotations
 import argparse
 
 from models import Board, Column, Task
-from repl.command_helpers import handle_list_helper, handle_delete_helper, handle_move_helper, handle_rename_helper
+from repl.command_helpers import handle_list_helper, handle_delete_helper, handle_rename_helper
 from services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
 from storage.seeds import BOOTSTRAP_CONFIG
 
@@ -84,7 +84,6 @@ def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: object
 		raise ValueError("Unexpected result type from handle_delete: {}".format(typ))
 
 
-# TODO: ==== TEST ====
 def handle_rename(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	typ, result = handle_rename_helper(args, svc)
 
@@ -99,22 +98,6 @@ def handle_rename(args: argparse.Namespace, svc: KanbanService, renderer: object
 		renderer.render_task_rename(args, result)
 	else:
 		raise ValueError("Unexpected result type from handle_rename: {}".format(typ))
-
-# TODO: Currenty unused, can only move tasks right now
-def handle_move(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	typ, result = handle_move_helper(args, svc)
-	
-	if typ is None:
-		# user declined move
-		return
-	elif typ is Board:
-		renderer.render_board_move(args, result)
-	elif typ is Column:
-		renderer.render_column_move(args, result)
-	elif typ is Task:
-		renderer.render_task_move(args, result)
-	else:
-		raise ValueError("Unexpected result type from handle_move: {}".format(typ))
 
 # ---------------------------------------------------------------------------
 # Board subcommands

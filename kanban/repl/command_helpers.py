@@ -92,37 +92,6 @@ def handle_delete_helper(args: argparse.Namespace, svc: KanbanService) -> type:
     return None
     
 
-# TODO: ==== TEST ====
-# TODO: REMOVE UNUSED
-def handle_move_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[type, Board | Column | Task]:
-    """
-    Move the entity at the given path to a new location.  This is the main
-    entry point for all move commands in the REPL, which pass a user-provided
-    path that may be absolute or relative to the current context.
-
-    It is only possible to move a task to another column on the current board.
-    
-    """
-    path = getattr(args, "path", "") or ""
-    dest = getattr(args, "dest", "") or ""
-    board, column, task = svc.path_components(path)
-    dest_board, dest_column, dest_task = svc.path_components(dest)
-
-    # TODO: Is this logic right? We have undefined methods. 
-
-    if board and column and task:
-        svc.move_task(path=f"/{board}/{column}/{task}", dest_board=dest_board, dest_column=dest_column)
-        return Task, svc.get_task(path=f"/{board}/{column}/{task}")
-    elif board and column and not task:
-        svc.move_column(path=f"/{board}/{column}", dest_board=dest_board)
-        return Column, svc.get_column(board=dest_board, column=dest_column)
-    elif board and not column and not task:
-        svc.move_task(path=f"/{board}/{task}", dest_board=dest_board)
-        return Task, svc.get_task(path=f"/{board}/{task}")
-    elif not board and not column and not task:
-        raise ValueError("Cannot move without a board name: {}".format(path))
-    
-# TODO: ==== TEST ====
 def handle_rename_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[type, Board | Column | Task]:
     """
     Rename the entity at the given path to a new name.  This is the main

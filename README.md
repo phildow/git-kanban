@@ -5,8 +5,8 @@ The repository uses pyenv and virtualenv. Run `.venv/bin/activate` to activate t
 
 ## Version Map
 
-0.5 - Implement filesystem basics
-0.6 - Complete filesystem and in memory store
+0.5 - Complete filesystem
+0.6 - Error handling and complete memory store
 0.7 - Implement indexing and search
 0.8 - Implement git tracking
 0.9 - Implement the TUI
@@ -61,47 +61,41 @@ Run:
 0.5 - Complete filesystem
 
 - LAST: reorg project structure (see emails)
-
-- FEAT: rename renames a task as well
-    - TEST: autocomplete
-    - TEST: integration
-    
-    - Add `task rename` to CLI
-    - Update REPL to accept tasks
-    - Flag not required
-    - But we should be able to just give the slug and from the path determine what we are renaming, dispatch accordingly
-    - CLI & REPL
+- Once we have file storage `kanban init` this directory and start storing tasks here (dogfood) ~ almost there!
 
 - CHORE: remove default columns from the service layer
 - BUG: default "To Do" slug -> todo
-
 - TEST: Check init error handling, don't overwrite a repo, don't initialize a repo that's already been created
 - TEST: make sure repl gives recoverable error message
 
-- FEAT: consider case-conversion package for unicode compatible kebab casing (pycases)
-- FEAT: kebab_case preserves accented characters
-
 ~
 
-- Once we have file storage `kanban init` this directory and start storing tasks here (dogfood) ~ almost there!
+0.6: Error handling, Complete in memory store
 
-~
+Error Handling
 
-0.6: Complete in memory store 
+- CHORE: Does the repo raise not found errors or does the service layer?
+    - I think the orchestrator just orchestrates and propogates errors but lets the storage layer determine if there is an error
+- FEAT: Use specific errors when a board/column/task isn't found
+- FEAT: Only show an "Unepected Error" when it actually is, vs say renaming to a name that already exists 
+- TEST: handle path errors better
+
+- Other
 
 - TEST: Ensure memory store supports same features as filesystem (ordering)
-- TEST: handle path errors better
 - FEAT: `--exlude` flag to list when `--all` flag to exlude a column (support multiple)
 - CHORE: Use slugs in memory repository for private indexing (add tests)
 - CHORE: add utilty to filter for invisible files
 - FEAT: ooo the shell will make as few as two columns
 - FEAT: add csv export
-- BUG: raise a services domain error if you rename to the same name
 
 - FEAT: Add comments to a task which are just appended to the body
     - CLI: `task comment <board/column/task> <comment>`
     - REPL: `comment <task> <comment>`
     - Need to note who left it
+
+- FEAT: consider case-conversion package for unicode compatible kebab casing (pycases)
+- FEAT: kebab_case preserves accented characters
 
 ~
 

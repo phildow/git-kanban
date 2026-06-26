@@ -121,7 +121,6 @@ def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: o
 	_pick(args, renderer, json_renderer).render_task_create(args, result)
 
 
-# TODO: ==== TEST ====
 def handle_task_rename(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.rename_task(args.path, args.new_name)
 	_pick(args, renderer, json_renderer).render_task_rename(args, result)
@@ -151,7 +150,6 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: o
 	_pick(args, renderer, json_renderer).render_task_edit(args, result)
 
 
-# ----- TODO: TEST -----
 def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	if args.column is not None:
 		result = svc.move_task(args.path, args.column)
