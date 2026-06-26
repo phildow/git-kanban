@@ -25,6 +25,7 @@ TestTaskCLI         All task subcommands (proj/todo + proj/done pre-created)
 
 from __future__ import annotations
 
+import configparser
 import io
 import json
 import os
@@ -100,6 +101,14 @@ class _CLIBase(unittest.TestCase):
                     k, v = line.split(":", 1)
                     fm[k.strip()] = v.strip()
         return fm
+
+    def _read_task_order(self, board: str, column: str) -> list[str]:
+        """Read the task order directly from the column's .metadata INI file."""
+        metadata = self.boards_dir / board / column / ".metadata"
+        cfg = configparser.ConfigParser()
+        cfg.read(metadata, encoding="utf-8")
+        raw = cfg.get("tasks", "order", fallback="")
+        return [f.replace(".md", "").strip() for f in raw.split("\n") if f.strip()]
 
 
 class _InitializedBase(_CLIBase):
@@ -714,6 +723,70 @@ class TestTaskCLI(_InitializedBase):
         self.run_cli("task", "create", "proj/todo/fix-login")
         out = self.run_cli("task", "move", "proj/todo/fix-login", "done")
         self.assertEqual(out, "")
+
+    # -- move reorder (within column) -----------------------------------------
+
+    def test_task_move_top_updates_metadata_order(self) -> None:
+        """task move --top places the task first in the column's metadata order."""
+        self.run_cli("task", "create", "proj/todo/first")
+        self.run_cli("task", "create", "proj/todo/second")
+        self.run_cli("task", "create", "proj/todo/third")
+        self.run_cli("task", "move", "proj/todo/third", "--top")
+        self.assertEqual(self._read_task_order("proj", "todo"), ["third", "first", "second"])
+
+    def test_task_move_bottom_updates_metadata_order(self) -> None:
+        """task move --bottom places the task last in the column's metadata order."""
+        self.run_cli("task", "create", "proj/todo/first")
+        self.run_cli("task", "create", "proj/todo/second")
+        self.run_cli("task", "create", "proj/todo/third")
+        self.run_cli("task", "move", "proj/todo/first", "--bottom")
+        self.assertEqual(self._read_task_order("proj", "todo"), ["second", "third", "first"])
+
+    def test_task_move_up_updates_metadata_order(self) -> None:
+        """task move --up moves the task one position earlier in the column's metadata order."""
+        self.run_cli("task", "create", "proj/todo/first")
+        self.run_cli("task", "create", "proj/todo/second")
+        self.run_cli("task", "create", "proj/todo/third")
+        self.run_cli("task", "move", "proj/todo/third", "--up")
+        self.assertEqual(self._read_task_order("proj", "todo"), ["first", "third", "second"])
+
+    def test_task_move_down_updates_metadata_order(self) -> None:
+        """task move --down moves the task one position later in the column's metadata order."""
+        self.run_cli("task", "create", "proj/todo/first")
+        self.run_cli("task", "create", "proj/todo/second")
+        self.run_cli("task", "create", "proj/todo/third")
+        self.run_cli("task", "move", "proj/todo/first", "--down")
+        self.assertEqual(self._read_task_order("proj", "todo"), ["second", "first", "third"])
+
+    def test_task_move_reorder_verbose_prints_output(self) -> None:
+        """task move --up --verbose prints something."""
+        self.run_cli("task", "create", "proj/todo/first")
+        self.run_cli("task", "create", "proj/todo/second")
+        out = self.run_cli("task", "move", "proj/todo/second", "--up", "--verbose")
+        self.assertTrue(out.strip())
+
+    def test_task_move_reorder_without_verbose_produces_no_output(self) -> None:
+        """task move --up without --verbose produces no output."""
+        self.run_cli("task", "create", "proj/todo/first")
+        self.run_cli("task", "create", "proj/todo/second")
+        out = self.run_cli("task", "move", "proj/todo/second", "--up")
+        self.assertEqual(out, "")
+
+    def test_task_move_reorder_json_verbose_includes_slug(self) -> None:
+        """task move --up --verbose --format json includes the reordered task's slug."""
+        self.run_cli("task", "create", "proj/todo/first")
+        self.run_cli("task", "create", "proj/todo/second")
+        data = self.run_json("task", "move", "proj/todo/second", "--up",
+                             "--verbose", "--format", "json")
+        self.assertEqual(data["slug"], "second")
+
+    def test_task_move_reorder_json_verbose_column_unchanged(self) -> None:
+        """task move --up --verbose --format json reflects the task's column (unchanged)."""
+        self.run_cli("task", "create", "proj/todo/first")
+        self.run_cli("task", "create", "proj/todo/second")
+        data = self.run_json("task", "move", "proj/todo/second", "--up",
+                             "--verbose", "--format", "json")
+        self.assertEqual(data["column"], "todo")
 
     # -- assign ---------------------------------------------------------------
 

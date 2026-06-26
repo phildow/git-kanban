@@ -30,6 +30,7 @@ TestReplMove            `move`/`mv` tasks between columns
 
 from __future__ import annotations
 
+import configparser
 import io
 import os
 import tempfile
@@ -99,6 +100,14 @@ class _ReplBase(unittest.TestCase):
                     k, v = line.split(":", 1)
                     fm[k.strip()] = v.strip()
         return fm
+
+    def _read_task_order(self, board: str, column: str) -> list[str]:
+        """Read the task order directly from the column's .metadata INI file."""
+        metadata = self.boards_dir / board / column / ".metadata"
+        cfg = configparser.ConfigParser()
+        cfg.read(metadata, encoding="utf-8")
+        raw = cfg.get("tasks", "order", fallback="")
+        return [f.replace(".md", "").strip() for f in raw.split("\n") if f.strip()]
 
 
 class _InitializedReplBase(_ReplBase):
@@ -293,7 +302,6 @@ class TestReplCreate(_InitializedReplBase):
         self.assertEqual(fm.get("created_by"), "mark")
         self.assertEqual(fm.get("due_date"), _iso("2026-12-31"))
         self.assertIn("bug", fm.get("tags", ""))
-
 
     def test_create_task_multiple_tags_all_written_to_frontmatter(self) -> None:
         """create task with multiple --tag flags writes all tags to the frontmatter."""
@@ -670,6 +678,48 @@ class TestReplMove(_InitializedReplBase):
         self.assertTrue(
             (self.boards_dir / "proj" / "done" / "fix-login.md").is_file()
         )
+
+
+class TestReplMoveReorder(_InitializedReplBase):
+    """move/mv reorder ops (--top, --bottom, --up, --down) within a column."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.repo.create_board("proj", slug="proj")
+        self.repo.create_column("proj", "todo", slug="todo")
+        self.svc.create_task("proj/todo/first", TaskCreateParams())
+        self.svc.create_task("proj/todo/second", TaskCreateParams())
+        self.svc.create_task("proj/todo/third", TaskCreateParams())
+
+    def test_move_top_updates_metadata_order(self) -> None:
+        """move --top places the task first in the column's metadata order."""
+        self.run_repl("move", "proj/todo/third", "--top")
+        self.assertEqual(self._read_task_order("proj", "todo"), ["third", "first", "second"])
+
+    def test_move_bottom_updates_metadata_order(self) -> None:
+        """move --bottom places the task last in the column's metadata order."""
+        self.run_repl("move", "proj/todo/first", "--bottom")
+        self.assertEqual(self._read_task_order("proj", "todo"), ["second", "third", "first"])
+
+    def test_move_up_updates_metadata_order(self) -> None:
+        """move --up moves the task one position earlier in the column's metadata order."""
+        self.run_repl("move", "proj/todo/third", "--up")
+        self.assertEqual(self._read_task_order("proj", "todo"), ["first", "third", "second"])
+
+    def test_move_down_updates_metadata_order(self) -> None:
+        """move --down moves the task one position later in the column's metadata order."""
+        self.run_repl("move", "proj/todo/first", "--down")
+        self.assertEqual(self._read_task_order("proj", "todo"), ["second", "first", "third"])
+
+    def test_move_reorder_produces_output(self) -> None:
+        """move --top prints something."""
+        out = self.run_repl("move", "proj/todo/third", "--top")
+        self.assertTrue(out.strip())
+
+    def test_mv_alias_reorder_updates_metadata_order(self) -> None:
+        """mv --bottom (alias for move) places the task last in the column's metadata order."""
+        self.run_repl("mv", "proj/todo/first", "--bottom")
+        self.assertEqual(self._read_task_order("proj", "todo"), ["second", "third", "first"])
 
 
 class TestReplAssign(_InitializedReplBase):
