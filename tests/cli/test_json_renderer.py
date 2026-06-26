@@ -345,6 +345,38 @@ class TestJsonRendererTasks(unittest.TestCase):
         self.assertIn("created_at", obj)
         self.assertIn("updated_at", obj)
 
+    def test_task_rename_silent_without_verbose(self) -> None:
+        """render_task_rename emits nothing when --verbose is not set."""
+        out = _capture(lambda: self.r.render_task_rename(_args(verbose=False), _task()))
+        self.assertEqual(out, "")
+
+    def test_task_rename_is_object(self) -> None:
+        """render_task_rename emits a JSON object when verbose."""
+        out = _capture(lambda: self.r.render_task_rename(_args(verbose=True), _task()))
+        self.assertIsInstance(json.loads(out), dict)
+
+    def test_task_rename_slug_field(self) -> None:
+        """render_task_rename emits the renamed task's new slug when verbose."""
+        out = _capture(lambda: self.r.render_task_rename(_args(verbose=True), _task(slug="fixed-parser")))
+        self.assertEqual(json.loads(out)["slug"], "fixed-parser")
+
+    def test_task_rename_title_field(self) -> None:
+        """render_task_rename emits the renamed task's new title when verbose."""
+        out = _capture(lambda: self.r.render_task_rename(_args(verbose=True), _task(title="Fixed Parser")))
+        self.assertEqual(json.loads(out)["title"], "Fixed Parser")
+
+    def test_task_rename_includes_timestamps(self) -> None:
+        """render_task_rename includes created_at and updated_at when verbose."""
+        out = _capture(lambda: self.r.render_task_rename(_args(verbose=True), _task()))
+        obj = json.loads(out)
+        self.assertEqual(obj["created_at"], _CREATED_AT.isoformat())
+        self.assertEqual(obj["updated_at"], _UPDATED_AT.isoformat())
+
+    def test_task_rename_id_field(self) -> None:
+        """render_task_rename emits the task UUID when verbose."""
+        out = _capture(lambda: self.r.render_task_rename(_args(verbose=True), _task()))
+        self.assertEqual(json.loads(out)["id"], str(_TASK_ID))
+
     def test_task_move_silent_without_verbose(self) -> None:
         """render_task_move emits nothing when --verbose is not set."""
         out = _capture(lambda: self.r.render_task_move(_args(verbose=False), _task()))

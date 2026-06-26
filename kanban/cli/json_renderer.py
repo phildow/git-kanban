@@ -138,6 +138,11 @@ class JsonRenderer:
 
     # TODO: ==== TEST ====
     @_requires_verbose
+    def render_task_rename(self, args: argparse.Namespace, result: Task) -> None:
+        self._emit(args, json.dumps(_task_detail_dict(result), indent=2))
+
+    # TODO: ==== TEST ====
+    @_requires_verbose
     def render_task_update(self, args: argparse.Namespace, result: Task) -> None:
         self._emit(args, json.dumps(_task_detail_dict(result), indent=2))
 
