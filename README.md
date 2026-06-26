@@ -64,6 +64,8 @@ Run:
 
 - FEAT: rename renames a task as well
     - TEST: autocomplete
+    - TEST: integration
+    
     - Add `task rename` to CLI
     - Update REPL to accept tasks
     - Flag not required
