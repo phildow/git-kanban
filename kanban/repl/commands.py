@@ -171,7 +171,7 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: o
 	result = svc.update_task(args.path, updates=updates)
 	renderer.render_task_edit(args, result)
 
-# ----- TODO: TEST -----
+
 def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	if args.column is not None:
 		result = svc.move_task(args.path, args.column)

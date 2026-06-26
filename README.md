@@ -65,9 +65,6 @@ Run:
     - But we should be able to just give the slug and from the path determine what we are renaming, dispatch accordingly
     - CLI & REPL
 
-- FEAT: add mutually exlusive argument to move command to move to top or bottom: column | --top | --bottom | --up | --down
-
-- BUG: update completion engine to work with leading quotes (I think you just strip them)
 - CHORE: remove default columns from the service layer
 - BUG: default "To Do" slug -> todo
 

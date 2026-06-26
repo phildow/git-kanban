@@ -399,7 +399,6 @@ class Renderer:
 			msg = f"Task moved: {result.slug}"
 		self._emit(args, msg)
 	
-	# ----- TODO: TEST -----
 	def render_task_reorder(self, args: argparse.Namespace, task_op: tuple[Task, str]) -> None:
 		result, op = task_op
 		if result.column and op in ["top", "bottom"]:
