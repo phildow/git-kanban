@@ -1005,25 +1005,25 @@ class TestTaskCLIEnglishNames(_InitializedBase):
 
     def setUp(self) -> None:
         super().setUp()
-        # board create adds default columns including "To Do" (slug "to-do").
+        # board create adds default columns including "To Do" (slug "todo").
         self.run_cli("board", "create", "My Project")
 
     def test_create_uses_slug_for_filename(self) -> None:
         """task create with a space-containing title creates a file at the kebab slug."""
-        self.run_cli("task", "create", "my-project/to-do/Fix Login Bug")
+        self.run_cli("task", "create", "my-project/todo/Fix Login Bug")
         self.assertTrue(
-            (self.boards_dir / "my-project" / "to-do" / "fix-login-bug.md").is_file()
+            (self.boards_dir / "my-project" / "todo" / "fix-login-bug.md").is_file()
         )
 
     def test_create_json_title(self) -> None:
         """task create --format json --verbose emits the full display title."""
-        data = self.run_json("task", "create", "my-project/to-do/Fix Login Bug",
+        data = self.run_json("task", "create", "my-project/todo/Fix Login Bug",
                              "--format", "json", "--verbose")
         self.assertEqual(data["title"], "Fix Login Bug")
 
     def test_create_json_slug(self) -> None:
         """task create --format json --verbose emits the kebab-case slug."""
-        data = self.run_json("task", "create", "my-project/to-do/Fix Login Bug",
+        data = self.run_json("task", "create", "my-project/todo/Fix Login Bug",
                              "--format", "json", "--verbose")
         self.assertEqual(data["slug"], "fix-login-bug")
 

@@ -9,7 +9,7 @@ from uuid import uuid4
 
 from models import Board, Column, Slug, Task, TaskFilter, UserContext
 from storage.kanban import KanbanRepository, ColumnNotFound, BoardNotFound
-from storage.seeds import BootstrapConfig
+from storage.seeds import BootstrapConfig, DEFAULT_COLUMNS
 from services.git import GitService
 from services.index import IndexService
 from utils.str import slug_it
@@ -341,8 +341,11 @@ class KanbanService:
         """Return the board with the given name, or None if not found."""
         return self.repository.get_board(board)
 
-    # TODO: remove default columns from the service layer; they should be defined in the bootstrap config instead
-    def create_board(self, path: str, columns = ["To Do", "In Progress", "In Review", "Done"]) -> Board:
+    def create_board(
+        self, 
+        path: str, 
+        columns: list[tuple[str, Slug]] = DEFAULT_COLUMNS
+    ) -> Board:
         """
         Create a new board directory under .kanban/boards/.  Raises
         BoardAlreadyExists if a board with that name is already present.
@@ -355,7 +358,7 @@ class KanbanService:
         slug = slug_it(name)
         board = self.repository.create_board(name, slug)
     
-        columns = [self.repository.create_column(board.slug, col, slug_it(col)) for col in columns]
+        columns = [self.repository.create_column(board.slug, col[0], col[1]) for col in columns]
         board.column_count = len(columns)
 
         return board

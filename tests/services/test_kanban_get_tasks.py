@@ -58,7 +58,7 @@ class TestKanbanServiceGetTasksFilter(unittest.TestCase):
             index_service=IndexService(repository=self.repo),
             git_service=GitService(),
         )
-        self.svc.create_board("main", columns=["todo", "done"])
+        self.svc.create_board("main", columns=[("To Do", "todo"), ("Done", "done")])
 
         self.t1 = self.repo.create_task(
             _task("Fix login bug", assigned_to="alice", priority="high",
@@ -163,7 +163,7 @@ class TestKanbanServiceGetTasksFilterNullValues(unittest.TestCase):
             index_service=IndexService(repository=self.repo),
             git_service=GitService(),
         )
-        self.svc.create_board("main", columns=["todo"])
+        self.svc.create_board("main", columns=[("To Do", "todo")])
 
         self.with_values = self.repo.create_task(
             _task("Has everything", assigned_to="alice", priority="high",

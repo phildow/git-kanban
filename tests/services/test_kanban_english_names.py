@@ -54,7 +54,7 @@ class TestKanbanServiceEnglishNames(unittest.TestCase):
         """Default column slugs are the kebab-case form of their display names."""
         self.svc.create_board("My Project")
         slugs = [c.slug for c in self.repo.get_columns("my-project")]
-        self.assertEqual(slugs, ["to-do", "in-progress", "in-review", "done"])
+        self.assertEqual(slugs, ["todo", "in-progress", "in-review", "done"])
 
     def test_rename_board_preserves_new_display_name(self) -> None:
         """Renaming a board to a multi-word name stores it exactly."""
@@ -84,13 +84,13 @@ class TestKanbanServiceEnglishNames(unittest.TestCase):
 
     def test_rename_column_preserves_new_display_name(self) -> None:
         """Renaming a column to a multi-word name stores it exactly."""
-        self.svc.create_board("My Project", columns=["backlog"])
+        self.svc.create_board("My Project", columns=[("Backlog", "backlog")])
         column = self.svc.rename_column("my-project/backlog", "In Progress")
         self.assertEqual(column.name, "In Progress")
 
     def test_rename_column_updates_slug(self) -> None:
         """Renaming a column updates the slug to match the new display name."""
-        self.svc.create_board("My Project", columns=["backlog"])
+        self.svc.create_board("My Project", columns=[("Backlog", "backlog")])
         column = self.svc.rename_column("my-project/backlog", "In Progress")
         self.assertEqual(column.slug, "in-progress")
 
@@ -98,39 +98,39 @@ class TestKanbanServiceEnglishNames(unittest.TestCase):
 
     def test_create_task_preserves_title(self) -> None:
         """A multi-word task title is stored exactly as given."""
-        self.svc.create_board("My Project", columns=["to-do"])
-        task = self.svc.create_task("my-project/to-do/Fix Login Bug", TaskCreateParams())
+        self.svc.create_board("My Project", columns=[("To Do", "todo")])
+        task = self.svc.create_task("my-project/todo/Fix Login Bug", TaskCreateParams())
         self.assertEqual(task.title, "Fix Login Bug")
 
     def test_create_task_derives_slug(self) -> None:
         """A multi-word task title produces a kebab-case slug."""
-        self.svc.create_board("My Project", columns=["to-do"])
-        task = self.svc.create_task("my-project/to-do/Fix Login Bug", TaskCreateParams())
+        self.svc.create_board("My Project", columns=[("To Do", "todo")])
+        task = self.svc.create_task("my-project/todo/Fix Login Bug", TaskCreateParams())
         self.assertEqual(task.slug, "fix-login-bug")
 
     def test_task_is_retrievable_by_slug(self) -> None:
         """A task created with a display name is retrievable via its slug path."""
-        self.svc.create_board("My Project", columns=["to-do"])
-        self.svc.create_task("my-project/to-do/Fix Login Bug", TaskCreateParams())
-        task = self.svc.get_task("my-project/to-do/fix-login-bug")
+        self.svc.create_board("My Project", columns=[("To Do", "todo")])
+        self.svc.create_task("my-project/todo/Fix Login Bug", TaskCreateParams())
+        task = self.svc.get_task("my-project/todo/fix-login-bug")
         self.assertEqual(task.title, "Fix Login Bug")
 
     def test_update_task_title_preserves_new_display_name(self) -> None:
         """Updating a task title stores the new multi-word name exactly."""
-        self.svc.create_board("My Project", columns=["to-do"])
-        self.svc.create_task("my-project/to-do/Fix Login Bug", TaskCreateParams())
+        self.svc.create_board("My Project", columns=[("To Do", "todo")])
+        self.svc.create_task("my-project/todo/Fix Login Bug", TaskCreateParams())
         updated = self.svc.update_task(
-            "my-project/to-do/fix-login-bug",
+            "my-project/todo/fix-login-bug",
             TaskUpdateParams(title="Fix Registration Bug"),
         )
         self.assertEqual(updated.title, "Fix Registration Bug")
 
     def test_update_task_title_updates_slug(self) -> None:
         """Updating a task title changes the slug to match the new name."""
-        self.svc.create_board("My Project", columns=["to-do"])
-        self.svc.create_task("my-project/to-do/Fix Login Bug", TaskCreateParams())
+        self.svc.create_board("My Project", columns=[("To Do", "todo")])
+        self.svc.create_task("my-project/todo/Fix Login Bug", TaskCreateParams())
         updated = self.svc.update_task(
-            "my-project/to-do/fix-login-bug",
+            "my-project/todo/fix-login-bug",
             TaskUpdateParams(title="Fix Registration Bug"),
         )
         self.assertEqual(updated.slug, "fix-registration-bug")

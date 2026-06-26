@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TypedDict
 
+from models import Slug
 
 class BootstrapSeed(TypedDict, total=False):
     """A single task entry in a bootstrap column. title and slug are required."""
@@ -34,6 +35,13 @@ class BootstrapConfig(TypedDict, total=False):
     usercontext: dict[str, str]
 
 
+DEFAULT_COLUMNS: list[tuple[str, Slug]] = [
+    ("To Do", "todo"),
+    ("In Progress", "in-progress"),
+    ("In Review", "in-review"),
+    ("Done", "done"),
+]
+
 BOOTSTRAP_CONFIG: BootstrapConfig = {
     "usercontext": {
         "board": "main",
@@ -56,7 +64,7 @@ BOOTSTRAP_CONFIG: BootstrapConfig = {
                                 " Navigate with `cd`:\n\n"
                                 "    cd /main\n"
                                 "    ls\n\n"
-                                "    cd /main/to-do\n"
+                                "    cd /main/todo\n"
                                 "    ls"
                             ),
                         },

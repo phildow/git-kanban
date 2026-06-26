@@ -39,7 +39,7 @@ class TestKanbanServiceCreateBoard(unittest.TestCase):
         
     def test_explicit_columns_are_created(self) -> None:
         """Columns passed explicitly are the ones created."""
-        self.svc.create_board("alpha", columns=["backlog", "wip", "done"])
+        self.svc.create_board("alpha", columns=[("backlog", "backlog"), ("wip", "wip"), ("done", "done")])
         column_names = [c.name for c in self.repo.get_columns("alpha")]
         self.assertEqual(column_names, ["backlog", "wip", "done"])
 
@@ -51,7 +51,7 @@ class TestKanbanServiceCreateBoard(unittest.TestCase):
 
     def test_returned_board_has_correct_columns_count(self) -> None:
         """The returned Board carries the correct number of Column objects."""
-        board = self.svc.create_board("alpha", columns=["todo", "done"])
+        board = self.svc.create_board("alpha", columns=[("To Do", "todo"), ("Done", "done")])
         self.assertEqual(board.column_count, 2)
 
 

@@ -869,24 +869,24 @@ class TestReplTaskEnglishNames(_InitializedReplBase):
 
     def setUp(self) -> None:
         super().setUp()
-        # board create adds default columns including "To Do" (slug "to-do").
+        # board create adds default columns including "To Do" (slug "todo").
         self.run_repl("create", "board", "My Project")
 
     def test_create_uses_slug_for_filename(self) -> None:
         """create task with a space-containing title creates a file at the kebab slug."""
-        self.run_repl("create", "task", "my-project/to-do/Fix Login Bug")
+        self.run_repl("create", "task", "my-project/todo/Fix Login Bug")
         self.assertTrue(
-            (self.boards_dir / "my-project" / "to-do" / "fix-login-bug.md").is_file()
+            (self.boards_dir / "my-project" / "todo" / "fix-login-bug.md").is_file()
         )
 
     def test_create_output_contains_title(self) -> None:
         """create task prints the full display title."""
-        out = self.run_repl("create", "task", "my-project/to-do/Fix Login Bug")
+        out = self.run_repl("create", "task", "my-project/todo/Fix Login Bug")
         self.assertIn("Fix Login Bug", out)
 
     def test_create_output_contains_slug(self) -> None:
         """create task prints the derived slug."""
-        out = self.run_repl("create", "task", "my-project/to-do/Fix Login Bug")
+        out = self.run_repl("create", "task", "my-project/todo/Fix Login Bug")
         self.assertIn("fix-login-bug", out)
 
 
