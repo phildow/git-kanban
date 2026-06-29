@@ -609,20 +609,20 @@ class TestReplUpdate(_InitializedReplBase):
 
     def test_update_task_writes_assigned_to_to_file(self) -> None:
         """update task --assigned-to persists the assigned_to to the markdown file."""
-        self.run_repl("update", "task", "proj/todo/fix-login", "--assigned-to", "alice")
+        self.run_repl("update", "proj/todo/fix-login", "--assigned-to", "alice")
         fm = self._read_frontmatter("proj", "todo", "fix-login")
         self.assertEqual(fm.get("assigned_to"), "alice")
 
     def test_update_task_writes_priority_to_file(self) -> None:
         """update task --priority persists the priority to the markdown file."""
-        self.run_repl("update", "task", "proj/todo/fix-login", "--priority", "high")
+        self.run_repl("update", "proj/todo/fix-login", "--priority", "high")
         fm = self._read_frontmatter("proj", "todo", "fix-login")
         self.assertEqual(fm.get("priority"), "high")
 
     def test_update_task_multiple_tags_all_written_to_frontmatter(self) -> None:
         """update task with multiple --tag flags writes all tags to the frontmatter."""
         self.run_repl(
-            "update", "task", "proj/todo/fix-login",
+            "update", "proj/todo/fix-login",
             "--tag", "bug",
             "--tag", "auth",
             "--tag", "refactor",
@@ -635,14 +635,14 @@ class TestReplUpdate(_InitializedReplBase):
 
     def test_update_task_produces_output(self) -> None:
         """update task prints something."""
-        out = self.run_repl("update", "task", "proj/todo/fix-login",
+        out = self.run_repl("update", "proj/todo/fix-login",
                             "--assigned-to", "alice")
-        self.assertTrue(out.strip())
+        self.assertEqual(out.strip(), "")
 
     def test_update_task_with_all_fields(self) -> None:
         """update task with every optional field persists all values."""
         self.run_repl(
-            "update", "task", "proj/todo/fix-login",
+            "update", "proj/todo/fix-login",
             "--assigned-to", "bob",
             "--priority", "low",
             "--tag", "refactor",

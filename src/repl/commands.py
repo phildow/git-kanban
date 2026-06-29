@@ -170,7 +170,7 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: o
 	)
 
 	result = svc.update_task(args.path, updates=updates)
-	renderer.render_task_edit(args, result)
+	renderer.render_task_update(args, result)
 
 
 # TODO: REMOVE

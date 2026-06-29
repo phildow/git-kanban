@@ -60,6 +60,8 @@ Run:
 
 0.5 - Complete filesystem
 
+- BUG: Uppercase priorities when displaying them
+
 - TEST: Check init error handling, don't overwrite a repo, don't initialize a repo that's already been created
 - TEST: make sure repl gives recoverable error message
 

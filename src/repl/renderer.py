@@ -344,7 +344,7 @@ class Renderer:
 				f"{self._clamped(task.title, 32-1):<32}", 
 				*(f"{self._clamped(column_name or "-", 16-1):<16}" if include_board else []), 
 				f"{self._clamped(task.assigned_to or "-", 16-1):<16}", 
-				f"{self._clamped(task.priority or "-", 16-1):<16}", 
+				f"{self._clamped(task.priority.capitalize() if task.priority else "-", 16-1):<16}", 
 				*(f"{self._clamped(tags or "-", 16-1):<16}" if include_tags else []),
 				f"{self._clamped(task.due_date.isoformat() if task.due_date else "-", 16-1):<16}"
 				]
@@ -390,7 +390,14 @@ class Renderer:
 		self._emit(args, "\n".join(lines))
 
 	def render_task_edit(self, args: argparse.Namespace, result: Task) -> None:
-		self._emit(args, result)
+		# """Render a message indicating that a task was opened in the editor."""
+		# self._emit(args, f"Task opened in editor: {result.title} ({result.slug})")
+		return
+	
+	def render_task_update(self, args: argparse.Namespace, result: Task) -> None:
+		# """Render a message indicating that a task was updated, including its slug."""
+		# self._emit(args, f"Task updated: {result.title} ({result.slug})")
+		return
 
 	def render_task_move(self, args: argparse.Namespace, result: Task) -> None:
 		if result.column:

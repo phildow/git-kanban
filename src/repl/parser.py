@@ -190,28 +190,16 @@ def _add_show_parser(subparsers: argparse._SubParsersAction) -> None:
 def _add_edit_parser(subparsers: argparse._SubParsersAction) -> None:
     edit_parser = subparsers.add_parser("edit", help="Edit a task in the default editor")
     _add_global_flags(edit_parser)
-    edit_sub = edit_parser.add_subparsers(dest="edit_subject", metavar="SUBJECT")
-    edit_sub.required = True
-
-    # edit task
-    p = edit_sub.add_parser("task", help="Open task in editor")
-    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
-    _add_global_flags(p)
-    p.set_defaults(func=handle_task_edit)
+    edit_parser.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
+    edit_parser.set_defaults(func=handle_task_edit)
 
 
 def _add_update_parser(subparsers: argparse._SubParsersAction) -> None:
     update_parser = subparsers.add_parser("update", help="Update a task")
     _add_global_flags(update_parser)
-    update_sub = update_parser.add_subparsers(dest="update_subject", metavar="SUBJECT")
-    update_sub.required = True
-
-    # update task
-    p = update_sub.add_parser("task", help="Update task fields")
-    p.add_argument("path", metavar="BOARD/COLUMN/TITLE", help="Fully qualified task path")
-    _add_task_create_args(p)
-    _add_global_flags(p)
-    p.set_defaults(func=handle_task_update)
+    update_parser.add_argument("path", metavar="BOARD/COLUMN/TITLE", help="Fully qualified task path")
+    _add_task_create_args(update_parser)
+    update_parser.set_defaults(func=handle_task_update)
 
 
 def _add_move_parser(subparsers: argparse._SubParsersAction) -> None:

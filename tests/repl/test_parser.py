@@ -74,7 +74,6 @@ class TestParserAliases(unittest.TestCase):
     def test_update_task_maps_to_update_handler(self):
         args = repl_parser.parse_args([
             "update",
-            "task",
             "main/todo/fix-parser",
             "--assigned-to",
             "philip",
@@ -89,7 +88,6 @@ class TestParserAliases(unittest.TestCase):
         ])
 
         self.assertEqual(args.command, "update")
-        self.assertEqual(args.update_subject, "task")
         self.assertEqual(args.path, "main/todo/fix-parser")
         self.assertEqual(args.assigned_to, "philip")
         self.assertEqual(args.priority, "medium")

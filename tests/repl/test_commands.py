@@ -306,7 +306,7 @@ class TestReplCommandHandlers(unittest.TestCase):
                 created_by=None,
             ),
         )
-        self.renderer.render_task_edit.assert_called_once_with(args, result)
+        self.renderer.render_task_update.assert_called_once_with(args, result)
 
     def test_handle_task_update_with_fields(self):
         args = self._args(
@@ -334,7 +334,7 @@ class TestReplCommandHandlers(unittest.TestCase):
                 created_by="alice",
             ),
         )
-        self.renderer.render_task_edit.assert_called_once_with(args, result)
+        self.renderer.render_task_update.assert_called_once_with(args, result)
 
     def test_handle_task_move(self):
         """`move` with a column forwards path and column to move_task and renders via render_task_move."""
