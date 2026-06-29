@@ -60,13 +60,10 @@ Run:
 
 0.5 - Complete filesystem
 
-- LAST: reorg project structure (see emails)
-- Once we have file storage `kanban init` this directory and start storing tasks here (dogfood) ~ almost there!
-
-- CHORE: remove default columns from the service layer
-- BUG: default "To Do" slug -> todo
 - TEST: Check init error handling, don't overwrite a repo, don't initialize a repo that's already been created
 - TEST: make sure repl gives recoverable error message
+
+- Once we have file storage `kanban init` this directory and start storing tasks here (dogfood) ~ almost there!
 
 ~
 
@@ -74,6 +71,7 @@ Run:
 
 Error Handling
 
+- CHORE: remove default columns from the service layer
 - CHORE: Does the repo raise not found errors or does the service layer?
     - I think the orchestrator just orchestrates and propogates errors but lets the storage layer determine if there is an error
 - FEAT: Use specific errors when a board/column/task isn't found
@@ -160,7 +158,7 @@ HISTORY (TUI)
 TOOD: is this right?
 
 ```
-python3 -m unittest discover -s tests
+python -m unittest discover -s tests -t .
 ```
 
 ### Installing after changes

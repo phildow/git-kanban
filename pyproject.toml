@@ -12,8 +12,9 @@ dependencies = []
 kanban = "main:main"
 
 [tool.setuptools]
+package-dir = {"" = "src"}
 py-modules = ["main"]
 
 [tool.setuptools.packages.find]
-where = ["."]
+where = ["src"]
 exclude = ["tests*"]
