@@ -13,10 +13,7 @@ from services.index import IndexService
 from storage.filesystem import FilesystemRepository
 from storage.kanban import KanbanRepository, RepositoryAlreadyInitialized
 from storage.memory import InMemoryRepository
-from utils.debug import __DEBUG__
-
-FILESYSTEM = "filesystem"
-MEMORY = "memory"
+from utils.debug import __DEBUG__, FILESYSTEM, MEMORY
 
 def main() -> None:
     setup_logging(logging.DEBUG)
