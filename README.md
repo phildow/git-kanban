@@ -60,9 +60,6 @@ Run:
 
 0.5 - Complete filesystemm
 
-- TEST: Check init error handling, don't overwrite a repo, don't initialize a repo that's already been created
-- TEST: make sure repl gives recoverable error message
-
 - Once we have file storage `kanban init` this directory and start storing tasks here (dogfood) ~ almost there!
 
 ~
@@ -71,7 +68,6 @@ Run:
 
 Error Handling
 
-- CHORE: remove default columns from the service layer
 - CHORE: Does the repo raise not found errors or does the service layer?
     - I think the orchestrator just orchestrates and propogates errors but lets the storage layer determine if there is an error
 - FEAT: Use specific errors when a board/column/task isn't found
@@ -80,6 +76,8 @@ Error Handling
 
 - Other
 
+- CHORE: improve ls layout
+- CHORE: remove default columns from the service layer
 - CHORE: mirgrate to python-frontmatter
 - TEST: Ensure memory store supports same features as filesystem (ordering)
 - FEAT: `--exlude` flag to list when `--all` flag to exlude a column (support multiple)

@@ -15,7 +15,14 @@ from repl.completion_engine import CompletionEngine
 from repl.parser import build_parser
 from repl.readline_completer import ReplCompleter
 from services.kanban import KanbanService
-from storage.kanban import BoardNotFound, ColumnNotFound, TaskNotFound
+from storage.kanban import (
+    BoardAlreadyExists,
+    BoardNotFound,
+    ColumnAlreadyExists,
+    ColumnNotFound,
+    TaskAlreadyExists,
+    TaskNotFound,
+)
 
 try:
     import readline
@@ -254,13 +261,14 @@ def run_repl(*, svc: KanbanService, renderer: object) -> None:
 
                 try:
                     args.func(args, svc, renderer)
-                except BoardNotFound as exc:
-                    print(f"Board not found: {exc.name}")
-                except ColumnNotFound as exc:
-                    print(f"Column not found: {exc.board}/{exc.name}")
-                except TaskNotFound as exc:
-                    print(f"Task not found: {exc.identifier}")
+                except (BoardNotFound, ColumnNotFound, TaskNotFound) as exc:
+                    logging.info(str(exc))
+                    print(f"{exc}")
+                except (BoardAlreadyExists, ColumnAlreadyExists, TaskAlreadyExists) as exc:
+                    logging.info(str(exc))
+                    print(f"{exc}")
                 except ValueError as exc:
+                    logging.error("ValueError: %s", str(exc))
                     print(f"{exc}")
                 except KeyboardInterrupt:
                     print()

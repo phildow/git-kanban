@@ -15,6 +15,7 @@ from storage.kanban import (
     BoardAlreadyExists,
     ColumnAlreadyExists, 
     ColumnNotFound, 
+    RepositoryAlreadyInitialized,
     TaskNotFound, 
     TaskAlreadyExists
 )
@@ -70,7 +71,7 @@ class FilesystemRepository(KanbanRepository):
 
     def init_storage(self) -> None:
         if self.is_initialized:
-            raise ValueError("Kanban is already initialized")
+            raise RepositoryAlreadyInitialized(self.root)
 
         kanban_dir = self.kanban_dir
         kanban_dir.mkdir()

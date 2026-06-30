@@ -7,15 +7,15 @@ from cli.parser import parse_args
 from cli.renderer import Renderer
 from cli.json_renderer import JsonRenderer
 
-from repl.render_helper import RenderHelper
 from services.git import GitService
 from services.kanban import KanbanService
 from services.index import IndexService
 from storage.filesystem import FilesystemRepository
-from storage.kanban import KanbanRepository
+from storage.kanban import KanbanRepository, RepositoryAlreadyInitialized
 from storage.memory import InMemoryRepository
+from utils.debug import __DEBUG__
 
-__DEBUG__ = True
+
 FILESYSTEM = "filesystem"
 MEMORY = "memory"
 
@@ -36,7 +36,12 @@ def main() -> None:
 
     try:
         args.func(args, svc, renderer, json_renderer)
-    except ValueError as e:
+    except RepositoryAlreadyInitialized as e:
+        logging.error("Error: %s", str(e))
+        print(f"Error: Repository already initialized")
+    except Exception as e:
+        exc_desc = str(e) or e.__class__.__name__
+        logging.error("Error: %s", exc_desc)
         print(f"Error: {e}")
 
 def setup_logging(level: int) -> None:

@@ -13,6 +13,7 @@ from storage.kanban import (
     BoardAlreadyExists,
     ColumnNotFound,
     ColumnAlreadyExists,
+    RepositoryAlreadyInitialized,
     TaskNotFound,
     TaskAlreadyExists,
 )
