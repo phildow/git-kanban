@@ -119,19 +119,19 @@ def _add_create_parser(subparsers: argparse._SubParsersAction) -> None:
     create_sub.required = True
 
     # create board
-    p = create_sub.add_parser("board", help="Create a new board")
+    p = create_sub.add_parser("board", aliases=["b"], help="Create a new board")
     p.add_argument("board", metavar="BOARD", help="Board name")
     _add_global_flags(p)
     p.set_defaults(func=handle_board_create)
 
     # create column
-    p = create_sub.add_parser("column", help="Create a new column")
+    p = create_sub.add_parser("column", aliases=["c"], help="Create a new column")
     p.add_argument("path", metavar="BOARD/COLUMN", help="Column path")
     _add_global_flags(p)
     p.set_defaults(func=handle_column_create)
 
     # create task
-    p = create_sub.add_parser("task", help="Create a new task")
+    p = create_sub.add_parser("task", aliases=["t"], help="Create a new task")
     p.add_argument("path", metavar="BOARD/COLUMN/TITLE", help="Fully qualified task path")
     _add_task_update_args(p)
     _add_global_flags(p)
