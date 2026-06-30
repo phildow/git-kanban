@@ -68,12 +68,17 @@ Once again each layer only interacts with the layers below it.
 
 The filesystem is the single source of truth. Layers do not cache results from the layer below them. Data model objects do not have access to the objects they contain or which contain them. Every time the `KanbanService` needs data from a domain service or the respository, it asks for it. Every time a repository needs data from storage, it asks for it, which means querying the filesystem.
 
-The index does cache data from the filesystem for search. It is updated by the `KanbanService` after every interaction with the repository.
+The index does cache data from the filesystem for search and to ensure consistency (was the kanban store changed outside the application). It is updated by the `KanbanService` after every write to the repository.
+
+### Overall Architecture
 
 **CLI Layer**
 
 - Handles terminal input/output and argument parsing only
-- Three consumers of the facade: a plain CLI for scriptable per-invocation commands, a REPL for interactive commands in a loop (e.g. `kanban repl`), and an optional lightweight TUI subcommand (e.g. `kanban tui`)
+- Three consumers of the coordinating facade: 
+- A plain CLI for scriptable per-invocation commands
+- A REPL for interactive commands in a loop (e.g. `kanban repl`)
+- A lightweight TUI (e.g. `kanban tui`)
 
 **Coordinating Facade (KanbanService)**
 
@@ -84,7 +89,8 @@ The index does cache data from the filesystem for search. It is updated by the `
 
 **Domain Services**
 
-- One class per domain: `BoardService`, `TaskService`, `SearchService`, `GitService`, `IndexService`. In practice the datamodel services are handled by the `KanbanService`.
+- One class per domain: `BoardService`, `TaskService`, `SearchService`, `GitService`, `IndexService`. 
+- In practice the datamodel services are handled by the `KanbanService`.
 - Return rich domain dataclasses (`Task`, `Board`, `Column`) never formatted strings
 - Raise domain exceptions (`TaskNotFound`, `BoardAlreadyExists`) never storage exceptions
 - Never touch storage directly — call repository methods only
