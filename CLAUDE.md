@@ -199,6 +199,9 @@ The kanban-store worktree shares the same object store as the root directory but
 In order for changes to the kanban-store directory to be tracked in their own worktree, git commands executed by kanban service must be instructed to execute within that folder, for example:
 
 ```bash
+git -C .kanban-store add boards/my-project/todo/fix-login-bug.md
+git -C .kanban-store commit -m "kanban: task created"
+git -C .kanban-store status
 git -C .kanban-store push
 git -C .kanban-store pull
 ```
