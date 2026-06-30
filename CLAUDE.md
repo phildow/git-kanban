@@ -17,8 +17,8 @@ Be succinct.
 - When writing python prefer dot notation over `getattr`, especially when the type is known
 - Prefer explicit types over `object` and add type whenever possible
 - Use double quotes `"..."` for strings
-- When typing optionals for prefer `typ | None` instead of `Optional(typ)`
-- When a python dependency is required add it to the pyproject files
+- When typing optionals prefer `typ | None` instead of `Optional(typ)`
+- When a python dependency is required add it to pyproject.toml
 - Add documenation when you create types and methods, including for tests
 - Break up tests, keep unit tests small
 - Run tests from the current working directory with the bash command `python -m unittest discover -s tests -t .`
@@ -28,7 +28,7 @@ Be succinct.
 
 We are building a kanban style task manager in python that uses the filesystem for storage and git for change tracking. Tasks are stored as markdown documents in directories that correspond to boards with subdirectories for columns. The task's filename is the slug conversion of its title.
 
-Metadata is stored as frontmatter in the markdown documents and includes a UUID to uniquely identify a task. A tasks's title (and so filename) may change but its UUID will not. The application uses a caching index for faster searching and for discovering when files have changed on disk outside of the application. The initial interface to the application is a CLI, but we will also support an TUI in the future.
+Metadata is stored as frontmatter in the markdown documents and includes a UUID to uniquely identify a task. A tasks's title (and so filename) may change but its UUID will not. The application uses a caching index for faster searching and for discovering when files have changed on disk outside of the application. The initial interface to the application is a CLI, but we also have a REPL and a TUI.
 
 The filesystem is the source of truth
 
@@ -56,7 +56,9 @@ Parser
 Command Handler 
   ↓      ↓
   ↓   Renderer
-  ↓
+  ↓      ↓
+  ↓   Render Helper
+  ↓      ↓  
 Kanban Service
 ```
 

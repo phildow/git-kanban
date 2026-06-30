@@ -58,9 +58,7 @@ Run:
 
 ### TODO
 
-0.5 - Complete filesystem
-
-- BUG: Uppercase priorities when displaying them
+0.5 - Complete filesystemm
 
 - TEST: Check init error handling, don't overwrite a repo, don't initialize a repo that's already been created
 - TEST: make sure repl gives recoverable error message
@@ -82,6 +80,7 @@ Error Handling
 
 - Other
 
+- CHORE: mirgrate to python-frontmatter
 - TEST: Ensure memory store supports same features as filesystem (ordering)
 - FEAT: `--exlude` flag to list when `--all` flag to exlude a column (support multiple)
 - CHORE: Use slugs in memory repository for private indexing (add tests)
