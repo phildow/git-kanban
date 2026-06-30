@@ -1,0 +1,12 @@
+[fields]
+	name = Main
+	slug = main
+	id = 44250d83-1ff7-4787-a9e1-c722a4e2a58e
+
+[columns]
+	order = 
+		todo
+		in-progress
+		in-review
+		done
+

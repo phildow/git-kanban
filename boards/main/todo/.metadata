@@ -1,0 +1,27 @@
+[fields]
+	name = To Do
+	slug = todo
+	id = 2bc2f6be-b8be-4b73-9d27-60afef839c64
+
+[tasks]
+	order = 
+		slug-to-do-todo.md
+		improve-list-layout.md
+		remove-default-columns-from-service-layer.md
+		migrate-t-python-frontmatter.md
+		esure-memory-store-supports-same-features-as-filesystem.md
+		exlude-flag-with-list-all-to-exclude-columns-multiple.md
+		use-slugs-in-memory-repository-for-private-indexing.md
+		add-utility-to-filter-for-invisible-files.md
+		csv-export.md
+		add-edit-flag-to-new-to-immediately-edit.md
+		command-to-add-comments-to-a-task.md
+		add-closed-at-metadata-to-a-task.md
+		config-default-boards-that-auto-set-the-closed-at-date.md
+		option-to-bootstrap-from-the-repl.md
+		autocomplete-tabs-via-index.md
+		user-sort-order-for-columns.md
+		user-sort-order-for-boards.md
+		scaffold-tui.md
+		ability-to-remove-a-tag.md
+

@@ -1,0 +1,10 @@
+[fields]
+	name = In Progress
+	slug = in-progress
+	id = 927fc5df-a0b6-4211-b276-eb3fe0572b61
+
+[tasks]
+	order = 
+		scaffold-indexing.md
+		git-worktree-for-kanban-dont-lose-this-data.md
+
