@@ -67,34 +67,10 @@ Error Handling
 - FEAT: Only show an "Unepected Error" when it actually is, vs say renaming to a name that already exists 
 - TEST: handle path errors better
 
-- Other
-
-- CHORE: slug "To Do" -> todo
-- CHORE: improve ls layout
-- CHORE: remove default columns from the service layer
-- CHORE: mirgrate to python-frontmatter
-- TEST: Ensure memory store supports same features as filesystem (ordering)
-- FEAT: `--exlude` flag to list when `--all` flag to exlude a column (support multiple)
-- CHORE: Use slugs in memory repository for private indexing (add tests)
-- CHORE: add utilty to filter for invisible files
-- FEAT: ooo the shell will make as few as two columns
-- FEAT: add csv export
-
-- FEAT: Add comments to a task which are just appended to the body
-    - CLI: `task comment <board/column/task> <comment>`
-    - REPL: `comment <task> <comment>`
-    - Need to note who left it
-
 - FEAT: consider case-conversion package for unicode compatible kebab casing (pycases)
 - FEAT: kebab_case preserves accented characters
 
 ~
-
-- FEAT: add closed_at metadata to a Task
-- FEAT: config: default boards that automatically set the closed_at value: None until moved to done or archived if Nones
-
-- FEAT: give the user the option to bootstrap from the repl
-- CLAUDE: note that models are lightweight and do not include relationships, where they reference other entities they reference them by name only, always call a service layer method to get a fully qualified object
 
 - CHORE: always pass the path to get_tasks not a reconstructed path
 - CHORE: basic refactoring to use exists methods in the filesystem, i'm sure there's more
@@ -109,15 +85,6 @@ POTENTIAL INCONSISTENCY
 - Two kinds of syncing:
 -   Filesystem -> cache | metadata
 -   Filesystme <-> git
-
-INDEXING
-
-- FEAT: tab completion for assigness and tags
-
-TUI
-
-- FEAT: implement user sort order for columns
-- FEAT: implement user sort order for tasks
 
 CONFIG
 
