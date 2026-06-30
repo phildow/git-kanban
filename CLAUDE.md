@@ -161,9 +161,32 @@ root-directory
 
 ### Git
 
-The kanban store is set up as a git worktree, created when the kanban project is initialized:
+The kanban store is set up as a git worktree, created when the kanban project is initialized and before the kanban store folder is created. It must be created in multiple steps using an orphan branch.
  
+```bash
+# 1. create the orphan branch (must be done from the main working tree)
+git checkout --orphan kanban
+git rm -rf .                    # clear inherited working tree files
+git commit --allow-empty -m "kanban: initialize"
+git checkout main               # return to main branch
+
+# 2. now add the worktree pointing at the orphan branch
+git worktree add .kanban-store kanban
 ```
+
+A cleaner approach creates the orphan branch without touching the main working tree:
+
+```bash
+# create an empty tree object
+EMPTY_TREE=$(git hash-object -wt tree /dev/null)
+
+# create a commit with no parents pointing at the empty tree
+INIT_COMMIT=$(echo "kanban: initialize" | git commit-tree $EMPTY_TREE)
+
+# create the branch ref pointing at that commit
+git update-ref refs/heads/kanban $INIT_COMMIT
+
+# now add the worktree
 git worktree add .kanban-store kanban
 ```
 
@@ -175,7 +198,7 @@ The kanban-store worktree shares the same object store as the root directory but
 
 In order for changes to the kanban-store directory to be tracked in their own worktree, git commands executed by kanban service must be instructed to execute within that folder, for example:
 
-```
+```bash
 git -C .kanban-store push
 git -C .kanban-store pull
 ```
