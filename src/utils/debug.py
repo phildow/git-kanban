@@ -1,2 +1,2 @@
 
-__DEBUG__ = True
+__DEBUG__ = False

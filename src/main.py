@@ -15,7 +15,6 @@ from storage.kanban import KanbanRepository, RepositoryAlreadyInitialized
 from storage.memory import InMemoryRepository
 from utils.debug import __DEBUG__
 
-
 FILESYSTEM = "filesystem"
 MEMORY = "memory"
 

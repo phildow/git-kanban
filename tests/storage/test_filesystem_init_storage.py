@@ -11,6 +11,7 @@ import unittest
 from pathlib import Path
 
 from storage.filesystem import FilesystemRepository
+from storage.kanban import RepositoryAlreadyInitialized
 
 
 class TestFilesystemInitStorage(unittest.TestCase):
@@ -55,9 +56,9 @@ class TestFilesystemInitStorage(unittest.TestCase):
         self.assertTrue((self.root / ".kanban" / "userdata").is_file())
 
     def test_raises_when_already_initialized(self) -> None:
-        """Calling init_storage a second time raises ValueError."""
+        """Calling init_storage a second time raises RepositoryAlreadyInitialized."""
         self.repo.init_storage()
-        with self.assertRaises(ValueError):
+        with self.assertRaises(RepositoryAlreadyInitialized):
             self.repo.init_storage()
 
 

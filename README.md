@@ -76,6 +76,7 @@ Error Handling
 
 - Other
 
+- CHORE: slug "To Do" -> todo
 - CHORE: improve ls layout
 - CHORE: remove default columns from the service layer
 - CHORE: mirgrate to python-frontmatter
