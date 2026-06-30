@@ -5,12 +5,11 @@ The repository uses pyenv and virtualenv. Run `.venv/bin/activate` to activate t
 
 ## Version Map
 
-0.5 - Complete filesystem
-0.6 - Error handling and complete memory store
-0.7 - Implement indexing and search
-0.8 - Implement git tracking
-0.9 - Implement the TUI
-1.0 - Release
+- 0.6 - Error handling and complete memory store
+- 0.7 - Implement indexing and search
+- 0.8 - Implement git tracking
+- 0.9 - Implement the TUI
+- 1.0 - Release
 
 ## Lessons
 
@@ -57,12 +56,6 @@ Run:
 ```
 
 ### TODO
-
-0.5 - Complete filesystemm
-
-- Once we have file storage `kanban init` this directory and start storing tasks here (dogfood) ~ almost there!
-
-~
 
 0.6: Error handling, Complete in memory store
 
