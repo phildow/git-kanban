@@ -13,10 +13,9 @@ from pathlib import Path
 from uuid import uuid4
 
 from storage.seeds import BOOTSTRAP_CONFIG
-from models import UserContext
 from services.kanban import KanbanService
 from services.git import GitService
-from services.index import IndexService
+from index.memory import InMemoryIndexService
 from storage.memory import InMemoryRepository
 
 
@@ -30,7 +29,7 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         repo = InMemoryRepository(root=temp_dir)
         svc = KanbanService(
             repository=repo,
-            index_service=IndexService(repository=repo),
+            index_service=InMemoryIndexService(repository=repo),
             git_service=GitService(),
         )
 
@@ -61,7 +60,7 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         repo = InMemoryRepository(root=temp_dir)
         svc = KanbanService(
             repository=repo,
-            index_service=IndexService(repository=repo),
+            index_service=InMemoryIndexService(repository=repo),
             git_service=GitService(),
         )
 
@@ -76,7 +75,7 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         repo = InMemoryRepository(root=temp_dir)
         svc = KanbanService(
             repository=repo,
-            index_service=IndexService(repository=repo),
+            index_service=InMemoryIndexService(repository=repo),
             git_service=GitService(),
         )
 
@@ -98,7 +97,7 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         repo = InMemoryRepository(root=temp_dir)
         svc = KanbanService(
             repository=repo,
-            index_service=IndexService(repository=repo),
+            index_service=InMemoryIndexService(repository=repo),
             git_service=GitService(),
         )
         custom: BootstrapConfig = {

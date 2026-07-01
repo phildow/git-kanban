@@ -13,7 +13,7 @@ from models import UserContext
 from storage.kanban import BoardNotFound, ColumnNotFound
 from services.kanban import KanbanService
 from services.git import GitService
-from services.index import IndexService
+from index.memory import InMemoryIndexService
 from storage.memory import InMemoryRepository
 
 
@@ -24,7 +24,7 @@ class TestKanbanServiceChangeDir(unittest.TestCase):
         self.repo = InMemoryRepository(root=temp_dir)
         self.svc = KanbanService(
             repository=self.repo,
-            index_service=IndexService(repository=self.repo),
+            index_service=InMemoryIndexService(repository=self.repo),
             git_service=GitService(),
         )
         self.repo.create_board("alpha", slug="alpha")
@@ -57,7 +57,7 @@ class TestKanbanServiceResolvePath(unittest.TestCase):
         self.repo = InMemoryRepository(root=temp_dir)
         self.svc = KanbanService(
             repository=self.repo,
-            index_service=IndexService(repository=self.repo),
+            index_service=InMemoryIndexService(repository=self.repo),
             git_service=GitService(),
         )
 

@@ -2,4 +2,4 @@
 
 from __future__ import annotations
 
-__all__ = ["models", "services", "storage", "cli", "repl", "utils", "ktypes"]
+__all__ = ["cli", "index", "models", "repl", "services", "storage", "utils"]

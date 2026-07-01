@@ -9,7 +9,7 @@ from cli.json_renderer import JsonRenderer
 
 from services.git import GitService
 from services.kanban import KanbanService
-from services.index import IndexService
+from index.memory import InMemoryIndexService
 from storage.filesystem import FilesystemRepository
 from storage.kanban import KanbanRepository, RepositoryAlreadyInitialized
 from storage.memory import InMemoryRepository
@@ -19,7 +19,7 @@ def main() -> None:
     setup_logging(logging.DEBUG)
     
     repository = get_repository(FILESYSTEM)
-    index_service = IndexService(repository=repository)
+    index_service = InMemoryIndexService(repository=repository)
     git_service = GitService()
     svc = KanbanService(repository=repository, index_service=index_service, git_service=git_service)
     renderer = Renderer()

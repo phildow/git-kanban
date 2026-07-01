@@ -11,7 +11,7 @@ from models import Board, Column, Slug, Task, TaskFilter, UserContext
 from storage.kanban import KanbanRepository, ColumnNotFound, BoardNotFound
 from storage.seeds import BootstrapConfig, DEFAULT_COLUMNS
 from services.git import GitService
-from services.index import IndexService
+from index.base import IndexService
 from utils.str import slug_it
 
 
@@ -381,7 +381,7 @@ class KanbanService:
 
         # Update index entries for tasks in the renamed board.
         for task in self.get_tasks(f"/{board.slug}"):
-            self.index_service.update_task(task)
+            self.index_service.upsert_task(task)
 
         return board
 
@@ -458,7 +458,7 @@ class KanbanService:
 
         # Update index entries for tasks in the renamed column.
         for task in self.get_tasks(f"/{board}/{new_slug}"):
-            self.index_service.update_task(task)
+            self.index_service.upsert_task(task)
 
         return renamed_column
 
@@ -593,7 +593,7 @@ class KanbanService:
         )
         filename = task.slug
         created_task = self.repository.create_task(task, filename)
-        self.index_service.update_task(created_task)
+        self.index_service.upsert_task(created_task)
         return created_task
 
     def get_task(
@@ -638,7 +638,7 @@ class KanbanService:
         task.slug = new_slug
 
         renamed_task = self.repository.update_task(task, slug=slug)
-        self.index_service.update_task(renamed_task)
+        self.index_service.upsert_task(renamed_task)
         return renamed_task
 
     def edit_task(
@@ -675,7 +675,7 @@ class KanbanService:
 
             edited_task = self._task_from_markdown(edited_text, original=task)
             updated = self.repository.update_task(edited_task, slug=task.slug)
-            self.index_service.update_task(updated)
+            self.index_service.upsert_task(updated)
             return updated
         finally:
             if tmp_path:
@@ -722,7 +722,7 @@ class KanbanService:
             task.created_by = updates.created_by
 
         updated = self.repository.update_task(task, slug=slug)
-        self.index_service.update_task(updated)
+        self.index_service.upsert_task(updated)
         return updated
 
     def move_task(
@@ -739,7 +739,7 @@ class KanbanService:
         task = self.get_task(path)
         column = Slug(column)
         result = self.repository.move_task(task, column)
-        self.index_service.update_task(result)
+        self.index_service.upsert_task(result)
         return result
 
     def reorder_task(
@@ -754,7 +754,7 @@ class KanbanService:
         """
         task = self.get_task(path)
         result = self.repository.reorder_task(task, op)
-        self.index_service.update_task(result)
+        self.index_service.upsert_task(result)
         return result
 
     def delete_task(
@@ -782,7 +782,7 @@ class KanbanService:
         task = self.get_task(path)
         task.assigned_to = user
         updated = self.repository.update_task(task, slug=task.slug)
-        self.index_service.update_task(updated)
+        self.index_service.upsert_task(updated)
         return updated
 
     # ── Search ────────────────────────────────────────────────────────────────

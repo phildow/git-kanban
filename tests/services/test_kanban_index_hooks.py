@@ -10,7 +10,6 @@ from pathlib import Path
 from uuid import uuid4
 from unittest.mock import MagicMock
 
-from models import UserContext
 from services.git import GitService
 from services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
 from storage.memory import InMemoryRepository
@@ -35,62 +34,62 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
         self.repo.create_column("alpha", "done", slug="done")
 
     def test_create_task_calls_index_update(self) -> None:
-        """Creating a task invokes index_service.update_task with the created task."""
+        """Creating a task invokes index_service.upsert_task with the created task."""
         created = self.svc.create_task("alpha/todo/t1", TaskCreateParams())
 
-        self.index_service.update_task.assert_called_once()
-        self.assertEqual(self.index_service.update_task.call_args.args[0].id, created.id)
+        self.index_service.upsert_task.assert_called_once()
+        self.assertEqual(self.index_service.upsert_task.call_args.args[0].id, created.id)
 
     def test_update_task_calls_index_update(self) -> None:
-        """Updating a task invokes index_service.update_task with the updated task."""
+        """Updating a task invokes index_service.upsert_task with the updated task."""
         self.svc.create_task("alpha/todo/t1", TaskCreateParams())
         self.index_service.reset_mock()
 
         updated = self.svc.update_task("alpha/todo/t1", TaskUpdateParams(assigned_to="alice"))
 
-        self.index_service.update_task.assert_called_once()
-        self.assertEqual(self.index_service.update_task.call_args.args[0].id, updated.id)
+        self.index_service.upsert_task.assert_called_once()
+        self.assertEqual(self.index_service.upsert_task.call_args.args[0].id, updated.id)
 
     def test_assign_task_calls_index_update(self) -> None:
-        """Assigning a task invokes index_service.update_task with the updated task."""
+        """Assigning a task invokes index_service.upsert_task with the updated task."""
         self.svc.create_task("alpha/todo/t1", TaskCreateParams())
         self.index_service.reset_mock()
 
         updated = self.svc.assign_task("alpha/todo/t1", "alice")
 
-        self.index_service.update_task.assert_called_once()
-        self.assertEqual(self.index_service.update_task.call_args.args[0].id, updated.id)
+        self.index_service.upsert_task.assert_called_once()
+        self.assertEqual(self.index_service.upsert_task.call_args.args[0].id, updated.id)
 
     def test_move_task_calls_index_update(self) -> None:
-        """Moving a task invokes index_service.update_task with the moved task."""
+        """Moving a task invokes index_service.upsert_task with the moved task."""
         self.svc.create_task("alpha/todo/t1", TaskCreateParams())
         self.index_service.reset_mock()
 
         moved = self.svc.move_task("alpha/todo/t1", "done")
 
-        self.index_service.update_task.assert_called_once()
-        self.assertEqual(self.index_service.update_task.call_args.args[0].id, moved.id)
+        self.index_service.upsert_task.assert_called_once()
+        self.assertEqual(self.index_service.upsert_task.call_args.args[0].id, moved.id)
 
     def test_reorder_task_calls_index_update(self) -> None:
-        """Reordering a task invokes index_service.update_task with the reordered task."""
+        """Reordering a task invokes index_service.upsert_task with the reordered task."""
         self.svc.create_task("alpha/todo/t1", TaskCreateParams())
         self.svc.create_task("alpha/todo/t2", TaskCreateParams())
         self.index_service.reset_mock()
 
         result = self.svc.reorder_task("alpha/todo/t2", "up")
 
-        self.index_service.update_task.assert_called_once()
-        self.assertEqual(self.index_service.update_task.call_args.args[0].id, result.id)
+        self.index_service.upsert_task.assert_called_once()
+        self.assertEqual(self.index_service.upsert_task.call_args.args[0].id, result.id)
 
     def test_reorder_task_index_update_not_called_for_invalid_op(self) -> None:
-        """index_service.update_task is not called when reorder_task raises for an invalid op."""
+        """index_service.upsert_task is not called when reorder_task raises for an invalid op."""
         self.svc.create_task("alpha/todo/t1", TaskCreateParams())
         self.index_service.reset_mock()
 
         with self.assertRaises(ValueError):
             self.svc.reorder_task("alpha/todo/t1", "sideways")
 
-        self.index_service.update_task.assert_not_called()
+        self.index_service.upsert_task.assert_not_called()
 
     def test_delete_task_calls_index_delete(self) -> None:
         """Deleting a task invokes index_service.delete_task with the deleted task."""
@@ -139,48 +138,48 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
 
         self.index_service.delete_task.assert_not_called()
 
-    def test_rename_column_calls_index_update_for_each_task(self) -> None:
-        """Renaming a column invokes index_service.update_task once per task in that column."""
+    def test_rename_column_calls_index_upsert_for_each_task(self) -> None:
+        """Renaming a column invokes index_service.upsert_task once per task in that column."""
         t1 = self.svc.create_task("alpha/todo/t1", TaskCreateParams())
         t2 = self.svc.create_task("alpha/todo/t2", TaskCreateParams())
         self.index_service.reset_mock()
 
         self.svc.rename_column("alpha/todo", "doing")
 
-        self.assertEqual(self.index_service.update_task.call_count, 2)
-        updated_ids = {c.args[0].id for c in self.index_service.update_task.call_args_list}
+        self.assertEqual(self.index_service.upsert_task.call_count, 2)
+        updated_ids = {c.args[0].id for c in self.index_service.upsert_task.call_args_list}
         self.assertEqual(updated_ids, {t1.id, t2.id})
 
     def test_rename_column_index_update_reflects_new_column_name(self) -> None:
-        """Tasks passed to index_service.update_task after rename carry the new column name."""
+        """Tasks passed to index_service.upsert_task after rename carry the new column name."""
         self.svc.create_task("alpha/todo/t1", TaskCreateParams())
         self.index_service.reset_mock()
 
         self.svc.rename_column("alpha/todo", "doing")
 
-        task_arg = self.index_service.update_task.call_args.args[0]
+        task_arg = self.index_service.upsert_task.call_args.args[0]
         self.assertEqual(task_arg.column, "doing")
 
-    def test_rename_board_calls_index_update_for_each_task(self) -> None:
-        """Renaming a board invokes index_service.update_task once per task in that board."""
+    def test_rename_board_calls_index_upsert_for_each_task(self) -> None:
+        """Renaming a board invokes index_service.upsert_task once per task in that board."""
         t1 = self.svc.create_task("alpha/todo/t1", TaskCreateParams())
         t2 = self.svc.create_task("alpha/todo/t2", TaskCreateParams())
         self.index_service.reset_mock()
 
         self.svc.rename_board("alpha", "beta")
 
-        self.assertEqual(self.index_service.update_task.call_count, 2)
-        updated_ids = {c.args[0].id for c in self.index_service.update_task.call_args_list}
+        self.assertEqual(self.index_service.upsert_task.call_count, 2)
+        updated_ids = {c.args[0].id for c in self.index_service.upsert_task.call_args_list}
         self.assertEqual(updated_ids, {t1.id, t2.id})
 
     def test_rename_board_index_update_reflects_new_board_name(self) -> None:
-        """Tasks passed to index_service.update_task after rename carry the new board name."""
+        """Tasks passed to index_service.upsert_task after rename carry the new board name."""
         self.svc.create_task("alpha/todo/t1", TaskCreateParams())
         self.index_service.reset_mock()
 
         self.svc.rename_board("alpha", "beta")
 
-        task_arg = self.index_service.update_task.call_args.args[0]
+        task_arg = self.index_service.upsert_task.call_args.args[0]
         self.assertEqual(task_arg.board, "beta")
 
 
