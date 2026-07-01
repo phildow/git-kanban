@@ -797,7 +797,7 @@ class TestTaskCLI(_InitializedBase):
         fm = self._read_frontmatter("proj", "todo", "fix-login")
         self.assertEqual(fm.get("assigned_to"), "alice")
 
-    def test_task_assign_overwrites_previous_assignee(self) -> None:
+    def test_task_assign_overwrites_previous_assigned_to(self) -> None:
         """task assign replaces an existing assigned_to value."""
         self.run_cli("task", "create", "proj/todo/fix-login", "--assigned-to", "alice")
         self.run_cli("task", "assign", "proj/todo/fix-login", "bob")

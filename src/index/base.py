@@ -117,22 +117,21 @@ class IndexService(ABC):
         """
         Return distinct tags seen across indexed tasks, sorted.
 
-        Used to populate --tag and tag= completions in the CLI and REPL.
+        Used to populate --tag completions in the CLI and REPL.
 
         Args:
             board: Restrict to tags used in this board, or None for all.
         """
 
     @abstractmethod
-    def list_assignees(self, board: str | None = None) -> list[str]:
+    def list_assigned_to(self, board: str | None = None) -> list[str]:
         """
-        Return distinct assignees seen across indexed tasks, sorted.
+        Return distinct assigned_to values seen across indexed tasks, sorted.
 
-
-        Used to populate --assignee and assignee= completions.
+        Used to populate --assigned_to completions in the CLI and REPL.
 
         Args:
-            board: Restrict to assignees in this board, or None for all.
+            board: Restrict to assigned_to values in this board, or None for all.
         """
 
     # ------------------------------------------------------------------

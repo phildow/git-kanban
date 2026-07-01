@@ -27,7 +27,7 @@ class InMemoryRepository(KanbanRepository):
     without touching calling code.
     """
 
-    def __init__(self, root: Path) -> None:
+    def __init__(self, root: Path = Path(".")) -> None:
         super().__init__(root)
         self._boards: dict[str, Board] = {}
         self._columns: dict[str, list[Column]] = {}

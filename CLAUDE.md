@@ -663,7 +663,7 @@ The TUI has the following output properties and formatting conventions:
 
 - **Status bar at the bottom** always shows contextual key hints for the current mode, so the user is never guessing what's available.
 
-- **Inline metadata** uses compact sigils: `!HIGH` for priority, `@name` for assignee, `#id` for card number, so cards stay readable at a glance without taking up too much vertical space.
+- **Inline metadata** uses compact sigils: `!HIGH` for priority, `@name` for assigned to, `#id` for card number, so cards stay readable at a glance without taking up too much vertical space.
 
 We will be using the `textual` python library to build the TUI
 
@@ -711,11 +711,11 @@ KanbanApp(App)
 │   └── Footer (key bindings hint bar — swaps content in move mode)
 │
 ├── TaskDetailScreen (modal, pushed on Enter/show)
-│   └── renders a single Task: title, assignee, priority, due date, tags, description
+│   └── renders a single Task: title, assigned_to, priority, due date, tags, description
 │
 ├── TaskFormScreen (modal, pushed on create/edit)
 │   ├── Input: title
-│   ├── Input: assignee
+│   ├── Input: assigned_to
 │   ├── Select: priority
 │   ├── Input: due date
 │   ├── Input: tags (comma separated)

@@ -97,10 +97,10 @@ class InMemoryIndexService(IndexService):
                 tags.update(t.tags)
         return sorted(tags)
 
-    def list_assignees(self, board: str | None = None) -> list[str]:
+    def list_assigned_to(self, board: str | None = None) -> list[str]:
         return sorted({
-            t.assignee for t in self._tasks.values()
-            if t.assignee is not None and (board is None or t.board == board)
+            t.assigned_to for t in self._tasks.values()
+            if t.assigned_to is not None and (board is None or t.board == board)
         })
 
     # ------------------------------------------------------------------
@@ -135,7 +135,7 @@ def _matches(task: Task, query: SearchQuery) -> bool:
     """Return True if task satisfies every non-None filter on query."""
     if not _in_scope(task, query.board, query.column):
         return False
-    if query.assignee is not None and task.assignee != query.assignee:
+    if query.assigned_to is not None and task.assigned_to != query.assigned_to:
         return False
     if query.priority is not None and task.priority != query.priority:
         return False

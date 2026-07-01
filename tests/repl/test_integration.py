@@ -755,7 +755,7 @@ class TestReplAssign(_InitializedReplBase):
         fm = self._read_frontmatter("proj", "todo", "fix-login")
         self.assertEqual(fm.get("assigned_to"), "alice")
 
-    def test_assign_overwrites_previous_assignee(self) -> None:
+    def test_assign_overwrites_previous_assigned_to(self) -> None:
         """assign replaces an existing assigned_to value."""
         self.run_repl("assign", "proj/todo/fix-login", "alice")
         self.run_repl("assign", "proj/todo/fix-login", "bob")
@@ -763,7 +763,7 @@ class TestReplAssign(_InitializedReplBase):
         self.assertEqual(fm.get("assigned_to"), "bob")
 
     def test_assign_produces_output(self) -> None:
-        """assign prints the new assignee."""
+        """assign prints the new assigned_to."""
         out = self.run_repl("assign", "proj/todo/fix-login", "alice")
         self.assertTrue(out.strip())
         self.assertIn("alice", out)

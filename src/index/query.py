@@ -43,7 +43,7 @@ class SearchQuery:
     text: str | None = None          # case-insensitive substring of title
     board: str | None = None         # None = all boards
     column: str | None = None        # None = all columns; only used with board
-    assignee: str | None = None
+    assigned_to: str | None = None
     priority: str | None = None
     tags: tuple[str, ...] = field(default_factory=tuple)  # all must match
     created_by: str | None = None
