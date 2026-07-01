@@ -24,4 +24,8 @@
 		user-sort-order-for-boards.md
 		scaffold-tui.md
 		ability-to-remove-a-tag.md
+		add-model-tests.md
+		enum-for-priority.md
+		rename-storage.md
+		path-names-in-quotes-mishandled.md
 
