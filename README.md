@@ -118,7 +118,7 @@ HISTORY (TUI)
 TOOD: is this right?
 
 ```
-python -m unittest discover -s tests -t .
+python -m unittest discover -s tests
 ```
 
 ### Installing after changes
