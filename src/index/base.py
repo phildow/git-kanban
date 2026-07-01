@@ -50,7 +50,7 @@ class IndexService(ABC):
         """
 
     @abstractmethod
-    def remove_task(self, task_id: UUID) -> None:
+    def remove_task(self, task: Task) -> None:
         """Remove the indexed record for task_id. No-op if absent."""
 
     @abstractmethod
@@ -60,6 +60,15 @@ class IndexService(ABC):
 
         Args:
             board: Remove only records for this board. None removes all.
+        """
+
+    @abstractmethod
+    def rebuild(self, board: str | None = None) -> None:
+        """
+        Rebuild the index from scratch by scanning the repository.
+
+        Args:
+            board: Restrict to this board, or None for all boards.
         """
 
     # ------------------------------------------------------------------

@@ -50,8 +50,8 @@ class InMemoryIndexService(IndexService):
     def upsert_task(self, task: Task) -> None:
         self._tasks[task.id] = task
 
-    def remove_task(self, task_id: UUID) -> None:
-        self._tasks.pop(task_id, None)
+    def remove_task(self, task: Task) -> None:
+        self._tasks.pop(task.id, None)
 
     def clear(self, board: str | None = None) -> None:
         if board is None:
@@ -60,6 +60,11 @@ class InMemoryIndexService(IndexService):
         stale = [tid for tid, t in self._tasks.items() if t.board == board]
         for tid in stale:
             del self._tasks[tid]
+
+    def rebuild(self, board: str | None = None) -> None:
+        self.clear(board)
+        for task in self.repository.get_tasks(board=board):
+            self.upsert_task(task)
 
     # ------------------------------------------------------------------
     # Lookups

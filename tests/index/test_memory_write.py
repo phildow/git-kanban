@@ -41,12 +41,12 @@ class TestRemove(unittest.TestCase):
         """get_path returns None after the task is removed."""
         task = make_task()
         self.index.upsert_task(task)
-        self.index.remove_task(task.id)
+        self.index.remove_task(task)
         self.assertIsNone(self.index.get_path(task.id))
 
     def test_remove_absent_id_is_noop(self) -> None:
         """Removing an id that was never indexed does not raise."""
-        self.index.remove_task(uuid4())
+        self.index.remove_task(make_task())
 
 
 class TestClear(unittest.TestCase):
