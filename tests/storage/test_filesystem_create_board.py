@@ -6,9 +6,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from models import Board
-from storage.filesystem import FilesystemRepository
-from storage.kanban import BoardAlreadyExists
+from kanban.models import Board
+from kanban.storage.filesystem import FilesystemRepository
+from kanban.storage.kanban import BoardAlreadyExists
 
 
 class TestFilesystemCreateBoard(unittest.TestCase):

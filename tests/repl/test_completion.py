@@ -11,17 +11,17 @@ from types import SimpleNamespace
 from uuid import uuid4
 from unittest.mock import MagicMock, patch
 
-from cli.parser import build_parser as build_cli_parser
-from models import UserContext
-from repl.parser import build_parser as build_repl_parser
-from repl.shell import (
+from kanban.cli.parser import build_parser as build_cli_parser
+from kanban.models import UserContext
+from kanban.repl.parser import build_parser as build_repl_parser
+from kanban.repl.shell import (
     _prompt,
     run_repl,
 )
-from services.kanban import KanbanService
-from index.memory import InMemoryIndexService
-from services.git import GitService 
-from storage.memory import InMemoryRepository
+from kanban.services.kanban import KanbanService
+from kanban.index.memory import InMemoryIndexService
+from kanban.services.git import GitService 
+from kanban.storage.memory import InMemoryRepository
 
 
 class _FakeSvc:

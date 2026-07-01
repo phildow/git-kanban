@@ -7,8 +7,8 @@ import unittest
 from pathlib import Path
 from uuid import uuid4
 
-from models import Task
-from storage.filesystem import FilesystemRepository
+from kanban.models import Task
+from kanban.storage.filesystem import FilesystemRepository
 
 
 class TestFilesystemColumnMetadata(unittest.TestCase):

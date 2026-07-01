@@ -9,12 +9,12 @@ import tempfile
 from pathlib import Path
 from uuid import uuid4
 
-from models import UserContext
-from storage.kanban import BoardNotFound, ColumnNotFound
-from services.kanban import KanbanService
-from services.git import GitService
-from index.memory import InMemoryIndexService
-from storage.memory import InMemoryRepository
+from kanban.models import UserContext
+from kanban.storage.kanban import BoardNotFound, ColumnNotFound
+from kanban.services.kanban import KanbanService
+from kanban.services.git import GitService
+from kanban.index.memory import InMemoryIndexService
+from kanban.storage.memory import InMemoryRepository
 
 
 class TestKanbanServiceChangeDir(unittest.TestCase):

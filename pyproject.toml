@@ -16,11 +16,14 @@ keywords = ["kanban", "task", "todo"]
 license = "MIT"
 
 [project.scripts]
-kanban = "main:main"
+kanban = "kanban.main:main"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+addopts = ["--import-mode=importlib"]
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-py-modules = ["main"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from storage.filesystem import FilesystemRepository
+from kanban.storage.filesystem import FilesystemRepository
 
 
 class TestFilesystemGetConfig(unittest.TestCase):

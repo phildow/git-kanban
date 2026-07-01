@@ -12,11 +12,11 @@ import unittest
 from pathlib import Path
 from uuid import uuid4
 
-from storage.seeds import BOOTSTRAP_CONFIG
-from services.kanban import KanbanService
-from services.git import GitService
-from index.memory import InMemoryIndexService
-from storage.memory import InMemoryRepository
+from kanban.storage.seeds import BOOTSTRAP_CONFIG
+from kanban.services.kanban import KanbanService
+from kanban.services.git import GitService
+from kanban.index.memory import InMemoryIndexService
+from kanban.storage.memory import InMemoryRepository
 
 
 class TestKanbanServiceInitKanban(unittest.TestCase):
@@ -91,7 +91,7 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
 
     def test_init_seeds_tasks_from_custom_config(self):
         """initialize_kanban accepts a custom BootstrapConfig instead of the default."""
-        from storage.seeds import BootstrapConfig
+        from kanban.storage.seeds import BootstrapConfig
         temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
         temp_dir.mkdir()
         repo = InMemoryRepository(root=temp_dir)

@@ -8,11 +8,11 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from uuid import uuid4
 
-from models import Task, TaskFilter, UserContext
-from services.git import GitService
-from index.memory import InMemoryIndexService
-from services.kanban import KanbanService
-from storage.memory import InMemoryRepository
+from kanban.models import Task, TaskFilter, UserContext
+from kanban.services.git import GitService
+from kanban.index.memory import InMemoryIndexService
+from kanban.services.kanban import KanbanService
+from kanban.storage.memory import InMemoryRepository
 
 
 _UTC = timezone.utc

@@ -12,8 +12,8 @@ import inspect
 import unittest
 from pathlib import Path
 
-from storage.filesystem import FilesystemRepository
-from storage.kanban import KanbanRepository
+from kanban.storage.filesystem import FilesystemRepository
+from kanban.storage.kanban import KanbanRepository
 
 
 class TestFilesystemRepositoryInterface(unittest.TestCase):

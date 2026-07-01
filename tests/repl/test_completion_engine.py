@@ -22,7 +22,7 @@ import unittest
 from dataclasses import dataclass
 from pathlib import Path
 
-from repl.completion_engine import CompletionEngine
+from kanban.repl.completion_engine import CompletionEngine
 
 _NOOP = lambda args: None  # noqa: E731 - trivial stand-in for real handlers
 

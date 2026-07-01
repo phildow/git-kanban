@@ -6,16 +6,15 @@ the expected method calls and argument mapping.
 
 from __future__ import annotations
 
-import sys
 import unittest
 from argparse import Namespace
 from pathlib import Path
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
-from cli import commands
-from storage.seeds import BOOTSTRAP_CONFIG
-from services.kanban import TaskCreateParams, TaskUpdateParams
+from kanban.cli import commands
+from kanban.storage.seeds import BOOTSTRAP_CONFIG
+from kanban.services.kanban import TaskCreateParams, TaskUpdateParams
 
 
 class TestCommandHandlers(unittest.TestCase):
@@ -141,7 +140,7 @@ class TestCommandHandlers(unittest.TestCase):
 
         commands.handle_task_list(args, self.svc, self.renderer, self.json_renderer)
 
-        from models import TaskFilter
+        from kanban.models import TaskFilter
         self.svc.get_tasks.assert_called_once_with(path="board-a/todo", filter=TaskFilter(), sort="title", reverse=True)
         self.renderer.render_task_list.assert_called_once_with(args, result)
 

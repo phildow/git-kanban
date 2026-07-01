@@ -8,8 +8,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
-from models import Task
-from storage.filesystem import FilesystemRepository
+from kanban.models import Task
+from kanban.storage.filesystem import FilesystemRepository
 
 
 def _now() -> datetime:

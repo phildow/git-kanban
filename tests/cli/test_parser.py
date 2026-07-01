@@ -10,8 +10,8 @@ import sys
 import unittest
 from pathlib import Path
 
-from cli import parser as cli_parser
-from cli.commands import (
+from kanban.cli import parser as cli_parser
+from kanban.cli.commands import (
     handle_board_create,
     handle_board_delete,
     handle_board_list,

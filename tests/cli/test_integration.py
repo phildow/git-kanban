@@ -36,12 +36,12 @@ from datetime import datetime
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from cli.parser import parse_args
-from cli.renderer import Renderer
-from cli.json_renderer import JsonRenderer
-from services.kanban import KanbanService
-from storage.filesystem import FilesystemRepository
-from storage.seeds import BOOTSTRAP_CONFIG
+from kanban.cli.parser import parse_args
+from kanban.cli.renderer import Renderer
+from kanban.cli.json_renderer import JsonRenderer
+from kanban.services.kanban import KanbanService
+from kanban.storage.filesystem import FilesystemRepository
+from kanban.storage.seeds import BOOTSTRAP_CONFIG
 
 def _iso(dt: str) -> datetime:
     """Convert a datetime string to an ISO 8601 string with UTC timezone."""

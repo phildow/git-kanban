@@ -8,9 +8,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import UUID, uuid4
 
-from models import Task
-from storage.filesystem import FilesystemRepository
-from storage.kanban import TaskNotFound
+from kanban.models import Task
+from kanban.storage.filesystem import FilesystemRepository
+from kanban.storage.kanban import TaskNotFound
 
 
 def _now() -> datetime:

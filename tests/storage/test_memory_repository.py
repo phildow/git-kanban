@@ -13,8 +13,8 @@ import unittest
 from pathlib import Path
 from uuid import uuid4
 
-from storage.kanban import KanbanRepository
-from storage.memory import InMemoryRepository
+from kanban.storage.kanban import KanbanRepository
+from kanban.storage.memory import InMemoryRepository
 
 
 class TestInMemoryRepositoryInterface(unittest.TestCase):

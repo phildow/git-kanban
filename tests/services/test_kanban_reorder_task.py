@@ -8,9 +8,9 @@ from pathlib import Path
 from unittest.mock import MagicMock
 from uuid import uuid4
 
-from services.git import GitService
-from services.kanban import KanbanService, TaskCreateParams
-from storage.memory import InMemoryRepository
+from kanban.services.git import GitService
+from kanban.services.kanban import KanbanService, TaskCreateParams
+from kanban.storage.memory import InMemoryRepository
 
 
 class TestKanbanServiceReorderTask(unittest.TestCase):

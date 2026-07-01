@@ -10,8 +10,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from storage.filesystem import FilesystemRepository
-from storage.kanban import RepositoryAlreadyInitialized
+from kanban.storage.filesystem import FilesystemRepository
+from kanban.storage.kanban import RepositoryAlreadyInitialized
 
 
 class TestFilesystemInitStorage(unittest.TestCase):

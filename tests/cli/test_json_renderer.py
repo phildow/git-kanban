@@ -15,9 +15,9 @@ from contextlib import redirect_stdout
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
-from models import Board, Column, Task, UserContext
-from services.kanban import GitCommit, KanbanStatus
-from cli.json_renderer import JsonRenderer
+from kanban.models import Board, Column, Task, UserContext
+from kanban.services.kanban import GitCommit, KanbanStatus
+from kanban.cli.json_renderer import JsonRenderer
 
 
 _TASK_ID = UUID("a3f9c2d1-8b4e-4f2a-9c1d-3e7f8a2b5c6d")

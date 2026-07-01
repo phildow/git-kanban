@@ -9,9 +9,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
-from models import Task
-from storage.kanban import TaskNotFound
-from storage.memory import InMemoryRepository
+from kanban.models import Task
+from kanban.storage.kanban import TaskNotFound
+from kanban.storage.memory import InMemoryRepository
 
 
 def _now() -> datetime:

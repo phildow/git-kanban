@@ -10,9 +10,9 @@ import unittest
 from argparse import Namespace
 from unittest.mock import MagicMock, patch
 
-from models import Board, Column, Task
-from repl import commands
-from services.kanban import TaskCreateParams, TaskUpdateParams
+from kanban.models import Board, Column, Task
+from kanban.repl import commands
+from kanban.services.kanban import TaskCreateParams, TaskUpdateParams
 
 
 class TestReplCommandHandlers(unittest.TestCase):
@@ -92,7 +92,7 @@ class TestReplCommandHandlers(unittest.TestCase):
     def test_handle_list_renders_board_list(self):
         args = self._args(path=None)
         result = object()
-        with patch("repl.commands.handle_list_helper", return_value=(Board, result)):
+        with patch("kanban.repl.commands.handle_list_helper", return_value=(Board, result)):
             commands.handle_list(args, self.svc, self.renderer)
 
         self.renderer.render_board_list.assert_called_once_with(args, result)
@@ -100,7 +100,7 @@ class TestReplCommandHandlers(unittest.TestCase):
     def test_handle_list_renders_column_list(self):
         args = self._args(path="alpha")
         result = object()
-        with patch("repl.commands.handle_list_helper", return_value=(Column, result)):
+        with patch("kanban.repl.commands.handle_list_helper", return_value=(Column, result)):
             commands.handle_list(args, self.svc, self.renderer)
 
         self.renderer.render_column_list.assert_called_once_with(args, result)
@@ -108,41 +108,41 @@ class TestReplCommandHandlers(unittest.TestCase):
     def test_handle_list_renders_task_list(self):
         args = self._args(path="alpha/todo")
         result = object()
-        with patch("repl.commands.handle_list_helper", return_value=(Task, result)):
+        with patch("kanban.repl.commands.handle_list_helper", return_value=(Task, result)):
             commands.handle_list(args, self.svc, self.renderer)
 
         self.renderer.render_task_list.assert_called_once_with(args, result)
 
     def test_handle_list_raises_for_unexpected_type(self):
         args = self._args(path=None)
-        with patch("repl.commands.handle_list_helper", return_value=([], str)):
+        with patch("kanban.repl.commands.handle_list_helper", return_value=([], str)):
             with self.assertRaises(ValueError):
                 commands.handle_list(args, self.svc, self.renderer)
 
     def test_handle_delete_renders_board_delete(self):
         args = self._args(path="alpha")
-        with patch("repl.commands.handle_delete_helper", return_value=Board):
+        with patch("kanban.repl.commands.handle_delete_helper", return_value=Board):
             commands.handle_delete(args, self.svc, self.renderer)
 
         self.renderer.render_board_delete.assert_called_once_with(args)
 
     def test_handle_delete_renders_column_delete(self):
         args = self._args(path="alpha/todo")
-        with patch("repl.commands.handle_delete_helper", return_value=Column):
+        with patch("kanban.repl.commands.handle_delete_helper", return_value=Column):
             commands.handle_delete(args, self.svc, self.renderer)
 
         self.renderer.render_column_delete.assert_called_once_with(args)
 
     def test_handle_delete_renders_task_delete(self):
         args = self._args(path="alpha/todo/fix-parser")
-        with patch("repl.commands.handle_delete_helper", return_value=Task):
+        with patch("kanban.repl.commands.handle_delete_helper", return_value=Task):
             commands.handle_delete(args, self.svc, self.renderer)
 
         self.renderer.render_task_delete.assert_called_once_with(args)
 
     def test_handle_delete_raises_for_unexpected_type(self):
         args = self._args(path="alpha")
-        with patch("repl.commands.handle_delete_helper", return_value=str):
+        with patch("kanban.repl.commands.handle_delete_helper", return_value=str):
             with self.assertRaises(ValueError):
                 commands.handle_delete(args, self.svc, self.renderer)
 

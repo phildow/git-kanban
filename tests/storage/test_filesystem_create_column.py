@@ -6,9 +6,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from models import Column
-from storage.filesystem import FilesystemRepository
-from storage.kanban import BoardNotFound, ColumnAlreadyExists
+from kanban.models import Column
+from kanban.storage.filesystem import FilesystemRepository
+from kanban.storage.kanban import BoardNotFound, ColumnAlreadyExists
 
 
 class TestFilesystemCreateColumn(unittest.TestCase):

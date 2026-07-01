@@ -11,10 +11,10 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from storage.filesystem import FilesystemRepository
-from storage.seeds import BOOTSTRAP_CONFIG
-from services.kanban import KanbanService
-from index.memory import InMemoryIndexService
+from kanban.storage.filesystem import FilesystemRepository
+from kanban.storage.seeds import BOOTSTRAP_CONFIG
+from kanban.services.kanban import KanbanService
+from kanban.index.memory import InMemoryIndexService
 
 
 class TestKanbanInitializeKanbanFilesystem(unittest.TestCase):

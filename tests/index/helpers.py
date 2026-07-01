@@ -6,7 +6,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from uuid import UUID, uuid4
 
-from models import Task  # Priority
+from kanban.models import Task  # Priority
 
 
 def make_task(

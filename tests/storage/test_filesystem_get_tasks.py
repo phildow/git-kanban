@@ -7,8 +7,8 @@ import textwrap
 import unittest
 from pathlib import Path
 
-from storage.filesystem import FilesystemRepository
-from storage.kanban import BoardNotFound, ColumnNotFound
+from kanban.storage.filesystem import FilesystemRepository
+from kanban.storage.kanban import BoardNotFound, ColumnNotFound
 
 
 def _task_md(task_id: str, title: str, slug: str) -> str:

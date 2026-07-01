@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import unittest
 
-from index.memory import InMemoryIndexService
-from storage.memory import InMemoryRepository
+from kanban.index.memory import InMemoryIndexService
+from kanban.storage.memory import InMemoryRepository
 from tests.index.helpers import make_task
 
 

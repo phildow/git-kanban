@@ -17,9 +17,9 @@ from datetime import datetime, UTC
 from pathlib import Path
 from uuid import uuid4
 
-from models import Board, Column, Task
-from storage.kanban import BoardAlreadyExists, BoardNotFound
-from storage.memory import InMemoryRepository
+from kanban.models import Board, Column, Task
+from kanban.storage.kanban import BoardAlreadyExists, BoardNotFound
+from kanban.storage.memory import InMemoryRepository
 
 
 class TestInMemoryRepositoryBoardOps(unittest.TestCase):

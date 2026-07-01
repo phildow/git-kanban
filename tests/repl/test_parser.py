@@ -11,8 +11,8 @@ import unittest
 from pathlib import Path
 
 # TODO: add handle_list tests
-from repl import parser as repl_parser
-from repl.commands import (
+from kanban.repl import parser as repl_parser
+from kanban.repl.commands import (
     handle_board_change,
     handle_board_create,
     handle_board_rename,

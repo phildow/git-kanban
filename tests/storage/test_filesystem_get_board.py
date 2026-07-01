@@ -7,9 +7,9 @@ import unittest
 from pathlib import Path
 from uuid import uuid4
 
-from models import Board
-from storage.filesystem import FilesystemRepository
-from storage.kanban import BoardNotFound
+from kanban.models import Board
+from kanban.storage.filesystem import FilesystemRepository
+from kanban.storage.kanban import BoardNotFound
 
 
 class TestFilesystemGetBoard(unittest.TestCase):

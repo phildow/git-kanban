@@ -10,9 +10,9 @@ from pathlib import Path
 from uuid import uuid4
 from unittest.mock import MagicMock
 
-from services.git import GitService
-from services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
-from storage.memory import InMemoryRepository
+from kanban.services.git import GitService
+from kanban.services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
+from kanban.storage.memory import InMemoryRepository
 
 
 class TestKanbanServiceTaskIndexHooks(unittest.TestCase):

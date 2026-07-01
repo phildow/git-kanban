@@ -13,14 +13,14 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
 
-from models import Task, TaskFilter
-from storage.kanban import (
+from kanban.models import Task, TaskFilter
+from kanban.storage.kanban import (
     BoardNotFound,
     ColumnNotFound,
     TaskAlreadyExists,
     TaskNotFound,
 )
-from storage.memory import InMemoryRepository
+from kanban.storage.memory import InMemoryRepository
 
 
 class TestInMemoryRepositoryTaskOps(unittest.TestCase):

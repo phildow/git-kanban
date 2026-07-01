@@ -6,9 +6,9 @@ import unittest
 from datetime import date
 
 # from models import Priority
-from index.memory import InMemoryIndexService
-from index.query import SearchQuery
-from storage.memory import InMemoryRepository
+from kanban.index.memory import InMemoryIndexService
+from kanban.index.query import SearchQuery
+from kanban.storage.memory import InMemoryRepository
 from tests.index.helpers import make_task
 
 
