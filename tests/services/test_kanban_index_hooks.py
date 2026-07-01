@@ -92,35 +92,35 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
         self.index_service.upsert_task.assert_not_called()
 
     def test_delete_task_calls_index_delete(self) -> None:
-        """Deleting a task invokes index_service.delete_task with the deleted task."""
+        """Deleting a task invokes index_service.remove_task with the deleted task."""
         created = self.svc.create_task("alpha/todo/t1", TaskCreateParams())
         self.index_service.reset_mock()
 
         self.svc.delete_task("alpha/todo/t1")
 
-        self.index_service.delete_task.assert_called_once()
-        self.assertEqual(self.index_service.delete_task.call_args.args[0].id, created.id)
+        self.index_service.remove_task.assert_called_once()
+        self.assertEqual(self.index_service.remove_task.call_args.args[0].id, created.id)
 
     def test_delete_column_calls_index_delete_for_each_task(self) -> None:
-        """Deleting a column invokes index_service.delete_task once per task it contained."""
+        """Deleting a column invokes index_service.remove_task once per task it contained."""
         t1 = self.svc.create_task("alpha/todo/t1", TaskCreateParams())
         t2 = self.svc.create_task("alpha/todo/t2", TaskCreateParams())
         self.index_service.reset_mock()
 
         self.svc.delete_column("alpha/todo")
 
-        self.assertEqual(self.index_service.delete_task.call_count, 2)
-        deleted_ids = {c.args[0].id for c in self.index_service.delete_task.call_args_list}
+        self.assertEqual(self.index_service.remove_task.call_count, 2)
+        deleted_ids = {c.args[0].id for c in self.index_service.remove_task.call_args_list}
         self.assertEqual(deleted_ids, {t1.id, t2.id})
 
     def test_delete_column_with_no_tasks_calls_no_index_delete(self) -> None:
-        """Deleting an empty column does not invoke index_service.delete_task."""
+        """Deleting an empty column does not invoke index_service.remove_task."""
         self.svc.delete_column("alpha/todo")
 
-        self.index_service.delete_task.assert_not_called()
+        self.index_service.remove_task.assert_not_called()
 
     def test_delete_board_calls_index_delete_for_each_task(self) -> None:
-        """Deleting a board invokes index_service.delete_task once per task across all columns."""
+        """Deleting a board invokes index_service.remove_task once per task across all columns."""
         t1 = self.svc.create_task("alpha/todo/t1", TaskCreateParams())
         t2 = self.svc.create_task("alpha/todo/t2", TaskCreateParams())
         t3 = self.svc.create_task("alpha/done/t3", TaskCreateParams())
@@ -128,15 +128,15 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
 
         self.svc.delete_board("alpha")
 
-        self.assertEqual(self.index_service.delete_task.call_count, 3)
-        deleted_ids = {c.args[0].id for c in self.index_service.delete_task.call_args_list}
+        self.assertEqual(self.index_service.remove_task.call_count, 3)
+        deleted_ids = {c.args[0].id for c in self.index_service.remove_task.call_args_list}
         self.assertEqual(deleted_ids, {t1.id, t2.id, t3.id})
 
     def test_delete_board_with_no_tasks_calls_no_index_delete(self) -> None:
-        """Deleting a board with no tasks does not invoke index_service.delete_task."""
+        """Deleting a board with no tasks does not invoke index_service.remove_task."""
         self.svc.delete_board("alpha")
 
-        self.index_service.delete_task.assert_not_called()
+        self.index_service.remove_task.assert_not_called()
 
     def test_rename_column_calls_index_upsert_for_each_task(self) -> None:
         """Renaming a column invokes index_service.upsert_task once per task in that column."""
