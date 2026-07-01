@@ -19,7 +19,7 @@ Be succinct.
 - Use double quotes `"..."` for strings
 - When typing optionals prefer `typ | None` instead of `Optional(typ)`
 - When a python dependency is required add it to pyproject.toml
-- Add documenation when you create types and methods, including for tests
+- Add documentation when creating types and methods, including for tests
 - Break up tests, keep unit tests small
 - Run tests from the current working directory with the bash command `python -m unittest discover -s tests -t .`
 - Tab indent key-value pairs in INI files
@@ -166,9 +166,13 @@ The kanban store is set up as a git worktree, created when the kanban project is
 ```bash
 # 1. create the orphan branch (must be done from the main working tree)
 git checkout --orphan kanban
-git rm -rf .                    # clear inherited working tree files
+
+# clear inherited working tree files
+git rm -rf .
 git commit --allow-empty -m "kanban: initialize"
-git checkout main               # return to main branch
+
+# return to main branch
+git checkout main
 
 # 2. now add the worktree pointing at the orphan branch
 git worktree add .kanban-store kanban
@@ -312,7 +316,7 @@ The data model follows. Note the lightweight relationships between the types:
 
 #### The Board
 
-```
+```python
 @dataclass
 class Board:
     id:   UUID
@@ -325,7 +329,7 @@ class Board:
 
 #### The Column
 
-```
+```python
 @dataclass
 class Column:
     id:         UUID
@@ -339,7 +343,7 @@ class Column:
 
 #### The Task
 
-```
+```python
 @dataclass
 class Task:
     id:             UUID
@@ -436,6 +440,8 @@ kanban config get <key>            # key: name
 # Global flags (all commands):
 #   --quiet
 ```
+
+Every command that does not have `--format` options of `table|plain|json` has instead `--format` options of `plain|json` defaulting to `plain`.
 
 ## The REPL
 
