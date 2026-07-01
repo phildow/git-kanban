@@ -199,9 +199,12 @@ The kanban-store worktree shares the same object store as the root directory but
 In order for changes to the kanban-store directory to be tracked in their own worktree, git commands executed by kanban service must be instructed to execute within that folder, for example:
 
 ```bash
+git -C .kanban-store push --set-upstream origin kanban
+
 git -C .kanban-store add boards/my-project/todo/fix-login-bug.md
 git -C .kanban-store commit -m "kanban: task created"
 git -C .kanban-store status
+
 git -C .kanban-store push
 git -C .kanban-store pull
 ```
@@ -493,7 +496,7 @@ Ctrl+C        - interrupt or cancel the current command
 Ctrl+L        - clear the screen
 Ctrl+D        - exit
 Ctrl+Z        - exit
-Tab           - automcomplete commands or files
+Tab           - context aware automcomplete commands, flags, files, tags, users, tags, etc
 ```
 
 The REPL prints it prompt as:
@@ -584,7 +587,7 @@ kanban> move /my-project/todo/fix<TAB>
 fix-login-bug
 ```
 
-**When there is an board but no column in the user context**
+**When there is a board but no column in the user context**
 
 The board segment is skipped. Completion starts at the column, resolved against the active board:
 
@@ -635,6 +638,134 @@ deploy-staging   update-certs   rotate-keys
 ```
 
 The signal that the user is overriding the context (current working directory) is the presence of a forward slash `/` at the beginning of the path.
+
+## The TUI
+
+The Text User Interface (TUI) provides a visual but still text based user interface to the underlying kanban service. Kanban means "signboard" or "visual card" in Japanese, so providing a visual, card based system is a requisite part of this application.
+
+The TUI is entirely keyboard driven with the following input properties:
+
+- **Navigation** — Arrow keys or vim-style `h/j/k/l` move focus between columns and cards. `Tab` cycles between columns.
+
+- **Actions on the selected card** — single-key commands trigger instantly: `m` to move a card to another column, `e` to open an edit panel, `d` to delete (with a confirmation prompt), `Enter` to expand card details.
+
+- **Command palette** — The addition of a `/` or `:` prompt for power users to type commands like `:move 14 done` or `:assign 11 sara`.
+
+- **Search/filter** — `/` or `f` opens an inline search bar that live-filters visible cards as you type.
+
+The TUI has the following output properties and formatting conventions:
+
+- **Box-drawing characters** (`┌ ─ ┐ │ └ ┘ ├ ┤`) form the card and column borders, giving a structured grid feel without a GUI.
+
+- **Color carries semantic meaning** — red for critical priority, yellow for high, green for done, dim/grey for archived items. Active focus gets a highlighted border or inverted colors.
+
+- **Density toggles** — a keypress like `c` might collapse cards to single-line summaries when you have many, expanding them on focus.
+
+- **Status bar at the bottom** always shows contextual key hints for the current mode, so the user is never guessing what's available.
+
+- **Inline metadata** uses compact sigils: `!HIGH` for priority, `@name` for assignee, `#id` for card number, so cards stay readable at a glance without taking up too much vertical space.
+
+We will be using the `textual` python library to build the TUI
+
+### The Visual Layout
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  🗂  My Kanban Board                          [?] Help  [q] Quit │
+├──────────────────┬──────────────────┬──────────────────┬────────┤
+│    BACKLOG (4)   │  IN PROGRESS (2) │   REVIEW (1)     │DONE(8) │
+│                  │                  │                  │        │
+│ ┌──────────────┐ │ ┌──────────────┐ │ ┌──────────────┐ │ ✓ #12  │
+│ │ #14 Fix nav  │ │ │▶ #11 Auth    │ │ │ #09 API docs │ │ ✓ #11  │
+│ │ !HIGH  @sara │ │ │   flow       │ │ │ !MED  @alex  │ │ ✓ #10  │
+│ │ 3d estimate  │ │ │ !HIGH @tom   │ │ └──────────────┘ │  ...   │
+│ └──────────────┘ │ │ due: Jun 15  │ │                  │        │
+│                  │ └──────────────┘ │                  │        │
+│ ┌──────────────┐ │                  │                  │        │
+│ │ #13 Dark mode│ │ ┌──────────────┐ │                  │        │
+│ │ !LOW  @alex  │ │ │▶ #08 Payment │ │                  │        │
+│ └──────────────┘ │ │   refactor   │ │                  │        │
+│                  │ │ !CRIT @sara  │ │                  │        │
+└──────────────────┴──────────────────┴──────────────────┴────────┘
+  ←/→ columns   ↑/↓ cards   [m] move   [n] new   [e] edit   [d] del
+```
+
+### The Application Structure
+
+```
+KanbanApp(App)
+│
+├── BoardScreen (default screen)
+│   ├── Header (board name, active column count)
+│   │
+│   ├── Horizontal
+│   │   ├── ColumnView(ListView) × N        — main board area
+│   │   │   └── CardWidget(Static) × N      — one per task in that column
+│   │   │       states: default | focused | move-mode (dashed amber border)
+│   │   │
+│   │   └── SidebarPanel (collapsible, right side)
+│   │       ├── StatusView                  — renders KanbanService.status()
+│   │       └── LogView                     — renders git log, scoped to
+│   │                                          focused task or board if none
+│   │
+│   └── Footer (key bindings hint bar — swaps content in move mode)
+│
+├── TaskDetailScreen (modal, pushed on Enter/show)
+│   └── renders a single Task: title, assignee, priority, due date, tags, description
+│
+├── TaskFormScreen (modal, pushed on create/edit)
+│   ├── Input: title
+│   ├── Input: assignee
+│   ├── Select: priority
+│   ├── Input: due date
+│   ├── Input: tags (comma separated)
+│   └── Button row: Save / Cancel
+│
+├── BoardSwitcherScreen (modal, pushed on `b`)
+│   └── ListView of board names — Enter switches BoardScreen's active board
+│
+└── CommandBar (overlay, toggled by `:`)
+    └── Input — free text, parsed with the same parser as the REPL
+```
+
+#### Key Bindings (Board Screen, normal mode)
+
+```
+←/→ or h/l     move focus between columns
+↑/↓ or j/k     move focus between cards within a column
+Enter          open TaskDetailScreen for focused card
+n              open TaskFormScreen (create)
+e              open TaskFormScreen (edit, pre-filled)
+d              delete focused card (confirm modal)
+m              enter move mode for focused card
+b              open BoardSwitcherScreen
+/              inline filter — live-filters visible cards as typed
+:              open CommandBar — full REPL-syntax command line
+s              toggle SidebarPanel collapse
+q / Ctrl+Q     quit
+?              help screen — bindings reference
+```
+
+#### Key bindings (move mode, once `m` pressed)
+
+```
+←/→ or h/l     move card to adjacent column
+↑/↓ or j/k     reorder card within current column
+Enter          commit — single move_task/reorder call
+Esc            cancel — discard, no calls made
+```
+
+### Refresh Strategy
+
+The filesystem remains the source of truth for the TUI, and the TUI consumes the kanban service exclusively, which itself queries the filesystem, no different from the CLI or REPL, but because the TUI maintains a visual state in a running application while the filesystem might change, it becomes necessary to develop a data refresh strategy. Our approach is threefold:
+
+1) **After own mutations** — every create/edit/move/delete re-fetches from KanbanService immediately, so the TUI never shows stale data caused by its own actions.
+
+2) **On terminal focus return** — when the app detects the terminal window regained focus (via terminal focus-reporting escape sequences, exposed through Textual's app-level focus/blur events), it re-syncs from the filesystem. This catches the common case of switching away to run git pull or edit a file, then switching back.
+
+3) **Manual refresh key** (`r` or `:refresh`) — explicit fallback for when focus-tracking isn't supported (notably gaps in tmux/screen pass-through) or when something changes while the terminal stays focused the whole time.
+
+In addition the TUI will refresh whenever a git sync is executed from within the app, akin to refreshing after a mutation.
 
 ## Additional Project Instructions
 
