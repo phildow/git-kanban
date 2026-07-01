@@ -3,3 +3,8 @@
 	slug = in-review
 	id = f9441364-8800-4df9-bd4a-13fa4f274a6e
 
+[tasks]
+	order = 
+		scaffold-indexing.md
+		git-worktree-for-kanban-dont-lose-this-data.md
+

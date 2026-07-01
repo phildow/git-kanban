@@ -3,7 +3,7 @@ id: 35f5d465-51b5-480a-92f7-d7a9b88ee737
 title: Command to add comments to a task
 slug: command-to-add-comments-to-a-task
 created_at: 2026-06-30T20:24:31.958450+00:00
-updated_at: 2026-06-30T20:28:19.914587+00:00
+updated_at: 2026-07-01T07:25:29.600096+00:00
 tags: [feature]
 ---
 
@@ -15,6 +15,9 @@ REPL: `comment <task> <comment>`
 Note who left it, for example:
 
 # Comments
+
+@shromona
+wow this is cool I want to add a commen
 
 @phildow
 This is a sample comment. It begins under the Comments header, which is how we parse for it, and each new comment begins with an @ or some other signifier to indicate this is the start of a comment.
