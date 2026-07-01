@@ -16,6 +16,7 @@ from storage.memory import InMemoryRepository
 from utils.debug import __DEBUG__, FILESYSTEM, MEMORY
 
 def main() -> None:
+    """Main entry point for the kanban CLI."""
     setup_logging(logging.DEBUG)
     
     repository = get_repository(FILESYSTEM)
@@ -41,6 +42,7 @@ def main() -> None:
         print(f"Error: {e}")
 
 def setup_logging(level: int) -> None:
+    """Configure logging to write to a file in the user's home directory."""
     logfile = Path("~/.kanban/kanban.log").expanduser()
 
     if not logfile.parent.exists():
@@ -52,6 +54,7 @@ def setup_logging(level: int) -> None:
                         format='%(asctime)s - %(levelname)s - %(message)s')
 
 def get_repository(typ: str) -> KanbanRepository:
+    """Returns the appropriate KanbanRepository implementation based on the specified type."""
     import tempfile
     from uuid import uuid4
 
