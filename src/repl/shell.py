@@ -216,6 +216,9 @@ def run_repl(*, svc: KanbanService, renderer: object) -> None:
 
     _print_welcome_message(svc)
 
+    # Ensure the index is up-to-date before starting the REPL (temporary measure until we have a persistent index)
+    svc.index_service.rebuild()
+
     try:
         with _install_exit_signal_handlers():
             while True:

@@ -403,7 +403,7 @@ class KanbanService:
 
         # Remove all index entries for tasks in the deleted board.
         for task in tasks:
-            self.index_service.delete_task(task)
+            self.index_service.remove_task(task)
 
         return board
 
@@ -490,7 +490,7 @@ class KanbanService:
 
         # Remove all index entries for tasks in the deleted column.
         for task in tasks:
-            self.index_service.delete_task(task)
+            self.index_service.remove_task(task)
 
         return None
 
@@ -767,7 +767,7 @@ class KanbanService:
         """
         task = self.get_task(path)
         self.repository.delete_task(task)
-        self.index_service.delete_task(task)
+        self.index_service.remove_task(task)
         return None
 
     def assign_task(
@@ -787,6 +787,16 @@ class KanbanService:
 
     # ── Search ────────────────────────────────────────────────────────────────
 
+    def get_tags(
+        self,
+        board:   str | None = None
+        ) -> list[str]:
+        """
+        Return a list of all unique tags across tasks in the repository, or
+        scoped to a single board if board is provided.
+        """
+        return self.index_service.list_tags(board=board)
+
     def search(
         self,
         query:   str,
@@ -803,7 +813,6 @@ class KanbanService:
         when the index is stale or absent.
         """
         self.index_service.rebuild()
-
 
     # ── Git ───────────────────────────────────────────────────────────────────
 

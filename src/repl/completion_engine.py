@@ -1,4 +1,5 @@
-"""Pure tab-completion logic for the REPL.
+"""
+Pure tab-completion logic for the REPL.
 
 :class:`CompletionEngine` walks the *actual* argparse parser tree (the
 one built by ``repl.parser.build_parser()``) to discover commands,
@@ -64,6 +65,10 @@ class CompletionDataSource(Protocol):
 
     def path_components(self, path: str | None = None) -> tuple[str | None, str | None, str | None]:
         ...
+
+    def get_tags(self, board: str | None = None) -> list[str]:
+        ...
+
 
     @property
     def working_board(self) -> str | None:
@@ -245,6 +250,8 @@ class CompletionEngine:
             return self._matching(
                 [c.slug for c in self._service.get_columns(self._service.working_board)], partial
             )
+        if action.dest == "tags":
+            return self._matching(self._service.get_tags(self._service.working_board), partial)
         return []  # free text: no suggestions
 
     @staticmethod
