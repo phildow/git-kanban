@@ -31,11 +31,13 @@ class Task:
     created_at:     datetime | None = None
     updated_at:     datetime | None = None
     body:           str = ""
-
+    
+    @property
+    def filename(self) -> str:
+        """Return the filename for this task, based on its slug."""
+        return f"{self.slug}.md"
+    
     @property
     def path(self) -> Path:
         return Path(f"/{self.board}/{self.column}/{self.slug}.md")
     
-    def filename(self) -> str:
-        """Return the filename for this task, based on its slug."""
-        return f"{self.slug}.md"
