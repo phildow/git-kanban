@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "kanban"
 version = "0.5.0"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = ["rich"]
 authors = [
     {name = "Philip Dow"}
 ]
