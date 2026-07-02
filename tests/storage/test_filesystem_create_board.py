@@ -8,7 +8,7 @@ from pathlib import Path
 
 from kanban.models import Board
 from kanban.storage.filesystem import FilesystemRepository
-from kanban.storage.kanban import BoardAlreadyExists
+from kanban.storage.base import BoardAlreadyExists
 
 
 class TestFilesystemCreateBoard(unittest.TestCase):

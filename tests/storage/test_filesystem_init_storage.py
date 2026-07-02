@@ -11,7 +11,7 @@ import unittest
 from pathlib import Path
 
 from kanban.storage.filesystem import FilesystemRepository
-from kanban.storage.kanban import RepositoryAlreadyInitialized
+from kanban.storage.base import RepositoryAlreadyInitialized
 
 
 class TestFilesystemInitStorage(unittest.TestCase):

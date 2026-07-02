@@ -9,7 +9,7 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 from ..models import Slug, Task, Board, Column
-from ..storage.kanban import (
+from ..storage.base import (
     KanbanRepository, 
     BoardNotFound, 
     BoardAlreadyExists,

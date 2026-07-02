@@ -13,7 +13,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from kanban.models import Column, Task
-from kanban.storage.kanban import BoardNotFound, ColumnAlreadyExists, ColumnNotFound
+from kanban.storage.base import BoardNotFound, ColumnAlreadyExists, ColumnNotFound
 from kanban.storage.memory import InMemoryRepository
 
 

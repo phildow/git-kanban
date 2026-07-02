@@ -23,7 +23,7 @@ from uuid import UUID
 
 from ..models import Task
 from ..index.query import SearchQuery, SearchResult
-from ..storage.kanban import KanbanRepository
+from ..storage.base import KanbanRepository
 
 class IndexService(ABC):
     """Cache of task metadata for fast search, lookup, and completion."""

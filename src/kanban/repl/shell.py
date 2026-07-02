@@ -15,7 +15,7 @@ from ..repl.completion_engine import CompletionEngine
 from ..repl.parser import build_parser
 from ..repl.readline_completer import ReplCompleter
 from ..services.kanban import KanbanService
-from ..storage.kanban import (
+from ..storage.base import (
     BoardAlreadyExists,
     BoardNotFound,
     ColumnAlreadyExists,

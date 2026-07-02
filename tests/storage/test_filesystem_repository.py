@@ -13,7 +13,7 @@ import unittest
 from pathlib import Path
 
 from kanban.storage.filesystem import FilesystemRepository
-from kanban.storage.kanban import KanbanRepository
+from kanban.storage.base import KanbanRepository
 
 
 class TestFilesystemRepositoryInterface(unittest.TestCase):

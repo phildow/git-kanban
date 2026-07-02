@@ -17,7 +17,7 @@ from uuid import UUID
 from ..models import Task # Priority
 from ..index.base import IndexService
 from ..index.query import SearchQuery, SearchResult, SortField
-from ..storage.kanban import KanbanRepository
+from ..storage.base import KanbanRepository
 
 # _PRIORITY_ORDER: dict[Priority, int] = {
 #     Priority.LOW: 0,

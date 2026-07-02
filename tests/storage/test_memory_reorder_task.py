@@ -10,7 +10,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from kanban.models import Task
-from kanban.storage.kanban import TaskNotFound
+from kanban.storage.base import TaskNotFound
 from kanban.storage.memory import InMemoryRepository
 
 

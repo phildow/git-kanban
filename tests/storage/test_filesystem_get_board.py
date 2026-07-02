@@ -9,7 +9,7 @@ from uuid import uuid4
 
 from kanban.models import Board
 from kanban.storage.filesystem import FilesystemRepository
-from kanban.storage.kanban import BoardNotFound
+from kanban.storage.base import BoardNotFound
 
 
 class TestFilesystemGetBoard(unittest.TestCase):

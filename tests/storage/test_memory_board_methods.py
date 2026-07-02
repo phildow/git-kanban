@@ -17,7 +17,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from kanban.models import Board, Column, Task
-from kanban.storage.kanban import BoardAlreadyExists, BoardNotFound
+from kanban.storage.base import BoardAlreadyExists, BoardNotFound
 from kanban.storage.memory import InMemoryRepository
 
 

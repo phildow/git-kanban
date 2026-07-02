@@ -13,7 +13,7 @@ import unittest
 from pathlib import Path
 from uuid import uuid4
 
-from kanban.storage.kanban import KanbanRepository
+from kanban.storage.base import KanbanRepository
 from kanban.storage.memory import InMemoryRepository
 
 

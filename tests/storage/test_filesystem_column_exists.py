@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 from kanban.storage.filesystem import FilesystemRepository
-from kanban.storage.kanban import BoardNotFound
+from kanban.storage.base import BoardNotFound
 
 
 class TestFilesystemColumnExists(unittest.TestCase):

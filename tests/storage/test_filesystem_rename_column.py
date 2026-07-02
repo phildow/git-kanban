@@ -9,7 +9,7 @@ from uuid import uuid4
 
 from kanban.models import Column
 from kanban.storage.filesystem import FilesystemRepository
-from kanban.storage.kanban import BoardNotFound, ColumnNotFound, ColumnAlreadyExists
+from kanban.storage.base import BoardNotFound, ColumnNotFound, ColumnAlreadyExists
 
 
 class TestFilesystemRenameColumn(unittest.TestCase):

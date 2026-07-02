@@ -8,7 +8,7 @@ import tempfile
 from uuid import uuid4
 
 from ..models import Board, Column, Slug, Task, TaskFilter, UserContext
-from ..storage.kanban import KanbanRepository, ColumnNotFound, BoardNotFound
+from ..storage.base import KanbanRepository, ColumnNotFound, BoardNotFound
 from ..storage.seeds import BootstrapConfig, DEFAULT_COLUMNS
 from ..services.git import GitService
 from ..index.base import IndexService

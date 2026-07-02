@@ -11,7 +11,7 @@ from .services.git import GitService
 from .services.kanban import KanbanService
 from .index.memory import InMemoryIndexService
 from .storage.filesystem import FilesystemRepository
-from .storage.kanban import KanbanRepository, RepositoryAlreadyInitialized
+from .storage.base import KanbanRepository, RepositoryAlreadyInitialized
 from .storage.memory import InMemoryRepository
 from .utils.debug import __DEBUG__, FILESYSTEM, MEMORY
 

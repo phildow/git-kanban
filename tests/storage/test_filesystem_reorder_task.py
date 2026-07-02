@@ -11,7 +11,7 @@ from uuid import uuid4
 
 from kanban.models import Task
 from kanban.storage.filesystem import FilesystemRepository
-from kanban.storage.kanban import TaskNotFound
+from kanban.storage.base import TaskNotFound
 
 
 def _now() -> datetime:

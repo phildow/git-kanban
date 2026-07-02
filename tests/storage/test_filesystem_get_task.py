@@ -11,7 +11,7 @@ from uuid import UUID
 
 from kanban.models import Task
 from kanban.storage.filesystem import FilesystemRepository
-from kanban.storage.kanban import BoardNotFound, ColumnNotFound, TaskNotFound
+from kanban.storage.base import BoardNotFound, ColumnNotFound, TaskNotFound
 
 
 _TASK_ID = UUID("a3f9c2d1-8b4e-4f2a-9c1d-3e7f8a2b5c6d")

@@ -10,7 +10,7 @@ from uuid import uuid4
 
 from kanban.models import Task
 from kanban.storage.filesystem import FilesystemRepository
-from kanban.storage.kanban import ColumnNotFound, TaskNotFound, TaskAlreadyExists
+from kanban.storage.base import ColumnNotFound, TaskNotFound, TaskAlreadyExists
 
 
 def _now() -> datetime:

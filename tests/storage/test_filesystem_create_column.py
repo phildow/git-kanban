@@ -8,7 +8,7 @@ from pathlib import Path
 
 from kanban.models import Column
 from kanban.storage.filesystem import FilesystemRepository
-from kanban.storage.kanban import BoardNotFound, ColumnAlreadyExists
+from kanban.storage.base import BoardNotFound, ColumnAlreadyExists
 
 
 class TestFilesystemCreateColumn(unittest.TestCase):
