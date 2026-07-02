@@ -34,10 +34,8 @@ from typing import Protocol
 
 # Positional/flag dest names that complete as a full board/column/task
 # path rather than a single segment. "path" is the parser's own
-# convention for fully-specified paths; "dest" is move's destination
-# argument, which may name a column, a board, or (eventually) a task,
-# so it gets the same multi-segment treatment.
-PATH_LIKE_DESTS = frozenset({"path", "dest"})
+# convention for fully-specified paths.
+PATH_LIKE_DESTS = frozenset({"path"})
 
 
 class Sluggable(Protocol):

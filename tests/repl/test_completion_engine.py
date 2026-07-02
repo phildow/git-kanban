@@ -66,6 +66,7 @@ def _build_fixture_parser() -> argparse.ArgumentParser:
     p.add_argument("path")  # BOARD/COLUMN/TITLE
     p.add_argument("-p", "--priority", choices=["low", "medium", "high"])
     p.add_argument("--assigned-to", dest="assigned_to")
+    p.add_argument("-t", "--tag", action="append", dest="tags")
     p.set_defaults(func=_NOOP)
 
     # rename <board|column>
@@ -88,7 +89,7 @@ def _build_fixture_parser() -> argparse.ArgumentParser:
     p.add_argument("path")
     p.set_defaults(func=_NOOP)
 
-    # move: task path + ambiguous destination (path-like per dest=="dest")
+    # move: task path + ambiguous destination (path-like per dest=="column")
     p = subparsers.add_parser("move", aliases=["mv"])
     p.add_argument("path")
     p.add_argument("column")
@@ -152,6 +153,11 @@ class FakeKanbanService:
         },
     }
 
+    _TAGS = {
+        "my-project": ["bug", "docs", "urgent"],
+        "ops": ["infra", "urgent"],
+    }
+
     def __init__(self) -> None:
         self._board: str | None = None
         self._column: str | None = None
@@ -176,6 +182,13 @@ class FakeKanbanService:
         if board is None or column is None:
             return []
         return [_Task(slug) for slug in self._BOARDS.get(board, {}).get(column, [])]
+
+    def get_tags(self, board: str | None = None) -> list[str]:
+        if board is None:
+            tags = {tag for board_tags in self._TAGS.values() for tag in board_tags}
+        else:
+            tags = set(self._TAGS.get(board, []))
+        return sorted(tags)
 
     def path_components(self, path: str | None = None) -> tuple[str | None, str | None, str | None]:
         """Resolve path against the stored user context, mirroring KanbanService."""
@@ -344,6 +357,29 @@ class FlagCompletionTests(EngineTestCase):
     def test_board_flag_completes_existing_boards(self) -> None:
         line = "search bug --board my-"
         self.assertEqual(self.complete(line), ["my-project"])
+
+
+class TagCompletionTests(EngineTestCase):
+    """dest="tags" completion, scoped to the active board context."""
+
+    def test_completes_tags_scoped_to_active_board(self) -> None:
+        context = _Context(board="my-project")
+        line = "create task /my-project/todo/new-task --tag "
+        self.assertEqual(self.complete(line, context), ["bug", "docs", "urgent"])
+
+    def test_filters_tags_by_prefix(self) -> None:
+        context = _Context(board="ops")
+        line = "create task /ops/todo/new-task --tag u"
+        self.assertEqual(self.complete(line, context), ["urgent"])
+
+    def test_no_active_board_completes_tags_across_all_boards(self) -> None:
+        line = "create task /my-project/todo/new-task --tag "
+        self.assertEqual(self.complete(line), ["bug", "docs", "infra", "urgent"])
+
+    def test_repeated_tag_flag_still_completes(self) -> None:
+        context = _Context(board="my-project")
+        line = "create task /my-project/todo/new-task --tag bug --tag "
+        self.assertEqual(self.complete(line, context), ["bug", "docs", "urgent"])
 
 
 class FreeTextCompletionTests(EngineTestCase):
