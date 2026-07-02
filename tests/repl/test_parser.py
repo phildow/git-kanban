@@ -6,20 +6,15 @@ defaults for top-level and nested subcommands.
 
 from __future__ import annotations
 
-import sys
 import unittest
-from pathlib import Path
 
 # TODO: add handle_list tests
 from kanban.repl import parser as repl_parser
 from kanban.repl.commands import (
     handle_board_change,
     handle_board_create,
-    handle_board_rename,
     handle_column_change,
     handle_column_create,
-    handle_column_rename,
-    handle_delete,
     handle_list,
     handle_change_dir,
     handle_rename,

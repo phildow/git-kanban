@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timezone
-from pathlib import Path
 from uuid import UUID, uuid4
 
 from kanban.models import Task  # Priority

@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from uuid import UUID
 
-from ..models.column import Column
 from ..models.slug import Slug
 
 @dataclass

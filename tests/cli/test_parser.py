@@ -6,9 +6,7 @@ defaults for top-level and nested subcommands.
 
 from __future__ import annotations
 
-import sys
 import unittest
-from pathlib import Path
 
 from kanban.cli import parser as cli_parser
 from kanban.cli.commands import (

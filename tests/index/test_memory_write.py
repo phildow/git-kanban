@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import unittest
-from uuid import uuid4
 
 from kanban.index.memory import InMemoryIndexService
 from kanban.storage.memory import InMemoryRepository

@@ -5,7 +5,6 @@ These tests document initialization semantics for in-memory bootstrapping.
 
 from __future__ import annotations
 
-import sys
 import tempfile
 import unittest
 

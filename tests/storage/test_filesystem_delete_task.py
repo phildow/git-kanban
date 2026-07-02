@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from kanban.models import Task
 from kanban.storage.filesystem import FilesystemRepository

@@ -11,9 +11,6 @@ from types import SimpleNamespace
 from uuid import uuid4
 from unittest.mock import MagicMock, patch
 
-from kanban.cli.parser import build_parser as build_cli_parser
-from kanban.models import UserContext
-from kanban.repl.parser import build_parser as build_repl_parser
 from kanban.repl.shell import (
     _prompt,
     run_repl,

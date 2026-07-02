@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-import sys
 import unittest
 import tempfile
 
 from pathlib import Path
 from uuid import uuid4
 
-from kanban.models import UserContext
 from kanban.storage.kanban import BoardNotFound, ColumnNotFound
 from kanban.services.kanban import KanbanService
 from kanban.services.git import GitService

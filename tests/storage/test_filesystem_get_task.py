@@ -7,7 +7,7 @@ import textwrap
 import unittest
 from datetime import datetime, UTC
 from pathlib import Path
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from kanban.models import Task
 from kanban.storage.filesystem import FilesystemRepository

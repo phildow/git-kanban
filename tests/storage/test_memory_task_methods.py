@@ -6,14 +6,13 @@ constraints, and move behavior.
 
 from __future__ import annotations
 
-import sys
 import tempfile
 import unittest
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
 
-from kanban.models import Task, TaskFilter
+from kanban.models import Task
 from kanban.storage.kanban import (
     BoardNotFound,
     ColumnNotFound,

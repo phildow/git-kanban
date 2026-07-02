@@ -7,7 +7,6 @@ column-scoped task cleanup.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-import sys
 import unittest
 import tempfile
 from pathlib import Path

@@ -9,7 +9,6 @@ These tests document expected board CRUD semantics, including:
 from __future__ import annotations
 
 from os import name
-import sys
 import tempfile
 import unittest
 

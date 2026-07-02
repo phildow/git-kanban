@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import sys
 import unittest
-from pathlib import Path
 from unittest.mock import patch
 
 from kanban.services.git import GitCommit, GitService

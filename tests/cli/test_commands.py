@@ -8,9 +8,7 @@ from __future__ import annotations
 
 import unittest
 from argparse import Namespace
-from pathlib import Path
 from unittest.mock import MagicMock
-from unittest.mock import patch
 
 from kanban.cli import commands
 from kanban.storage.seeds import BOOTSTRAP_CONFIG
