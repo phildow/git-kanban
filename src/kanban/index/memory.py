@@ -14,22 +14,11 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID
 
-from ..models import Task # Priority
+from ..models import Task
+from ..models.priority import PRIORITY_ORDER
 from ..index.base import IndexService
 from ..index.query import SearchQuery, SearchResult, SortField
 from ..storage.base import KanbanRepository
-
-# _PRIORITY_ORDER: dict[Priority, int] = {
-#     Priority.LOW: 0,
-#     Priority.MEDIUM: 1,
-#     Priority.HIGH: 2,
-# }
-
-_PRIORITY_ORDER: dict[str, int] = {
-    "low": 0,
-    "medium": 1,
-    "high": 2,
-}
 
 # Sentinels for nullable sort fields; must match the timezone-awareness
 # of domain datetimes (always UTC per the frontmatter spec).
@@ -170,7 +159,7 @@ def _value_key(sort: SortField) -> Callable[[Task], Any]:
         case SortField.TITLE:
             return lambda t: t.title.lower()
         case SortField.PRIORITY:
-            return lambda t: _PRIORITY_ORDER.get(t.priority, 0)
+            return lambda t: PRIORITY_ORDER.get(t.priority, 0)
         case SortField.DUE_DATE:
             return lambda t: t.due_date or date.min
         case SortField.CREATED_AT:

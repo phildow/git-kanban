@@ -6,6 +6,7 @@ Path arguments are explicit and fully specified by the caller.
 
 import argparse
 
+from ..models import Priority
 from ..cli.commands import (
     handle_board_create,
     handle_board_delete,
@@ -39,7 +40,7 @@ FORMAT_CHOICES = ["table", "plain", "json"]
 FORMAT_CHOICES_SIMPLE = ["plain", "json"]
 SORT_TASK_CHOICES = ["title", "priority", "due-date", "created-at", "updated-at", "created-by", "column"]
 SORT_BOARD_COLUMN_CHOICES = ["title"]
-PRIORITY_CHOICES = ["low", "medium", "high"]
+PRIORITY_CHOICES = [p.value for p in Priority]
 
 
 def _add_global_flags(parser: argparse.ArgumentParser) -> None:

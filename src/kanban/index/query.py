@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from enum import Enum
 
-from ..models import Task # Priority
+from ..models import Priority, Task
 
 
 class SortField(str, Enum):
@@ -44,7 +44,7 @@ class SearchQuery:
     board: str | None = None         # None = all boards
     column: str | None = None        # None = all columns; only used with board
     assigned_to: str | None = None
-    priority: str | None = None
+    priority: Priority | None = None
     tags: tuple[str, ...] = field(default_factory=tuple)  # all must match
     created_by: str | None = None
     due_before: date | None = None   # exclusive: due_date < due_before

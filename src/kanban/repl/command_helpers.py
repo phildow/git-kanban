@@ -10,9 +10,20 @@ which call into this service as needed to perform more complex operations.
 import argparse
 from datetime import datetime, timezone
 
-from ..models import Board, Column, Task, TaskFilter
+from ..models import Board, Column, Priority, Task, TaskFilter
 from ..services.kanban import KanbanService
 from ..utils.shell import prompt_for_confirmation
+
+
+# ---------------------------------------------------------------------------
+# Private helpers
+# ---------------------------------------------------------------------------
+
+def _parse_priority(args: argparse.Namespace) -> Priority | None:
+    """Return the --priority argument as a Priority, or None if not provided."""
+    priority = getattr(args, "priority", None)
+    return Priority(priority) if priority else None
+
 
 def _build_task_filter(args: argparse.Namespace) -> TaskFilter:
     """Build a TaskFilter from parsed CLI/REPL filter arguments."""
@@ -21,13 +32,16 @@ def _build_task_filter(args: argparse.Namespace) -> TaskFilter:
 
     return TaskFilter(
         assigned_to=getattr(args, "assigned_to", None),
-        priority=getattr(args, "priority", None),
+        priority=_parse_priority(args),
         tags=getattr(args, "tags", None) or [],
         due_before=_parse_date(getattr(args, "due_before", None)),
         due_after=_parse_date(getattr(args, "due_after", None)),
-        created_by=getattr(args, "created-by", None),
+        created_by=getattr(args, "created_by", None),
     )
 
+# ---------------------------------------------------------------------------
+# Private helpers
+# ---------------------------------------------------------------------------
 
 def handle_list_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[type, list[Board | Column | Task]]:
     """

@@ -11,6 +11,7 @@ Path arguments are explicit and fully specified by the caller.
 
 import argparse
 
+from ..models import Priority
 from ..repl.commands import (
     handle_board_change,
     handle_column_change,
@@ -37,7 +38,7 @@ from ..repl.commands import (
 
 SORT_TASK_CHOICES = ["title", "priority", "due-date", "created-at", "updated-at", "created-by", "column"]
 SORT_BOARD_COLUMN_CHOICES = ["title"]
-PRIORITY_CHOICES = ["low", "medium", "high"]
+PRIORITY_CHOICES = [p.value for p in Priority]
 
 class CustomFormatter(argparse.RawDescriptionHelpFormatter):
     @staticmethod

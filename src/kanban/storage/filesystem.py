@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import UUID, uuid4
 
-from ..models import Slug, Task, Board, Column
+from ..models import Priority, Slug, Task, Board, Column
 from ..storage.base import (
     KanbanRepository, 
     BoardNotFound, 
@@ -825,7 +825,7 @@ class FilesystemRepository(KanbanRepository):
             column=column,
             created_by=fm.get("created_by") or None,
             assigned_to=fm.get("assigned_to") or None,
-            priority=fm.get("priority") or None,
+            priority=Priority(p) if (p := fm.get("priority")) else None,
             due_date=due_date,
             tags=tags,
             created_at=created_at,

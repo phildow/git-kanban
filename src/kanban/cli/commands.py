@@ -8,16 +8,26 @@ import argparse
 from datetime import datetime, timezone
 
 from ..storage.seeds import BOOTSTRAP_CONFIG
-from ..models import TaskFilter
+from ..models import Priority, TaskFilter
 from ..services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
 from ..utils.shell import prompt_for_confirmation
 
+
+# ---------------------------------------------------------------------------
+# Private helpers
+# ---------------------------------------------------------------------------
 
 def _pick(args: argparse.Namespace, renderer: object, json_renderer: object) -> object:
     """Return the JSON renderer when --format json is requested, otherwise the default."""
     if getattr(args, "format", None) == "json":
         return json_renderer
     return renderer
+
+
+def _parse_priority(args: argparse.Namespace) -> Priority | None:
+    """Return the --priority argument as a Priority, or None if not provided."""
+    priority = getattr(args, "priority", None)
+    return Priority(priority) if priority else None
 
 
 # ---------------------------------------------------------------------------
@@ -95,7 +105,7 @@ def _build_task_filter(args: argparse.Namespace) -> TaskFilter:
 
 	return TaskFilter(
 		assigned_to=getattr(args, "assigned_to", None),
-		priority=getattr(args, "priority", None),
+		priority=_parse_priority(args),
 		tags=getattr(args, "tags", None) or [],
 		due_before=_parse_date(getattr(args, "due_before", None)),
 		due_after=_parse_date(getattr(args, "due_after", None)),
@@ -111,7 +121,7 @@ def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: obj
 def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	params = TaskCreateParams(
 		assigned_to=getattr(args, "assigned_to", None),
-		priority=getattr(args, "priority", None),
+		priority=_parse_priority(args),
 		tags=getattr(args, "tags", None) or [],
 		due_date=getattr(args, "due_date", None),
 		created_by=getattr(args, "created_by", None),
@@ -140,7 +150,7 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: o
 	updates = TaskUpdateParams(
 		title=getattr(args, "title", None),
 		assigned_to=getattr(args, "assigned_to", None),
-		priority=getattr(args, "priority", None),
+		priority=_parse_priority(args),
 		tags=getattr(args, "tags", None),
 		due_date=getattr(args, "due_date", None),
 		created_by=getattr(args, "created_by", None),

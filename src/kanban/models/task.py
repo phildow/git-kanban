@@ -5,6 +5,7 @@ from datetime import datetime
 from pathlib import Path
 from uuid import UUID
 
+from ..models.priority import Priority
 from ..models.slug import Slug
 
 @dataclass
@@ -25,7 +26,7 @@ class Task:
     
     created_by:     str | None = None
     assigned_to:    str | None = None
-    priority:       str | None = None
+    priority:       Priority | None = None
     due_date:       datetime | None = None
     tags:           list[str] = field(default_factory=list)
     created_at:     datetime | None = None

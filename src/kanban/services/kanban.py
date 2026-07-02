@@ -7,7 +7,8 @@ import subprocess
 import tempfile
 from uuid import uuid4
 
-from ..models import Board, Column, Slug, Task, TaskFilter, UserContext
+from ..models import Board, Column, Priority, Slug, Task, TaskFilter, UserContext
+from ..models.priority import PRIORITY_ORDER
 from ..storage.base import KanbanRepository, ColumnNotFound, BoardNotFound
 from ..storage.seeds import BootstrapConfig, DEFAULT_COLUMNS
 from ..services.git import GitService
@@ -22,7 +23,7 @@ class TaskCreateParams:
     # TODO: the title is supplied by the path, but should it be included here
     # title:      str
     assigned_to: str | None = None
-    priority:    str | None = None
+    priority:    Priority | None = None
     tags:        list[str] = field(default_factory=list)
     due_date:    datetime | None = None
     created_by:  str | None = None
@@ -31,7 +32,7 @@ class TaskCreateParams:
 class TaskUpdateParams:
     title:       str | None = None
     assigned_to: str | None = None
-    priority:    str | None = None
+    priority:    Priority | None = None
     tags:        list[str] | None = None
     created_by:  str | None = None
     due_date:    datetime | None = None
@@ -174,7 +175,7 @@ class KanbanService:
                         slug=task_config["slug"],
                         board=board_slug,
                         column=col_slug,
-                        priority=task_config.get("priority"),
+                        priority=Priority(p) if (p := task_config.get("priority")) else None,
                         assigned_to=task_config.get("assigned_to"),
                         body=task_config.get("body", ""),
                         created_at=now,
@@ -529,8 +530,7 @@ class KanbanService:
             if sort == "column":
                 return (task.column or "").lower()
             if sort == "priority":
-                priority_rank = {"low": 0, "medium": 1, "high": 2}
-                return priority_rank.get((task.priority or "").lower(), -1)
+                return PRIORITY_ORDER.get(task.priority, -1)
             if sort == "due-date":
                 return task.due_date
             if sort == "created-at":
@@ -562,7 +562,7 @@ class KanbanService:
             raise ValueError(f"No working board/column and no explicit path or title provided: {path}")
 
         assigned_to: str | None
-        priority: str | None
+        priority: Priority | None
         tags: list[str]
         due_date: datetime | None
         created_by: str | None
@@ -943,7 +943,7 @@ class KanbanService:
 
         title = frontmatter.get("title", original.title).strip() or original.title
         assigned_to = frontmatter.get("assigned_to", "") or None
-        priority = frontmatter.get("priority", "") or None
+        priority = Priority(p) if (p := frontmatter.get("priority", "")) else None
         created_by = frontmatter.get("created_by", "") or None
 
         due_date_raw = frontmatter.get("due_date", "").strip()

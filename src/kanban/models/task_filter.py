@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 
+from .priority import Priority
+
 
 @dataclass
 class TaskFilter:
@@ -10,9 +12,9 @@ class TaskFilter:
 
     All fields are optional; `None` means "do not filter by this field".
     """
-    
+
     assigned_to: str | None = None
-    priority:    str | None = None          # "low" | "medium" | "high"
+    priority:    Priority | None = None
     tags:        list[str] = field(default_factory=list)
     due_before:  datetime | None = None
     due_after:   datetime | None = None

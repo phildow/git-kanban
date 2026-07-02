@@ -7,9 +7,15 @@ from __future__ import annotations
 import argparse
 
 from ..models import Board, Column, Task
-from ..repl.command_helpers import handle_list_helper, handle_delete_helper, handle_rename_helper
+from ..repl.command_helpers import (
+    _parse_priority, 
+    handle_list_helper, 
+    handle_delete_helper, 
+    handle_rename_helper
+)
 from ..services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
 from ..storage.seeds import BOOTSTRAP_CONFIG
+
 
 # ---------------------------------------------------------------------------
 # Initialization commands
@@ -139,7 +145,7 @@ def handle_column_reorder(args: argparse.Namespace, svc: KanbanService, renderer
 def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	params = TaskCreateParams(
 		assigned_to=getattr(args, "assigned_to", None),
-		priority=getattr(args, "priority", None),
+		priority=_parse_priority(args),
 		tags=getattr(args, "tags", None) or [],
 		due_date=getattr(args, "due_date", None),
 		created_by=getattr(args, "created_by", None),
@@ -163,7 +169,7 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: o
 	updates = TaskUpdateParams(
 		title=getattr(args, "title", None),
 		assigned_to=getattr(args, "assigned_to", None),
-		priority=getattr(args, "priority", None),
+		priority=_parse_priority(args),
 		tags=getattr(args, "tags", None),
 		due_date=getattr(args, "due_date", None),
 		created_by=getattr(args, "created_by", None),

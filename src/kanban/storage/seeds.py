@@ -74,7 +74,7 @@ BOOTSTRAP_CONFIG: BootstrapConfig = {
                             "body": (
                                 "Create a task in the current column with `new task`:\n\n"
                                 '    new task "Fix the login bug"\n'
-                                '    new task "Write API docs" --priority High --assigned-to Alice'
+                                '    new task "Write API docs" --priority high --assigned-to Alice'
                             ),
                         },
                         {
@@ -95,11 +95,11 @@ BOOTSTRAP_CONFIG: BootstrapConfig = {
                         {
                             "title": "Update a task with details",
                             "slug": "update-a-task-with-details",
-                            "priority": "High",
+                            "priority": "high",
                             "assigned_to": "Alice",
                             "body": (
                                 "Update a task's metadata with `update`:\n\n"
-                                '    update "update a task with details" --priority Medium --assigned-to Bob\n'
+                                '    update "update a task with details" --priority medium --assigned-to Bob\n'
                                 '    update "update a task with details" --tag Bug --due-date 2026-07-01'
                             ),
                         },
