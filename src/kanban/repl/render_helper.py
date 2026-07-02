@@ -6,6 +6,7 @@ class RenderHelper:
     def __init__(self, service: KanbanService):
         self.svc = service
         
+    # TODO: Return board
     def board_name_from_slug(self, slug: Slug) -> str:
         """
         Given a board slug, return the corresponding board name.
@@ -16,6 +17,7 @@ class RenderHelper:
                 return board.name
         raise ValueError(f"No board found with slug '{slug}'")
 
+    # TODO: return column
     def column_name_from_slug(self, board_slug: Slug, column_slug: Slug) -> str:
         """
         Given a board slug and a column slug, return the corresponding column name.

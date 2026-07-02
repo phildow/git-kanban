@@ -400,10 +400,11 @@ class Renderer:
 		return
 
 	def render_task_move(self, args: argparse.Namespace, result: Task) -> None:
+		# TODO: get column.name from slug
 		if result.column:
-			msg = f"Task moved to: {result.column}"
+			msg = f"{result.title} moved to: {result.column}"
 		else:
-			msg = f"Task moved: {result.slug}"
+			msg = f"Moved task: {result.title})"
 		self._emit(args, msg)
 	
 	def render_task_rename(self, args: argparse.Namespace, result: Task) -> None:
