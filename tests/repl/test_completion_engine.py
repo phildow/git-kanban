@@ -65,8 +65,9 @@ def _build_fixture_parser() -> argparse.ArgumentParser:
     p = create_sub.add_parser("task")
     p.add_argument("path")  # BOARD/COLUMN/TITLE
     p.add_argument("-p", "--priority", choices=["low", "medium", "high"])
-    p.add_argument("--assigned-to", dest="assigned_to")
+    p.add_argument("-w", "--assigned-to", dest="assigned_to")
     p.add_argument("-t", "--tag", action="append", dest="tags")
+    p.add_argument("--created-by", dest="created_by")
     p.set_defaults(func=_NOOP)
 
     # rename <board|column>
@@ -158,6 +159,11 @@ class FakeKanbanService:
         "ops": ["infra", "urgent"],
     }
 
+    _ASSIGNED_TOS = {
+        "my-project": ["alice", "bob"],
+        "ops": ["alice", "carol"],
+    }
+
     def __init__(self) -> None:
         self._board: str | None = None
         self._column: str | None = None
@@ -189,6 +195,13 @@ class FakeKanbanService:
         else:
             tags = set(self._TAGS.get(board, []))
         return sorted(tags)
+
+    def get_assigned_tos(self, board: str | None = None) -> list[str]:
+        if board is None:
+            names = {name for board_names in self._ASSIGNED_TOS.values() for name in board_names}
+        else:
+            names = set(self._ASSIGNED_TOS.get(board, []))
+        return sorted(names)
 
     def path_components(self, path: str | None = None) -> tuple[str | None, str | None, str | None]:
         """Resolve path against the stored user context, mirroring KanbanService."""
@@ -351,7 +364,7 @@ class FlagCompletionTests(EngineTestCase):
         self.assertEqual(self.complete(line), ["high"])
 
     def test_free_value_flag_has_no_suggestions(self) -> None:
-        line = "create task /my-project/todo/new-task --assigned-to al"
+        line = "create task /my-project/todo/new-task --created-by al"
         self.assertEqual(self.complete(line), [])
 
     def test_board_flag_completes_existing_boards(self) -> None:
@@ -380,6 +393,29 @@ class TagCompletionTests(EngineTestCase):
         context = _Context(board="my-project")
         line = "create task /my-project/todo/new-task --tag bug --tag "
         self.assertEqual(self.complete(line, context), ["bug", "docs", "urgent"])
+
+
+class AssignedToCompletionTests(EngineTestCase):
+    """dest="assigned_to" completion, scoped to the active board context."""
+
+    def test_completes_assigned_to_scoped_to_active_board(self) -> None:
+        context = _Context(board="my-project")
+        line = "create task /my-project/todo/new-task --assigned-to "
+        self.assertEqual(self.complete(line, context), ["alice", "bob"])
+
+    def test_filters_assigned_to_by_prefix(self) -> None:
+        context = _Context(board="ops")
+        line = "create task /ops/todo/new-task --assigned-to c"
+        self.assertEqual(self.complete(line, context), ["carol"])
+
+    def test_no_active_board_completes_assigned_to_across_all_boards(self) -> None:
+        line = "create task /my-project/todo/new-task --assigned-to "
+        self.assertEqual(self.complete(line), ["alice", "bob", "carol"])
+
+    def test_short_flag_completes_assigned_to(self) -> None:
+        context = _Context(board="my-project")
+        line = "create task /my-project/todo/new-task -w "
+        self.assertEqual(self.complete(line, context), ["alice", "bob"])
 
 
 class FreeTextCompletionTests(EngineTestCase):

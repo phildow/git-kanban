@@ -67,6 +67,9 @@ class CompletionDataSource(Protocol):
     def get_tags(self, board: str | None = None) -> list[str]:
         ...
 
+    def get_assigned_tos(self, board: str | None = None) -> list[str]:
+        ...
+
 
     @property
     def working_board(self) -> str | None:
@@ -250,6 +253,10 @@ class CompletionEngine:
             )
         if action.dest == "tags":
             return self._matching(self._service.get_tags(self._service.working_board), partial)
+        if action.dest == "assigned_to":
+            return self._matching(
+                self._service.get_assigned_tos(self._service.working_board), partial
+            )
         return []  # free text: no suggestions
 
     @staticmethod

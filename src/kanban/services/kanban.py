@@ -797,6 +797,16 @@ class KanbanService:
         """
         return self.index_service.list_tags(board=board)
 
+    def get_assigned_tos(
+        self,
+        board:   str | None = None
+        ) -> list[str]:
+        """
+        Return a list of all unique assigned_to values across tasks in the repository, or
+        scoped to a single board if board is provided.
+        """
+        return self.index_service.list_assigned_to(board=board)
+
     def search(
         self,
         query:   str,
