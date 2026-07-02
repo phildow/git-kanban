@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import unittest
 from argparse import Namespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from kanban.cli import commands
 from kanban.storage.seeds import BOOTSTRAP_CONFIG
@@ -434,6 +434,40 @@ class TestCommandHandlers(unittest.TestCase):
         commands.handle_config_get(args, self.svc, self.renderer, self.json_renderer)
         self.svc.config_get.assert_called_once_with("name")
         self.renderer.render_config_get.assert_called_once_with(args, result)
+
+    @patch("kanban.repl.render_helper.RenderHelper")
+    @patch("kanban.repl.renderer.Renderer")
+    @patch("kanban.repl.rich_renderer.RichRenderer")
+    @patch("kanban.repl.run_repl")
+    def test_handle_repl_without_rich_uses_plain_renderer(
+        self, run_repl, rich_renderer_cls, renderer_cls, render_helper_cls
+    ):
+        """`repl` without --rich starts the plain-text REPL renderer."""
+        args = self._args(rich=False)
+
+        commands.handle_repl(args, self.svc, self.renderer, self.json_renderer)
+
+        render_helper_cls.assert_called_once_with(service=self.svc)
+        renderer_cls.assert_called_once_with(render_helper=render_helper_cls.return_value)
+        rich_renderer_cls.assert_not_called()
+        run_repl.assert_called_once_with(svc=self.svc, renderer=renderer_cls.return_value)
+
+    @patch("kanban.repl.render_helper.RenderHelper")
+    @patch("kanban.repl.renderer.Renderer")
+    @patch("kanban.repl.rich_renderer.RichRenderer")
+    @patch("kanban.repl.run_repl")
+    def test_handle_repl_with_rich_uses_rich_renderer(
+        self, run_repl, rich_renderer_cls, renderer_cls, render_helper_cls
+    ):
+        """`repl --rich` starts the REPL with the rich-text renderer instead."""
+        args = self._args(rich=True)
+
+        commands.handle_repl(args, self.svc, self.renderer, self.json_renderer)
+
+        render_helper_cls.assert_called_once_with(service=self.svc)
+        rich_renderer_cls.assert_called_once_with(render_helper=render_helper_cls.return_value)
+        renderer_cls.assert_not_called()
+        run_repl.assert_called_once_with(svc=self.svc, renderer=rich_renderer_cls.return_value)
 
 
 if __name__ == "__main__":

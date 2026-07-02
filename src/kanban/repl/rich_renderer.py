@@ -6,9 +6,15 @@ import argparse
 from functools import wraps
 import shutil
 
+from rich.table import Table
+from rich import box, print
+
 from ..models import UserContext, Board, Column, Task
 from ..repl.render_helper import RenderHelper
 from ..services.kanban import GitCommit, KanbanStatus
+
+# Box style options:
+# https://rich.readthedocs.io/en/stable/appendix/box.html#appendix-box
 
 def _requires_verbose(method):
 	@wraps(method)
@@ -20,7 +26,7 @@ def _requires_verbose(method):
 
 	return _wrapped
 
-class Renderer:
+class RichRenderer:
 	def __init__(self, render_helper: RenderHelper):
 		self.render_helper = render_helper
 
@@ -29,6 +35,7 @@ class Renderer:
 			return
 		if value is None:
 			return
+		# Console.print(value)
 		print(value)
 
 
@@ -122,23 +129,16 @@ class Renderer:
 
 	def render_board_list_verbose(self, args: argparse.Namespace, result: list[Board]) -> None:
 		"""Render a detailed list of boards, including their column counts."""
-		items = []
-
-		heading =   [f"{"Name":<32}", f"{"Columns":<16}", f"{"Tasks":<16}"]
-		underline = [f"{"----":<32}", f"{"-------":<16}", f"{"-----":<16}"]
-
-		items.append("".join(heading))
-		items.append("".join(underline))
+		table = Table(title=f"Boards ({len(result)})", box=box.ASCII2, show_header=True, header_style="bold")
+		
+		table.add_column("Name", width=32, no_wrap=True)
+		table.add_column("Tasks", width=8, no_wrap=True)
+		table.add_column("Columns", width=8, no_wrap=True)
 
 		for board in result:
-			elems = [
-				f"{self._clamped(board.name, 32-1):<32}",
-				f"{self._clamped(str(board.column_count), 16-1):<16}",
-				f"{self._clamped(str(board.task_count), 16-1):<16}"
-			]
-			items.append("".join(elems))
+			table.add_row(board.name, str(board.task_count), str(board.column_count))
 
-		self._emit(args, "\n".join(items))
+		self._emit(args, table)
 
 	def render_board_create(self, args: argparse.Namespace, result: Board) -> None:
 		"""Render a message indicating that a board was created, including its name."""
@@ -202,22 +202,15 @@ class Renderer:
 
 	def render_column_list_verbose(self, args: argparse.Namespace, result: list[Column]) -> None:
 		"""Render a detailed list of columns, including their board names and positions."""
-		items = []
-
-		heading =  [  f"{"Name":<32}", f"{"Tasks":<16}"]
-		uderline = [  f"{"----":<32}", f"{"-----":<16}"]
-
-		items.append("".join(heading))
-		items.append("".join(uderline))
-
-		for column in result:
-			elems = [
-				f"{self._clamped(column.name, 32-1):<32}",
-				f"{self._clamped(str(column.task_count), 16-1):<16}",
-				]
-			items.append("".join(elems))
+		table = Table(title=f"Columns ({len(result)})", box=box.ASCII2, show_header=True, header_style="bold")
 		
-		self._emit(args, "\n".join(items))
+		table.add_column("Name", width=32, no_wrap=True)
+		table.add_column("Tasks", width=8, no_wrap=True)
+		
+		for column in result:
+			table.add_row(column.name, str(column.task_count))
+        
+		self._emit(args, table)
 
 	def render_column_create(self, args: argparse.Namespace, result: Column) -> None:
 		"""
@@ -314,8 +307,6 @@ class Renderer:
 
 	def render_task_list_verbose(self, args: argparse.Namespace, result: list[Task]) -> None:
 		"""Render a detailed list of tasks, including their slugs, titles, and locations."""
-		items = []
-
 		# date_format = "%Y-%m-%d"
         # date_format = "%B %d"
 		# isoformat()
@@ -324,39 +315,42 @@ class Renderer:
 		include_tags = width > 80
 		include_column = width > 96
 
-		heading =  [f"{"Title":<32}", f"{"Assigned To":<16}", f"{"Priority":<16}", f"{"Due":<16}"]
-		uderline = [f"{"-----":<32}", f"{"-----------":<16}", f"{"--------":<16}", f"{"---":<16}"]
+		table = Table(title=f"Tasks ({len(result)})", box=box.ASCII2, show_header=True, header_style="bold")
+
+		table.add_column("Title", width=40, no_wrap=True)
+		
+		if include_column:
+			table.add_column("Column", width=16, no_wrap=True)
+
+		table.add_column("Assigned To", width=16, no_wrap=True)
+		table.add_column("Priority", width=12, no_wrap=True)
 
 		if include_tags:
-			heading.insert(3,  f"{"Tags":<16}")
-			uderline.insert(3, f"{"----":<16}")
-		if include_column:
-			heading.insert(1,  f"{"Column":<16}")
-			uderline.insert(1, f"{"-----":<16}")
+			table.add_column("Tags", width=16, no_wrap=True)
 
-		items.append("".join(heading))
-		items.append("".join(uderline))
+		table.add_column("Due", width=12, no_wrap=True)
 
-		for task in result:	
-			tags = ", ".join(task.tags) if task.tags else None
-			column_name = self.render_helper.column_name_from_slug(task.board, task.column)
+		for task in result:
+			tags = ", ".join(task.tags) if task.tags else "-"
+			column_name = self.render_helper.column_name_from_slug(task.board, task.column) or "-"
+
 			elems = [
-				f"{self._clamped(task.title, 32-1):<32}", 
-				*(f"{self._clamped(column_name or "-", 16-1):<16}" if include_column else []), 
-				f"{self._clamped(task.assigned_to or "-", 16-1):<16}", 
-				f"{self._clamped(task.priority.capitalize() if task.priority else "-", 16-1):<16}", 
-				*(f"{self._clamped(tags or "-", 16-1):<16}" if include_tags else []),
-				f"{self._clamped(task.due_date.isoformat() if task.due_date else "-", 16-1):<16}"
-				]
-			items.append("".join(elems))
-		
-		items.append("")
+				task.title,
+				task.assigned_to or "-",
+				task.priority.capitalize() if task.priority else "-",
+				task.due_date.date().isoformat() if task.due_date else "-",
+			]
 
-		items.insert(0, "---------------------")
-		items.insert(1, f"Number of tasks: {len(result)}")
-		items.insert(2, "---------------------\n")
+			if include_tags:
+				elems.insert(3, tags)
+			if include_column:
+				elems.insert(1, column_name)
 
-		self._emit(args, "\n".join(items))
+			table.add_row(
+				*elems
+			)
+
+		self._emit(args, table)
 
 	def render_task_create(self, args: argparse.Namespace, result: Task) -> None:
 		"""

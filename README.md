@@ -98,6 +98,7 @@ CONFIG
     - eg `task-cols:80=title,assigned-to,tags`
     - eg `task-cols:96=title,assigned-to,tags,due`
 - Allow the user to customize the default column names
+- Allow the user to configure rich layout properties (eg table box style)
 
 VERSION 1.1
 
