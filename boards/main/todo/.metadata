@@ -8,7 +8,7 @@
 		slug-to-do-todo.md
 		improve-list-layout.md
 		remove-default-columns-from-service-layer.md
-		migrate-t-python-frontmatter.md
+		migrate-to-pythong-frontmatter.md
 		ensure-memory-store-supports-same-features-as-filesystem.md
 		exlude-flag-with-list-all-to-exclude-columns-multiple.md
 		use-slugs-in-memory-repository-for-private-indexing.md
@@ -29,5 +29,5 @@
 		rename-kanban-storage-file-base.md
 		path-names-in-quotes-mishandled.md
 		add-tests-for-tags-completion.md
-		import-module-from-tests.md
+		fileystemmove-task-returning-board-and-column-name.md
 

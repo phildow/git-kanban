@@ -6,5 +6,4 @@
 [tasks]
 	order = 
 		scaffold-indexing.md
-		git-worktree-for-kanban-dont-lose-this-data.md
 
