@@ -5,5 +5,7 @@
 
 [tasks]
 	order = 
-	
+		add-rich-option-to-the-repl.md
+		change-due-date-flag-to-due.md
+		all-paths-are-absolute-in-cli.md
 

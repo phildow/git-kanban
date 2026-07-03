@@ -8,7 +8,7 @@
 		slug-to-do-todo.md
 		improve-list-layout.md
 		remove-default-columns-from-service-layer.md
-		migrate-to-pythong-frontmatter.md
+		migrate-to-python-frontmatter.md
 		ensure-memory-store-supports-same-features-as-filesystem.md
 		exlude-flag-with-list-all-to-exclude-columns-multiple.md
 		use-slugs-in-memory-repository-for-private-indexing.md
@@ -24,10 +24,11 @@
 		user-sort-order-for-boards.md
 		scaffold-tui.md
 		ability-to-remove-a-tag.md
-		add-model-tests.md
-		enum-for-priority.md
-		rename-kanban-storage-file-base.md
 		path-names-in-quotes-mishandled.md
-		add-tests-for-tags-completion.md
 		fileystemmove-task-returning-board-and-column-name.md
+		editing-should-not-include-the-frontmatter.md
+		add-claude-conversations-to-repo.md
+		add-board-short-id-like-main-for-main-or-infra-for-infrastructure.md
+		default-sort-order-when-listing-tags-in-table.md
+		add-type-checking-with-mypy.md
 

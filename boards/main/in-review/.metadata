@@ -6,4 +6,11 @@
 [tasks]
 	order = 
 		scaffold-indexing.md
+		add-model-tests.md
+		rename-kanban-storage-file-base.md
+		enum-for-priority.md
+		remove-dest-option-from-completion-engine.md
+		add-tests-for-tags-completion.md
+		add-tab-completion-for-assignee.md
+		yyyy-mm-dd-when-showing-dates.md
 
