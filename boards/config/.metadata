@@ -1,0 +1,12 @@
+[fields]
+	name = Config
+	slug = config
+	id = 36b543eb-387c-413a-8199-5a62e29d5392
+
+[columns]
+	order = 
+		todo
+		in-progress
+		in-review
+		done
+
