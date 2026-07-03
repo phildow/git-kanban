@@ -213,6 +213,14 @@ git -C .kanban-store push
 git -C .kanban-store pull
 ```
 
+The worktree and branch are stored in the .kanban/config file:
+
+```INI
+[repository]
+  worktree = ".kanban-store"
+  branch = "kanban"
+```
+
 ### Metadata
 
 #### The Store

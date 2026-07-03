@@ -14,6 +14,7 @@ from kanban.cli import commands
 from kanban.storage.seeds import BOOTSTRAP_CONFIG
 from kanban.services.kanban import TaskCreateParams, TaskUpdateParams
 
+# Note that tests also check that board/column/[task] paths are re-written to /board/column/[task]
 
 class TestCommandHandlers(unittest.TestCase):
     """Dispatch contract tests for CLI command handlers."""
@@ -106,28 +107,28 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.create_column.return_value = result
         commands.handle_column_create(args, self.svc, self.renderer, self.json_renderer)
-        self.svc.create_column.assert_called_once_with("board-a/todo")
+        self.svc.create_column.assert_called_once_with("/board-a/todo")
         self.renderer.render_column_create.assert_called_once_with(args, result)
 
         args = self._args(path="board-a/todo", new_name="doing")
         result = object()
         self.svc.rename_column.return_value = result
         commands.handle_column_rename(args, self.svc, self.renderer, self.json_renderer)
-        self.svc.rename_column.assert_called_once_with("board-a/todo", "doing")
+        self.svc.rename_column.assert_called_once_with("/board-a/todo", "doing")
         self.renderer.render_column_rename.assert_called_once_with(args, result)
 
         args = self._args(path="board-a/todo", position=2)
         result = object()
         self.svc.reorder_column.return_value = result
         commands.handle_column_reorder(args, self.svc, self.renderer, self.json_renderer)
-        self.svc.reorder_column.assert_called_once_with("board-a/todo", 2)
+        self.svc.reorder_column.assert_called_once_with("/board-a/todo", 2)
         self.renderer.render_column_reorder.assert_called_once_with(args, result)
 
         args = self._args(path="board-a/todo", force=True)
         result = object()
         self.svc.delete_column.return_value = result
         commands.handle_column_delete(args, self.svc, self.renderer, self.json_renderer)
-        self.svc.delete_column.assert_called_once_with("board-a/todo")
+        self.svc.delete_column.assert_called_once_with("/board-a/todo")
         self.renderer.render_column_delete.assert_called_once_with(args, result)
 
     def test_handle_task_list(self):
@@ -139,7 +140,7 @@ class TestCommandHandlers(unittest.TestCase):
         commands.handle_task_list(args, self.svc, self.renderer, self.json_renderer)
 
         from kanban.models import TaskFilter
-        self.svc.get_tasks.assert_called_once_with(path="board-a/todo", filter=TaskFilter(), sort="title", reverse=True)
+        self.svc.get_tasks.assert_called_once_with(path="/board-a/todo", filter=TaskFilter(), sort="title", reverse=True)
         self.renderer.render_task_list.assert_called_once_with(args, result)
 
     def test_handle_task_create_with_all_optional_fields(self):
@@ -158,7 +159,7 @@ class TestCommandHandlers(unittest.TestCase):
         commands.handle_task_create(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.create_task.assert_called_once_with(
-            "board-a/todo/fix-parser",
+            "/board-a/todo/fix-parser",
             TaskCreateParams(
                 assigned_to="philip",
                 priority="high",
@@ -178,7 +179,7 @@ class TestCommandHandlers(unittest.TestCase):
         commands.handle_task_create(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.create_task.assert_called_once_with(
-            "board-a/todo/check-no-other-args",
+            "/board-a/todo/check-no-other-args",
             TaskCreateParams(
                 assigned_to=None,
                 priority=None,
@@ -205,7 +206,7 @@ class TestCommandHandlers(unittest.TestCase):
         commands.handle_task_create(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.create_task.assert_called_once_with(
-            "board-a/todo/check-tags-none",
+            "/board-a/todo/check-tags-none",
             TaskCreateParams(
                 assigned_to="alex",
                 priority=None,
@@ -224,19 +225,19 @@ class TestCommandHandlers(unittest.TestCase):
 
         commands.handle_task_show(args, self.svc, self.renderer, self.json_renderer)
 
-        self.svc.get_task.assert_called_once_with("board-a/todo/fix-parser")
+        self.svc.get_task.assert_called_once_with("/board-a/todo/fix-parser")
         self.renderer.render_task_show.assert_called_once_with(args, result)
 
     def test_handle_task_update_with_default_optional_fields(self):
         """`task update` defaults unspecified update fields to `None`."""
-        args = self._args(path="board-a/todo/fix-parser")
+        args = self._args(path="/board-a/todo/fix-parser")
         result = object()
         self.svc.update_task.return_value = result
 
         commands.handle_task_update(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.update_task.assert_called_once_with(
-            "board-a/todo/fix-parser",
+            "/board-a/todo/fix-parser",
             updates=TaskUpdateParams(
                 title=None,
                 assigned_to=None,
@@ -265,7 +266,7 @@ class TestCommandHandlers(unittest.TestCase):
         commands.handle_task_update(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.update_task.assert_called_once_with(
-            "board-a/todo/fix-parser",
+            "/board-a/todo/fix-parser",
             updates=TaskUpdateParams(
                 title="fix parser robustly",
                 assigned_to="philip",
@@ -286,7 +287,7 @@ class TestCommandHandlers(unittest.TestCase):
         commands.handle_task_update(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.update_task.assert_called_once_with(
-            "board-a/todo/fix-parser",
+            "/board-a/todo/fix-parser",
             updates=TaskUpdateParams(
                 title=None,
                 assigned_to=None,
@@ -306,7 +307,7 @@ class TestCommandHandlers(unittest.TestCase):
 
         commands.handle_task_rename(args, self.svc, self.renderer, self.json_renderer)
 
-        self.svc.rename_task.assert_called_once_with("board-a/todo/fix-parser", "Fixed Parser")
+        self.svc.rename_task.assert_called_once_with("/board-a/todo/fix-parser", "Fixed Parser")
         self.renderer.render_task_rename.assert_called_once_with(args, result)
 
     def test_handle_task_move(self):
@@ -317,7 +318,7 @@ class TestCommandHandlers(unittest.TestCase):
 
         commands.handle_task_move(args, self.svc, self.renderer, self.json_renderer)
 
-        self.svc.move_task.assert_called_once_with("board-a/todo/fix-parser", "done")
+        self.svc.move_task.assert_called_once_with("/board-a/todo/fix-parser", "done")
         self.renderer.render_task_move.assert_called_once_with(args, result)
 
     def test_handle_task_move_top(self):
@@ -328,7 +329,7 @@ class TestCommandHandlers(unittest.TestCase):
 
         commands.handle_task_move(args, self.svc, self.renderer, self.json_renderer)
 
-        self.svc.reorder_task.assert_called_once_with("board-a/todo/fix-parser", "top")
+        self.svc.reorder_task.assert_called_once_with("/board-a/todo/fix-parser", "top")
         self.renderer.render_task_reorder.assert_called_once_with(args, (result, "top"))
 
     def test_handle_task_move_bottom(self):
@@ -339,7 +340,7 @@ class TestCommandHandlers(unittest.TestCase):
 
         commands.handle_task_move(args, self.svc, self.renderer, self.json_renderer)
 
-        self.svc.reorder_task.assert_called_once_with("board-a/todo/fix-parser", "bottom")
+        self.svc.reorder_task.assert_called_once_with("/board-a/todo/fix-parser", "bottom")
         self.renderer.render_task_reorder.assert_called_once_with(args, (result, "bottom"))
 
     def test_handle_task_move_up(self):
@@ -350,7 +351,7 @@ class TestCommandHandlers(unittest.TestCase):
 
         commands.handle_task_move(args, self.svc, self.renderer, self.json_renderer)
 
-        self.svc.reorder_task.assert_called_once_with("board-a/todo/fix-parser", "up")
+        self.svc.reorder_task.assert_called_once_with("/board-a/todo/fix-parser", "up")
         self.renderer.render_task_reorder.assert_called_once_with(args, (result, "up"))
 
     def test_handle_task_move_down(self):
@@ -361,7 +362,7 @@ class TestCommandHandlers(unittest.TestCase):
 
         commands.handle_task_move(args, self.svc, self.renderer, self.json_renderer)
 
-        self.svc.reorder_task.assert_called_once_with("board-a/todo/fix-parser", "down")
+        self.svc.reorder_task.assert_called_once_with("/board-a/todo/fix-parser", "down")
         self.renderer.render_task_reorder.assert_called_once_with(args, (result, "down"))
 
     def test_handle_task_assign(self):
@@ -372,7 +373,7 @@ class TestCommandHandlers(unittest.TestCase):
 
         commands.handle_task_assign(args, self.svc, self.renderer, self.json_renderer)
 
-        self.svc.assign_task.assert_called_once_with("board-a/todo/fix-parser", "alice")
+        self.svc.assign_task.assert_called_once_with("/board-a/todo/fix-parser", "alice")
         self.renderer.render_task_assign.assert_called_once_with(args, result)
 
     def test_handle_task_delete(self):
@@ -383,7 +384,7 @@ class TestCommandHandlers(unittest.TestCase):
 
         commands.handle_task_delete(args, self.svc, self.renderer, self.json_renderer)
 
-        self.svc.delete_task.assert_called_once_with("board-a/todo/fix-parser")
+        self.svc.delete_task.assert_called_once_with("/board-a/todo/fix-parser")
         self.renderer.render_task_delete.assert_called_once_with(args, result)
 
     def test_search_handler(self):
@@ -405,7 +406,7 @@ class TestCommandHandlers(unittest.TestCase):
 
         commands.handle_log(args, self.svc, self.renderer, self.json_renderer)
 
-        self.svc.log.assert_called_once_with(path="board-a/todo/task-1", limit=5)
+        self.svc.log.assert_called_once_with(path="/board-a/todo/task-1", limit=5)
         self.renderer.render_log.assert_called_once_with(args, result)
 
     def test_status_handler(self):

@@ -10,6 +10,7 @@ from ..services.kanban import GitCommit, KanbanStatus
 
 
 def _requires_verbose(method):
+	""""Decorator to ensure that the decorated method only executes when verbose mode is enabled."""
 	@wraps(method)
 	def _wrapped(self, args: argparse.Namespace, result):
 		if not getattr(args, "verbose", False):

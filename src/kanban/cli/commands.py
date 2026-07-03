@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
+from functools import wraps
 
 from ..storage.seeds import BOOTSTRAP_CONFIG
 from ..models import Priority, TaskFilter
@@ -16,6 +17,20 @@ from ..utils.shell import prompt_for_confirmation
 # ---------------------------------------------------------------------------
 # Private helpers
 # ---------------------------------------------------------------------------
+
+def with_absolute_path(method):
+	"""Decorator to rewrite the path to an absolute path"""
+	@wraps(method)
+	def _wrapped(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
+		"""Rewrite the path in the result to include the board/column context if applicable."""
+		path = getattr(args, "path", None)
+
+		if path is not None and isinstance(path, str) and not path.startswith("/"):
+			setattr(args, "path", f"/{path}")
+
+		return method(args, svc, renderer, json_renderer)
+
+	return _wrapped
 
 def _pick(args: argparse.Namespace, renderer: object, json_renderer: object) -> object:
     """Return the JSON renderer when --format json is requested, otherwise the default."""
@@ -73,21 +88,25 @@ def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: o
 	_pick(args, renderer, json_renderer).render_column_list(args, result)
 
 
+@with_absolute_path
 def handle_column_create(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.create_column(args.path)
 	_pick(args, renderer, json_renderer).render_column_create(args, result)
 
 
+@with_absolute_path
 def handle_column_rename(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.rename_column(args.path, args.new_name)
 	_pick(args, renderer, json_renderer).render_column_rename(args, result)
 
 
+@with_absolute_path
 def handle_column_reorder(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.reorder_column(args.path, args.position)
 	_pick(args, renderer, json_renderer).render_column_reorder(args, result)
 
 
+@with_absolute_path
 def handle_column_delete(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	if not args.force and not prompt_for_confirmation(f"Delete column '{args.path}'?"):
 		return
@@ -113,11 +132,13 @@ def _build_task_filter(args: argparse.Namespace) -> TaskFilter:
 	)
 
 
+@with_absolute_path
 def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.get_tasks(path=args.path, filter=_build_task_filter(args), sort=args.sort, reverse=args.reverse)
 	_pick(args, renderer, json_renderer).render_task_list(args, result)
 
 
+@with_absolute_path
 def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	params = TaskCreateParams(
 		assigned_to=getattr(args, "assigned_to", None),
@@ -131,21 +152,24 @@ def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: o
 	_pick(args, renderer, json_renderer).render_task_create(args, result)
 
 
+@with_absolute_path
 def handle_task_rename(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.rename_task(args.path, args.new_name)
 	_pick(args, renderer, json_renderer).render_task_rename(args, result)
 
 
+@with_absolute_path
 def handle_task_show(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.get_task(args.path)
 	_pick(args, renderer, json_renderer).render_task_show(args, result)
 
-
+@with_absolute_path
 def handle_task_edit(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.edit_task(args.path)
 	_pick(args, renderer, json_renderer).render_task_edit(args, result)
 
 
+@with_absolute_path
 def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	updates = TaskUpdateParams(
 		title=getattr(args, "title", None),
@@ -160,6 +184,7 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: o
 	_pick(args, renderer, json_renderer).render_task_edit(args, result)
 
 
+@with_absolute_path
 def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	if args.column is not None:
 		result = svc.move_task(args.path, args.column)
@@ -170,13 +195,14 @@ def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: obj
 		_pick(args, renderer, json_renderer).render_task_reorder(args, (result, op))
 
 
+@with_absolute_path
 def handle_task_delete(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	if not args.force and not prompt_for_confirmation(f"Delete task '{args.path}'?"):
 		return
 	result = svc.delete_task(args.path)
 	_pick(args, renderer, json_renderer).render_task_delete(args, result)
 
-
+@with_absolute_path
 def handle_task_assign(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.assign_task(args.path, args.assigned_to)
 	_pick(args, renderer, json_renderer).render_task_assign(args, result)
@@ -191,6 +217,7 @@ def handle_search(args: argparse.Namespace, svc: KanbanService, renderer: object
 	_pick(args, renderer, json_renderer).render_search(args, result)
 
 
+@with_absolute_path
 def handle_log(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	result = svc.log(path=args.path, limit=args.limit)
 	_pick(args, renderer, json_renderer).render_log(args, result)
