@@ -346,7 +346,7 @@ class Renderer:
 				f"{self._clamped(task.assigned_to or "-", 16-1):<16}", 
 				f"{self._clamped(task.priority.capitalize() if task.priority else "-", 16-1):<16}", 
 				*(f"{self._clamped(tags or "-", 16-1):<16}" if include_tags else []),
-				f"{self._clamped(task.due_date.isoformat() if task.due_date else "-", 16-1):<16}"
+				f"{self._clamped(task.due_date.date().isoformat() if task.due_date else "-", 16-1):<16}"
 				]
 			items.append("".join(elems))
 		
@@ -379,7 +379,7 @@ class Renderer:
 			f"Location: /{result.board}/{result.column}" if result.board and result.column else "Location: (unscoped)",
 			f"Assigned To: {result.assigned_to or "-"}",
 			f"Priority: {result.priority or "-"}",
-			f"Due: {result.due_date.isoformat() if result.due_date else "-"}",
+			f"Due: {result.due_date.date().isoformat() if result.due_date else "-"}",
 			f"Tags: {", ".join(result.tags) if result.tags else "-"}",
 			f"Created by: {result.created_by or "-"}",
 			"---------------------"

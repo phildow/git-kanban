@@ -182,7 +182,7 @@ class Renderer:
 			f"Location: {result.board}/{result.column}" if result.board and result.column else "Location: (unscoped)",
 			f"Assigned To: {result.assigned_to or "-"}",
 			f"Priority: {result.priority or "-"}",
-			f"Due: {result.due_date.isoformat() if result.due_date else "-"}",
+			f"Due: {result.due_date.date().isoformat() if result.due_date else "-"}",
 			f"Tags: {", ".join(result.tags) if result.tags else "-"}",
 			f"Created by: {result.created_by or "-"}",
 		]
