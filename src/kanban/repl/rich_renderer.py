@@ -6,6 +6,7 @@ import argparse
 from functools import wraps
 import shutil
 
+from rich.markdown import Markdown
 from rich.table import Table
 from rich import box, print
 
@@ -363,25 +364,26 @@ class RichRenderer:
 	def render_task_show(self, args: argparse.Namespace, result: Task) -> None:
 		"""Render detailed information about a single task, including all metadata and the body/description."""
 		
-		lines = [
-			"---------------------",
-			result.title,
-			"---------------------"
-			"",
-			f"Slug: {result.slug}",
-			f"ID: {result.id}",
-			f"Location: /{result.board}/{result.column}" if result.board and result.column else "Location: (unscoped)",
-			f"Assigned To: {result.assigned_to or "-"}",
-			f"Priority: {result.priority or "-"}",
-			f"Due: {result.due_date.date().isoformat() if result.due_date else "-"}",
-			f"Tags: {", ".join(result.tags) if result.tags else "-"}",
-			f"Created by: {result.created_by or "-"}",
-			"---------------------"
-			"",
-			result.body,
-			"---------------------",
-		]
-		self._emit(args, "\n".join(lines))
+		table = Table(box=box.ASCII2, show_header=True, header_style="bold", title_justify="left")
+
+		table.add_column("Title", width=12, justify="right", no_wrap=True)
+		table.add_column(result.title, width=40, justify="left", no_wrap=False)
+
+
+		table.add_row("Slug", result.slug)
+		table.add_row("ID", str(result.id))
+		table.add_row("Location", f"/{result.board}/{result.column}")
+		table.add_row("Assigned To", result.assigned_to or "-")
+		table.add_row("Priority", result.priority or "-")
+		table.add_row("Due", str(result.due_date.date().isoformat()) if result.due_date else "-")
+		table.add_row("Tags", ", ".join(result.tags) if result.tags else "-")
+		table.add_row("Created By", result.created_by or "-")
+
+		self._emit(args, "")
+		self._emit(args, table)
+		self._emit(args, "")
+		self._emit(args, result.body)
+		self._emit(args, "")
 
 	def render_task_edit(self, args: argparse.Namespace, result: Task) -> None:
 		# """Render a message indicating that a task was opened in the editor."""
