@@ -376,7 +376,7 @@ The command line structure follows:
 
 ```
 kanban init
-kanban repl [-r|--rich]
+kanban repl [--no-rich]
 
 kanban board list [--format <table|plain|json>] [--sort <title>] [--reverse]
 kanban board create <board>

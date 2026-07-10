@@ -245,11 +245,11 @@ def handle_repl(args: argparse.Namespace, svc: KanbanService, renderer: object, 
 
 	render_helper = RenderHelper(service=svc)
 
-	if getattr(args, "rich", False):
-		from ..repl.rich_renderer import RichRenderer
-		repl_renderer = RichRenderer(render_helper=render_helper)
-	else:
+	if getattr(args, "no_rich", False):
 		from ..repl.renderer import Renderer as REPLRenderer
 		repl_renderer = REPLRenderer(render_helper=render_helper)
+	else:
+		from ..repl.rich_renderer import RichRenderer
+		repl_renderer = RichRenderer(render_helper=render_helper)
 
 	run_repl(svc=svc, renderer=repl_renderer)

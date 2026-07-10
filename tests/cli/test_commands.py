@@ -440,11 +440,11 @@ class TestCommandHandlers(unittest.TestCase):
     @patch("kanban.repl.renderer.Renderer")
     @patch("kanban.repl.rich_renderer.RichRenderer")
     @patch("kanban.repl.run_repl")
-    def test_handle_repl_without_rich_uses_plain_renderer(
+    def test_handle_repl_with_no_rich_uses_plain_renderer(
         self, run_repl, rich_renderer_cls, renderer_cls, render_helper_cls
     ):
-        """`repl` without --rich starts the plain-text REPL renderer."""
-        args = self._args(rich=False)
+        """`repl --no-rich` starts the plain-text REPL renderer."""
+        args = self._args(no_rich=True)
 
         commands.handle_repl(args, self.svc, self.renderer, self.json_renderer)
 
@@ -457,11 +457,11 @@ class TestCommandHandlers(unittest.TestCase):
     @patch("kanban.repl.renderer.Renderer")
     @patch("kanban.repl.rich_renderer.RichRenderer")
     @patch("kanban.repl.run_repl")
-    def test_handle_repl_with_rich_uses_rich_renderer(
+    def test_handle_repl_defaults_to_rich_renderer(
         self, run_repl, rich_renderer_cls, renderer_cls, render_helper_cls
     ):
-        """`repl --rich` starts the REPL with the rich-text renderer instead."""
-        args = self._args(rich=True)
+        """`repl` without --no-rich starts the REPL with the rich-text renderer by default."""
+        args = self._args(no_rich=False)
 
         commands.handle_repl(args, self.svc, self.renderer, self.json_renderer)
 

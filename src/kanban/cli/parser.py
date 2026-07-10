@@ -335,7 +335,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     # repl
     p = subparsers.add_parser("repl", help="Start an interactive kanban shell")
-    p.add_argument("-r", "--rich", action="store_true", default=False, help="Use rich text rendering")
+    p.add_argument("--no-rich", dest="no_rich", action="store_true", default=False, help="Disable rich text rendering and use the plain renderer")
     _add_global_flags(p)
     p.set_defaults(func=handle_repl)
 
