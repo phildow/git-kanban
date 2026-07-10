@@ -18,7 +18,6 @@ from ..models import Task
 from ..models.priority import PRIORITY_ORDER
 from ..index.base import IndexBase
 from ..index.query import SearchQuery, SearchResult, SortField
-from ..storage.base import KanbanRepository
 
 # Sentinels for nullable sort fields; must match the timezone-awareness
 # of domain datetimes (always UTC per the frontmatter spec).
@@ -28,8 +27,8 @@ _DATETIME_MIN = datetime.min.replace(tzinfo=timezone.utc)
 class InMemoryIndexService(IndexBase):
     """IndexBase backed by a dict[UUID, Task]."""
 
-    def __init__(self, repository: KanbanRepository) -> None:
-        super().__init__(repository)
+    def __init__(self) -> None:
+        super().__init__()
         self._tasks: dict[UUID, Task] = {}
 
     # ------------------------------------------------------------------
@@ -49,11 +48,6 @@ class InMemoryIndexService(IndexBase):
         stale = [tid for tid, t in self._tasks.items() if t.board == board]
         for tid in stale:
             del self._tasks[tid]
-
-    def rebuild(self, board: str | None = None) -> None:
-        self.clear(board)
-        for task in self.repository.get_tasks(board=board):
-            self.upsert_task(task)
 
     # ------------------------------------------------------------------
     # Lookups

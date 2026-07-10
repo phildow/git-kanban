@@ -28,7 +28,7 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         repo = InMemoryRepository(root=temp_dir)
         svc = KanbanService(
             repository=repo,
-            index_service=InMemoryIndexService(repository=repo),
+            index_service=InMemoryIndexService(),
             git_service=GitService(),
         )
 
@@ -59,7 +59,7 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         repo = InMemoryRepository(root=temp_dir)
         svc = KanbanService(
             repository=repo,
-            index_service=InMemoryIndexService(repository=repo),
+            index_service=InMemoryIndexService(),
             git_service=GitService(),
         )
 
@@ -74,7 +74,7 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         repo = InMemoryRepository(root=temp_dir)
         svc = KanbanService(
             repository=repo,
-            index_service=InMemoryIndexService(repository=repo),
+            index_service=InMemoryIndexService(),
             git_service=GitService(),
         )
 
@@ -96,7 +96,7 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         repo = InMemoryRepository(root=temp_dir)
         svc = KanbanService(
             repository=repo,
-            index_service=InMemoryIndexService(repository=repo),
+            index_service=InMemoryIndexService(),
             git_service=GitService(),
         )
         custom: BootstrapConfig = {

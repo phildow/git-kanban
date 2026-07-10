@@ -23,7 +23,6 @@ from uuid import UUID
 
 from ..models import Task
 from ..index.query import SearchQuery, SearchResult
-from ..storage.base import KanbanRepository
 
 class IndexBase(ABC):
     """Cache of task metadata for fast search, lookup, and completion."""
@@ -37,9 +36,8 @@ class IndexBase(ABC):
     # ------------------------------------------------------------------
 
     @abstractmethod
-    def __init__(self, repository: KanbanRepository) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.repository = repository
 
     @abstractmethod
     def upsert_task(self, task: Task) -> None:
@@ -60,15 +58,6 @@ class IndexBase(ABC):
 
         Args:
             board: Remove only records for this board. None removes all.
-        """
-
-    @abstractmethod
-    def rebuild(self, board: str | None = None) -> None:
-        """
-        Rebuild the index from scratch by scanning the repository.
-
-        Args:
-            board: Restrict to this board, or None for all boards.
         """
 
     # ------------------------------------------------------------------

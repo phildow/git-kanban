@@ -8,7 +8,6 @@ from datetime import date
 # from models import Priority
 from kanban.index.memory import InMemoryIndexService
 from kanban.index.query import SearchQuery
-from kanban.storage.memory import InMemoryRepository
 from tests.index.helpers import make_task
 
 
@@ -16,7 +15,7 @@ class TestSearchFilters(unittest.TestCase):
     """Each SearchQuery field narrows results independently (AND semantics)."""
 
     def setUp(self) -> None:
-        self.index = InMemoryIndexService(repository=InMemoryRepository())
+        self.index = InMemoryIndexService()
         self.t1 = make_task(
             title="Fix login bug",
             board="proj", 

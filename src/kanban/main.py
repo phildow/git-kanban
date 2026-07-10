@@ -21,8 +21,8 @@ def main() -> None:
     setup_logging(logging.DEBUG)
     
     repository = get_repository(FILESYSTEM)
-    index_base = InMemoryIndexService(repository=repository)
-    index_service = IndexService(index_base=index_base)
+    index_base = InMemoryIndexService()
+    index_service = IndexService(index_base=index_base, repository=repository)
     git_service = GitService()
     svc = KanbanService(repository=repository, index_service=index_service, git_service=git_service)
     renderer = Renderer()

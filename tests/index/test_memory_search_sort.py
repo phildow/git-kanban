@@ -11,7 +11,6 @@ from datetime import date
 # from models import Priority
 from kanban.index.memory import InMemoryIndexService
 from kanban.index.query import SearchQuery, SortField
-from kanban.storage.memory import InMemoryRepository
 from tests.index.helpers import make_task, utc
 
 
@@ -19,7 +18,7 @@ class TestSortByTitle(unittest.TestCase):
     """Default sort is title ascending, case-insensitive."""
 
     def setUp(self) -> None:
-        self.index = InMemoryIndexService(repository=InMemoryRepository())
+        self.index = InMemoryIndexService()
         for title in ("Banana task", "Apple task", "Cherry task"):
             self.index.upsert_task(make_task(title=title))
 
@@ -42,7 +41,7 @@ class TestSortByPriority(unittest.TestCase):
     """Priority sort order is LOW < MEDIUM < HIGH. None always sorts last."""
 
     def setUp(self) -> None:
-        self.index = InMemoryIndexService(repository=InMemoryRepository())
+        self.index = InMemoryIndexService()
         self.index.upsert_task(make_task(title="High", priority="high"))
         self.index.upsert_task(make_task(title="Low", priority="low"))
         self.index.upsert_task(make_task(title="Med", priority="medium"))
@@ -72,7 +71,7 @@ class TestSortByDueDate(unittest.TestCase):
     """Due-date sort: earliest first ascending. None always sorts last."""
 
     def setUp(self) -> None:
-        self.index = InMemoryIndexService(repository=InMemoryRepository())
+        self.index = InMemoryIndexService()
         self.index.upsert_task(make_task(title="Early", due_date=date(2026, 1, 1)))
         self.index.upsert_task(make_task(title="Late", due_date=date(2026, 12, 31)))
         self.index.upsert_task(make_task(title="No date"))
@@ -96,7 +95,7 @@ class TestSortByTimestamps(unittest.TestCase):
     """created_at and updated_at sort chronologically. None always sorts last."""
 
     def setUp(self) -> None:
-        self.index = InMemoryIndexService(repository=InMemoryRepository())
+        self.index = InMemoryIndexService()
         self.index.upsert_task(
             make_task(title="Old", created_at=utc(2026, 1, 1), updated_at=utc(2026, 1, 1))
         )

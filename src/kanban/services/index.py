@@ -13,14 +13,20 @@ from uuid import UUID
 from ..index.base import IndexBase
 from ..index.query import SearchQuery, SearchResult
 from ..models import Task
+from ..storage.base import KanbanRepository
 
 
 class IndexService:
     """Forwards index operations to an injected IndexBase implementation."""
 
-    def __init__(self, index_base: IndexBase) -> None:
-        """Wrap index_base, the concrete implementation to forward calls to."""
+    def __init__(self, index_base: IndexBase, repository: KanbanRepository) -> None:
+        """Wrap index_base, the concrete implementation to forward calls to.
+
+        repository is used for rebuild(), which scans the filesystem
+        source of truth to repopulate index_base.
+        """
         self.index_base = index_base
+        self.repository = repository
 
     def upsert_task(self, task: Task) -> None:
         """Insert or update the indexed record for a task."""
@@ -36,7 +42,9 @@ class IndexService:
 
     def rebuild(self, board: str | None = None) -> None:
         """Rebuild the index from scratch by scanning the repository."""
-        self.index_base.rebuild(board)
+        self.index_base.clear(board)
+        for task in self.repository.get_tasks(board=board):
+            self.index_base.upsert_task(task)
 
     def get_path(self, task_id: UUID) -> Path | None:
         """Return the current filesystem path for task_id, or None."""

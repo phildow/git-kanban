@@ -114,7 +114,7 @@ class TestReplCompletion(unittest.TestCase):
         self.repo = InMemoryRepository(root=temp_dir)
         self.svc = KanbanService(
             repository=self.repo,
-            index_service=InMemoryIndexService(repository=self.repo),
+            index_service=InMemoryIndexService(),
             git_service=GitService(),
         )
         self.svc.create_board("alpha", columns=[])

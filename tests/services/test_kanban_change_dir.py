@@ -22,7 +22,7 @@ class TestKanbanServiceChangeDir(unittest.TestCase):
         self.repo = InMemoryRepository(root=temp_dir)
         self.svc = KanbanService(
             repository=self.repo,
-            index_service=InMemoryIndexService(repository=self.repo),
+            index_service=InMemoryIndexService(),
             git_service=GitService(),
         )
         self.repo.create_board("alpha", slug="alpha")
@@ -55,7 +55,7 @@ class TestKanbanServiceResolvePath(unittest.TestCase):
         self.repo = InMemoryRepository(root=temp_dir)
         self.svc = KanbanService(
             repository=self.repo,
-            index_service=InMemoryIndexService(repository=self.repo),
+            index_service=InMemoryIndexService(),
             git_service=GitService(),
         )
 

@@ -7,7 +7,6 @@ from pathlib import Path
 from uuid import uuid4
 
 from kanban.index.memory import InMemoryIndexService
-from kanban.storage.memory import InMemoryRepository
 from tests.index.helpers import make_task
 
 
@@ -15,7 +14,7 @@ class TestGetPath(unittest.TestCase):
     """get_path returns the indexed path for a known id, or None."""
 
     def setUp(self) -> None:
-        self.index = InMemoryIndexService(repository=InMemoryRepository())
+        self.index = InMemoryIndexService()
 
     def test_returns_task_path(self) -> None:
         """Path returned matches task.path."""
@@ -33,7 +32,7 @@ class TestFindByTitle(unittest.TestCase):
     """find_by_title uses exact prefix matching, case-sensitive."""
 
     def setUp(self) -> None:
-        self.index = InMemoryIndexService(repository=InMemoryRepository()   )
+        self.index = InMemoryIndexService()
         self.fix_login = make_task(title="Fix login bug", board="proj", column="todo")
         self.fix_certs = make_task(title="Fix certs", board="ops", column="todo")
         self.write_docs = make_task(title="Write API docs", board="proj", column="todo")
@@ -79,7 +78,7 @@ class TestKnownPaths(unittest.TestCase):
     """known_paths returns every indexed path, optionally scoped to a board."""
 
     def setUp(self) -> None:
-        self.index = InMemoryIndexService(repository=InMemoryRepository())
+        self.index = InMemoryIndexService()
         self.a1 = make_task(title="Task one", board="alpha")
         self.a2 = make_task(title="Task two", board="alpha")
         self.b1 = make_task(title="Task three", board="beta")
@@ -96,4 +95,4 @@ class TestKnownPaths(unittest.TestCase):
 
     def test_empty_index_returns_empty_set(self) -> None:
         """An empty index returns an empty set."""
-        self.assertEqual(InMemoryIndexService(repository=InMemoryRepository()).known_paths(), set())
+        self.assertEqual(InMemoryIndexService().known_paths(), set())
