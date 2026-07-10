@@ -1,11 +1,11 @@
 """Abstract base class for the task index cache.
 
 The index is a derived cache over the filesystem; the filesystem is
-always the source of truth. IndexService is never queried as an
+always the source of truth. IndexBase is never queried as an
 authority on what exists — only for search, filtering, path resolution,
 and tab-completion support.
 
-IndexService has no knowledge of user context (active board, active
+IndexBase has no knowledge of user context (active board, active
 column). Callers populate SearchQuery fields and method arguments for
 any scoping they require.
 
@@ -25,7 +25,7 @@ from ..models import Task
 from ..index.query import SearchQuery, SearchResult
 from ..storage.base import KanbanRepository
 
-class IndexService(ABC):
+class IndexBase(ABC):
     """Cache of task metadata for fast search, lookup, and completion."""
 
     # ------------------------------------------------------------------

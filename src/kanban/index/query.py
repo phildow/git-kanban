@@ -1,6 +1,6 @@
 """Query and result types for the index layer.
 
-These are shared between IndexService and SearchService. SearchQuery is
+These are shared between IndexBase and SearchService. SearchQuery is
 the single parameter object for all filtering, scoping, and sorting.
 """
 
@@ -37,7 +37,7 @@ class SearchQuery:
 
     board=None means all boards. Callers that want active-board scoping
     (e.g. SearchService applying user context) are responsible for
-    populating board before passing the query to IndexService.
+    populating board before passing the query to IndexBase.
     """
 
     text: str | None = None          # case-insensitive substring of title

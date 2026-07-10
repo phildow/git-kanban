@@ -16,7 +16,7 @@ from uuid import UUID
 
 from ..models import Task
 from ..models.priority import PRIORITY_ORDER
-from ..index.base import IndexService
+from ..index.base import IndexBase
 from ..index.query import SearchQuery, SearchResult, SortField
 from ..storage.base import KanbanRepository
 
@@ -25,8 +25,8 @@ from ..storage.base import KanbanRepository
 _DATETIME_MIN = datetime.min.replace(tzinfo=timezone.utc)
 
 
-class InMemoryIndexService(IndexService):
-    """IndexService backed by a dict[UUID, Task]."""
+class InMemoryIndexService(IndexBase):
+    """IndexBase backed by a dict[UUID, Task]."""
 
     def __init__(self, repository: KanbanRepository) -> None:
         super().__init__(repository)
