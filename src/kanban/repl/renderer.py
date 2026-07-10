@@ -93,7 +93,7 @@ class Renderer:
 		if getattr(args, "slugs", False):
 			self.render_board_list_slug_only(args, result)
 		else:
-			self.render_board_list(args, result)
+			self.render_board_list_rich(args, result)
 
 	def render_board_list_slug_only(self, args: argparse.Namespace, result: list[Board]) -> None:
 		"""Render a simple list of board slugs, without additional details."""
@@ -122,7 +122,7 @@ class Renderer:
 
 		self._emit(args, "\n".join(lines))
 
-	def render_board_list(self, args: argparse.Namespace, result: list[Board]) -> None:
+	def render_board_list_rich(self, args: argparse.Namespace, result: list[Board]) -> None:
 		"""Render a detailed list of boards, including their column counts."""
 		items = []
 
@@ -170,7 +170,7 @@ class Renderer:
 		if getattr(args, "slugs", False):
 			self.render_column_list_slug_only(args, result)
 		else:
-			self.render_column_list(args, result)
+			self.render_column_list_rich(args, result)
 
 	def render_column_list_slug_only(self, args: argparse.Namespace, result: list[Column]) -> None:
 		"""
@@ -202,7 +202,7 @@ class Renderer:
 
 		self._emit(args, "\n".join(lines))
 
-	def render_column_list(self, args: argparse.Namespace, result: list[Column]) -> None:
+	def render_column_list_rich(self, args: argparse.Namespace, result: list[Column]) -> None:
 		"""Render a detailed list of columns, including their board names and positions."""
 		items = []
 
@@ -282,7 +282,7 @@ class Renderer:
 		if getattr(args, "slugs", False):
 			self.render_task_list_slug_only(args, result)
 		else:
-			self.render_task_list(args, result)
+			self.render_task_list_rich(args, result)
 
 
 	def render_task_list_slug_only(self, args: argparse.Namespace, result: list[Task]) -> None:
@@ -314,7 +314,7 @@ class Renderer:
 		self._emit(args, "\n".join(lines))
 
 
-	def render_task_list(self, args: argparse.Namespace, result: list[Task]) -> None:
+	def render_task_list_rich(self, args: argparse.Namespace, result: list[Task]) -> None:
 		"""Render a detailed list of tasks, including their slugs, titles, and locations."""
 		items = []
 
