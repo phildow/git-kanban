@@ -12,7 +12,7 @@ from ..models.priority import PRIORITY_ORDER
 from ..storage.base import KanbanRepository, ColumnNotFound, BoardNotFound
 from ..storage.seeds import BootstrapConfig, DEFAULT_COLUMNS
 from ..services.git import GitService
-from ..index.base import IndexBase
+from ..services.index import IndexService
 from ..utils.str import slug_it
 
 
@@ -98,7 +98,7 @@ class KanbanService:
         
     #     return attr
 
-    def __init__(self, repository: KanbanRepository, index_service: IndexBase, git_service: GitService) -> None:
+    def __init__(self, repository: KanbanRepository, index_service: IndexService, git_service: GitService) -> None:
         """
         Assemble the facade from its domain services.  All services are
         injected rather than instantiated here so that the InMemoryRepository

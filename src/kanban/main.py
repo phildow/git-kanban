@@ -8,6 +8,7 @@ from .cli.renderer import Renderer
 from .cli.json_renderer import JsonRenderer
 
 from .services.git import GitService
+from .services.index import IndexService
 from .services.kanban import KanbanService
 from .index.memory import InMemoryIndexService
 from .storage.filesystem import FilesystemRepository
@@ -20,7 +21,8 @@ def main() -> None:
     setup_logging(logging.DEBUG)
     
     repository = get_repository(FILESYSTEM)
-    index_service = InMemoryIndexService(repository=repository)
+    index_base = InMemoryIndexService(repository=repository)
+    index_service = IndexService(index_base=index_base)
     git_service = GitService()
     svc = KanbanService(repository=repository, index_service=index_service, git_service=git_service)
     renderer = Renderer()
