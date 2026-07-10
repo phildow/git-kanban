@@ -10,6 +10,7 @@ from uuid import uuid4
 
 from kanban.models import Task, TaskFilter, UserContext
 from kanban.services.git import GitService
+from kanban.services.index import IndexService
 from kanban.index.memory import InMemoryIndex
 from kanban.services.kanban import KanbanService
 from kanban.storage.memory import InMemoryRepository
@@ -55,7 +56,7 @@ class TestKanbanServiceGetTasksFilter(unittest.TestCase):
         self.repo = InMemoryRepository(root=temp_dir)
         self.svc = KanbanService(
             repository=self.repo,
-            index_service=InMemoryIndex(),
+            index_service=IndexService(index_base=InMemoryIndex(), repository=self.repo),
             git_service=GitService(),
         )
         self.svc.create_board("main", columns=[("To Do", "todo"), ("Done", "done")])
@@ -160,7 +161,7 @@ class TestKanbanServiceGetTasksFilterNullValues(unittest.TestCase):
         self.repo = InMemoryRepository(root=temp_dir)
         self.svc = KanbanService(
             repository=self.repo,
-            index_service=InMemoryIndex(),
+            index_service=IndexService(index_base=InMemoryIndex(), repository=self.repo),
             git_service=GitService(),
         )
         self.svc.create_board("main", columns=[("To Do", "todo")])

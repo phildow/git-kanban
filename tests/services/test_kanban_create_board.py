@@ -8,6 +8,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from kanban.services.git import GitService
+from kanban.services.index import IndexService
 from kanban.index.memory import InMemoryIndex
 from kanban.services.kanban import KanbanService
 from kanban.storage.memory import InMemoryRepository
@@ -22,7 +23,7 @@ class TestKanbanServiceCreateBoard(unittest.TestCase):
         self.repo = InMemoryRepository(root=temp_dir)
         self.svc = KanbanService(
             repository=self.repo,
-            index_service=InMemoryIndex(),
+            index_service=IndexService(index_base=InMemoryIndex(), repository=self.repo),
             git_service=GitService(),
         )
 
