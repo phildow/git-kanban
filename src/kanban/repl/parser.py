@@ -141,7 +141,7 @@ def _add_create_parser(subparsers: argparse._SubParsersAction) -> None:
 
 def _add_list_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("list", aliases=["ls"], help="List all boards, columns, or tasks in the current context or at a specified path")
-    p.add_argument("-l", "--list", action="store_true", default=False, help="Enable list-mode output")
+    p.add_argument("--slugs", action="store_true", default=False, help="Render a compact list of slugs only, like filenames")
     group = p.add_mutually_exclusive_group(required=False)
     group.add_argument("path", metavar="BOARD[/COLUMN]", nargs="?", help="Board or board/column to list (optional)")
     group.add_argument("-a", "--tasks", dest="all_tasks", action="store_true", default=False, help="List all tasks on the current board")

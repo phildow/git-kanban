@@ -96,10 +96,10 @@ class RichRenderer:
 
 	def render_board_list(self, args: argparse.Namespace, result: list[Board]) -> None:
 		"""Render a list of boards, optionally with their column counts"""
-		if args.list == True:
-			self.render_board_list_verbose(args, result)
+		if getattr(args, "slugs", False):
+			self.render_board_list_slug_only(args, result)
 		else:
-			self.render_board_list_slug_only(args, result) 
+			self.render_board_list(args, result)
 			
 	def render_board_list_slug_only(self, args: argparse.Namespace, result: list[Board]) -> None:
 		"""Render a simple list of board slugs, without additional details."""
@@ -128,7 +128,7 @@ class RichRenderer:
 
 		self._emit(args, "\n".join(lines))
 
-	def render_board_list_verbose(self, args: argparse.Namespace, result: list[Board]) -> None:
+	def render_board_list(self, args: argparse.Namespace, result: list[Board]) -> None:
 		"""Render a detailed list of boards, including their column counts."""
 		table = Table(title=f"Boards ({len(result)})", box=box.ASCII2, show_header=True, header_style="bold")
 		
@@ -166,10 +166,10 @@ class RichRenderer:
 
 	def render_column_list(self, args: argparse.Namespace, result: list[Column]) -> None:
 		"""Render a list of columns, optionally with their board names and positions"""
-		if args.list == True:
-			self.render_column_list_verbose(args, result)
-		else:
+		if getattr(args, "slugs", False):
 			self.render_column_list_slug_only(args, result)
+		else:
+			self.render_column_list(args, result)
 
 	def render_column_list_slug_only(self, args: argparse.Namespace, result: list[Column]) -> None:
 		"""
@@ -201,7 +201,7 @@ class RichRenderer:
 
 		self._emit(args, "\n".join(lines))
 
-	def render_column_list_verbose(self, args: argparse.Namespace, result: list[Column]) -> None:
+	def render_column_list(self, args: argparse.Namespace, result: list[Column]) -> None:
 		"""Render a detailed list of columns, including their board names and positions."""
 		table = Table(title=f"Columns ({len(result)})", box=box.ASCII2, show_header=True, header_style="bold")
 		
@@ -271,10 +271,10 @@ class RichRenderer:
 
 	def render_task_list(self, args: argparse.Namespace, result: list[Task]) -> None:
 		"""Render a list of tasks, optionally with their slugs, titles, and locations."""
-		if args.list == True:
-			self.render_task_list_verbose(args, result)
-		else:
+		if getattr(args, "slugs", False):
 			self.render_task_list_slug_only(args, result)
+		else:
+			self.render_task_list(args, result)
 
 
 	def render_task_list_slug_only(self, args: argparse.Namespace, result: list[Task]) -> None:
@@ -306,7 +306,7 @@ class RichRenderer:
 		self._emit(args, "\n".join(lines))
 
 
-	def render_task_list_verbose(self, args: argparse.Namespace, result: list[Task]) -> None:
+	def render_task_list(self, args: argparse.Namespace, result: list[Task]) -> None:
 		"""Render a detailed list of tasks, including their slugs, titles, and locations."""
 		# date_format = "%Y-%m-%d"
         # date_format = "%B %d"

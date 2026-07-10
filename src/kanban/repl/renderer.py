@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from functools import wraps
 import shutil
+from warnings import deprecated
 
 from ..models import UserContext, Board, Column, Task
 from ..repl.render_helper import RenderHelper
@@ -20,6 +21,7 @@ def _requires_verbose(method):
 
 	return _wrapped
 
+@deprecated("The RichRenderer is used by default. This class is deprecated and will be removed in a future version.")
 class Renderer:
 	def __init__(self, render_helper: RenderHelper):
 		self.render_helper = render_helper
@@ -88,11 +90,11 @@ class Renderer:
 
 	def render_board_list(self, args: argparse.Namespace, result: list[Board]) -> None:
 		"""Render a list of boards, optionally with their column counts"""
-		if args.list == True:
-			self.render_board_list_verbose(args, result)
+		if getattr(args, "slugs", False):
+			self.render_board_list_slug_only(args, result)
 		else:
-			self.render_board_list_slug_only(args, result) 
-			
+			self.render_board_list(args, result)
+
 	def render_board_list_slug_only(self, args: argparse.Namespace, result: list[Board]) -> None:
 		"""Render a simple list of board slugs, without additional details."""
 		if not result:
@@ -120,7 +122,7 @@ class Renderer:
 
 		self._emit(args, "\n".join(lines))
 
-	def render_board_list_verbose(self, args: argparse.Namespace, result: list[Board]) -> None:
+	def render_board_list(self, args: argparse.Namespace, result: list[Board]) -> None:
 		"""Render a detailed list of boards, including their column counts."""
 		items = []
 
@@ -165,10 +167,10 @@ class Renderer:
 
 	def render_column_list(self, args: argparse.Namespace, result: list[Column]) -> None:
 		"""Render a list of columns, optionally with their board names and positions"""
-		if args.list == True:
-			self.render_column_list_verbose(args, result)
-		else:
+		if getattr(args, "slugs", False):
 			self.render_column_list_slug_only(args, result)
+		else:
+			self.render_column_list(args, result)
 
 	def render_column_list_slug_only(self, args: argparse.Namespace, result: list[Column]) -> None:
 		"""
@@ -200,7 +202,7 @@ class Renderer:
 
 		self._emit(args, "\n".join(lines))
 
-	def render_column_list_verbose(self, args: argparse.Namespace, result: list[Column]) -> None:
+	def render_column_list(self, args: argparse.Namespace, result: list[Column]) -> None:
 		"""Render a detailed list of columns, including their board names and positions."""
 		items = []
 
@@ -277,10 +279,10 @@ class Renderer:
 
 	def render_task_list(self, args: argparse.Namespace, result: list[Task]) -> None:
 		"""Render a list of tasks, optionally with their slugs, titles, and locations."""
-		if args.list == True:
-			self.render_task_list_verbose(args, result)
-		else:
+		if getattr(args, "slugs", False):
 			self.render_task_list_slug_only(args, result)
+		else:
+			self.render_task_list(args, result)
 
 
 	def render_task_list_slug_only(self, args: argparse.Namespace, result: list[Task]) -> None:
@@ -312,7 +314,7 @@ class Renderer:
 		self._emit(args, "\n".join(lines))
 
 
-	def render_task_list_verbose(self, args: argparse.Namespace, result: list[Task]) -> None:
+	def render_task_list(self, args: argparse.Namespace, result: list[Task]) -> None:
 		"""Render a detailed list of tasks, including their slugs, titles, and locations."""
 		items = []
 

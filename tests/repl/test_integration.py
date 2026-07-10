@@ -383,9 +383,9 @@ class TestReplList(_InitializedReplBase):
         out = self.run_repl("list", "proj/todo", "--reverse")
         self.assertTrue(out.strip())
 
-    def test_list_verbose_flag_produces_output(self) -> None:
-        """list -l (verbose/list-mode) produces output."""
-        out = self.run_repl("list", "proj/todo", "-l")
+    def test_list_slugs_flag_produces_output(self) -> None:
+        """list --slugs (slug-only, file-like output) produces output."""
+        out = self.run_repl("list", "proj/todo", "--slugs")
         self.assertTrue(out.strip())
 
     def test_list_filter_assigned_to(self) -> None:

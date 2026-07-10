@@ -95,18 +95,15 @@ class TestParserAliases(unittest.TestCase):
         args = repl_parser.parse_args(["list"])
         self.assertEqual(args.command, "list")
         self.assertIs(args.func, handle_list)
-        self.assertFalse(args.list)
+        self.assertFalse(args.slugs)
 
         args = repl_parser.parse_args(["ls"])
         self.assertEqual(args.command, "ls")
         self.assertIs(args.func, handle_list)
-        self.assertFalse(args.list)
+        self.assertFalse(args.slugs)
 
-        args = repl_parser.parse_args(["list", "-l"])
-        self.assertTrue(args.list)
-
-        args = repl_parser.parse_args(["list", "--list"])
-        self.assertTrue(args.list)
+        args = repl_parser.parse_args(["list", "--slugs"])
+        self.assertTrue(args.slugs)
 
     def test_assign_maps_to_assign_handler(self):
         args = repl_parser.parse_args(["assign", "main/todo/fix-login", "alice"])
