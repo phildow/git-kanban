@@ -10,7 +10,7 @@ from .cli.json_renderer import JsonRenderer
 from .services.git import GitService
 from .services.index import IndexService
 from .services.kanban import KanbanService
-from .index.memory import InMemoryIndexService
+from .index.memory import InMemoryIndex
 from .storage.filesystem import FilesystemRepository
 from .storage.base import KanbanRepository, RepositoryAlreadyInitialized
 from .storage.memory import InMemoryRepository
@@ -21,7 +21,7 @@ def main() -> None:
     setup_logging(logging.DEBUG)
     
     repository = get_repository(FILESYSTEM)
-    index_base = InMemoryIndexService()
+    index_base = InMemoryIndex()
     index_service = IndexService(index_base=index_base, repository=repository)
     git_service = GitService()
     svc = KanbanService(repository=repository, index_service=index_service, git_service=git_service)

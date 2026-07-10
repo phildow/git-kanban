@@ -16,7 +16,7 @@ from kanban.repl.shell import (
     run_repl,
 )
 from kanban.services.kanban import KanbanService
-from kanban.index.memory import InMemoryIndexService
+from kanban.index.memory import InMemoryIndex
 from kanban.services.git import GitService 
 from kanban.storage.memory import InMemoryRepository
 
@@ -114,7 +114,7 @@ class TestReplCompletion(unittest.TestCase):
         self.repo = InMemoryRepository(root=temp_dir)
         self.svc = KanbanService(
             repository=self.repo,
-            index_service=InMemoryIndexService(),
+            index_service=InMemoryIndex(),
             git_service=GitService(),
         )
         self.svc.create_board("alpha", columns=[])

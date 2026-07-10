@@ -11,7 +11,7 @@ any scoping they require.
 
 Concrete implementations:
 
-    InMemoryIndexService  — dict-backed, for unit tests
+    InMemoryIndex  — dict-backed, for unit tests
     SqliteIndexService    — SQLite + FTS5, for production use
 """
 

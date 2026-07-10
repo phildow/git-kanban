@@ -1,10 +1,10 @@
-"""Tests for InMemoryIndexService write-through operations."""
+"""Tests for InMemoryIndex write-through operations."""
 
 from __future__ import annotations
 
 import unittest
 
-from kanban.index.memory import InMemoryIndexService
+from kanban.index.memory import InMemoryIndex
 from tests.index.helpers import make_task
 
 
@@ -12,7 +12,7 @@ class TestUpsert(unittest.TestCase):
     """upsert_task adds a record; a second upsert for the same id replaces it."""
 
     def setUp(self) -> None:
-        self.index = InMemoryIndexService()
+        self.index = InMemoryIndex()
 
     def test_upserted_task_is_reachable_by_path(self) -> None:
         """get_path returns the task's path immediately after upsert."""
@@ -33,7 +33,7 @@ class TestRemove(unittest.TestCase):
     """remove_task deletes a record; is a no-op when the id is absent."""
 
     def setUp(self) -> None:
-        self.index = InMemoryIndexService()
+        self.index = InMemoryIndex()
 
     def test_removed_task_is_unreachable(self) -> None:
         """get_path returns None after the task is removed."""
@@ -51,7 +51,7 @@ class TestClear(unittest.TestCase):
     """clear() removes all records; clear(board=) removes only that board."""
 
     def setUp(self) -> None:
-        self.index = InMemoryIndexService()
+        self.index = InMemoryIndex()
         self.alpha = make_task(title="Alpha task", board="alpha")
         self.beta = make_task(title="Beta task", board="beta")
         self.index.upsert_task(self.alpha)

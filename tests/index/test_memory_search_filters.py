@@ -1,4 +1,4 @@
-"""Tests for InMemoryIndexService search filtering."""
+"""Tests for InMemoryIndex search filtering."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import unittest
 from datetime import date
 
 # from models import Priority
-from kanban.index.memory import InMemoryIndexService
+from kanban.index.memory import InMemoryIndex
 from kanban.index.query import SearchQuery
 from tests.index.helpers import make_task
 
@@ -15,7 +15,7 @@ class TestSearchFilters(unittest.TestCase):
     """Each SearchQuery field narrows results independently (AND semantics)."""
 
     def setUp(self) -> None:
-        self.index = InMemoryIndexService()
+        self.index = InMemoryIndex()
         self.t1 = make_task(
             title="Fix login bug",
             board="proj", 
@@ -113,5 +113,5 @@ class TestSearchFilters(unittest.TestCase):
         self.assertEqual(self._ids(SearchQuery(board="proj", assigned_to="alice")), {self.t1.id})
 
     def test_search_result_score_is_none(self) -> None:
-        """InMemoryIndexService always produces score=None (no bm25 ranking)."""
+        """InMemoryIndex always produces score=None (no bm25 ranking)."""
         self.assertTrue(all(r.score is None for r in self.index.search(SearchQuery())))

@@ -1,10 +1,10 @@
-"""Tests for InMemoryIndexService completion-value enumeration."""
+"""Tests for InMemoryIndex completion-value enumeration."""
 
 from __future__ import annotations
 
 import unittest
 
-from kanban.index.memory import InMemoryIndexService
+from kanban.index.memory import InMemoryIndex
 from tests.index.helpers import make_task
 
 
@@ -12,7 +12,7 @@ class TestListTags(unittest.TestCase):
     """list_tags returns sorted distinct tags, optionally scoped to a board."""
 
     def setUp(self) -> None:
-        self.index = InMemoryIndexService()
+        self.index = InMemoryIndex()
         self.index.upsert_task(make_task(board="proj", tags=("bug", "auth")))
         self.index.upsert_task(make_task(title="Task 2", board="proj", tags=("bug", "api")))
         self.index.upsert_task(make_task(title="Task 3", board="ops", tags=("infra",)))
@@ -38,11 +38,11 @@ class TestListTags(unittest.TestCase):
 
     def test_empty_index_returns_empty_list(self) -> None:
         """An empty index yields an empty list."""
-        self.assertEqual(InMemoryIndexService().list_tags(), [])
+        self.assertEqual(InMemoryIndex().list_tags(), [])
 
     def test_tasks_without_tags_contribute_nothing(self) -> None:
         """Tasks with an empty tags tuple do not affect the result."""
-        index = InMemoryIndexService()
+        index = InMemoryIndex()
         index.upsert_task(make_task(tags=()))
         self.assertEqual(index.list_tags(), [])
 
@@ -51,7 +51,7 @@ class TestListAssignedTo(unittest.TestCase):
     """list_assigned_to returns sorted distinct assigned_to values, optionally scoped."""
 
     def setUp(self) -> None:
-        self.index = InMemoryIndexService()
+        self.index = InMemoryIndex()
         self.index.upsert_task(make_task(board="proj", assigned_to="alice"))
         self.index.upsert_task(make_task(title="Task 2", board="proj", assigned_to="bob"))
         self.index.upsert_task(make_task(title="Task 3", board="proj", assigned_to="alice"))
@@ -72,6 +72,6 @@ class TestListAssignedTo(unittest.TestCase):
 
     def test_none_assigned_to_excluded(self) -> None:
         """Tasks with no assigned_to do not contribute a None entry."""
-        index = InMemoryIndexService()
+        index = InMemoryIndex()
         index.upsert_task(make_task(assigned_to=None))
         self.assertEqual(index.list_assigned_to(), [])

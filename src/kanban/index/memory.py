@@ -24,7 +24,7 @@ from ..index.query import SearchQuery, SearchResult, SortField
 _DATETIME_MIN = datetime.min.replace(tzinfo=timezone.utc)
 
 
-class InMemoryIndexService(IndexBase):
+class InMemoryIndex(IndexBase):
     """IndexBase backed by a dict[UUID, Task]."""
 
     def __init__(self) -> None:

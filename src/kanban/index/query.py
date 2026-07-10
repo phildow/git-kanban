@@ -58,7 +58,7 @@ class SearchResult:
     """A matched task with an optional relevance score.
 
     score is populated by FTS-backed implementations via bm25 and is
-    None for InMemoryIndexService, which has no ranking concept. Tests
+    None for InMemoryIndex, which has no ranking concept. Tests
     that assert on relevance ordering should target the SQLite
     implementation.
     """

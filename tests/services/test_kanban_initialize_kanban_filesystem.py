@@ -14,7 +14,7 @@ from unittest.mock import MagicMock
 from kanban.storage.filesystem import FilesystemRepository
 from kanban.storage.seeds import BOOTSTRAP_CONFIG
 from kanban.services.kanban import KanbanService
-from kanban.index.memory import InMemoryIndexService
+from kanban.index.memory import InMemoryIndex
 
 
 class TestKanbanInitializeKanbanFilesystem(unittest.TestCase):
@@ -26,7 +26,7 @@ class TestKanbanInitializeKanbanFilesystem(unittest.TestCase):
         self.repo = FilesystemRepository(root=self.root)
         self.svc = KanbanService(
             repository=self.repo,
-            index_service=InMemoryIndexService(),
+            index_service=InMemoryIndex(),
             git_service=MagicMock(),
         )
 
@@ -153,7 +153,7 @@ class TestKanbanInitializeKanbanFilesystemCustomBoard(unittest.TestCase):
         self.repo = FilesystemRepository(root=self.root)
         self.svc = KanbanService(
             repository=self.repo,
-            index_service=InMemoryIndexService(),
+            index_service=InMemoryIndex(),
             git_service=MagicMock(),
         )
         self.config = {
