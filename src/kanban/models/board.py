@@ -21,10 +21,6 @@ class Board:
     # created_by: str | None = None
 
     @property
-    def filename(self) -> str:
-        return self.slug
-
-    @property
     def path(self) -> Path:
         return Path(f"/{self.slug}")
     

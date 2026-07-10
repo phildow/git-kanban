@@ -43,7 +43,7 @@ class IndexBase(ABC):
     def upsert_task(self, task: Task) -> None:
         """Insert or update the indexed record for a task.
 
-        Board and column are derived from task.path. Replaces any
+        Board and column are derived from task. Replaces any
         existing record keyed on task.id.
         """
 

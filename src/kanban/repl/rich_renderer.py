@@ -273,8 +273,10 @@ class RichRenderer:
 		"""Render a list of tasks, optionally with their slugs, titles, and locations."""
 		if getattr(args, "slugs", False):
 			self.render_task_list_slug_only(args, result)
+			print("RENDERED SLUGS")
 		else:
 			self.render_task_list(args, result)
+			print("RENDERED RICH")
 
 
 	def render_task_list_slug_only(self, args: argparse.Namespace, result: list[Task]) -> None:

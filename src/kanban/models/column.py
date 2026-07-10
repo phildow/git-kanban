@@ -25,10 +25,6 @@ class Column:
     task_count: int = 0
 
     @property
-    def filename(self) -> str:
-        return self.slug
-
-    @property
     def path(self) -> Path:
         return Path(f"/{self.board}/{self.slug}")
     

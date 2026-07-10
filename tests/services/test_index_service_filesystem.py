@@ -86,7 +86,7 @@ class TestIndexServiceDiffFilesystem(unittest.TestCase):
 
         result = self.index_service.diff()
 
-        expected_path = Path("/main/backlog/add-rate-limiting.md")
+        expected_path = Path("/main/backlog/add-rate-limiting")
         self.assertEqual(result.missing_from_index, {expected_path})
         self.assertEqual(result.missing_from_repository, set())
 
@@ -100,7 +100,7 @@ class TestIndexServiceDiffFilesystem(unittest.TestCase):
         result = self.index_service.diff()
 
         self.assertEqual(result.missing_from_repository, {stale_task.path})
-        self.assertEqual(result.missing_from_index, {Path("/main/backlog/add-rate-limiting.md")})
+        self.assertEqual(result.missing_from_index, {Path("/main/backlog/add-rate-limiting")})
 
     def test_rebuild_resolves_missing_from_index_after_direct_file_creation(self) -> None:
         """rebuild() re-scans the repository, absorbing files added directly on disk."""

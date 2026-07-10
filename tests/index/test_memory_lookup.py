@@ -20,7 +20,7 @@ class TestGetPath(unittest.TestCase):
         """Path returned matches task.path."""
         task = make_task(board="ops", column="in-progress")
         self.index.upsert_task(task)
-        expected = Path("/ops/in-progress/fix-login-bug.md")
+        expected = Path("/ops/in-progress/fix-login-bug")
         self.assertEqual(self.index.get_path(task.id), expected)
 
     def test_unknown_id_returns_none(self) -> None:

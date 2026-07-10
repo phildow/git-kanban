@@ -1,4 +1,4 @@
-"""Tests for `Board.filename` and `Board.path`."""
+"""Tests for `Board.path`."""
 
 from __future__ import annotations
 
@@ -10,13 +10,8 @@ from uuid import uuid4
 from kanban.models import Board
 
 
-class TestBoardFilenameAndPath(unittest.TestCase):
-    """Verifies the `filename` and `path` properties of `Board`."""
-
-    def test_filename_is_slug(self):
-        """`filename` returns the board's slug."""
-        board = Board(id=uuid4(), name="My Project", slug="my-project")
-        self.assertEqual(board.filename, "my-project")
+class TestBoardAPath(unittest.TestCase):
+    """Verifies the `path` property of `Board`."""
 
     def test_path_is_absolute_and_includes_slug(self):
         """`path` is an absolute path containing just the board's slug."""
