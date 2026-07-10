@@ -9,6 +9,7 @@ from __future__ import annotations
 import unittest
 from argparse import Namespace
 from unittest.mock import MagicMock, patch
+from uuid import uuid4
 
 from kanban.models import Board, Column, Task
 from kanban.repl import commands
@@ -224,7 +225,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.renderer.render_column_reorder.assert_called_once_with(args, result)
 
     def test_handle_task_create_defaults(self):
-        args = self._args(path="alpha/todo/fix-parser")
+        args = self._args(path="alpha/todo/fix-parser", edit=False)
         result = object()
         self.svc.create_task.return_value = result
 
@@ -242,6 +243,30 @@ class TestReplCommandHandlers(unittest.TestCase):
         )
         self.renderer.render_task_create.assert_called_once_with(args, result)
 
+    def test_handle_task_create_without_edit_flag_does_not_open_editor(self):
+        """create task without --edit does not call svc.edit_task."""
+        args = self._args(path="alpha/todo/fix-parser", edit=False)
+        result = object()
+        self.svc.create_task.return_value = result
+
+        commands.handle_task_create(args, self.svc, self.renderer)
+
+        self.svc.edit_task.assert_not_called()
+        self.renderer.render_task_create.assert_called_once_with(args, result)
+
+    def test_handle_task_create_with_edit_flag_opens_editor(self):
+        """create task --edit opens the newly created task in the editor."""
+        args = self._args(path="alpha/todo/fix-parser", edit=True)
+        created = Task(id=uuid4(), title="Fix parser", slug="fix-parser", board="alpha", column="todo")
+        edited = Task(id=uuid4(), title="Fix parser", slug="fix-parser", board="alpha", column="todo")
+        self.svc.create_task.return_value = created
+        self.svc.edit_task.return_value = edited
+
+        commands.handle_task_create(args, self.svc, self.renderer)
+
+        self.svc.edit_task.assert_called_once_with(created.path)
+        self.renderer.render_task_create.assert_called_once_with(args, edited)
+
     def test_handle_task_create_with_optional_fields(self):
         args = self._args(
             path="alpha/todo/fix-parser",
@@ -250,6 +275,7 @@ class TestReplCommandHandlers(unittest.TestCase):
             tags=["cli", "tests"],
             due_date="2026-06-17",
             created_by="philip",
+            edit=False,
         )
         result = object()
         self.svc.create_task.return_value = result

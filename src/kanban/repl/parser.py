@@ -134,6 +134,7 @@ def _add_create_parser(subparsers: argparse._SubParsersAction) -> None:
     # create task
     p = create_sub.add_parser("task", aliases=["t"], help="Create a new task")
     p.add_argument("path", metavar="BOARD/COLUMN/TITLE", help="Fully qualified task path")
+    p.add_argument("--edit", action="store_true", default=False, help="Open the new task in the editor after creating it")
     _add_task_update_args(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_task_create)
