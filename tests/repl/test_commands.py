@@ -122,28 +122,31 @@ class TestReplCommandHandlers(unittest.TestCase):
 
     def test_handle_delete_renders_board_delete(self):
         args = self._args(path="alpha")
-        with patch("kanban.repl.commands.handle_delete_helper", return_value=Board):
+        deleted = object()
+        with patch("kanban.repl.commands.handle_delete_helper", return_value=(Board, deleted)):
             commands.handle_delete(args, self.svc, self.renderer)
 
-        self.renderer.render_board_delete.assert_called_once_with(args)
+        self.renderer.render_board_delete.assert_called_once_with(args, deleted)
 
     def test_handle_delete_renders_column_delete(self):
         args = self._args(path="alpha/todo")
-        with patch("kanban.repl.commands.handle_delete_helper", return_value=Column):
+        deleted = object()
+        with patch("kanban.repl.commands.handle_delete_helper", return_value=(Column, deleted)):
             commands.handle_delete(args, self.svc, self.renderer)
 
-        self.renderer.render_column_delete.assert_called_once_with(args)
+        self.renderer.render_column_delete.assert_called_once_with(args, deleted)
 
     def test_handle_delete_renders_task_delete(self):
         args = self._args(path="alpha/todo/fix-parser")
-        with patch("kanban.repl.commands.handle_delete_helper", return_value=Task):
+        deleted = object()
+        with patch("kanban.repl.commands.handle_delete_helper", return_value=(Task, deleted)):
             commands.handle_delete(args, self.svc, self.renderer)
 
-        self.renderer.render_task_delete.assert_called_once_with(args)
+        self.renderer.render_task_delete.assert_called_once_with(args, deleted)
 
     def test_handle_delete_raises_for_unexpected_type(self):
         args = self._args(path="alpha")
-        with patch("kanban.repl.commands.handle_delete_helper", return_value=str):
+        with patch("kanban.repl.commands.handle_delete_helper", return_value=(str, object())):
             with self.assertRaises(ValueError):
                 commands.handle_delete(args, self.svc, self.renderer)
 

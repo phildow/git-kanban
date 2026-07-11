@@ -74,7 +74,7 @@ def handle_list_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[ty
         return Board, svc.get_boards(sort=sort, reverse=reverse)
        
 
-def handle_delete_helper(args: argparse.Namespace, svc: KanbanService) -> type:
+def handle_delete_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[type, Board | Column | Task] | tuple[None, None]:
     """
     Delete the entity at the given path.  This is the main entry point for
     all delete/rm commands in the REPL, which pass a user-provided path that
@@ -89,21 +89,18 @@ def handle_delete_helper(args: argparse.Namespace, svc: KanbanService) -> type:
 
     if board and column and task:
         if _confirm(f"Are you sure you want to delete the task '{task}'?"):
-            svc.delete_task(path=f"/{board}/{column}/{task}")
-            return Task
+            return Task, svc.delete_task(path=f"/{board}/{column}/{task}")
     elif board and column:
         if _confirm(f"Are you sure you want to delete the column '{column}'?"):
-            svc.delete_column(path=f"/{board}/{column}")
-            return Column
+            return Column, svc.delete_column(path=f"/{board}/{column}")
     elif board:
         if _confirm(f"Are you sure you want to delete the board '{board}'?"):
-            svc.delete_board(board)
-            return Board
+            return Board, svc.delete_board(board)
     else:
         raise ValueError("Cannot delete without a board name: {}".format(path))
 
     # User declined deletion
-    return None
+    return None, None
     
 
 def handle_rename_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[type, Board | Column | Task]:

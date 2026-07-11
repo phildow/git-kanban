@@ -387,18 +387,19 @@ class KanbanService:
 
         return board
 
-    def delete_board(self, path: str) -> None:
+    def delete_board(self, path: str) -> Board:
         """
         Recursively delete a board directory and remove it from .kanban-store/boards/.metadata.
         Raises BoardNotFound if the board does not exist.  Also removes all
         index entries for tasks that belonged to the board and clears the current
-        context if it pointed at the deleted board.
+        context if it pointed at the deleted board.  Returns the deleted Board.
         """
 
         board, _, _ = self.path_components(path)
+        deleted_board = self.repository.get_board(board)
         tasks = self.get_tasks(path)
         self.repository.delete_board(board)
-        
+
         # Clear current context if it points to the deleted board.
         if self._user_context.board == board:
             self.clear_user_context()
@@ -407,7 +408,7 @@ class KanbanService:
         for task in tasks:
             self.index_service.remove_task(task)
 
-        return board
+        return deleted_board
 
 
     # ── Columns ───────────────────────────────────────────────────────────────
@@ -475,14 +476,16 @@ class KanbanService:
         board, column, _ = self.path_components(path)
         return self.repository.reorder_column(board, column, position)  
 
-    def delete_column(self, path: str) -> None:
+    def delete_column(self, path: str) -> Column:
         """
         Delete a column subdirectory and all tasks it contains.  Raises
         BoardNotFound or ColumnNotFound if either does not exist.  Removes
         all index entries for tasks in the column, updates the board's .metadata
         file, and clears the current context column if it pointed here.
+        Returns the deleted Column.
         """
         board, column, _ = self.path_components(path)
+        deleted_column = self.repository.get_column(board, column)
         tasks = self.get_tasks(path)
         self.repository.delete_column(board, column)
 
@@ -494,7 +497,7 @@ class KanbanService:
         for task in tasks:
             self.index_service.remove_task(task)
 
-        return None
+        return deleted_column
 
 
     # ── Tasks ─────────────────────────────────────────────────────────────────
@@ -783,10 +786,11 @@ class KanbanService:
     def delete_task(
         self,
         path: str | Path,
-    ) -> None:
+    ) -> Task:
         """
         Delete a task's .md file from disk.  Raises TaskNotFound or
         via path_components.  Removes the task's index entry and commits.
+        Returns the deleted Task.
         """
         if isinstance(path, Path):
             path = str(path)
@@ -794,7 +798,7 @@ class KanbanService:
         task = self.get_task(path)
         self.repository.delete_task(task)
         self.index_service.remove_task(task)
-        return None
+        return task
 
     def assign_task(
         self,

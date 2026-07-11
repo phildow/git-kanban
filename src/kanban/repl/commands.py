@@ -76,17 +76,17 @@ def handle_list(args: argparse.Namespace, svc: KanbanService, renderer: object) 
 
 
 def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	typ = handle_delete_helper(args, svc)
+	typ, result = handle_delete_helper(args, svc)
 
 	if typ is None:
 		# user declined deletion
 		return
 	elif typ is Board:
-		renderer.render_board_delete(args)
+		renderer.render_board_delete(args, result)
 	elif typ is Column:
-		renderer.render_column_delete(args)
+		renderer.render_column_delete(args, result)
 	elif typ is Task:
-		renderer.render_task_delete(args)
+		renderer.render_task_delete(args, result)
 	else:
 		raise ValueError("Unexpected result type from handle_delete: {}".format(typ))
 

@@ -155,11 +155,9 @@ class Renderer:
 		new_slug = result.slug or getattr(args, "new_name", None)
 		self._emit(args, f"Renamed board: {old_name} -> {new_name} ({new_slug})")
 
-	def render_board_delete(self, args: argparse.Namespace) -> None:
+	def render_board_delete(self, args: argparse.Namespace, result: Board) -> None:
 		"""Render a message indicating that a board was deleted, including its name."""
-		board_name = getattr(args, "board", None)
-		board_slug = getattr(args, "slug", None)
-		self._emit(args, f"Deleted board: {board_name} ({board_slug})")
+		self._emit(args, f"Deleted board: {result.name} ({result.slug})")
 
 # ---------------------------------------------------------------------------
 # Column rendering
@@ -261,17 +259,12 @@ class Renderer:
 		else:
 			self._emit(args, f"Column reordered: {target}")
 
-	def render_column_delete(self, args: argparse.Namespace) -> None:
+	def render_column_delete(self, args: argparse.Namespace, result: Column) -> None:
 		"""
-		Render a message indicating that a column was deleted, 
+		Render a message indicating that a column was deleted,
 		including its name and optionally its board if available.
 		"""
-		path = getattr(args, "path", "") or ""
-		column_name = path.split("/", 1)[1] if "/" in path else path
-		board_name = path.split("/", 1)[0] if "/" in path else None
-		column_slug = getattr(args, "slug", None)
-		
-		self._emit(args, f"Column deleted: {column_name} ({column_slug})")
+		self._emit(args, f"Column deleted: {result.name} ({result.slug})")
 
 # ---------------------------------------------------------------------------
 # Task rendering
@@ -424,12 +417,9 @@ class Renderer:
 			msg = f"Task reordered: {result.slug} ({op})"
 		self._emit(args, msg)
 
-	def render_task_delete(self, args: argparse.Namespace) -> None:
-		path = getattr(args, "path", None)
-		if path:
-			self._emit(args, f"Task deleted: {path}")
-		else:
-			self._emit(args, "Task deleted")
+	def render_task_delete(self, args: argparse.Namespace, result: Task) -> None:
+		"""Render a message indicating that a task was deleted, including its title."""
+		self._emit(args, f"Task deleted: {result.title} ({result.slug})")
 
 	def render_task_assign(self, args: argparse.Namespace, result: Task) -> None:
 		self._emit(args, f"Task assigned to: {result.assigned_to}")
