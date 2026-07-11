@@ -119,6 +119,7 @@ def _in_scope(task: Task, board: str | None, column: str | None) -> bool:
     return True
 
 
+# NOTE: May be moved to index service if we want to share with SQLite implementation.
 def _matches(task: Task, query: SearchQuery) -> bool:
     """Return True if task satisfies every non-None filter on query."""
     if not _in_scope(task, query.board, query.column):
@@ -137,8 +138,10 @@ def _matches(task: Task, query: SearchQuery) -> bool:
     if query.due_after is not None:
         if task.due_date is None or task.due_date <= query.due_after:
             return False
-    if query.text is not None and query.text.lower() not in task.title.lower():
-        return False
+    if query.text is not None:
+        text = query.text.lower()
+        if text not in task.title.lower() and text not in task.body.lower():
+            return False
     return True
 
 

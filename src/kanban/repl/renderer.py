@@ -439,7 +439,8 @@ class Renderer:
 # ---------------------------------------------------------------------------
 
 	def render_search(self, args: argparse.Namespace, result: list[Task]) -> None:
-		self._emit(args, result)
+		"""Render search results the same way `render_task_list` renders a task list."""
+		self.render_task_list(args, result)
 
 	def render_log(self, args: argparse.Namespace, result: list[GitCommit]) -> None:
 		self._emit(args, result)

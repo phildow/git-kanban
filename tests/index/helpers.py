@@ -22,6 +22,7 @@ def make_task(
     tags: tuple[str, ...] = (),
     created_at: datetime | None = None,
     updated_at: datetime | None = None,
+    body: str = "",
 ) -> Task:
     """Build a Task with derived path and sensible defaults."""
     derived_slug = slug or title.lower().replace(" ", "-")
@@ -38,6 +39,7 @@ def make_task(
         tags=tags,
         created_at=created_at,
         updated_at=updated_at,
+        body=body,
     )
 
 

@@ -7,6 +7,7 @@ import subprocess
 import tempfile
 from uuid import uuid4
 
+from ..index.query import SearchQuery, SortField
 from ..models import Board, Column, Priority, Slug, Task, TaskFilter, UserContext
 from ..models.priority import PRIORITY_ORDER
 from ..storage.base import KanbanRepository, ColumnNotFound, BoardNotFound
@@ -846,11 +847,26 @@ class KanbanService:
         """
         Full-text search across task titles and bodies, narrowed by any
         TaskFilter provided.  Scoped to a single board if board is given,
-        otherwise searches the whole repository.  Delegates to SearchService,
-        which uses the index when available and falls back to a filesystem scan
-        when the index is stale or absent.
+        otherwise searches the whole repository.  Rebuilds the index first
+        to guarantee fresh results, then delegates to the index service.
         """
         self.index_service.rebuild()
+
+        search_query = SearchQuery(
+            text=query,
+            board=board,
+            assigned_to=filter.assigned_to,
+            priority=filter.priority,
+            tags=tuple(filter.tags),
+            created_by=filter.created_by,
+            due_before=filter.due_before.date() if filter.due_before else None,
+            due_after=filter.due_after.date() if filter.due_after else None,
+            sort=SortField(sort) if sort else SortField.TITLE,
+            reverse=reverse,
+        )
+
+        results = self.index_service.search(search_query)
+        return [result.task for result in results]
 
     # ── Git ───────────────────────────────────────────────────────────────────
 

@@ -18,32 +18,35 @@ class TestSearchFilters(unittest.TestCase):
         self.index = InMemoryIndex()
         self.t1 = make_task(
             title="Fix login bug",
-            board="proj", 
+            board="proj",
             column="todo",
-            assigned_to="alice", 
+            assigned_to="alice",
             priority="high", # Priority.HIGH,
-            tags=("bug", "auth"), 
+            tags=("bug", "auth"),
             created_by="alice",
             due_date=date(2026, 6, 10),
+            body="Users report intermittent failures when authenticating via SSO.",
         )
         self.t2 = make_task(
             title="Write API docs",
-            board="proj", 
+            board="proj",
             column="in-progress",
-            assigned_to="bob", 
+            assigned_to="bob",
             priority="medium", # Priority.MEDIUM,
-            tags=("docs",), 
+            tags=("docs",),
             created_by="bob",
             due_date=date(2026, 7, 1),
+            body="Document the /tasks endpoint and pagination behavior.",
         )
         self.t3 = make_task(
             title="Deploy staging",
-            board="ops", 
+            board="ops",
             column="todo",
-            assigned_to="alice", 
+            assigned_to="alice",
             priority="low", # Priority.LOW,
-            tags=("infra",), 
+            tags=("infra",),
             created_by="carol",
+            body="Rotate the staging credentials before deploying.",
         )
         for t in (self.t1, self.t2, self.t3):
             self.index.upsert_task(t)
@@ -107,6 +110,22 @@ class TestSearchFilters(unittest.TestCase):
     def test_filter_text_is_case_insensitive(self) -> None:
         """text= is matched case-insensitively."""
         self.assertEqual(self._ids(SearchQuery(text="WRITE")), {self.t2.id})
+
+    def test_filter_text_matches_body_substring(self) -> None:
+        """text= matches as a substring of the body when absent from the title."""
+        self.assertEqual(self._ids(SearchQuery(text="SSO")), {self.t1.id})
+
+    def test_filter_text_matches_body_is_case_insensitive(self) -> None:
+        """text= body matching is case-insensitive."""
+        self.assertEqual(self._ids(SearchQuery(text="PAGINATION")), {self.t2.id})
+
+    def test_filter_text_matches_body_substring_not_whole_word(self) -> None:
+        """text= matches a body substring even when it isn't a whole word."""
+        self.assertEqual(self._ids(SearchQuery(text="credential")), {self.t3.id})
+
+    def test_filter_text_with_no_title_or_body_match_returns_empty(self) -> None:
+        """text= with no match in any task's title or body returns nothing."""
+        self.assertEqual(self._ids(SearchQuery(text="nonexistent")), set())
 
     def test_multiple_filters_are_anded(self) -> None:
         """Multiple filters are combined with AND; all must be satisfied."""

@@ -311,6 +311,7 @@ def build_parser() -> argparse.ArgumentParser:
     # search
     p = subparsers.add_parser("search", help="Full-text search across tasks")
     p.add_argument("query", metavar="QUERY", help="Search query")
+    p.add_argument("--slugs", action="store_true", default=False, help="Render a compact list of slugs only, like filenames")
     _add_task_filter_args(p)
     p.add_argument("--board", metavar="BOARD", help="Restrict search to a specific board")
     _add_list_args(p, SORT_TASK_CHOICES)

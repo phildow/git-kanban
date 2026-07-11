@@ -40,7 +40,7 @@ class SearchQuery:
     populating board before passing the query to IndexBase.
     """
 
-    text: str | None = None          # case-insensitive substring of title
+    text: str | None = None          # case-insensitive substring of title or body
     board: str | None = None         # None = all boards
     column: str | None = None        # None = all columns; only used with board
     assigned_to: str | None = None

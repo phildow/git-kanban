@@ -79,7 +79,13 @@ class TestParserAliases(unittest.TestCase):
         self.assertEqual(args.query, "fix")
         self.assertIsNone(args.sort)
         self.assertFalse(args.reverse)
+        self.assertFalse(args.slugs)
         self.assertIs(args.func, handle_search)
+
+    def test_search_slugs_flag(self):
+        """`search ... --slugs` sets slugs to True."""
+        args = repl_parser.parse_args(["search", "fix", "--slugs"])
+        self.assertTrue(args.slugs)
 
     def test_search_sort_and_reverse_flags(self):
         """`search ... --sort <field> --reverse` sets sort and reverse."""
