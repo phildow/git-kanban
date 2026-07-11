@@ -20,6 +20,7 @@ TestReplInit            `init` and `init --bootstrap` on a fresh repo
 TestReplContext         `cd`, `board`, `column` context commands
 TestReplCreate          `create`/`new`/`n` for boards, columns, and tasks
 TestReplList            `list`/`ls` with paths, filters, sort, and -l flag
+TestReplColumns         `columns`/`cols` listing columns for a board
 TestReplRename          `rename` for boards, columns, and tasks
 TestReplDelete          `delete`/`del`/`rm` for boards, columns, and tasks
 TestReplReorder         `reorder column`
@@ -416,6 +417,43 @@ class TestReplList(_InitializedReplBase):
         out = self.run_repl("list", "-a")
         self.assertIn("fix-login", out)
         self.assertIn("task-done", out)
+
+
+# ---------------------------------------------------------------------------
+# columns / cols
+# ---------------------------------------------------------------------------
+
+class TestReplColumns(_InitializedReplBase):
+    """columns/cols command lists columns for a board."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.repo.create_board("proj", slug="proj")
+        self.repo.create_column("proj", "todo", slug="todo")
+        self.repo.create_column("proj", "done", slug="done")
+
+    def test_columns_with_explicit_board_produces_output(self) -> None:
+        """columns <board> produces output."""
+        out = self.run_repl("columns", "proj")
+        self.assertTrue(out.strip())
+
+    def test_columns_uses_current_context_board(self) -> None:
+        """columns with no board argument falls back to the active board context."""
+        self.svc.set_board("proj")
+        out = self.run_repl("columns")
+        self.assertTrue(out.strip())
+
+    def test_cols_alias_produces_output(self) -> None:
+        """cols (alias for columns) produces output."""
+        out = self.run_repl("cols", "proj")
+        self.assertTrue(out.strip())
+
+    def test_columns_slugs_flag_produces_output(self) -> None:
+        """columns <board> --slugs produces the compact slug-only output."""
+        out = self.run_repl("columns", "proj", "--slugs")
+        self.assertTrue(out.strip())
+        self.assertIn("todo", out)
+        self.assertIn("done", out)
 
 
 # ---------------------------------------------------------------------------

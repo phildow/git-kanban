@@ -464,6 +464,7 @@ COMMAND
   cd               Set the active board and column
   board            Set the active board
   column           Set the active column
+  columns          List columns for a board
   create           Create a board, column, or task
   list             List all boards, columns, or tasks in the current context or at a specified path
   rename           Rename a board, column, or task
@@ -497,6 +498,7 @@ new = create
   s = show
   r = show
  ls = list
+cols = columns
  mv = move
  rm = delete
  :q = exit

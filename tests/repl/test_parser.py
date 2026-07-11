@@ -15,6 +15,7 @@ from kanban.repl.commands import (
     handle_board_create,
     handle_column_change,
     handle_column_create,
+    handle_column_list,
     handle_list,
     handle_change_dir,
     handle_rename,
@@ -47,6 +48,27 @@ class TestParserAliases(unittest.TestCase):
     def test_column_command_requires_name(self):
         with self.assertRaises(SystemExit):
             repl_parser.parse_args(["column"])
+
+    def test_columns_and_cols_alias_map_to_column_list_handler(self):
+        args = repl_parser.parse_args(["columns"])
+        self.assertEqual(args.command, "columns")
+        self.assertIsNone(args.board)
+        self.assertIsNone(args.sort)
+        self.assertFalse(args.reverse)
+        self.assertFalse(args.slugs)
+        self.assertIs(args.func, handle_column_list)
+
+        args = repl_parser.parse_args(["cols", "alpha"])
+        self.assertEqual(args.command, "cols")
+        self.assertEqual(args.board, "alpha")
+        self.assertIs(args.func, handle_column_list)
+
+    def test_columns_sort_and_reverse_and_slugs_flags(self):
+        """`columns ... --sort <field> --reverse --slugs` sets all three."""
+        args = repl_parser.parse_args(["columns", "alpha", "--sort", "title", "--reverse", "--slugs"])
+        self.assertEqual(args.sort, "title")
+        self.assertTrue(args.reverse)
+        self.assertTrue(args.slugs)
 
     def test_create_aliases_map_to_create_handlers(self):
         args = repl_parser.parse_args(["new", "board", "main"])

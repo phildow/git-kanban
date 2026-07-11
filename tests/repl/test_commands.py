@@ -220,6 +220,28 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.rename_column.assert_called_once_with("alpha/todo", "doing")
         self.renderer.render_column_rename.assert_called_once_with(args, result)
 
+    def test_handle_column_list(self):
+        """`columns`/`cols` forwards board/sort/reverse and renders the column list."""
+        args = self._args(board="alpha", sort="title", reverse=True)
+        result = object()
+        self.svc.get_columns.return_value = result
+
+        commands.handle_column_list(args, self.svc, self.renderer)
+
+        self.svc.get_columns.assert_called_once_with(board="alpha", sort="title", reverse=True)
+        self.renderer.render_column_list.assert_called_once_with(args, result)
+
+    def test_handle_column_list_defaults(self):
+        """`columns` with no board falls back to None so KanbanService uses context."""
+        args = self._args()
+        result = object()
+        self.svc.get_columns.return_value = result
+
+        commands.handle_column_list(args, self.svc, self.renderer)
+
+        self.svc.get_columns.assert_called_once_with(board=None, sort=None, reverse=False)
+        self.renderer.render_column_list.assert_called_once_with(args, result)
+
         args = self._args(path="alpha/todo", position=2)
         result = object()
         self.svc.reorder_column.return_value = result
