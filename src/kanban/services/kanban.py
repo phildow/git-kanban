@@ -545,7 +545,7 @@ class KanbanService:
 
     def create_task(
         self,
-        path: str,
+        path: str | Path,
         params: TaskCreateParams,
     ) -> Task:
         """
@@ -555,6 +555,8 @@ class KanbanService:
         with the same title slug is already present in that column.  Updates the
         index and commits.
         """
+        if isinstance(path, Path):
+            path = str(path)
 
         board, column, title = self.path_components(path)
 
@@ -598,7 +600,7 @@ class KanbanService:
 
     def get_task(
         self,
-        path: str,
+        path: str | Path,
     ) -> Task:
         """
         Resolve and return a single task by title slug.  Delegates
@@ -606,6 +608,9 @@ class KanbanService:
         explicit → context → index-search chain and raises TaskNotFound or
         if resolution fails.
         """
+        if isinstance(path, Path):
+            path = str(path)
+
         board, column, title = self.path_components(path)
 
         if board is None or column is None:
@@ -617,7 +622,7 @@ class KanbanService:
 
     def rename_task(
         self,
-        path: str,
+        path: str | Path,
         new_title: str,
     ) -> Task:
         """
@@ -626,6 +631,10 @@ class KanbanService:
         resolved, and TaskAlreadyExists if the new title slug is already taken
         in that column.  Updates the index and commits.
         """
+
+        if isinstance(path, Path):
+            path = str(path)
+
         board, column, title = self.path_components(path)
         if board is None or column is None or title is None:
             raise ValueError(f"Unable to locate task at: {path}")
@@ -643,13 +652,17 @@ class KanbanService:
 
     def edit_task(
         self,
-        path: str,
+        path: str | Path,
     ) -> Task:
         """Open's the task's .md file in an editor, then reads the updated 
         content and metadata and applies changes to the task.  Raises 
         TaskNotFound if the task cannot be resolved.  
         Updates the index and commits.
         """
+        
+        if isinstance(path, Path):
+            path = str(path)
+
         task = self.get_task(path)
         markdown = self._task_to_markdown(task)
 
@@ -686,7 +699,7 @@ class KanbanService:
 
     def update_task(
         self,
-        path:     str,
+        path:     str | Path,
         updates:  TaskUpdateParams,
     ) -> Task:
         """
@@ -695,6 +708,9 @@ class KanbanService:
         current title, the file is renamed to match the new slug.  Raises
         TaskNotFound via path_components. Updates the index entry and commits.
         """
+        if isinstance(path, Path):
+            path = str(path)
+
         task = self.get_task(path)
 
         # TODO: how do we handle removing a field?
@@ -727,7 +743,7 @@ class KanbanService:
 
     def move_task(
         self,
-        path:   str,
+        path:   str | Path,
         column: str,
     ) -> Task:
         """
@@ -736,6 +752,9 @@ class KanbanService:
         Raises TaskNotFound, BoardNotFound, or ColumnNotFound as appropriate.  
         Updates the index and commits.
         """
+        if isinstance(path, Path):
+            path = str(path)
+
         task = self.get_task(path)
         column = Slug(column)
         result = self.repository.move_task(task, column)
@@ -744,7 +763,7 @@ class KanbanService:
 
     def reorder_task(
         self,
-        path: str,
+        path: str | Path,
         op:   str,
     ) -> Task:
         """
@@ -752,6 +771,9 @@ class KanbanService:
         new priority is valid.  Raises TaskNotFound via path_components.
         Updates the index and commits.
         """
+        if isinstance(path, Path):
+            path = str(path)
+
         task = self.get_task(path)
         result = self.repository.reorder_task(task, op)
         self.index_service.upsert_task(result)
@@ -759,12 +781,15 @@ class KanbanService:
 
     def delete_task(
         self,
-        path: str,
+        path: str | Path,
     ) -> None:
         """
         Delete a task's .md file from disk.  Raises TaskNotFound or
         via path_components.  Removes the task's index entry and commits.
         """
+        if isinstance(path, Path):
+            path = str(path)
+
         task = self.get_task(path)
         self.repository.delete_task(task)
         self.index_service.remove_task(task)
@@ -772,13 +797,16 @@ class KanbanService:
 
     def assign_task(
         self,
-        path: str,
+        path: str | Path,
         user: str,
     ) -> Task:
         """
         Assign a task to a user.  Raises TaskNotFound via path_components.  
         Updates the index and commits.
         """
+        if isinstance(path, Path):
+            path = str(path)
+
         task = self.get_task(path)
         task.assigned_to = user
         updated = self.repository.update_task(task, slug=task.slug)
