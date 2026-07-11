@@ -220,6 +220,17 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.rename_column.assert_called_once_with("alpha/todo", "doing")
         self.renderer.render_column_rename.assert_called_once_with(args, result)
 
+    def test_handle_board_list(self):
+        """`boards` renders the board list."""
+        args = self._args()
+        result = object()
+        self.svc.get_boards.return_value = result
+
+        commands.handle_board_list(args, self.svc, self.renderer)
+
+        self.svc.get_boards.assert_called_once_with()
+        self.renderer.render_board_list.assert_called_once_with(args, result)
+
     def test_handle_column_list(self):
         """`columns`/`cols` forwards board and renders the column list."""
         args = self._args(board="alpha")

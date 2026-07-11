@@ -13,6 +13,7 @@ from kanban.repl import parser as repl_parser
 from kanban.repl.commands import (
     handle_board_change,
     handle_board_create,
+    handle_board_list,
     handle_column_change,
     handle_column_create,
     handle_column_list,
@@ -38,6 +39,17 @@ class TestParserAliases(unittest.TestCase):
     def test_board_command_requires_name(self):
         with self.assertRaises(SystemExit):
             repl_parser.parse_args(["board"])
+
+    def test_boards_command_maps_to_board_list_handler(self):
+        args = repl_parser.parse_args(["boards"])
+        self.assertEqual(args.command, "boards")
+        self.assertFalse(args.slugs)
+        self.assertIs(args.func, handle_board_list)
+
+    def test_boards_slugs_flag(self):
+        """`boards --slugs` sets slugs to True."""
+        args = repl_parser.parse_args(["boards", "--slugs"])
+        self.assertTrue(args.slugs)
 
     def test_column_command_maps_to_column_handler(self):
         args = repl_parser.parse_args(["column", "todo"])

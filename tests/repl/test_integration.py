@@ -20,6 +20,7 @@ TestReplInit            `init` and `init --bootstrap` on a fresh repo
 TestReplContext         `cd`, `board`, `column` context commands
 TestReplCreate          `create`/`new`/`n` for boards, columns, and tasks
 TestReplList            `list`/`ls` with paths, filters, sort, and -l flag
+TestReplBoards          `boards` listing all boards
 TestReplColumns         `columns`/`cols` listing columns for a board
 TestReplRename          `rename` for boards, columns, and tasks
 TestReplDelete          `delete`/`del`/`rm` for boards, columns, and tasks
@@ -417,6 +418,31 @@ class TestReplList(_InitializedReplBase):
         out = self.run_repl("list", "-a")
         self.assertIn("fix-login", out)
         self.assertIn("task-done", out)
+
+
+# ---------------------------------------------------------------------------
+# boards
+# ---------------------------------------------------------------------------
+
+class TestReplBoards(_InitializedReplBase):
+    """boards command lists all boards."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.repo.create_board("proj", slug="proj")
+        self.repo.create_board("ops", slug="ops")
+
+    def test_boards_produces_output(self) -> None:
+        """boards produces output."""
+        out = self.run_repl("boards")
+        self.assertTrue(out.strip())
+
+    def test_boards_slugs_flag_produces_output(self) -> None:
+        """boards --slugs produces the compact slug-only output."""
+        out = self.run_repl("boards", "--slugs")
+        self.assertTrue(out.strip())
+        self.assertIn("proj", out)
+        self.assertIn("ops", out)
 
 
 # ---------------------------------------------------------------------------

@@ -75,6 +75,11 @@ def handle_list(args: argparse.Namespace, svc: KanbanService, renderer: object) 
 		raise ValueError("Unexpected result type from handle_list: {}".format(typ))
 
 
+def handle_board_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	result = svc.get_boards()
+	renderer.render_board_list(args, result)
+
+
 def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	result = svc.get_columns(board=getattr(args, "board", None))
 	renderer.render_column_list(args, result)
