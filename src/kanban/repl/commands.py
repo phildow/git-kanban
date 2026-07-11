@@ -76,11 +76,7 @@ def handle_list(args: argparse.Namespace, svc: KanbanService, renderer: object) 
 
 
 def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	result = svc.get_columns(
-		board=getattr(args, "board", None),
-		sort=getattr(args, "sort", None),
-		reverse=getattr(args, "reverse", False),
-	)
+	result = svc.get_columns(board=getattr(args, "board", None))
 	renderer.render_column_list(args, result)
 
 

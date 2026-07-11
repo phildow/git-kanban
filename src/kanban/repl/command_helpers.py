@@ -69,9 +69,9 @@ def handle_list_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[ty
     elif board and not column and all_tasks:
         return Task, svc.get_tasks(path=f"/{board}", filter=filter, sort=sort, reverse=reverse)
     elif board and not column and not all_tasks:
-        return Column, svc.get_columns(board=board, sort=sort, reverse=reverse)
+        return Column, svc.get_columns(board=board)
     elif not board and not column:
-        return Board, svc.get_boards(sort=sort, reverse=reverse)
+        return Board, svc.get_boards()
        
 
 def handle_delete_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[type, Board | Column | Task] | tuple[None, None]:

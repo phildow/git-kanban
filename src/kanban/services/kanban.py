@@ -327,15 +327,10 @@ class KanbanService:
 
     # ── Boards ────────────────────────────────────────────────────────────────
 
-    def get_boards(
-        self,
-        sort:    str | None = None,
-        reverse: bool = False,
-    ) -> list[Board]:
+    def get_boards(self) -> list[Board]:
         """
-        Return all boards in the repository.  sort accepts "title"; omitting
-        it preserves the order recorded in .kanban-store/boards/.metadata.  reverse flips
-        whichever ordering is in effect.
+        Return all boards in the repository, in the order recorded in
+        .kanban-store/boards/.metadata.
         """
         return self.repository.get_boards()
 
@@ -416,14 +411,11 @@ class KanbanService:
     def get_columns(
         self,
         board:   str | None = None,
-        sort:    str | None = None,
-        reverse: bool = False,
     ) -> list[Column]:
         """
-        Return all columns for the given board.  Falls back to the current
-        context board if board is None; raises NoBoardInContext if neither is
-        set.  sort accepts "title"; omitting it preserves the order in the
-        board's .metadata file.
+        Return all columns for the given board, in the order recorded in the
+        board's .metadata file.  Falls back to the current context board if
+        board is None; raises NoBoardInContext if neither is set.
         """
         board, _, _ = self.path_components(board)
         return self.repository.get_columns(board)

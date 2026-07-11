@@ -14,7 +14,7 @@ Be succinct.
 
 - Use python as the programming language
 - The name of the root python package is `kanban`
-- When writing python prefer dot notation over `getattr`, especially when the type is known
+- Use dot notation instead `getattr`, especially when the type is known
 - Prefer explicit types over `object` and add type whenever possible
 - Use double quotes `"..."` for strings
 - When typing optionals prefer `typ | None` instead of `Optional(typ)`
@@ -378,12 +378,12 @@ The command line structure follows:
 kanban init
 kanban repl [--no-rich]
 
-kanban board list [--format <table|plain|json>] [--sort <title>] [--reverse]
+kanban board list [--format <table|plain|json>]
 kanban board create <board>
 kanban board rename <board> <new-name>
 kanban board delete <board>
 
-kanban column list <board> [--format <table|plain|json>] [--sort <title>] [--reverse]
+kanban column list <board> [--format <table|plain|json>]
 kanban column create <board>/<column>
 kanban column rename <board><column> <new-name>
 kanban column reorder <board>/<column> <position>

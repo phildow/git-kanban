@@ -38,7 +38,6 @@ from ..repl.commands import (
 )
 
 SORT_TASK_CHOICES = ["title", "priority", "due-date", "created-at", "updated-at", "created-by", "column"]
-SORT_BOARD_COLUMN_CHOICES = ["title"]
 PRIORITY_CHOICES = [p.value for p in Priority]
 
 class CustomFormatter(argparse.RawDescriptionHelpFormatter):
@@ -264,7 +263,6 @@ def _add_columns_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("columns", aliases=["cols"], help="List columns for a board")
     p.add_argument("board", metavar="BOARD", nargs="?", help="Board to list columns for (optional, falls back to current context)")
     p.add_argument("--slugs", action="store_true", default=False, help="Render a compact list of slugs only, like filenames")
-    _add_list_args(p, SORT_BOARD_COLUMN_CHOICES)
     _add_global_flags(p)
     p.set_defaults(func=handle_column_list)
 

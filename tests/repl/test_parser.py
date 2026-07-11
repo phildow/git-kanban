@@ -53,8 +53,6 @@ class TestParserAliases(unittest.TestCase):
         args = repl_parser.parse_args(["columns"])
         self.assertEqual(args.command, "columns")
         self.assertIsNone(args.board)
-        self.assertIsNone(args.sort)
-        self.assertFalse(args.reverse)
         self.assertFalse(args.slugs)
         self.assertIs(args.func, handle_column_list)
 
@@ -63,11 +61,9 @@ class TestParserAliases(unittest.TestCase):
         self.assertEqual(args.board, "alpha")
         self.assertIs(args.func, handle_column_list)
 
-    def test_columns_sort_and_reverse_and_slugs_flags(self):
-        """`columns ... --sort <field> --reverse --slugs` sets all three."""
-        args = repl_parser.parse_args(["columns", "alpha", "--sort", "title", "--reverse", "--slugs"])
-        self.assertEqual(args.sort, "title")
-        self.assertTrue(args.reverse)
+    def test_columns_slugs_flag(self):
+        """`columns ... --slugs` sets slugs to True."""
+        args = repl_parser.parse_args(["columns", "alpha", "--slugs"])
         self.assertTrue(args.slugs)
 
     def test_create_aliases_map_to_create_handlers(self):

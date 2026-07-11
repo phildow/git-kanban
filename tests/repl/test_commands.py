@@ -221,14 +221,14 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.renderer.render_column_rename.assert_called_once_with(args, result)
 
     def test_handle_column_list(self):
-        """`columns`/`cols` forwards board/sort/reverse and renders the column list."""
-        args = self._args(board="alpha", sort="title", reverse=True)
+        """`columns`/`cols` forwards board and renders the column list."""
+        args = self._args(board="alpha")
         result = object()
         self.svc.get_columns.return_value = result
 
         commands.handle_column_list(args, self.svc, self.renderer)
 
-        self.svc.get_columns.assert_called_once_with(board="alpha", sort="title", reverse=True)
+        self.svc.get_columns.assert_called_once_with(board="alpha")
         self.renderer.render_column_list.assert_called_once_with(args, result)
 
     def test_handle_column_list_defaults(self):
@@ -239,7 +239,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_column_list(args, self.svc, self.renderer)
 
-        self.svc.get_columns.assert_called_once_with(board=None, sort=None, reverse=False)
+        self.svc.get_columns.assert_called_once_with(board=None)
         self.renderer.render_column_list.assert_called_once_with(args, result)
 
         args = self._args(path="alpha/todo", position=2)

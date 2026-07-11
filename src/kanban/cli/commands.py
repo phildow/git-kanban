@@ -59,7 +59,7 @@ def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: object, 
 # ---------------------------------------------------------------------------
 
 def handle_board_list(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
-	result = svc.get_boards(sort=args.sort, reverse=args.reverse)
+	result = svc.get_boards()
 	_pick(args, renderer, json_renderer).render_board_list(args, result)
 
 
@@ -84,7 +84,7 @@ def handle_board_delete(args: argparse.Namespace, svc: KanbanService, renderer: 
 # ---------------------------------------------------------------------------
 
 def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
-	result = svc.get_columns(board=args.board, sort=args.sort, reverse=args.reverse)
+	result = svc.get_columns(board=args.board)
 	_pick(args, renderer, json_renderer).render_column_list(args, result)
 
 
