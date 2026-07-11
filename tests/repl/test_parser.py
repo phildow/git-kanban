@@ -18,6 +18,7 @@ from kanban.repl.commands import (
     handle_list,
     handle_change_dir,
     handle_rename,
+    handle_search,
     handle_task_assign,
     handle_task_create,
     handle_task_move,
@@ -71,6 +72,25 @@ class TestParserAliases(unittest.TestCase):
         """`create task ... --edit` sets edit to True."""
         args = repl_parser.parse_args(["create", "task", "main/todo/fix-parser", "--edit"])
         self.assertTrue(args.edit)
+
+    def test_search_maps_to_search_handler(self):
+        args = repl_parser.parse_args(["search", "fix"])
+        self.assertEqual(args.command, "search")
+        self.assertEqual(args.query, "fix")
+        self.assertIsNone(args.sort)
+        self.assertFalse(args.reverse)
+        self.assertIs(args.func, handle_search)
+
+    def test_search_sort_and_reverse_flags(self):
+        """`search ... --sort <field> --reverse` sets sort and reverse."""
+        args = repl_parser.parse_args(["search", "fix", "--sort", "priority", "--reverse"])
+        self.assertEqual(args.sort, "priority")
+        self.assertTrue(args.reverse)
+
+    def test_search_sort_rejects_invalid_choice(self):
+        """`search --sort` only accepts SORT_TASK_CHOICES values."""
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["search", "fix", "--sort", "bogus"])
 
     def test_update_task_maps_to_update_handler(self):
         args = repl_parser.parse_args([

@@ -313,6 +313,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("query", metavar="QUERY", help="Search query")
     _add_task_filter_args(p)
     p.add_argument("--board", metavar="BOARD", help="Restrict search to a specific board")
+    _add_list_args(p, SORT_TASK_CHOICES)
     _add_global_flags(p)
     p.set_defaults(func=handle_search)
 
