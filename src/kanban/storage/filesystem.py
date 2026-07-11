@@ -387,9 +387,7 @@ class FilesystemRepository(KanbanRepository):
                 for filename in self._get_task_order(b, col):
                     entry = col_dir / filename
                     if entry.is_file():
-                        board_name = self._board_name_from_slug(b)
-                        column_name = self._column_name_from_slug(b, col)
-                        tasks.append(self._parse_task_file(entry, b, col))
+                        tasks.append(self._parse_task_file(entry))
 
         return tasks
 
@@ -404,7 +402,7 @@ class FilesystemRepository(KanbanRepository):
         if not task_path.is_file():
             raise TaskNotFound(f"{board}/{column}/{filename}")
         
-        return self._parse_task_file(task_path, board, column)
+        return self._parse_task_file(task_path)
 
     def create_task(self, task: Task, slug: Slug) -> Task:
         column_slug = task.column
@@ -452,7 +450,7 @@ class FilesystemRepository(KanbanRepository):
             order.append(f"{slug}.md")
         self._set_task_order(board_slug, column_slug, order)
 
-        return self._parse_task_file(path, task.board, task.column)
+        return self._parse_task_file(path)
 
     def update_task(self, task: Task, slug: Slug) -> Task:
         board_slug = task.board
@@ -506,7 +504,7 @@ class FilesystemRepository(KanbanRepository):
                 order.append(new_filename)
             self._set_task_order(board_slug, column_slug, order)
 
-        return self._parse_task_file(new_path, task.board, task.column)
+        return self._parse_task_file(new_path)
 
     def move_task(self, task: Task, column: Slug) -> Task:
         board_slug = task.board
@@ -546,11 +544,7 @@ class FilesystemRepository(KanbanRepository):
                 dest_order.append(filename)
             self._set_task_order(board_slug, dest_column_slug, dest_order)
 
-        board_name = self.get_board_metadata(board_slug, "fields.name") or task.board
-        column_name = self.get_column_metadata(board_slug, dest_column_slug, "fields.name") or column
-
-        # TODO: return slug for board and column
-        return self._parse_task_file(dest_file, board_name, column_name)
+        return self._parse_task_file(dest_file)
 
     def reorder_task(self, task: Task, op: str) -> Task:
         board_slug = task.board
@@ -770,13 +764,19 @@ class FilesystemRepository(KanbanRepository):
     # Task file parsing and utilities
     # ------------------------------------------------------------------
 
-    def _parse_task_file(self, path: Path, board: Slug, column: Slug) -> Task:
-        
+    def _parse_task_file(self, path: Path) -> Task:
+
         def _parse_dt(raw: str) -> datetime:
             dt = datetime.fromisoformat(raw)
             return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
-        
-        """Parse a markdown task file with YAML frontmatter into a Task."""
+
+        """Parse a markdown task file with YAML frontmatter into a Task.
+
+        board and column are derived from path's parent directories, which
+        follow boards_dir/<board>/<column>/<slug>.md.
+        """
+        column = path.parent.name
+        board = path.parent.parent.name
         content = path.read_text(encoding="utf-8")
         lines = content.splitlines()
 

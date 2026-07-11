@@ -127,6 +127,26 @@ class TestFilesystemMoveTask(unittest.TestCase):
         with self.assertRaises(TaskAlreadyExists):
             self.repo.move_task(t1, "done")
 
+    def test_returns_slugs_not_display_names_when_they_differ(self) -> None:
+        """board/column on the returned task are slugs, even when display names differ."""
+        self.repo.create_board("My Project", slug="my-project")
+        self.repo.create_column("my-project", "To Do", slug="todo")
+        self.repo.create_column("my-project", "Done", slug="done")
+
+        task = Task(
+            id=uuid4(),
+            title="Alpha",
+            slug="alpha",
+            board="my-project",
+            column="todo",
+        )
+        created = self.repo.create_task(task, "alpha")
+
+        moved = self.repo.move_task(created, "done")
+
+        self.assertEqual(moved.board, "my-project")
+        self.assertEqual(moved.column, "done")
+
 
 if __name__ == "__main__":
     unittest.main()
