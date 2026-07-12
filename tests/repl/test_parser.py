@@ -64,6 +64,7 @@ class TestParserAliases(unittest.TestCase):
         self.assertIsNone(args.sort)
         self.assertFalse(args.reverse)
         self.assertFalse(args.slugs)
+        self.assertIsNone(args.column)
         self.assertIs(args.func, handle_task_list)
 
         args = repl_parser.parse_args(["tasks", "alpha/todo"])
@@ -76,6 +77,11 @@ class TestParserAliases(unittest.TestCase):
         self.assertEqual(args.sort, "title")
         self.assertTrue(args.reverse)
         self.assertTrue(args.slugs)
+
+    def test_tasks_exclude_flag_is_repeatable(self):
+        """`tasks ... -x <column> --exclude <column>` accumulates into a list."""
+        args = repl_parser.parse_args(["tasks", "alpha", "-x", "done", "--exclude", "archive"])
+        self.assertEqual(args.column, ["done", "archive"])
 
     def test_create_aliases_map_to_create_handlers(self):
         args = repl_parser.parse_args(["new", "board", "main"])
@@ -165,6 +171,11 @@ class TestParserAliases(unittest.TestCase):
 
         args = repl_parser.parse_args(["list", "--slugs"])
         self.assertTrue(args.slugs)
+
+    def test_list_exclude_flag_is_repeatable(self):
+        """`list ... -x <column> --exclude <column>` accumulates into a list."""
+        args = repl_parser.parse_args(["list", "-x", "done", "--exclude", "archive"])
+        self.assertEqual(args.column, ["done", "archive"])
 
     def test_assign_maps_to_assign_handler(self):
         args = repl_parser.parse_args(["assign", "main/todo/fix-login", "alice"])

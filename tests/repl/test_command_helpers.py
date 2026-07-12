@@ -66,6 +66,11 @@ class TestHandleTaskListHelper(unittest.TestCase):
         with self.assertRaises(ValueError):
             handle_task_list_helper(self._args(), self.svc)
 
+    def test_exclude_drops_tasks_in_named_column(self) -> None:
+        """column=[name] (the --exclude flag's dest) drops tasks in that column."""
+        result = handle_task_list_helper(self._args(path="alpha", column=["done"]), self.svc)
+        self.assertEqual([t.id for t in result], [self.t1.id])
+
 
 if __name__ == "__main__":
     unittest.main()

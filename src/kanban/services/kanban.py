@@ -71,6 +71,8 @@ def _task_matches_filter(task: Task, filter: TaskFilter) -> bool:
         return False
     if filter.due_after is not None and (task.due_date is None or task.due_date <= filter.due_after):
         return False
+    if filter.exclude_columns and task.column in filter.exclude_columns:
+        return False
     return True
 
 

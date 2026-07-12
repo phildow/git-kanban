@@ -37,6 +37,7 @@ def _build_task_filter(args: argparse.Namespace) -> TaskFilter:
         due_before=_parse_date(getattr(args, "due_before", None)),
         due_after=_parse_date(getattr(args, "due_after", None)),
         created_by=getattr(args, "created_by", None),
+        exclude_columns=getattr(args, "column", None) or [],
     )
 
 # ---------------------------------------------------------------------------

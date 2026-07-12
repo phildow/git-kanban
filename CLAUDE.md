@@ -469,6 +469,7 @@ columns <board> [--slugs]
 
 tasks [BOARD[/COLUMN]]
     [--slugs]
+    [--exclude <column>]        # repeatable
     [--sort <title|priority|due-date|created-at|updated-at|created-by|column>]
     [--reverse]
     [--assigned-to <name>]
@@ -490,6 +491,7 @@ create task <board>/<column>/<title>
 
 list [BOARD[/COLUMN]] [-a|--tasks]
     [--slugs]
+    [--exclude <column>]        # repeatable
     [--sort <title|priority|due-date|created-at|updated-at|created-by|column>]
     [--reverse]
     [--assigned-to <name>]

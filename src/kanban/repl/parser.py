@@ -146,6 +146,7 @@ def _add_list_parser(subparsers: argparse._SubParsersAction) -> None:
     group = p.add_mutually_exclusive_group(required=False)
     group.add_argument("path", metavar="BOARD[/COLUMN]", nargs="?", help="Board or board/column to list (optional)")
     group.add_argument("-a", "--tasks", dest="all_tasks", action="store_true", default=False, help="List all tasks on the current board")
+    p.add_argument("-x", "--exclude", metavar="COLUMN", action="append", dest="column", help="Exclude tasks in this column (repeatable)")
     _add_list_args(p, SORT_TASK_CHOICES)
     _add_task_filter_args(p)
     _add_global_flags(p)
@@ -263,6 +264,7 @@ def _add_tasks_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("path", metavar="BOARD[/COLUMN]", nargs="?",
                     help="Board or board/column to list tasks for (optional, falls back to every task in the active board)")
     p.add_argument("--slugs", action="store_true", default=False, help="Render a compact list of slugs only, like filenames")
+    p.add_argument("-x", "--exclude", metavar="COLUMN", action="append", dest="column", help="Exclude tasks in this column (repeatable)")
     _add_list_args(p, SORT_TASK_CHOICES)
     _add_task_filter_args(p)
     _add_global_flags(p)
