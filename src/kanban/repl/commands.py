@@ -76,21 +76,6 @@ def handle_list(args: argparse.Namespace, svc: KanbanService, renderer: object) 
 		raise ValueError("Unexpected result type from handle_list: {}".format(typ))
 
 
-def handle_board_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	result = svc.get_boards()
-	renderer.render_board_list(args, result)
-
-
-def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	result = svc.get_columns(board=getattr(args, "board", None))
-	renderer.render_column_list(args, result)
-
-
-def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	result = handle_task_list_helper(args, svc)
-	renderer.render_task_list(args, result)
-
-
 def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	typ, result = handle_delete_helper(args, svc)
 
@@ -126,6 +111,11 @@ def handle_rename(args: argparse.Namespace, svc: KanbanService, renderer: object
 # Board subcommands
 # ---------------------------------------------------------------------------
 
+def handle_board_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	result = svc.get_boards()
+	renderer.render_board_list(args, result)
+
+
 def handle_board_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	result = svc.create_board(args.board)
 	renderer.render_board_create(args, result)
@@ -139,6 +129,11 @@ def handle_board_rename(args: argparse.Namespace, svc: KanbanService, renderer: 
 # ---------------------------------------------------------------------------
 # Column subcommands
 # ---------------------------------------------------------------------------
+
+def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	result = svc.get_columns(board=getattr(args, "board", None))
+	renderer.render_column_list(args, result)
+
 
 def handle_column_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	result = svc.create_column(args.path)
@@ -158,6 +153,11 @@ def handle_column_reorder(args: argparse.Namespace, svc: KanbanService, renderer
 # ---------------------------------------------------------------------------
 # Task subcommands
 # ---------------------------------------------------------------------------
+
+def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	result = handle_task_list_helper(args, svc)
+	renderer.render_task_list(args, result)
+	
 
 def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	params = TaskCreateParams(
