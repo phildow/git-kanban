@@ -23,6 +23,7 @@ from kanban.repl.commands import (
     handle_task_create,
     handle_task_list,
     handle_task_move,
+    handle_task_show,
     handle_task_update,
 )
 
@@ -183,6 +184,21 @@ class TestParserAliases(unittest.TestCase):
         self.assertEqual(args.path, "main/todo/fix-login")
         self.assertEqual(args.assigned_to, "alice")
         self.assertIs(args.func, handle_task_assign)
+
+    def test_show_maps_to_show_handler_and_defaults_plain_to_false(self):
+        args = repl_parser.parse_args(["show", "main/todo/fix-login"])
+        self.assertEqual(args.command, "show")
+        self.assertEqual(args.path, "main/todo/fix-login")
+        self.assertFalse(args.plain)
+        self.assertIs(args.func, handle_task_show)
+
+    def test_show_plain_flag(self):
+        """`show ... -p`/`--plain` sets plain to True."""
+        args = repl_parser.parse_args(["show", "main/todo/fix-login", "-p"])
+        self.assertTrue(args.plain)
+
+        args = repl_parser.parse_args(["show", "main/todo/fix-login", "--plain"])
+        self.assertTrue(args.plain)
 
     def test_assign_requires_path_and_user(self):
         with self.assertRaises(SystemExit):

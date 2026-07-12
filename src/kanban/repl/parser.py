@@ -187,6 +187,7 @@ def _add_reorder_parser(subparsers: argparse._SubParsersAction) -> None:
 def _add_show_parser(subparsers: argparse._SubParsersAction) -> None:
     show_parser = subparsers.add_parser("show", aliases=["view", "v", "s"], help="Show task details")
     show_parser.add_argument("path", metavar="BOARD/COLUMN/TASK", help="The task to show")
+    show_parser.add_argument("-p", "--plain", action="store_true", default=False, help="Render the task body as plain text instead of Markdown")
     show_parser.set_defaults(func=handle_task_show)
 
 

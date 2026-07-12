@@ -507,7 +507,7 @@ delete <board[/column][/task]> [-f|--force]
 
 reorder column <board/column> <position>
 
-show <board/column/task>
+show <board/column/task> [-p|--plain]
 
 edit <board/column/task>
 
@@ -559,18 +559,18 @@ The `[]` brackets indicate optional path components that are inferred from the u
 The following command aliases are registered by default:
 
 ```
-new = create        (subcommands: board|b, column|c, task|t)
-  n = create
- ls = list
+ new = create        (subcommands: board|b, column|c, task|t)
+   n = create
+  ls = list
 cols = columns
- mv = move
-del = delete
- rm = delete
+  mv = move
+ del = delete
+  rm = delete
 view = show
    v = show
    s = show
 quit = exit
- :q = exit
+  :q = exit
 ```
 
 The REPL supports command control commands and tab completion:
