@@ -239,16 +239,24 @@ class TestReplCreate(_InitializedReplBase):
         self.assertTrue((self.boards_dir / "proj").is_dir())
 
     def test_create_column_creates_directory(self) -> None:
-        """create column creates a column directory."""
+        """create column creates a column directory in the active board."""
         self.repo.create_board("proj", slug="proj")
-        self.run_repl("create", "column", "proj/todo")
+        self.svc.set_board("proj")
+        self.run_repl("create", "column", "todo")
         self.assertTrue((self.boards_dir / "proj" / "todo").is_dir())
 
     def test_create_column_produces_output(self) -> None:
         """create column prints something."""
         self.repo.create_board("proj", slug="proj")
-        out = self.run_repl("create", "column", "proj/todo")
+        self.svc.set_board("proj")
+        out = self.run_repl("create", "column", "todo")
         self.assertTrue(out.strip())
+
+    def test_create_column_requires_active_board(self) -> None:
+        """create column with no active board raises rather than resolving nonsense."""
+        self.repo.create_board("proj", slug="proj")
+        with self.assertRaises(ValueError):
+            self.run_repl("create", "column", "todo")
 
     def test_create_task_creates_file(self) -> None:
         """create task creates a markdown file in the active board."""
@@ -970,43 +978,44 @@ class TestReplColumnEnglishNames(_InitializedReplBase):
         super().setUp()
         # Create with no default columns so later column create tests don't collide.
         self.svc.create_board("My Project", columns=[])
+        self.svc.set_board("my-project")
 
     def test_create_uses_slug_for_directory(self) -> None:
         """create column with a space-containing name creates a directory at the kebab slug."""
-        self.run_repl("create", "column", "my-project/On Hold")
+        self.run_repl("create", "column", "On Hold")
         self.assertTrue((self.boards_dir / "my-project" / "on-hold").is_dir())
 
     def test_create_output_contains_name(self) -> None:
         """create column prints the full display name."""
-        out = self.run_repl("create", "column", "my-project/On Hold")
+        out = self.run_repl("create", "column", "On Hold")
         self.assertIn("On Hold", out)
 
     def test_create_output_contains_slug(self) -> None:
         """create column prints the derived slug."""
-        out = self.run_repl("create", "column", "my-project/On Hold")
+        out = self.run_repl("create", "column", "On Hold")
         self.assertIn("on-hold", out)
 
     def test_rename_uses_new_slug_for_directory(self) -> None:
         """rename column moves the directory to the slug derived from the new display name."""
-        self.run_repl("create", "column", "my-project/backlog")
+        self.run_repl("create", "column", "backlog")
         self.run_repl("rename", "/my-project/backlog", "Work Queue")
         self.assertTrue((self.boards_dir / "my-project" / "work-queue").is_dir())
 
     def test_rename_removes_old_slug_directory(self) -> None:
         """rename column removes the old slug directory."""
-        self.run_repl("create", "column", "my-project/backlog")
+        self.run_repl("create", "column", "backlog")
         self.run_repl("rename", "/my-project/backlog", "Work Queue")
         self.assertFalse((self.boards_dir / "my-project" / "backlog").exists())
 
     def test_rename_output_contains_new_name(self) -> None:
         """rename column prints the new display name."""
-        self.run_repl("create", "column", "my-project/backlog")
+        self.run_repl("create", "column", "backlog")
         out = self.run_repl("rename", "/my-project/backlog", "Work Queue")
         self.assertIn("Work Queue", out)
 
     def test_rename_output_contains_new_slug(self) -> None:
         """rename column prints the new derived slug."""
-        self.run_repl("create", "column", "my-project/backlog")
+        self.run_repl("create", "column", "backlog")
         out = self.run_repl("rename", "/my-project/backlog", "Work Queue")
         self.assertIn("work-queue", out)
 

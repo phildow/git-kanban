@@ -91,10 +91,10 @@ class TestParserAliases(unittest.TestCase):
         self.assertEqual(args.board, "main")
         self.assertIs(args.func, handle_board_create)
 
-        args = repl_parser.parse_args(["new", "column", "main/todo"])
+        args = repl_parser.parse_args(["new", "column", "todo"])
         self.assertEqual(args.command, "new")
         self.assertEqual(args.create_subject, "column")
-        self.assertEqual(args.path, "main/todo")
+        self.assertEqual(args.column, "todo")
         self.assertIs(args.func, handle_column_create)
 
         args = repl_parser.parse_args(["n", "task", "todo", "fix-parser"])

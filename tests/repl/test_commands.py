@@ -182,11 +182,12 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.renderer.render_task_rename.assert_called_once_with(args, result)
 
     def test_column_handlers(self):
-        args = self._args(path="alpha/todo")
+        args = self._args(column="todo")
+        self.svc.working_board = "alpha"
         result = object()
         self.svc.create_column.return_value = result
         commands.handle_column_create(args, self.svc, self.renderer)
-        self.svc.create_column.assert_called_once_with("alpha/todo")
+        self.svc.create_column.assert_called_once_with("/alpha/todo")
         self.renderer.render_column_create.assert_called_once_with(args, result)
 
         args = self._args(path="alpha/todo", new_name="doing")
@@ -195,6 +196,13 @@ class TestReplCommandHandlers(unittest.TestCase):
         commands.handle_column_rename(args, self.svc, self.renderer)
         self.svc.rename_column.assert_called_once_with("alpha/todo", "doing")
         self.renderer.render_column_rename.assert_called_once_with(args, result)
+
+    def test_handle_column_create_raises_without_active_board(self):
+        """create column with no active board raises rather than resolving nonsense."""
+        args = self._args(column="todo")
+        self.svc.working_board = None
+        with self.assertRaises(ValueError):
+            commands.handle_column_create(args, self.svc, self.renderer)
 
     def test_handle_board_list(self):
         """`boards` renders the board list."""

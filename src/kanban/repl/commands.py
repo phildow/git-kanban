@@ -126,7 +126,11 @@ def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: o
 
 
 def handle_column_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	result = svc.create_column(args.path)
+	board = svc.working_board
+	if not board:
+		raise ValueError("No active board; set one with `cd` before creating a column")
+
+	result = svc.create_column(f"/{board}/{args.column}")
 	renderer.render_column_create(args, result)
 
 

@@ -127,7 +127,7 @@ def _add_create_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # create column
     p = create_sub.add_parser("column", aliases=["c"], help="Create a new column")
-    p.add_argument("path", metavar="BOARD/COLUMN", help="Column path")
+    p.add_argument("column", metavar="COLUMN", help="Name of the new column, created in the active board")
     _add_global_flags(p)
     p.set_defaults(func=handle_column_create)
 

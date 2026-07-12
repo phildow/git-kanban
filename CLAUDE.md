@@ -480,7 +480,7 @@ tasks [BOARD[/COLUMN]]
     [--created-by <name>]
 
 create board <board>
-create column <board>/<column>
+create column <column>    # created in the active board; raises if no board is active
 create task <column> <title>    # column in the active board; raises if no board is active
     [--edit]
     [--assigned-to <name>]
