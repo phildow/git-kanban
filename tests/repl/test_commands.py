@@ -56,40 +56,6 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.change_dir.assert_called_once_with(path="alpha/todo")
         self.renderer.render_change_dir.assert_called_once_with(args, result)
 
-    def test_handle_board_sets_context_to_board(self):
-        args = self._args(board="alpha")
-        result = object()
-        self.svc.set_board.return_value = result
-
-        commands.handle_board_change(args, self.svc, self.renderer)
-
-        self.svc.set_board.assert_called_once_with(board="alpha")
-        self.renderer.render_change_board.assert_called_once_with(args, result)
-
-    def test_handle_board_raises_when_board_missing(self):
-        args = self._args(board="missing")
-        self.svc.set_board.side_effect = ValueError("Board not found: missing")
-
-        with self.assertRaises(ValueError):
-            commands.handle_board_change(args, self.svc, self.renderer)
-
-    def test_handle_column_sets_context_to_column(self):
-        args = self._args(column="todo")
-        result = object()
-        self.svc.set_column.return_value = result
-
-        commands.handle_column_change(args, self.svc, self.renderer)
-
-        self.svc.set_column.assert_called_once_with(column="todo")
-        self.renderer.render_change_column.assert_called_once_with(args, result)
-
-    def test_handle_column_raises_when_column_missing(self):
-        args = self._args(column="missing")
-        self.svc.set_column.side_effect = ValueError("Column not found: missing")
-
-        with self.assertRaises(ValueError):
-            commands.handle_column_change(args, self.svc, self.renderer)
-
     def test_handle_list_renders_board_list(self):
         args = self._args(path=None)
         result = object()

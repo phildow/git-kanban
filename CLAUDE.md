@@ -462,9 +462,7 @@ The REPL commands follow.
 ```
 COMMAND
   cd               Set the active board and column
-  board            Set the active board
   boards           List all boards
-  column           Set the active column
   columns          List columns for a board
   tasks            List tasks, optionally scoped to a board or board/column
   create           Create a board, column, or task

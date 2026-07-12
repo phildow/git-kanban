@@ -72,24 +72,6 @@ class RichRenderer:
 			return
 
 		self._emit(args, "Current context cleared")
-	
-	@_requires_verbose
-	def render_change_board(self, args: argparse.Namespace, result: UserContext) -> None:
-		"""Render a message indicating the new current board, or that the board context was cleared."""
-		board = result.board
-		if board:
-			self._emit(args, f"Changed board to: {board}")
-		else:
-			self._emit(args, "Board cleared")
-
-	@_requires_verbose
-	def render_change_column(self, args: argparse.Namespace, result: UserContext) -> None:
-		"""Render a message indicating the new current column, or that the column context was cleared."""
-		column = result.column
-		if column:
-			self._emit(args, f"Changed column to: {column}")
-		else:
-			self._emit(args, "Column cleared")
 
 # ---------------------------------------------------------------------------
 # Board rendering

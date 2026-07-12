@@ -29,7 +29,7 @@ def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: object) 
 	renderer.render_init(args, result)
 
 # ---------------------------------------------------------------------------
-# Working context commands (use, board, column)
+# Working context commands (cd)
 # ---------------------------------------------------------------------------
 
 def handle_change_dir(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
@@ -41,23 +41,6 @@ def handle_change_dir(args: argparse.Namespace, svc: KanbanService, renderer: ob
 	result = svc.change_dir(path=args.path)
 	renderer.render_change_dir(args, result)
 
-
-def handle_board_change(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	"""Update current context with the provided board name.
-
-	Relies on `svc.set_board()` for validation and raises if the board does not exist.
-	"""
-	result = svc.set_board(board=args.board)
-	renderer.render_change_board(args, result)
-
-
-def handle_column_change(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	"""Update current context with the provided column name.
-
-	Relies on `svc.set_column()` for validation and raises if the column does not exist.
-	"""
-	result = svc.set_column(column=args.column)
-	renderer.render_change_column(args, result)
 
 # ---------------------------------------------------------------------------
 # Common commands (list, delete)

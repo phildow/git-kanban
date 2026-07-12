@@ -11,10 +11,8 @@ import unittest
 # TODO: add handle_list tests
 from kanban.repl import parser as repl_parser
 from kanban.repl.commands import (
-    handle_board_change,
     handle_board_create,
     handle_board_list,
-    handle_column_change,
     handle_column_create,
     handle_column_list,
     handle_list,
@@ -31,16 +29,6 @@ from kanban.repl.commands import (
 class TestParserAliases(unittest.TestCase):
     """Tests for verb-first parser aliases and wiring."""
 
-    def test_board_command_maps_to_board_handler(self):
-        args = repl_parser.parse_args(["board", "main"])
-        self.assertEqual(args.command, "board")
-        self.assertEqual(args.board, "main")
-        self.assertIs(args.func, handle_board_change)
-
-    def test_board_command_requires_name(self):
-        with self.assertRaises(SystemExit):
-            repl_parser.parse_args(["board"])
-
     def test_boards_command_maps_to_board_list_handler(self):
         args = repl_parser.parse_args(["boards"])
         self.assertEqual(args.command, "boards")
@@ -51,16 +39,6 @@ class TestParserAliases(unittest.TestCase):
         """`boards --slugs` sets slugs to True."""
         args = repl_parser.parse_args(["boards", "--slugs"])
         self.assertTrue(args.slugs)
-
-    def test_column_command_maps_to_column_handler(self):
-        args = repl_parser.parse_args(["column", "todo"])
-        self.assertEqual(args.command, "column")
-        self.assertEqual(args.column, "todo")
-        self.assertIs(args.func, handle_column_change)
-
-    def test_column_command_requires_name(self):
-        with self.assertRaises(SystemExit):
-            repl_parser.parse_args(["column"])
 
     def test_columns_and_cols_alias_map_to_column_list_handler(self):
         args = repl_parser.parse_args(["columns"])

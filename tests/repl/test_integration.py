@@ -17,7 +17,7 @@ Layout
 _ReplBase               setUp/tearDown, run_repl helper, boards_dir
 _InitializedReplBase    Adds repo.init_storage() so commands run immediately
 TestReplInit            `init` and `init --bootstrap` on a fresh repo
-TestReplContext         `cd`, `board`, `column` context commands
+TestReplContext         `cd` context command
 TestReplCreate          `create`/`new`/`n` for boards, columns, and tasks
 TestReplList            `list`/`ls` with paths, filters, sort, and -l flag
 TestReplBoards          `boards` listing all boards
@@ -181,7 +181,7 @@ class TestReplInit(_ReplBase):
 
 
 # ---------------------------------------------------------------------------
-# Context commands: cd, board, column
+# Context commands: cd
 # ---------------------------------------------------------------------------
 
 class TestReplContext(_InitializedReplBase):
@@ -206,17 +206,6 @@ class TestReplContext(_InitializedReplBase):
         """cd --clear clears the context and prints nothing."""
         self.run_repl("cd", "proj")
         out = self.run_repl("cd", "--clear")
-        self.assertEqual(out, "")
-
-    def test_board_command_produces_no_output(self) -> None:
-        """board <name> changes the active board and prints nothing."""
-        out = self.run_repl("board", "proj")
-        self.assertEqual(out, "")
-
-    def test_column_command_produces_no_output(self) -> None:
-        """column <name> changes the active column and prints nothing."""
-        self.run_repl("board", "proj")
-        out = self.run_repl("column", "todo")
         self.assertEqual(out, "")
 
 
