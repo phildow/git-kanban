@@ -9,9 +9,10 @@ import logging
 
 from ..models import Board, Column, Task
 from ..repl.command_helpers import (
-    _parse_priority, 
-    handle_list_helper, 
-    handle_delete_helper, 
+    _parse_priority,
+    handle_list_helper,
+    handle_task_list_helper,
+    handle_delete_helper,
     handle_rename_helper
 )
 from ..services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
@@ -83,6 +84,11 @@ def handle_board_list(args: argparse.Namespace, svc: KanbanService, renderer: ob
 def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	result = svc.get_columns(board=getattr(args, "board", None))
 	renderer.render_column_list(args, result)
+
+
+def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	result = handle_task_list_helper(args, svc)
+	renderer.render_task_list(args, result)
 
 
 def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:

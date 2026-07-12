@@ -22,6 +22,7 @@ TestReplCreate          `create`/`new`/`n` for boards, columns, and tasks
 TestReplList            `list`/`ls` with paths, filters, sort, and -l flag
 TestReplBoards          `boards` listing all boards
 TestReplColumns         `columns`/`cols` listing columns for a board
+TestReplTasks           `tasks` listing tasks scoped to a board or board/column
 TestReplRename          `rename` for boards, columns, and tasks
 TestReplDelete          `delete`/`del`/`rm` for boards, columns, and tasks
 TestReplReorder         `reorder column`
@@ -480,6 +481,60 @@ class TestReplColumns(_InitializedReplBase):
         self.assertTrue(out.strip())
         self.assertIn("todo", out)
         self.assertIn("done", out)
+
+
+# ---------------------------------------------------------------------------
+# tasks
+# ---------------------------------------------------------------------------
+
+class TestReplTasks(_InitializedReplBase):
+    """tasks command lists tasks, optionally scoped to a board or board/column."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.repo.create_board("proj", slug="proj")
+        self.repo.create_column("proj", "todo", slug="todo")
+        self.repo.create_column("proj", "done", slug="done")
+        self.svc.create_task("proj/todo/fix-login", TaskCreateParams())
+        self.svc.create_task("proj/done/write-docs", TaskCreateParams())
+
+    def test_tasks_with_board_path_shows_all_columns(self) -> None:
+        """tasks <board> includes tasks from every column in that board."""
+        out = self.run_repl("tasks", "proj")
+        self.assertIn("fix-login", out)
+        self.assertIn("write-docs", out)
+
+    def test_tasks_with_board_column_path_scopes_to_column(self) -> None:
+        """tasks <board>/<column> includes only that column's tasks."""
+        out = self.run_repl("tasks", "proj/done")
+        self.assertIn("write-docs", out)
+        self.assertNotIn("fix-login", out)
+
+    def test_tasks_with_no_path_uses_active_board_all_columns(self) -> None:
+        """tasks with no path falls back to every task in the active board."""
+        self.svc.set_board("proj")
+        out = self.run_repl("tasks")
+        self.assertIn("fix-login", out)
+        self.assertIn("write-docs", out)
+
+    def test_tasks_with_no_path_ignores_active_column(self) -> None:
+        """tasks with no path still shows the whole board even if a column is active."""
+        self.svc.set_board("proj")
+        self.svc.set_column("todo")
+        out = self.run_repl("tasks")
+        self.assertIn("fix-login", out)
+        self.assertIn("write-docs", out)
+
+    def test_tasks_with_no_path_and_no_active_board_raises(self) -> None:
+        """tasks with no path and no active board raises rather than listing nothing."""
+        with self.assertRaises(ValueError):
+            self.run_repl("tasks")
+
+    def test_tasks_slugs_flag_produces_output(self) -> None:
+        """tasks <board> --slugs produces the compact slug-only output."""
+        out = self.run_repl("tasks", "proj", "--slugs")
+        self.assertIn("fix-login", out)
+        self.assertIn("write-docs", out)
 
 
 # ---------------------------------------------------------------------------

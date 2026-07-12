@@ -32,6 +32,7 @@ from ..repl.commands import (
     handle_task_assign,
     handle_task_create,
     handle_task_edit,
+    handle_task_list,
     handle_task_move,
     handle_task_show,
     handle_task_update,
@@ -275,6 +276,17 @@ def _add_columns_parser(subparsers: argparse._SubParsersAction) -> None:
     p.set_defaults(func=handle_column_list)
 
 
+def _add_tasks_parser(subparsers: argparse._SubParsersAction) -> None:
+    p = subparsers.add_parser("tasks", help="List tasks, optionally scoped to a board or board/column")
+    p.add_argument("path", metavar="BOARD[/COLUMN]", nargs="?",
+                    help="Board or board/column to list tasks for (optional, falls back to every task in the active board)")
+    p.add_argument("--slugs", action="store_true", default=False, help="Render a compact list of slugs only, like filenames")
+    _add_list_args(p, SORT_TASK_CHOICES)
+    _add_task_filter_args(p)
+    _add_global_flags(p)
+    p.set_defaults(func=handle_task_list)
+
+
 def _add_assign_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("assign", help="Assign a task to a user")
     p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
@@ -314,6 +326,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_boards_parser(subparsers)
     _add_column_parser(subparsers)
     _add_columns_parser(subparsers)
+    _add_tasks_parser(subparsers)
     _add_create_parser(subparsers)
     _add_list_parser(subparsers)
     _add_rename_parser(subparsers)

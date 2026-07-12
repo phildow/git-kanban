@@ -231,6 +231,16 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.get_boards.assert_called_once_with()
         self.renderer.render_board_list.assert_called_once_with(args, result)
 
+    def test_handle_task_list(self):
+        """`tasks` delegates to handle_task_list_helper and renders the result."""
+        args = self._args(path="alpha/todo")
+        result = [object()]
+        with patch("kanban.repl.commands.handle_task_list_helper", return_value=result) as mock_helper:
+            commands.handle_task_list(args, self.svc, self.renderer)
+
+        mock_helper.assert_called_once_with(args, self.svc)
+        self.renderer.render_task_list.assert_called_once_with(args, result)
+
     def test_handle_column_list(self):
         """`columns`/`cols` forwards board and renders the column list."""
         args = self._args(board="alpha")

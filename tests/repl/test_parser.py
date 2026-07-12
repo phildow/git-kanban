@@ -23,6 +23,7 @@ from kanban.repl.commands import (
     handle_search,
     handle_task_assign,
     handle_task_create,
+    handle_task_list,
     handle_task_move,
     handle_task_update,
 )
@@ -76,6 +77,26 @@ class TestParserAliases(unittest.TestCase):
     def test_columns_slugs_flag(self):
         """`columns ... --slugs` sets slugs to True."""
         args = repl_parser.parse_args(["columns", "alpha", "--slugs"])
+        self.assertTrue(args.slugs)
+
+    def test_tasks_maps_to_task_list_handler(self):
+        args = repl_parser.parse_args(["tasks"])
+        self.assertEqual(args.command, "tasks")
+        self.assertIsNone(args.path)
+        self.assertIsNone(args.sort)
+        self.assertFalse(args.reverse)
+        self.assertFalse(args.slugs)
+        self.assertIs(args.func, handle_task_list)
+
+        args = repl_parser.parse_args(["tasks", "alpha/todo"])
+        self.assertEqual(args.path, "alpha/todo")
+        self.assertIs(args.func, handle_task_list)
+
+    def test_tasks_sort_reverse_and_slugs_flags(self):
+        """`tasks ... --sort <field> --reverse --slugs` sets all three."""
+        args = repl_parser.parse_args(["tasks", "alpha", "--sort", "title", "--reverse", "--slugs"])
+        self.assertEqual(args.sort, "title")
+        self.assertTrue(args.reverse)
         self.assertTrue(args.slugs)
 
     def test_create_aliases_map_to_create_handlers(self):
