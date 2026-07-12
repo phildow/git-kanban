@@ -490,6 +490,8 @@ create task <board>/<column>/<title>
     [--created-by <name>]
 
 list [BOARD[/COLUMN]]    # lists tasks; falls back to the active board/column context
+    [-b|--boards]                       # list all boards instead of tasks (no path)
+    [-c|--columns|--cols]               # list columns in the active or provided board instead of tasks
     [--slugs]
     [--exclude <column>]        # repeatable
     [--sort <title|priority|due-date|created-at|updated-at|created-by|column>]

@@ -54,6 +54,48 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         self.renderer.render_task_list.assert_called_once_with(args, result)
 
+    def test_handle_list_boards_flag_renders_board_list(self):
+        args = self._args(path=None, boards=True, columns=False)
+        result = [object()]
+        self.svc.get_boards.return_value = result
+
+        commands.handle_list(args, self.svc, self.renderer)
+
+        self.svc.get_boards.assert_called_once_with()
+        self.renderer.render_board_list.assert_called_once_with(args, result)
+
+    def test_handle_list_boards_flag_with_path_raises(self):
+        args = self._args(path="alpha", boards=True, columns=False)
+        with self.assertRaises(ValueError):
+            commands.handle_list(args, self.svc, self.renderer)
+
+    def test_handle_list_columns_flag_uses_explicit_path_as_board(self):
+        args = self._args(path="alpha", boards=False, columns=True)
+        result = [object()]
+        self.svc.get_columns.return_value = result
+
+        commands.handle_list(args, self.svc, self.renderer)
+
+        self.svc.get_columns.assert_called_once_with(board="alpha")
+        self.renderer.render_column_list.assert_called_once_with(args, result)
+
+    def test_handle_list_columns_flag_falls_back_to_active_board(self):
+        args = self._args(path=None, boards=False, columns=True)
+        result = [object()]
+        self.svc.working_board = "alpha"
+        self.svc.get_columns.return_value = result
+
+        commands.handle_list(args, self.svc, self.renderer)
+
+        self.svc.get_columns.assert_called_once_with(board="alpha")
+        self.renderer.render_column_list.assert_called_once_with(args, result)
+
+    def test_handle_list_columns_flag_raises_without_board(self):
+        args = self._args(path=None, boards=False, columns=True)
+        self.svc.working_board = None
+        with self.assertRaises(ValueError):
+            commands.handle_list(args, self.svc, self.renderer)
+
     def test_handle_delete_renders_board_delete(self):
         args = self._args(path="alpha")
         deleted = object()

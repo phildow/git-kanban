@@ -414,6 +414,26 @@ class TestReplList(_InitializedReplBase):
         self.assertIn("fix-login", out)
         self.assertIn("task-done", out)
 
+    def test_list_boards_flag_lists_boards(self) -> None:
+        """list -b/--boards lists boards instead of tasks."""
+        self.repo.create_board("ops", slug="ops")
+        out = self.run_repl("list", "-b")
+        self.assertIn("proj", out)
+        self.assertIn("ops", out)
+
+    def test_list_columns_flag_with_explicit_board(self) -> None:
+        """list <board> -c/--cols lists that board's columns instead of tasks."""
+        out = self.run_repl("list", "proj", "--cols")
+        self.assertIn("todo", out)
+        self.assertIn("done", out)
+
+    def test_list_columns_flag_falls_back_to_active_board(self) -> None:
+        """list -c with no path falls back to the active board's columns."""
+        self.svc.set_board("proj")
+        out = self.run_repl("list", "-c")
+        self.assertIn("todo", out)
+        self.assertIn("done", out)
+
 
 # ---------------------------------------------------------------------------
 # boards

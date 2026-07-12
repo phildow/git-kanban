@@ -47,6 +47,21 @@ def handle_change_dir(args: argparse.Namespace, svc: KanbanService, renderer: ob
 # ---------------------------------------------------------------------------
 
 def handle_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	if getattr(args, "boards", False):
+		if getattr(args, "path", None):
+			raise ValueError("Cannot combine --boards with a path")
+		result = svc.get_boards()
+		renderer.render_board_list(args, result)
+		return
+
+	if getattr(args, "columns", False):
+		board = getattr(args, "path", None) or svc.working_board
+		if not board:
+			raise ValueError("No active board; provide a board or set one with `cd`")
+		result = svc.get_columns(board=board)
+		renderer.render_column_list(args, result)
+		return
+
 	result = handle_list_helper(args, svc)
 	renderer.render_task_list(args, result)
 
