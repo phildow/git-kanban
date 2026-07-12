@@ -18,7 +18,7 @@ from .utils.debug import __DEBUG__, FILESYSTEM, MEMORY
 
 def main() -> None:
     """Main entry point for the kanban CLI."""
-    setup_logging(logging.DEBUG)
+    setup_logging(logging.INFO)
     
     repository = get_repository(FILESYSTEM)
     index_base = InMemoryIndex()
@@ -49,7 +49,11 @@ def setup_logging(level: int) -> None:
 
     if not logfile.parent.exists():
         logfile.parent.mkdir(parents=True, exist_ok=True)
-        
+
+    # doesn't seem to work
+    # logging.getLogger("markdown-it").disabled = True
+    # logging.getLogger("rich").disabled = True
+
     logging.basicConfig(filename=str(logfile),
                         filemode="a",
                         level=level,

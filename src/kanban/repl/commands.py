@@ -154,7 +154,6 @@ def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: o
 	result = svc.create_task(args.path, params)
 
 	if args.edit:
-		logging.debug("Opening task in editor: %s", result.path)
 		result = svc.edit_task(result.path)
 
 	renderer.render_task_create(args, result)
