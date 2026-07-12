@@ -91,22 +91,23 @@ class TestParserAliases(unittest.TestCase):
         self.assertEqual(args.board, "main")
         self.assertIs(args.func, handle_board_create)
 
-        args = repl_parser.parse_args(["new", "column", "main/todo"])
+        args = repl_parser.parse_args(["new", "column", "todo"])
         self.assertEqual(args.command, "new")
         self.assertEqual(args.create_subject, "column")
-        self.assertEqual(args.path, "main/todo")
+        self.assertEqual(args.column, "todo")
         self.assertIs(args.func, handle_column_create)
 
-        args = repl_parser.parse_args(["n", "task", "main/todo/fix-parser"])
+        args = repl_parser.parse_args(["n", "task", "todo", "fix-parser"])
         self.assertEqual(args.command, "n")
         self.assertEqual(args.create_subject, "task")
-        self.assertEqual(args.path, "main/todo/fix-parser")
+        self.assertEqual(args.column, "todo")
+        self.assertEqual(args.title, "fix-parser")
         self.assertFalse(args.edit)
         self.assertIs(args.func, handle_task_create)
 
     def test_create_task_edit_flag(self):
         """`create task ... --edit` sets edit to True."""
-        args = repl_parser.parse_args(["create", "task", "main/todo/fix-parser", "--edit"])
+        args = repl_parser.parse_args(["create", "task", "todo", "fix-parser", "--edit"])
         self.assertTrue(args.edit)
 
     def test_search_maps_to_search_handler(self):
@@ -177,6 +178,26 @@ class TestParserAliases(unittest.TestCase):
         """`list ... -x <column> --exclude <column>` accumulates into a list."""
         args = repl_parser.parse_args(["list", "-x", "done", "--exclude", "archive"])
         self.assertEqual(args.column, ["done", "archive"])
+
+    def test_list_boards_flag(self):
+        """`list -b`/`--boards` sets boards to True."""
+        args = repl_parser.parse_args(["list", "-b"])
+        self.assertTrue(args.boards)
+        self.assertFalse(args.columns)
+
+        args = repl_parser.parse_args(["list", "--boards"])
+        self.assertTrue(args.boards)
+
+    def test_list_columns_flag_and_aliases(self):
+        """`list -c`/`--columns`/`--cols` all set columns to True."""
+        for flag in ("-c", "--columns", "--cols"):
+            args = repl_parser.parse_args(["list", flag])
+            self.assertTrue(args.columns)
+            self.assertFalse(args.boards)
+
+    def test_list_boards_and_columns_flags_are_mutually_exclusive(self):
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["list", "-b", "-c"])
 
     def test_assign_maps_to_assign_handler(self):
         args = repl_parser.parse_args(["assign", "main/todo/fix-login", "alice"])
@@ -313,12 +334,12 @@ class TestParserAliases(unittest.TestCase):
 
         args = parser.parse_args(["cd"])
         self.assertEqual(args.command, "cd")
-        self.assertIsNone(args.path)
+        self.assertIsNone(args.board)
         self.assertIs(args.func, handle_change_dir)
 
-        args = parser.parse_args(["cd", "main/todo"])
+        args = parser.parse_args(["cd", "main"])
         self.assertEqual(args.command, "cd")
-        self.assertEqual(args.path, "main/todo")
+        self.assertEqual(args.board, "main")
         self.assertIs(args.func, handle_change_dir)
 
 

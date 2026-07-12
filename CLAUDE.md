@@ -462,7 +462,7 @@ The REPL command structure follows:
 ```
 init [-b|--bootstrap]
 
-cd [BOARD[/COLUMN]]    # omit to clear the active context
+cd [BOARD]    # sets the active board (clearing any active column); omit to clear the active context
 
 boards [--slugs]
 columns <board> [--slugs]
@@ -480,8 +480,8 @@ tasks [BOARD[/COLUMN]]
     [--created-by <name>]
 
 create board <board>
-create column <board>/<column>
-create task <board>/<column>/<title>
+create column <column>    # created in the active board; raises if no board is active
+create task <column> <title>    # column in the active board; raises if no board is active
     [--edit]
     [--assigned-to <name>]
     [--priority <low|medium|high>]
@@ -489,7 +489,9 @@ create task <board>/<column>/<title>
     [--due-date <date>]
     [--created-by <name>]
 
-list [BOARD[/COLUMN]] [-a|--tasks]
+list [BOARD[/COLUMN]]    # lists tasks; falls back to the active board/column context
+    [-b|--boards]                       # list all boards instead of tasks (no path)
+    [-c|--columns|--cols]               # list columns in the active or provided board instead of tasks
     [--slugs]
     [--exclude <column>]        # repeatable
     [--sort <title|priority|due-date|created-at|updated-at|created-by|column>]

@@ -33,12 +33,12 @@ def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: object) 
 # ---------------------------------------------------------------------------
 
 def handle_change_dir(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	if getattr(args, "path", None) is None:
+	if getattr(args, "board", None) is None:
 		result = svc.change_dir(clear=True)
 		renderer.render_change_dir(args, result)
 		return
 
-	result = svc.change_dir(path=args.path)
+	result = svc.set_board(board=args.board)
 	renderer.render_change_dir(args, result)
 
 
@@ -47,16 +47,23 @@ def handle_change_dir(args: argparse.Namespace, svc: KanbanService, renderer: ob
 # ---------------------------------------------------------------------------
 
 def handle_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	typ, results = handle_list_helper(args, svc)
-	
-	if typ is Board:
-		renderer.render_board_list(args, results)
-	elif typ is Column:
-		renderer.render_column_list(args, results)
-	elif typ is Task:
-		renderer.render_task_list(args, results)
-	else:
-		raise ValueError("Unexpected result type from handle_list: {}".format(typ))
+	if getattr(args, "boards", False):
+		if getattr(args, "path", None):
+			raise ValueError("Cannot combine --boards with a path")
+		result = svc.get_boards()
+		renderer.render_board_list(args, result)
+		return
+
+	if getattr(args, "columns", False):
+		board = getattr(args, "path", None) or svc.working_board
+		if not board:
+			raise ValueError("No active board; provide a board or set one with `cd`")
+		result = svc.get_columns(board=board)
+		renderer.render_column_list(args, result)
+		return
+
+	result = handle_list_helper(args, svc)
+	renderer.render_task_list(args, result)
 
 
 def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
@@ -119,7 +126,11 @@ def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: o
 
 
 def handle_column_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	result = svc.create_column(args.path)
+	board = svc.working_board
+	if not board:
+		raise ValueError("No active board; set one with `cd` before creating a column")
+
+	result = svc.create_column(f"/{board}/{args.column}")
 	renderer.render_column_create(args, result)
 
 
@@ -143,6 +154,10 @@ def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: obj
 	
 
 def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	board = svc.working_board
+	if not board:
+		raise ValueError("No active board; set one with `cd` before creating a task")
+
 	params = TaskCreateParams(
 		assigned_to=getattr(args, "assigned_to", None),
 		priority=_parse_priority(args),
@@ -151,7 +166,8 @@ def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: o
 		created_by=getattr(args, "created_by", None),
 	)
 
-	result = svc.create_task(args.path, params)
+	task_path = f"/{board}/{args.column}/{args.title}"
+	result = svc.create_task(task_path, params)
 
 	if args.edit:
 		result = svc.edit_task(result.path)

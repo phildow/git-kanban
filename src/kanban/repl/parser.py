@@ -127,13 +127,14 @@ def _add_create_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # create column
     p = create_sub.add_parser("column", aliases=["c"], help="Create a new column")
-    p.add_argument("path", metavar="BOARD/COLUMN", help="Column path")
+    p.add_argument("column", metavar="COLUMN", help="Name of the new column, created in the active board")
     _add_global_flags(p)
     p.set_defaults(func=handle_column_create)
 
     # create task
     p = create_sub.add_parser("task", aliases=["t"], help="Create a new task")
-    p.add_argument("path", metavar="BOARD/COLUMN/TITLE", help="Fully qualified task path")
+    p.add_argument("column", metavar="COLUMN", help="Column in the active board to create the task in")
+    p.add_argument("title", metavar="TITLE", help="Title of the new task")
     p.add_argument("--edit", action="store_true", default=False, help="Open the new task in the editor after creating it")
     _add_task_update_args(p)
     _add_global_flags(p)
@@ -141,12 +142,13 @@ def _add_create_parser(subparsers: argparse._SubParsersAction) -> None:
 
 
 def _add_list_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser("list", aliases=["ls"], help="List all boards, columns, or tasks in the current context or at a specified path")
+    p = subparsers.add_parser("list", aliases=["ls"], help="List tasks in the current context or at a specified board/column path")
+    p.add_argument("path", metavar="BOARD[/COLUMN]", nargs="?", help="Board or board/column to list tasks for (optional, falls back to the active board)")
     p.add_argument("--slugs", action="store_true", default=False, help="Render a compact list of slugs only, like filenames")
-    group = p.add_mutually_exclusive_group(required=False)
-    group.add_argument("path", metavar="BOARD[/COLUMN]", nargs="?", help="Board or board/column to list (optional)")
-    group.add_argument("-a", "--tasks", dest="all_tasks", action="store_true", default=False, help="List all tasks on the current board")
     p.add_argument("-x", "--exclude", metavar="COLUMN", action="append", dest="column", help="Exclude tasks in this column (repeatable)")
+    group = p.add_mutually_exclusive_group()
+    group.add_argument("-b", "--boards", action="store_true", default=False, help="List all boards instead of tasks")
+    group.add_argument("-c", "--columns", "--cols", action="store_true", default=False, help="List columns in the active or provided board instead of tasks")
     _add_list_args(p, SORT_TASK_CHOICES)
     _add_task_filter_args(p)
     _add_global_flags(p)
@@ -239,8 +241,8 @@ def _add_config_parser(subparsers: argparse._SubParsersAction) -> None:
 
 
 def _add_cd_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser("cd", help="Set or clear the active board and column")
-    p.add_argument("path", metavar="BOARD[/COLUMN]", nargs="?", help="Board or board/column to set active (omit to clear)")
+    p = subparsers.add_parser("cd", help="Set or clear the active board")
+    p.add_argument("board", metavar="BOARD", nargs="?", help="Board to set active (omit to clear)")
     _add_global_flags(p)
     p.set_defaults(func=handle_change_dir)
 

@@ -197,13 +197,15 @@ class TestReplContext(_InitializedReplBase):
         out = self.run_repl("cd", "proj")
         self.assertEqual(out, "")
 
-    def test_cd_board_column_sets_context_and_produces_no_output(self) -> None:
-        """cd <board>/<column> sets board+column context and prints nothing."""
-        out = self.run_repl("cd", "proj/todo")
-        self.assertEqual(out, "")
+    def test_cd_board_clears_any_previously_active_column(self) -> None:
+        """cd <board> resets the active column, even if one was previously set."""
+        self.svc.set_board("proj")
+        self.svc.set_column("todo")
+        self.run_repl("cd", "proj")
+        self.assertIsNone(self.svc.user_context.column)
 
-    def test_cd_no_path_clears_context_and_produces_no_output(self) -> None:
-        """cd with no path clears the context and prints nothing."""
+    def test_cd_no_board_clears_context_and_produces_no_output(self) -> None:
+        """cd with no board clears the context and prints nothing."""
         self.run_repl("cd", "proj")
         out = self.run_repl("cd")
         self.assertEqual(out, "")
@@ -237,37 +239,55 @@ class TestReplCreate(_InitializedReplBase):
         self.assertTrue((self.boards_dir / "proj").is_dir())
 
     def test_create_column_creates_directory(self) -> None:
-        """create column creates a column directory."""
+        """create column creates a column directory in the active board."""
         self.repo.create_board("proj", slug="proj")
-        self.run_repl("create", "column", "proj/todo")
+        self.svc.set_board("proj")
+        self.run_repl("create", "column", "todo")
         self.assertTrue((self.boards_dir / "proj" / "todo").is_dir())
 
     def test_create_column_produces_output(self) -> None:
         """create column prints something."""
         self.repo.create_board("proj", slug="proj")
-        out = self.run_repl("create", "column", "proj/todo")
+        self.svc.set_board("proj")
+        out = self.run_repl("create", "column", "todo")
         self.assertTrue(out.strip())
 
+    def test_create_column_requires_active_board(self) -> None:
+        """create column with no active board raises rather than resolving nonsense."""
+        self.repo.create_board("proj", slug="proj")
+        with self.assertRaises(ValueError):
+            self.run_repl("create", "column", "todo")
+
     def test_create_task_creates_file(self) -> None:
-        """create task creates a markdown file."""
+        """create task creates a markdown file in the active board."""
         self.repo.create_board("proj", slug="proj")
         self.repo.create_column("proj", "todo", slug="todo")
-        self.run_repl("create", "task", "proj/todo/fix-login")
+        self.svc.set_board("proj")
+        self.run_repl("create", "task", "todo", "fix-login")
         self.assertTrue((self.boards_dir / "proj" / "todo" / "fix-login.md").is_file())
+
+    def test_create_task_requires_active_board(self) -> None:
+        """create task with no active board raises rather than resolving nonsense."""
+        self.repo.create_board("proj", slug="proj")
+        self.repo.create_column("proj", "todo", slug="todo")
+        with self.assertRaises(ValueError):
+            self.run_repl("create", "task", "todo", "fix-login")
 
     def test_create_task_produces_output(self) -> None:
         """create task prints something."""
         self.repo.create_board("proj", slug="proj")
         self.repo.create_column("proj", "todo", slug="todo")
-        out = self.run_repl("create", "task", "proj/todo/fix-login")
+        self.svc.set_board("proj")
+        out = self.run_repl("create", "task", "todo", "fix-login")
         self.assertTrue(out.strip())
 
     def test_create_task_with_all_optional_fields(self) -> None:
         """create task with all optional fields creates the file."""
         self.repo.create_board("proj", slug="proj")
         self.repo.create_column("proj", "todo", slug="todo")
+        self.svc.set_board("proj")
         self.run_repl(
-            "create", "task", "proj/todo/new-task",
+            "create", "task", "todo", "new-task",
             "--assigned-to", "alice",
             "--priority", "high",
             "--tag", "bug",
@@ -280,8 +300,9 @@ class TestReplCreate(_InitializedReplBase):
         """Optional fields on create task appear in the file's frontmatter."""
         self.repo.create_board("proj", slug="proj")
         self.repo.create_column("proj", "todo", slug="todo")
+        self.svc.set_board("proj")
         self.run_repl(
-            "create", "task", "proj/todo/new-task",
+            "create", "task", "todo", "new-task",
             "--assigned-to", "alice",
             "--priority", "high",
             "--tag", "bug",
@@ -299,8 +320,9 @@ class TestReplCreate(_InitializedReplBase):
         """create task with multiple --tag flags writes all tags to the frontmatter."""
         self.repo.create_board("proj", slug="proj")
         self.repo.create_column("proj", "todo", slug="todo")
+        self.svc.set_board("proj")
         self.run_repl(
-            "create", "task", "proj/todo/new-task",
+            "create", "task", "todo", "new-task",
             "--tag", "bug",
             "--tag", "auth",
             "--tag", "refactor",
@@ -315,14 +337,16 @@ class TestReplCreate(_InitializedReplBase):
         """new task (alias for create task) creates a markdown file."""
         self.repo.create_board("proj", slug="proj")
         self.repo.create_column("proj", "todo", slug="todo")
-        self.run_repl("new", "task", "proj/todo/fix-login")
+        self.svc.set_board("proj")
+        self.run_repl("new", "task", "todo", "fix-login")
         self.assertTrue((self.boards_dir / "proj" / "todo" / "fix-login.md").is_file())
 
     def test_n_task_alias_creates_file(self) -> None:
         """n task (alias for create task) creates a markdown file."""
         self.repo.create_board("proj", slug="proj")
         self.repo.create_column("proj", "todo", slug="todo")
-        self.run_repl("n", "task", "proj/todo/fix-login")
+        self.svc.set_board("proj")
+        self.run_repl("n", "task", "todo", "fix-login")
         self.assertTrue((self.boards_dir / "proj" / "todo" / "fix-login.md").is_file())
 
 
@@ -340,15 +364,17 @@ class TestReplList(_InitializedReplBase):
         self.repo.create_column("proj", "done", slug="done")
         self.svc.create_task("proj/todo/fix-login", TaskCreateParams())
 
-    def test_list_no_path_shows_boards(self) -> None:
-        """list with no path produces output (boards)."""
-        out = self.run_repl("list")
-        self.assertTrue(out.strip())
+    def test_list_no_path_and_no_active_board_raises(self) -> None:
+        """list with no path and no active board raises rather than listing nothing."""
+        with self.assertRaises(ValueError):
+            self.run_repl("list")
 
-    def test_list_board_shows_columns(self) -> None:
-        """list <board> produces output (columns)."""
+    def test_list_board_shows_all_tasks_in_board(self) -> None:
+        """list <board> (no column) produces output for every column's tasks."""
+        self.svc.create_task("proj/done/task-done", TaskCreateParams())
         out = self.run_repl("list", "proj")
-        self.assertTrue(out.strip())
+        self.assertIn("fix-login", out)
+        self.assertIn("task-done", out)
 
     def test_list_board_column_shows_tasks(self) -> None:
         """list <board>/<column> produces output when tasks exist."""
@@ -361,7 +387,8 @@ class TestReplList(_InitializedReplBase):
         self.assertIn("fix-login", out)
 
     def test_ls_alias_produces_output(self) -> None:
-        """ls (alias for list) produces output."""
+        """ls (alias for list) produces output when a board is active."""
+        self.svc.set_board("proj")
         out = self.run_repl("ls")
         self.assertTrue(out.strip())
 
@@ -401,13 +428,33 @@ class TestReplList(_InitializedReplBase):
         self.assertIn("task-tagged", out)
         self.assertNotIn("fix-login", out)
 
-    def test_list_all_tasks_flag_requires_board_context(self) -> None:
-        """list -a lists all tasks on the active board when context is set."""
+    def test_list_no_path_with_active_board_lists_its_tasks(self) -> None:
+        """list with no path falls back to every task in the active board."""
         self.svc.create_task("/proj/done/task-done", TaskCreateParams())
         self.svc.set_board("proj")
-        out = self.run_repl("list", "-a")
+        out = self.run_repl("list")
         self.assertIn("fix-login", out)
         self.assertIn("task-done", out)
+
+    def test_list_boards_flag_lists_boards(self) -> None:
+        """list -b/--boards lists boards instead of tasks."""
+        self.repo.create_board("ops", slug="ops")
+        out = self.run_repl("list", "-b")
+        self.assertIn("proj", out)
+        self.assertIn("ops", out)
+
+    def test_list_columns_flag_with_explicit_board(self) -> None:
+        """list <board> -c/--cols lists that board's columns instead of tasks."""
+        out = self.run_repl("list", "proj", "--cols")
+        self.assertIn("todo", out)
+        self.assertIn("done", out)
+
+    def test_list_columns_flag_falls_back_to_active_board(self) -> None:
+        """list -c with no path falls back to the active board's columns."""
+        self.svc.set_board("proj")
+        out = self.run_repl("list", "-c")
+        self.assertIn("todo", out)
+        self.assertIn("done", out)
 
 
 # ---------------------------------------------------------------------------
@@ -931,43 +978,44 @@ class TestReplColumnEnglishNames(_InitializedReplBase):
         super().setUp()
         # Create with no default columns so later column create tests don't collide.
         self.svc.create_board("My Project", columns=[])
+        self.svc.set_board("my-project")
 
     def test_create_uses_slug_for_directory(self) -> None:
         """create column with a space-containing name creates a directory at the kebab slug."""
-        self.run_repl("create", "column", "my-project/On Hold")
+        self.run_repl("create", "column", "On Hold")
         self.assertTrue((self.boards_dir / "my-project" / "on-hold").is_dir())
 
     def test_create_output_contains_name(self) -> None:
         """create column prints the full display name."""
-        out = self.run_repl("create", "column", "my-project/On Hold")
+        out = self.run_repl("create", "column", "On Hold")
         self.assertIn("On Hold", out)
 
     def test_create_output_contains_slug(self) -> None:
         """create column prints the derived slug."""
-        out = self.run_repl("create", "column", "my-project/On Hold")
+        out = self.run_repl("create", "column", "On Hold")
         self.assertIn("on-hold", out)
 
     def test_rename_uses_new_slug_for_directory(self) -> None:
         """rename column moves the directory to the slug derived from the new display name."""
-        self.run_repl("create", "column", "my-project/backlog")
+        self.run_repl("create", "column", "backlog")
         self.run_repl("rename", "/my-project/backlog", "Work Queue")
         self.assertTrue((self.boards_dir / "my-project" / "work-queue").is_dir())
 
     def test_rename_removes_old_slug_directory(self) -> None:
         """rename column removes the old slug directory."""
-        self.run_repl("create", "column", "my-project/backlog")
+        self.run_repl("create", "column", "backlog")
         self.run_repl("rename", "/my-project/backlog", "Work Queue")
         self.assertFalse((self.boards_dir / "my-project" / "backlog").exists())
 
     def test_rename_output_contains_new_name(self) -> None:
         """rename column prints the new display name."""
-        self.run_repl("create", "column", "my-project/backlog")
+        self.run_repl("create", "column", "backlog")
         out = self.run_repl("rename", "/my-project/backlog", "Work Queue")
         self.assertIn("Work Queue", out)
 
     def test_rename_output_contains_new_slug(self) -> None:
         """rename column prints the new derived slug."""
-        self.run_repl("create", "column", "my-project/backlog")
+        self.run_repl("create", "column", "backlog")
         out = self.run_repl("rename", "/my-project/backlog", "Work Queue")
         self.assertIn("work-queue", out)
 
@@ -979,22 +1027,23 @@ class TestReplTaskEnglishNames(_InitializedReplBase):
         super().setUp()
         # board create adds default columns including "To Do" (slug "todo").
         self.run_repl("create", "board", "My Project")
+        self.svc.set_board("my-project")
 
     def test_create_uses_slug_for_filename(self) -> None:
         """create task with a space-containing title creates a file at the kebab slug."""
-        self.run_repl("create", "task", "my-project/todo/Fix Login Bug")
+        self.run_repl("create", "task", "todo", "Fix Login Bug")
         self.assertTrue(
             (self.boards_dir / "my-project" / "todo" / "fix-login-bug.md").is_file()
         )
 
     def test_create_output_contains_title(self) -> None:
         """create task prints the full display title."""
-        out = self.run_repl("create", "task", "my-project/todo/Fix Login Bug")
+        out = self.run_repl("create", "task", "todo", "Fix Login Bug")
         self.assertIn("Fix Login Bug", out)
 
     def test_create_output_contains_slug(self) -> None:
         """create task prints the derived slug."""
-        out = self.run_repl("create", "task", "my-project/todo/Fix Login Bug")
+        out = self.run_repl("create", "task", "todo", "Fix Login Bug")
         self.assertIn("fix-login-bug", out)
 
 
