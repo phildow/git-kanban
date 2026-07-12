@@ -27,17 +27,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         return Namespace(**kwargs)
 
     def test_handle_change_dir_defaults_to_clear_without_path(self):
-        args = self._args(path=None, clear=False)
-        result = object()
-        self.svc.change_dir.return_value = result
-
-        commands.handle_change_dir(args, self.svc, self.renderer)
-
-        self.svc.change_dir.assert_called_once_with(clear=True)
-        self.renderer.render_change_dir.assert_called_once_with(args, result)
-
-    def test_handle_change_dir_clear_flag(self):
-        args = self._args(path="alpha/todo", clear=True)
+        args = self._args(path=None)
         result = object()
         self.svc.change_dir.return_value = result
 
@@ -47,7 +37,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.renderer.render_change_dir.assert_called_once_with(args, result)
 
     def test_handle_change_dir_with_path(self):
-        args = self._args(path="alpha/todo", clear=False)
+        args = self._args(path="alpha/todo")
         result = object()
         self.svc.change_dir.return_value = result
 

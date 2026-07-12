@@ -287,18 +287,11 @@ class TestParserAliases(unittest.TestCase):
         args = parser.parse_args(["cd"])
         self.assertEqual(args.command, "cd")
         self.assertIsNone(args.path)
-        self.assertFalse(args.clear)
         self.assertIs(args.func, handle_change_dir)
 
         args = parser.parse_args(["cd", "main/todo"])
         self.assertEqual(args.command, "cd")
         self.assertEqual(args.path, "main/todo")
-        self.assertFalse(args.clear)
-        self.assertIs(args.func, handle_change_dir)
-
-        args = parser.parse_args(["cd", "--clear"])
-        self.assertTrue(args.clear)
-        self.assertIsNone(args.path)
         self.assertIs(args.func, handle_change_dir)
 
 

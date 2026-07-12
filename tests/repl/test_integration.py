@@ -202,10 +202,10 @@ class TestReplContext(_InitializedReplBase):
         out = self.run_repl("cd", "proj/todo")
         self.assertEqual(out, "")
 
-    def test_cd_clear_produces_no_output(self) -> None:
-        """cd --clear clears the context and prints nothing."""
+    def test_cd_no_path_clears_context_and_produces_no_output(self) -> None:
+        """cd with no path clears the context and prints nothing."""
         self.run_repl("cd", "proj")
-        out = self.run_repl("cd", "--clear")
+        out = self.run_repl("cd")
         self.assertEqual(out, "")
 
 

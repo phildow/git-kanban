@@ -33,7 +33,7 @@ def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: object) 
 # ---------------------------------------------------------------------------
 
 def handle_change_dir(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	if args.clear or getattr(args, "path", None) is None:
+	if getattr(args, "path", None) is None:
 		result = svc.change_dir(clear=True)
 		renderer.render_change_dir(args, result)
 		return

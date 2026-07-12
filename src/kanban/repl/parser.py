@@ -238,9 +238,7 @@ def _add_config_parser(subparsers: argparse._SubParsersAction) -> None:
 
 def _add_cd_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("cd", help="Set or clear the active board and column")
-    group = p.add_mutually_exclusive_group(required=False)
-    group.add_argument("path", metavar="BOARD[/COLUMN]", nargs="?", help="Board or board/column to set active")
-    group.add_argument("--clear", action="store_true", default=False, help="Clear the current context")
+    p.add_argument("path", metavar="BOARD[/COLUMN]", nargs="?", help="Board or board/column to set active (omit to clear)")
     _add_global_flags(p)
     p.set_defaults(func=handle_change_dir)
 

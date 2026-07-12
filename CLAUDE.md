@@ -462,8 +462,7 @@ The REPL command structure follows:
 ```
 init [-b|--bootstrap]
 
-cd [BOARD[/COLUMN]]
-cd --clear
+cd [BOARD[/COLUMN]]    # omit to clear the active context
 
 boards [--slugs]
 columns <board> [--slugs]
@@ -501,10 +500,13 @@ list [BOARD[/COLUMN]] [-a|--tasks]
     [--created-by <name>]
 
 rename <board/column/task> <new-name>
+
 delete <board[/column][/task]> [-f|--force]
+
 reorder column <board/column> <position>
 
 show <board/column/task>
+
 edit <board/column/task>
 
 update <board/column/title>
