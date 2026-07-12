@@ -44,35 +44,26 @@ def _build_task_filter(args: argparse.Namespace) -> TaskFilter:
 # Private helpers
 # ---------------------------------------------------------------------------
 
-def handle_list_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[type, list[Board | Column | Task]]:
+def handle_list_helper(args: argparse.Namespace, svc: KanbanService) -> list[Task]:
     """
-    List the contents at the path applying filters and sort.  This is
-    the main entry point for all list/ls commands in the REPL, which pass a
-    user-provided path that may be absolute or relative to the current
-    context.
+    List tasks scoped to a board or board/column path, falling back to the
+    current user context.  This is the main entry point for all list/ls
+    commands in the REPL.  A board-only scope returns every task in that
+    board, across all columns.  Raises if no board can be resolved from
+    the path or context.
     """
-    all_tasks = getattr(args, "all_tasks", False)
     path = getattr(args, "path", "") or ""
-
     board, column, _ = svc.path_components(path)
 
     filter = _build_task_filter(args)
     sort = getattr(args, "sort", None)
     reverse = getattr(args, "reverse", False)
-    
-    if all_tasks and board:
-        return Task, svc.get_tasks(path=f"/{board}", filter=filter, sort=sort, reverse=reverse)
-    elif all_tasks and not board:
-        raise ValueError("Cannot list all tasks without a board name")
-    
-    if board and column:
-        return Task, svc.get_tasks(path=f"/{board}/{column}", filter=filter, sort=sort, reverse=reverse)
-    elif board and not column and all_tasks:
-        return Task, svc.get_tasks(path=f"/{board}", filter=filter, sort=sort, reverse=reverse)
-    elif board and not column and not all_tasks:
-        return Column, svc.get_columns(board=board)
-    elif not board and not column:
-        return Board, svc.get_boards()
+
+    if board is None:
+        raise ValueError("No active board; provide a board or board/column, or set one with `cd`")
+
+    task_path = f"/{board}/{column}" if column else f"/{board}"
+    return svc.get_tasks(path=task_path, filter=filter, sort=sort, reverse=reverse)
 
 
 def handle_task_list_helper(args: argparse.Namespace, svc: KanbanService) -> list[Task]:

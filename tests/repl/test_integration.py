@@ -342,15 +342,17 @@ class TestReplList(_InitializedReplBase):
         self.repo.create_column("proj", "done", slug="done")
         self.svc.create_task("proj/todo/fix-login", TaskCreateParams())
 
-    def test_list_no_path_shows_boards(self) -> None:
-        """list with no path produces output (boards)."""
-        out = self.run_repl("list")
-        self.assertTrue(out.strip())
+    def test_list_no_path_and_no_active_board_raises(self) -> None:
+        """list with no path and no active board raises rather than listing nothing."""
+        with self.assertRaises(ValueError):
+            self.run_repl("list")
 
-    def test_list_board_shows_columns(self) -> None:
-        """list <board> produces output (columns)."""
+    def test_list_board_shows_all_tasks_in_board(self) -> None:
+        """list <board> (no column) produces output for every column's tasks."""
+        self.svc.create_task("proj/done/task-done", TaskCreateParams())
         out = self.run_repl("list", "proj")
-        self.assertTrue(out.strip())
+        self.assertIn("fix-login", out)
+        self.assertIn("task-done", out)
 
     def test_list_board_column_shows_tasks(self) -> None:
         """list <board>/<column> produces output when tasks exist."""
@@ -363,7 +365,8 @@ class TestReplList(_InitializedReplBase):
         self.assertIn("fix-login", out)
 
     def test_ls_alias_produces_output(self) -> None:
-        """ls (alias for list) produces output."""
+        """ls (alias for list) produces output when a board is active."""
+        self.svc.set_board("proj")
         out = self.run_repl("ls")
         self.assertTrue(out.strip())
 
@@ -403,11 +406,11 @@ class TestReplList(_InitializedReplBase):
         self.assertIn("task-tagged", out)
         self.assertNotIn("fix-login", out)
 
-    def test_list_all_tasks_flag_requires_board_context(self) -> None:
-        """list -a lists all tasks on the active board when context is set."""
+    def test_list_no_path_with_active_board_lists_its_tasks(self) -> None:
+        """list with no path falls back to every task in the active board."""
         self.svc.create_task("/proj/done/task-done", TaskCreateParams())
         self.svc.set_board("proj")
-        out = self.run_repl("list", "-a")
+        out = self.run_repl("list")
         self.assertIn("fix-login", out)
         self.assertIn("task-done", out)
 

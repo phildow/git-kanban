@@ -47,16 +47,8 @@ def handle_change_dir(args: argparse.Namespace, svc: KanbanService, renderer: ob
 # ---------------------------------------------------------------------------
 
 def handle_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	typ, results = handle_list_helper(args, svc)
-	
-	if typ is Board:
-		renderer.render_board_list(args, results)
-	elif typ is Column:
-		renderer.render_column_list(args, results)
-	elif typ is Task:
-		renderer.render_task_list(args, results)
-	else:
-		raise ValueError("Unexpected result type from handle_list: {}".format(typ))
+	result = handle_list_helper(args, svc)
+	renderer.render_task_list(args, result)
 
 
 def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:

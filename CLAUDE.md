@@ -489,7 +489,7 @@ create task <board>/<column>/<title>
     [--due-date <date>]
     [--created-by <name>]
 
-list [BOARD[/COLUMN]] [-a|--tasks]
+list [BOARD[/COLUMN]]    # lists tasks; falls back to the active board/column context
     [--slugs]
     [--exclude <column>]        # repeatable
     [--sort <title|priority|due-date|created-at|updated-at|created-by|column>]

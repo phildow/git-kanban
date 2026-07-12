@@ -46,35 +46,13 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.set_board.assert_called_once_with(board="alpha")
         self.renderer.render_change_dir.assert_called_once_with(args, result)
 
-    def test_handle_list_renders_board_list(self):
-        args = self._args(path=None)
-        result = object()
-        with patch("kanban.repl.commands.handle_list_helper", return_value=(Board, result)):
-            commands.handle_list(args, self.svc, self.renderer)
-
-        self.renderer.render_board_list.assert_called_once_with(args, result)
-
-    def test_handle_list_renders_column_list(self):
-        args = self._args(path="alpha")
-        result = object()
-        with patch("kanban.repl.commands.handle_list_helper", return_value=(Column, result)):
-            commands.handle_list(args, self.svc, self.renderer)
-
-        self.renderer.render_column_list.assert_called_once_with(args, result)
-
     def test_handle_list_renders_task_list(self):
         args = self._args(path="alpha/todo")
-        result = object()
-        with patch("kanban.repl.commands.handle_list_helper", return_value=(Task, result)):
+        result = [object()]
+        with patch("kanban.repl.commands.handle_list_helper", return_value=result):
             commands.handle_list(args, self.svc, self.renderer)
 
         self.renderer.render_task_list.assert_called_once_with(args, result)
-
-    def test_handle_list_raises_for_unexpected_type(self):
-        args = self._args(path=None)
-        with patch("kanban.repl.commands.handle_list_helper", return_value=([], str)):
-            with self.assertRaises(ValueError):
-                commands.handle_list(args, self.svc, self.renderer)
 
     def test_handle_delete_renders_board_delete(self):
         args = self._args(path="alpha")
