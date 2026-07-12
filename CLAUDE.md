@@ -481,7 +481,7 @@ tasks [BOARD[/COLUMN]]
 
 create board <board>
 create column <board>/<column>
-create task <board>/<column>/<title>
+create task <column> <title>    # column in the active board; raises if no board is active
     [--edit]
     [--assigned-to <name>]
     [--priority <low|medium|high>]

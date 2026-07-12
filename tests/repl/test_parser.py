@@ -97,16 +97,17 @@ class TestParserAliases(unittest.TestCase):
         self.assertEqual(args.path, "main/todo")
         self.assertIs(args.func, handle_column_create)
 
-        args = repl_parser.parse_args(["n", "task", "main/todo/fix-parser"])
+        args = repl_parser.parse_args(["n", "task", "todo", "fix-parser"])
         self.assertEqual(args.command, "n")
         self.assertEqual(args.create_subject, "task")
-        self.assertEqual(args.path, "main/todo/fix-parser")
+        self.assertEqual(args.column, "todo")
+        self.assertEqual(args.title, "fix-parser")
         self.assertFalse(args.edit)
         self.assertIs(args.func, handle_task_create)
 
     def test_create_task_edit_flag(self):
         """`create task ... --edit` sets edit to True."""
-        args = repl_parser.parse_args(["create", "task", "main/todo/fix-parser", "--edit"])
+        args = repl_parser.parse_args(["create", "task", "todo", "fix-parser", "--edit"])
         self.assertTrue(args.edit)
 
     def test_search_maps_to_search_handler(self):

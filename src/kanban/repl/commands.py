@@ -150,6 +150,10 @@ def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: obj
 	
 
 def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	board = svc.working_board
+	if not board:
+		raise ValueError("No active board; set one with `cd` before creating a task")
+
 	params = TaskCreateParams(
 		assigned_to=getattr(args, "assigned_to", None),
 		priority=_parse_priority(args),
@@ -158,7 +162,8 @@ def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: o
 		created_by=getattr(args, "created_by", None),
 	)
 
-	result = svc.create_task(args.path, params)
+	task_path = f"/{board}/{args.column}/{args.title}"
+	result = svc.create_task(task_path, params)
 
 	if args.edit:
 		logging.debug("Opening task in editor: %s", result.path)

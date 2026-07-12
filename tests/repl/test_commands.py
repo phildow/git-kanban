@@ -247,14 +247,15 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.renderer.render_column_reorder.assert_called_once_with(args, result)
 
     def test_handle_task_create_defaults(self):
-        args = self._args(path="alpha/todo/fix-parser", edit=False)
+        args = self._args(column="todo", title="fix-parser", edit=False)
+        self.svc.working_board = "alpha"
         result = object()
         self.svc.create_task.return_value = result
 
         commands.handle_task_create(args, self.svc, self.renderer)
 
         self.svc.create_task.assert_called_once_with(
-            "alpha/todo/fix-parser",
+            "/alpha/todo/fix-parser",
             TaskCreateParams(
                 assigned_to=None,
                 priority=None,
@@ -267,7 +268,8 @@ class TestReplCommandHandlers(unittest.TestCase):
 
     def test_handle_task_create_without_edit_flag_does_not_open_editor(self):
         """create task without --edit does not call svc.edit_task."""
-        args = self._args(path="alpha/todo/fix-parser", edit=False)
+        args = self._args(column="todo", title="fix-parser", edit=False)
+        self.svc.working_board = "alpha"
         result = object()
         self.svc.create_task.return_value = result
 
@@ -278,7 +280,8 @@ class TestReplCommandHandlers(unittest.TestCase):
 
     def test_handle_task_create_with_edit_flag_opens_editor(self):
         """create task --edit opens the newly created task in the editor."""
-        args = self._args(path="alpha/todo/fix-parser", edit=True)
+        args = self._args(column="todo", title="fix-parser", edit=True)
+        self.svc.working_board = "alpha"
         created = Task(id=uuid4(), title="Fix parser", slug="fix-parser", board="alpha", column="todo")
         edited = Task(id=uuid4(), title="Fix parser", slug="fix-parser", board="alpha", column="todo")
         self.svc.create_task.return_value = created
@@ -291,7 +294,8 @@ class TestReplCommandHandlers(unittest.TestCase):
 
     def test_handle_task_create_with_optional_fields(self):
         args = self._args(
-            path="alpha/todo/fix-parser",
+            column="todo",
+            title="fix-parser",
             assigned_to="philip",
             priority="high",
             tags=["cli", "tests"],
@@ -299,13 +303,14 @@ class TestReplCommandHandlers(unittest.TestCase):
             created_by="philip",
             edit=False,
         )
+        self.svc.working_board = "alpha"
         result = object()
         self.svc.create_task.return_value = result
 
         commands.handle_task_create(args, self.svc, self.renderer)
 
         self.svc.create_task.assert_called_once_with(
-            "alpha/todo/fix-parser",
+            "/alpha/todo/fix-parser",
             TaskCreateParams(
                 assigned_to="philip",
                 priority="high",
@@ -315,6 +320,13 @@ class TestReplCommandHandlers(unittest.TestCase):
             ),
         )
         self.renderer.render_task_create.assert_called_once_with(args, result)
+
+    def test_handle_task_create_raises_without_active_board(self):
+        """create task with no active board raises rather than resolving nonsense."""
+        args = self._args(column="todo", title="fix-parser", edit=False)
+        self.svc.working_board = None
+        with self.assertRaises(ValueError):
+            commands.handle_task_create(args, self.svc, self.renderer)
 
     def test_handle_task_show(self):
         args = self._args(path="alpha/todo/fix-parser")
