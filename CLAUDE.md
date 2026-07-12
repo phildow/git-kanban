@@ -457,30 +457,92 @@ The REPL is the Read-Evaulate-Print-Loop that runs the command line application 
 
 The REPL sits at the same level in the architecture as the CLI and it consumes the same KanbanService. It has a dedicated renderer, and if adds a user context which keeps track of the current board and colum, modeled as the current working directory.
 
-The REPL commands follow.
+The REPL command structure follows:
 
 ```
-COMMAND
-  cd               Set the active board and column
-  boards           List all boards
-  columns          List columns for a board
-  tasks            List tasks, optionally scoped to a board or board/column
-  create           Create a board, column, or task
-  list             List all boards, columns, or tasks in the current context or at a specified path
-  rename           Rename a board, column, or task
-  delete           Delete a board, column, or task
-  show             Show task details
-  edit             Edit a task in the default editor
-  update           Update a task
-  move             Move a task to another column or up/down within a column
-  config           List, get, or set configuration values
-  search           Full-text search across tasks
-  log              Show git log for a task or scope
-  status           Show repository status summary
-  assign           Assign a task to someone
-  
-options:
-  -h, --help         Show this help message
+init [-b|--bootstrap]
+
+cd [BOARD[/COLUMN]]
+cd --clear
+
+boards [--slugs]
+columns <board> [--slugs]
+
+tasks [BOARD[/COLUMN]]
+    [--slugs]
+    [--sort <title|priority|due-date|created-at|updated-at|created-by|column>]
+    [--reverse]
+    [--assigned-to <name>]
+    [--priority <low|medium|high>]
+    [--tag <tag>]
+    [--due-before <date>]
+    [--due-after <date>]
+    [--created-by <name>]
+
+create board <board>
+create column <board>/<column>
+create task <board>/<column>/<title>
+    [--edit]
+    [--assigned-to <name>]
+    [--priority <low|medium|high>]
+    [--tag <tag>]
+    [--due-date <date>]
+    [--created-by <name>]
+
+list [BOARD[/COLUMN]] [-a|--tasks]
+    [--slugs]
+    [--sort <title|priority|due-date|created-at|updated-at|created-by|column>]
+    [--reverse]
+    [--assigned-to <name>]
+    [--priority <low|medium|high>]
+    [--tag <tag>]
+    [--due-before <date>]
+    [--due-after <date>]
+    [--created-by <name>]
+
+rename <board/column/task> <new-name>
+delete <board[/column][/task]> [-f|--force]
+reorder column <board/column> <position>
+
+show <board/column/task>
+edit <board/column/task>
+
+update <board/column/title>
+    [--assigned-to <name>]
+    [--priority <low|medium|high>]
+    [--tag <tag>]
+    [--due-date <date>]
+    [--created-by <name>]
+
+move <task> [<column>]
+move <task> [--top|--bottom|--up|--down]
+
+assign <board/column/task> <user>
+
+config
+config set <key> <value>    # key: name
+config get <key>            # key: name
+
+search <query>
+    [--slugs]
+    [--board <board>]
+    [--sort <title|priority|due-date|created-at|updated-at|created-by|column>]
+    [--reverse]
+    [--assigned-to <name>]
+    [--priority <low|medium|high>]
+    [--tag <tag>]
+    [--due-before <date>]
+    [--due-after <date>]
+    [--created-by <name>]
+
+log [[BOARD/COLUMN/]TASK] [--limit <n>]
+
+status
+
+exit
+
+# Every subcommand also accepts -h/--help.
+# No global flags are currently active for the REPL (see _add_global_flags).
 ```
 
 The `[]` brackets indicate optional path components that are inferred from the user context or index search. Path resolution for all commands follows:
@@ -490,19 +552,21 @@ The `[]` brackets indicate optional path components that are inferred from the u
 3. Index search (scoped to active board if set)
 4. Error on ambiguity
 
-The following aliases are added by default. The user may remove them or define their own:
+The following command aliases are registered by default:
 
 ```
-new = create
+new = create        (subcommands: board|b, column|c, task|t)
   n = create
-  s = show
-  r = show
  ls = list
 cols = columns
  mv = move
+del = delete
  rm = delete
+view = show
+   v = show
+   s = show
+quit = exit
  :q = exit
-  ? = help
 ```
 
 The REPL supports command control commands and tab completion:
