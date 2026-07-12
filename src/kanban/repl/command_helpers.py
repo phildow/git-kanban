@@ -37,6 +37,7 @@ def _build_task_filter(args: argparse.Namespace) -> TaskFilter:
         due_before=_parse_date(getattr(args, "due_before", None)),
         due_after=_parse_date(getattr(args, "due_after", None)),
         created_by=getattr(args, "created_by", None),
+        exclude_columns=getattr(args, "column", None) or [],
     )
 
 # ---------------------------------------------------------------------------
@@ -69,10 +70,36 @@ def handle_list_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[ty
     elif board and not column and all_tasks:
         return Task, svc.get_tasks(path=f"/{board}", filter=filter, sort=sort, reverse=reverse)
     elif board and not column and not all_tasks:
-        return Column, svc.get_columns(board=board, sort=sort, reverse=reverse)
+        return Column, svc.get_columns(board=board)
     elif not board and not column:
-        return Board, svc.get_boards(sort=sort, reverse=reverse)
-       
+        return Board, svc.get_boards()
+
+
+def handle_task_list_helper(args: argparse.Namespace, svc: KanbanService) -> list[Task]:
+    """
+    Return tasks scoped by path (a board or board/column path).  This is
+    the main entry point for the `tasks` command in the REPL.  When path is
+    omitted, falls back to every task in the active board (all columns),
+    raising if no board is active.
+    """
+    path = getattr(args, "path", "") or ""
+    filter = _build_task_filter(args)
+    sort = getattr(args, "sort", None)
+    reverse = getattr(args, "reverse", False)
+
+    if not path:
+        board = svc.working_board
+        if not board:
+            raise ValueError("No active board; provide a board or board/column, or set one with `board`/`cd`")
+        return svc.get_tasks(path=f"/{board}", filter=filter, sort=sort, reverse=reverse)
+
+    board, column, _ = svc.path_components(path)
+    if board is None:
+        raise ValueError(f"Cannot resolve board from: {path}")
+    if column:
+        return svc.get_tasks(path=f"/{board}/{column}", filter=filter, sort=sort, reverse=reverse)
+    return svc.get_tasks(path=f"/{board}", filter=filter, sort=sort, reverse=reverse)
+
 
 def handle_delete_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[type, Board | Column | Task] | tuple[None, None]:
     """

@@ -92,11 +92,9 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
 
     def test_board_commands(self):
         """Board subcommands parse arguments and bind the correct handlers."""
-        args = cli_parser.parse_args(["board", "list", "--sort", "title", "--reverse"])
+        args = cli_parser.parse_args(["board", "list"])
         self.assertEqual(args.command, "board")
         self.assertEqual(args.board_command, "list")
-        self.assertEqual(args.sort, "title")
-        self.assertTrue(args.reverse)
         self.assertEqual(args.format, "plain")
         self.assertIs(args.func, handle_board_list)
 
@@ -118,8 +116,6 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         args = cli_parser.parse_args(["column", "list", "board-a"])
         self.assertEqual(args.board, "board-a")
         self.assertEqual(args.format, "plain")
-        self.assertEqual(args.sort, None)
-        self.assertFalse(args.reverse)
         self.assertIs(args.func, handle_column_list)
 
         args = cli_parser.parse_args(["column", "list", "board-a"])

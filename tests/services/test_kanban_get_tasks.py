@@ -218,5 +218,56 @@ class TestKanbanServiceGetTasksFilterNullValues(unittest.TestCase):
         self.assertNotIn(self.no_values.id, self._ids(tasks))
 
 
+class TestKanbanServiceGetTasksExcludeColumns(unittest.TestCase):
+    """TaskFilter.exclude_columns drops tasks belonging to the named columns."""
+
+    def setUp(self) -> None:
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+        temp_dir.mkdir()
+        self.repo = InMemoryRepository(root=temp_dir)
+        self.svc = KanbanService(
+            repository=self.repo,
+            index_service=IndexService(index_base=InMemoryIndex(), repository=self.repo),
+            git_service=GitService(),
+        )
+        self.svc.create_board("main", columns=[("To Do", "todo"), ("Done", "done"), ("Archive", "archive")])
+
+        self.todo_task = self.repo.create_task(_task("Fix login bug", column="todo"), "fix-login-bug")
+        self.done_task = self.repo.create_task(_task("Write API docs", column="done"), "write-api-docs")
+        self.archive_task = self.repo.create_task(_task("Old task", column="archive"), "old-task")
+
+    def _ids(self, tasks) -> set:
+        return {t.id for t in tasks}
+
+    def test_excludes_tasks_in_named_column(self) -> None:
+        """A single excluded column drops only that column's tasks."""
+        tasks = self.svc.get_tasks(path="/main", filter=TaskFilter(exclude_columns=["done"]), sort=None)
+        self.assertEqual(self._ids(tasks), {self.todo_task.id, self.archive_task.id})
+
+    def test_excludes_tasks_in_multiple_named_columns(self) -> None:
+        """Multiple excluded columns drop tasks from all of them."""
+        tasks = self.svc.get_tasks(
+            path="/main", filter=TaskFilter(exclude_columns=["done", "archive"]), sort=None
+        )
+        self.assertEqual(self._ids(tasks), {self.todo_task.id})
+
+    def test_empty_exclude_columns_returns_all_tasks(self) -> None:
+        """An empty exclude_columns list filters nothing."""
+        tasks = self.svc.get_tasks(path="/main", filter=TaskFilter(exclude_columns=[]), sort=None)
+        self.assertEqual(self._ids(tasks), {self.todo_task.id, self.done_task.id, self.archive_task.id})
+
+    def test_exclude_columns_combined_with_other_filters(self) -> None:
+        """exclude_columns is ANDed with other active filter criteria."""
+        self.repo.create_task(
+            _task("Assigned in done", column="done", assigned_to="alice"), "assigned-in-done"
+        )
+        tasks = self.svc.get_tasks(
+            path="/main",
+            filter=TaskFilter(assigned_to="alice", exclude_columns=["done"]),
+            sort=None,
+        )
+        self.assertEqual(tasks, [])
+
+
 if __name__ == "__main__":
     unittest.main()

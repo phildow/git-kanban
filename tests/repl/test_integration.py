@@ -17,9 +17,12 @@ Layout
 _ReplBase               setUp/tearDown, run_repl helper, boards_dir
 _InitializedReplBase    Adds repo.init_storage() so commands run immediately
 TestReplInit            `init` and `init --bootstrap` on a fresh repo
-TestReplContext         `cd`, `board`, `column` context commands
+TestReplContext         `cd` context command
 TestReplCreate          `create`/`new`/`n` for boards, columns, and tasks
 TestReplList            `list`/`ls` with paths, filters, sort, and -l flag
+TestReplBoards          `boards` listing all boards
+TestReplColumns         `columns`/`cols` listing columns for a board
+TestReplTasks           `tasks` listing tasks scoped to a board or board/column
 TestReplRename          `rename` for boards, columns, and tasks
 TestReplDelete          `delete`/`del`/`rm` for boards, columns, and tasks
 TestReplReorder         `reorder column`
@@ -178,7 +181,7 @@ class TestReplInit(_ReplBase):
 
 
 # ---------------------------------------------------------------------------
-# Context commands: cd, board, column
+# Context commands: cd
 # ---------------------------------------------------------------------------
 
 class TestReplContext(_InitializedReplBase):
@@ -199,21 +202,10 @@ class TestReplContext(_InitializedReplBase):
         out = self.run_repl("cd", "proj/todo")
         self.assertEqual(out, "")
 
-    def test_cd_clear_produces_no_output(self) -> None:
-        """cd --clear clears the context and prints nothing."""
+    def test_cd_no_path_clears_context_and_produces_no_output(self) -> None:
+        """cd with no path clears the context and prints nothing."""
         self.run_repl("cd", "proj")
-        out = self.run_repl("cd", "--clear")
-        self.assertEqual(out, "")
-
-    def test_board_command_produces_no_output(self) -> None:
-        """board <name> changes the active board and prints nothing."""
-        out = self.run_repl("board", "proj")
-        self.assertEqual(out, "")
-
-    def test_column_command_produces_no_output(self) -> None:
-        """column <name> changes the active column and prints nothing."""
-        self.run_repl("board", "proj")
-        out = self.run_repl("column", "todo")
+        out = self.run_repl("cd")
         self.assertEqual(out, "")
 
 
@@ -416,6 +408,122 @@ class TestReplList(_InitializedReplBase):
         out = self.run_repl("list", "-a")
         self.assertIn("fix-login", out)
         self.assertIn("task-done", out)
+
+
+# ---------------------------------------------------------------------------
+# boards
+# ---------------------------------------------------------------------------
+
+class TestReplBoards(_InitializedReplBase):
+    """boards command lists all boards."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.repo.create_board("proj", slug="proj")
+        self.repo.create_board("ops", slug="ops")
+
+    def test_boards_produces_output(self) -> None:
+        """boards produces output."""
+        out = self.run_repl("boards")
+        self.assertTrue(out.strip())
+
+    def test_boards_slugs_flag_produces_output(self) -> None:
+        """boards --slugs produces the compact slug-only output."""
+        out = self.run_repl("boards", "--slugs")
+        self.assertTrue(out.strip())
+        self.assertIn("proj", out)
+        self.assertIn("ops", out)
+
+
+# ---------------------------------------------------------------------------
+# columns / cols
+# ---------------------------------------------------------------------------
+
+class TestReplColumns(_InitializedReplBase):
+    """columns/cols command lists columns for a board."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.repo.create_board("proj", slug="proj")
+        self.repo.create_column("proj", "todo", slug="todo")
+        self.repo.create_column("proj", "done", slug="done")
+
+    def test_columns_with_explicit_board_produces_output(self) -> None:
+        """columns <board> produces output."""
+        out = self.run_repl("columns", "proj")
+        self.assertTrue(out.strip())
+
+    def test_columns_uses_current_context_board(self) -> None:
+        """columns with no board argument falls back to the active board context."""
+        self.svc.set_board("proj")
+        out = self.run_repl("columns")
+        self.assertTrue(out.strip())
+
+    def test_cols_alias_produces_output(self) -> None:
+        """cols (alias for columns) produces output."""
+        out = self.run_repl("cols", "proj")
+        self.assertTrue(out.strip())
+
+    def test_columns_slugs_flag_produces_output(self) -> None:
+        """columns <board> --slugs produces the compact slug-only output."""
+        out = self.run_repl("columns", "proj", "--slugs")
+        self.assertTrue(out.strip())
+        self.assertIn("todo", out)
+        self.assertIn("done", out)
+
+
+# ---------------------------------------------------------------------------
+# tasks
+# ---------------------------------------------------------------------------
+
+class TestReplTasks(_InitializedReplBase):
+    """tasks command lists tasks, optionally scoped to a board or board/column."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.repo.create_board("proj", slug="proj")
+        self.repo.create_column("proj", "todo", slug="todo")
+        self.repo.create_column("proj", "done", slug="done")
+        self.svc.create_task("proj/todo/fix-login", TaskCreateParams())
+        self.svc.create_task("proj/done/write-docs", TaskCreateParams())
+
+    def test_tasks_with_board_path_shows_all_columns(self) -> None:
+        """tasks <board> includes tasks from every column in that board."""
+        out = self.run_repl("tasks", "proj")
+        self.assertIn("fix-login", out)
+        self.assertIn("write-docs", out)
+
+    def test_tasks_with_board_column_path_scopes_to_column(self) -> None:
+        """tasks <board>/<column> includes only that column's tasks."""
+        out = self.run_repl("tasks", "proj/done")
+        self.assertIn("write-docs", out)
+        self.assertNotIn("fix-login", out)
+
+    def test_tasks_with_no_path_uses_active_board_all_columns(self) -> None:
+        """tasks with no path falls back to every task in the active board."""
+        self.svc.set_board("proj")
+        out = self.run_repl("tasks")
+        self.assertIn("fix-login", out)
+        self.assertIn("write-docs", out)
+
+    def test_tasks_with_no_path_ignores_active_column(self) -> None:
+        """tasks with no path still shows the whole board even if a column is active."""
+        self.svc.set_board("proj")
+        self.svc.set_column("todo")
+        out = self.run_repl("tasks")
+        self.assertIn("fix-login", out)
+        self.assertIn("write-docs", out)
+
+    def test_tasks_with_no_path_and_no_active_board_raises(self) -> None:
+        """tasks with no path and no active board raises rather than listing nothing."""
+        with self.assertRaises(ValueError):
+            self.run_repl("tasks")
+
+    def test_tasks_slugs_flag_produces_output(self) -> None:
+        """tasks <board> --slugs produces the compact slug-only output."""
+        out = self.run_repl("tasks", "proj", "--slugs")
+        self.assertIn("fix-login", out)
+        self.assertIn("write-docs", out)
 
 
 # ---------------------------------------------------------------------------

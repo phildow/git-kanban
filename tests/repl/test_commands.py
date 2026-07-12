@@ -27,17 +27,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         return Namespace(**kwargs)
 
     def test_handle_change_dir_defaults_to_clear_without_path(self):
-        args = self._args(path=None, clear=False)
-        result = object()
-        self.svc.change_dir.return_value = result
-
-        commands.handle_change_dir(args, self.svc, self.renderer)
-
-        self.svc.change_dir.assert_called_once_with(clear=True)
-        self.renderer.render_change_dir.assert_called_once_with(args, result)
-
-    def test_handle_change_dir_clear_flag(self):
-        args = self._args(path="alpha/todo", clear=True)
+        args = self._args(path=None)
         result = object()
         self.svc.change_dir.return_value = result
 
@@ -47,7 +37,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.renderer.render_change_dir.assert_called_once_with(args, result)
 
     def test_handle_change_dir_with_path(self):
-        args = self._args(path="alpha/todo", clear=False)
+        args = self._args(path="alpha/todo")
         result = object()
         self.svc.change_dir.return_value = result
 
@@ -55,40 +45,6 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         self.svc.change_dir.assert_called_once_with(path="alpha/todo")
         self.renderer.render_change_dir.assert_called_once_with(args, result)
-
-    def test_handle_board_sets_context_to_board(self):
-        args = self._args(board="alpha")
-        result = object()
-        self.svc.set_board.return_value = result
-
-        commands.handle_board_change(args, self.svc, self.renderer)
-
-        self.svc.set_board.assert_called_once_with(board="alpha")
-        self.renderer.render_change_board.assert_called_once_with(args, result)
-
-    def test_handle_board_raises_when_board_missing(self):
-        args = self._args(board="missing")
-        self.svc.set_board.side_effect = ValueError("Board not found: missing")
-
-        with self.assertRaises(ValueError):
-            commands.handle_board_change(args, self.svc, self.renderer)
-
-    def test_handle_column_sets_context_to_column(self):
-        args = self._args(column="todo")
-        result = object()
-        self.svc.set_column.return_value = result
-
-        commands.handle_column_change(args, self.svc, self.renderer)
-
-        self.svc.set_column.assert_called_once_with(column="todo")
-        self.renderer.render_change_column.assert_called_once_with(args, result)
-
-    def test_handle_column_raises_when_column_missing(self):
-        args = self._args(column="missing")
-        self.svc.set_column.side_effect = ValueError("Column not found: missing")
-
-        with self.assertRaises(ValueError):
-            commands.handle_column_change(args, self.svc, self.renderer)
 
     def test_handle_list_renders_board_list(self):
         args = self._args(path=None)
@@ -219,6 +175,49 @@ class TestReplCommandHandlers(unittest.TestCase):
         commands.handle_column_rename(args, self.svc, self.renderer)
         self.svc.rename_column.assert_called_once_with("alpha/todo", "doing")
         self.renderer.render_column_rename.assert_called_once_with(args, result)
+
+    def test_handle_board_list(self):
+        """`boards` renders the board list."""
+        args = self._args()
+        result = object()
+        self.svc.get_boards.return_value = result
+
+        commands.handle_board_list(args, self.svc, self.renderer)
+
+        self.svc.get_boards.assert_called_once_with()
+        self.renderer.render_board_list.assert_called_once_with(args, result)
+
+    def test_handle_task_list(self):
+        """`tasks` delegates to handle_task_list_helper and renders the result."""
+        args = self._args(path="alpha/todo")
+        result = [object()]
+        with patch("kanban.repl.commands.handle_task_list_helper", return_value=result) as mock_helper:
+            commands.handle_task_list(args, self.svc, self.renderer)
+
+        mock_helper.assert_called_once_with(args, self.svc)
+        self.renderer.render_task_list.assert_called_once_with(args, result)
+
+    def test_handle_column_list(self):
+        """`columns`/`cols` forwards board and renders the column list."""
+        args = self._args(board="alpha")
+        result = object()
+        self.svc.get_columns.return_value = result
+
+        commands.handle_column_list(args, self.svc, self.renderer)
+
+        self.svc.get_columns.assert_called_once_with(board="alpha")
+        self.renderer.render_column_list.assert_called_once_with(args, result)
+
+    def test_handle_column_list_defaults(self):
+        """`columns` with no board falls back to None so KanbanService uses context."""
+        args = self._args()
+        result = object()
+        self.svc.get_columns.return_value = result
+
+        commands.handle_column_list(args, self.svc, self.renderer)
+
+        self.svc.get_columns.assert_called_once_with(board=None)
+        self.renderer.render_column_list.assert_called_once_with(args, result)
 
         args = self._args(path="alpha/todo", position=2)
         result = object()

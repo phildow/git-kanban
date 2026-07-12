@@ -240,22 +240,6 @@ class TestBoardCLI(_InitializedBase):
         data = self.run_json("board", "list", "--format", "json")
         self.assertEqual(data, [])
 
-    def test_board_list_sort(self) -> None:
-        """board list --sort title includes all boards."""
-        self.repo.create_board("alpha", slug="alpha")
-        self.repo.create_board("beta", slug="beta")
-        out = self.run_cli("board", "list", "--sort", "title")
-        self.assertIn("alpha", out)
-        self.assertIn("beta", out)
-
-    def test_board_list_reverse(self) -> None:
-        """board list --reverse includes all boards."""
-        self.repo.create_board("alpha", slug="alpha")
-        self.repo.create_board("beta", slug="beta")
-        out = self.run_cli("board", "list", "--reverse")
-        self.assertIn("alpha", out)
-        self.assertIn("beta", out)
-
     def test_board_rename_creates_new_directory(self) -> None:
         """board rename creates the destination directory."""
         self.repo.create_board("proj", slug="proj")
@@ -365,14 +349,6 @@ class TestColumnCLI(_InitializedBase):
         self.repo.create_column("proj", "todo", slug="todo")
         data = self.run_json("column", "list", "proj", "--format", "json")
         self.assertIn("position", data[0])
-
-    def test_column_list_sort(self) -> None:
-        """column list --sort title includes all columns."""
-        self.repo.create_column("proj", "todo", slug="todo")
-        self.repo.create_column("proj", "done", slug="done")
-        out = self.run_cli("column", "list", "proj", "--sort", "title")
-        self.assertIn("todo", out)
-        self.assertIn("done", out)
 
     def test_column_rename_creates_new_directory(self) -> None:
         """column rename creates the destination directory."""

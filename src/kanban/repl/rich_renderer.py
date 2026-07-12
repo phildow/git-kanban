@@ -7,8 +7,10 @@ from functools import wraps
 import logging
 import shutil
 
-from rich.markdown import Markdown
+from rich.console import Console, ConsoleOptions, RenderResult
+from rich.markdown import Heading, Markdown
 from rich.table import Table
+from rich.text import Text
 from rich import box, print
 
 from ..models import UserContext, Board, Column, Task
@@ -28,7 +30,27 @@ def _requires_verbose(method):
 
 	return _wrapped
 
+# Custom Rich Markdown renderer that left-justifies headings instead of centering them.
+
+class LeftJustifiedHeading(Heading):
+    def __rich_console__(
+        self,
+        console: Console,
+        options: ConsoleOptions,
+    ) -> RenderResult:
+        yield from console.render(self.text, options=options.update(justify="left"))
+
+class KanbanMarkdown(Markdown):
+    elements = {
+        **Markdown.elements,
+        "heading_open": LeftJustifiedHeading,
+    }
+
+# The class responsible for rendering output to the console in a rich format.
+
 class RichRenderer:
+	console = Console(color_system="auto")
+
 	def __init__(self, render_helper: RenderHelper):
 		self.render_helper = render_helper
 
@@ -37,8 +59,7 @@ class RichRenderer:
 			return
 		if value is None:
 			return
-		# Console.print(value)
-		print(value)
+		self.console.print(value)
 
 
 	def _clamped(self, s: str, max_len: int, suffix: str = "...") -> str:
@@ -72,24 +93,6 @@ class RichRenderer:
 			return
 
 		self._emit(args, "Current context cleared")
-	
-	@_requires_verbose
-	def render_change_board(self, args: argparse.Namespace, result: UserContext) -> None:
-		"""Render a message indicating the new current board, or that the board context was cleared."""
-		board = result.board
-		if board:
-			self._emit(args, f"Changed board to: {board}")
-		else:
-			self._emit(args, "Board cleared")
-
-	@_requires_verbose
-	def render_change_column(self, args: argparse.Namespace, result: UserContext) -> None:
-		"""Render a message indicating the new current column, or that the column context was cleared."""
-		column = result.column
-		if column:
-			self._emit(args, f"Changed column to: {column}")
-		else:
-			self._emit(args, "Column cleared")
 
 # ---------------------------------------------------------------------------
 # Board rendering
@@ -378,7 +381,13 @@ class RichRenderer:
 		self._emit(args, "")
 		self._emit(args, table)
 		self._emit(args, "")
-		self._emit(args, result.body)
+		if not result.body:
+			body = ""
+		elif getattr(args, "plain", False):
+			body = Text(result.body)
+		else:
+			body = KanbanMarkdown(result.body, justify="left")
+		self._emit(args, body)
 		self._emit(args, "")
 
 	def render_task_edit(self, args: argparse.Namespace, result: Task) -> None:

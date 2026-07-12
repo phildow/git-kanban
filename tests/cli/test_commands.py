@@ -51,14 +51,14 @@ class TestCommandHandlers(unittest.TestCase):
         self.renderer.render_init.assert_called_once_with(args, result)
 
     def test_handle_board_list(self):
-        """`board list` forwards sort options and renders list output."""
+        """`board list` renders list output."""
         args = self._args(sort="title", reverse=True)
         result = object()
         self.svc.get_boards.return_value = result
 
         commands.handle_board_list(args, self.svc, self.renderer, self.json_renderer)
 
-        self.svc.get_boards.assert_called_once_with(sort="title", reverse=True)
+        self.svc.get_boards.assert_called_once_with()
         self.renderer.render_board_list.assert_called_once_with(args, result)
 
     def test_handle_board_create(self):
@@ -100,7 +100,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.get_columns.return_value = result
         commands.handle_column_list(args, self.svc, self.renderer, self.json_renderer)
-        self.svc.get_columns.assert_called_once_with(board="board-a", sort="title", reverse=False)
+        self.svc.get_columns.assert_called_once_with(board="board-a")
         self.renderer.render_column_list.assert_called_once_with(args, result)
 
         args = self._args(path="board-a/todo")

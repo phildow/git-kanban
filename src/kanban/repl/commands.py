@@ -9,9 +9,10 @@ import logging
 
 from ..models import Board, Column, Task
 from ..repl.command_helpers import (
-    _parse_priority, 
-    handle_list_helper, 
-    handle_delete_helper, 
+    _parse_priority,
+    handle_list_helper,
+    handle_task_list_helper,
+    handle_delete_helper,
     handle_rename_helper
 )
 from ..services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
@@ -28,11 +29,11 @@ def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: object) 
 	renderer.render_init(args, result)
 
 # ---------------------------------------------------------------------------
-# Working context commands (use, board, column)
+# Working context commands (cd)
 # ---------------------------------------------------------------------------
 
 def handle_change_dir(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	if args.clear or getattr(args, "path", None) is None:
+	if getattr(args, "path", None) is None:
 		result = svc.change_dir(clear=True)
 		renderer.render_change_dir(args, result)
 		return
@@ -40,23 +41,6 @@ def handle_change_dir(args: argparse.Namespace, svc: KanbanService, renderer: ob
 	result = svc.change_dir(path=args.path)
 	renderer.render_change_dir(args, result)
 
-
-def handle_board_change(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	"""Update current context with the provided board name.
-
-	Relies on `svc.set_board()` for validation and raises if the board does not exist.
-	"""
-	result = svc.set_board(board=args.board)
-	renderer.render_change_board(args, result)
-
-
-def handle_column_change(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	"""Update current context with the provided column name.
-
-	Relies on `svc.set_column()` for validation and raises if the column does not exist.
-	"""
-	result = svc.set_column(column=args.column)
-	renderer.render_change_column(args, result)
 
 # ---------------------------------------------------------------------------
 # Common commands (list, delete)
@@ -110,6 +94,11 @@ def handle_rename(args: argparse.Namespace, svc: KanbanService, renderer: object
 # Board subcommands
 # ---------------------------------------------------------------------------
 
+def handle_board_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	result = svc.get_boards()
+	renderer.render_board_list(args, result)
+
+
 def handle_board_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	result = svc.create_board(args.board)
 	renderer.render_board_create(args, result)
@@ -123,6 +112,11 @@ def handle_board_rename(args: argparse.Namespace, svc: KanbanService, renderer: 
 # ---------------------------------------------------------------------------
 # Column subcommands
 # ---------------------------------------------------------------------------
+
+def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	result = svc.get_columns(board=getattr(args, "board", None))
+	renderer.render_column_list(args, result)
+
 
 def handle_column_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	result = svc.create_column(args.path)
@@ -142,6 +136,11 @@ def handle_column_reorder(args: argparse.Namespace, svc: KanbanService, renderer
 # ---------------------------------------------------------------------------
 # Task subcommands
 # ---------------------------------------------------------------------------
+
+def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+	result = handle_task_list_helper(args, svc)
+	renderer.render_task_list(args, result)
+	
 
 def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	params = TaskCreateParams(

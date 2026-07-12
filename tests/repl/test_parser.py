@@ -11,42 +11,78 @@ import unittest
 # TODO: add handle_list tests
 from kanban.repl import parser as repl_parser
 from kanban.repl.commands import (
-    handle_board_change,
     handle_board_create,
-    handle_column_change,
+    handle_board_list,
     handle_column_create,
+    handle_column_list,
     handle_list,
     handle_change_dir,
     handle_rename,
     handle_search,
     handle_task_assign,
     handle_task_create,
+    handle_task_list,
     handle_task_move,
+    handle_task_show,
     handle_task_update,
 )
 
 class TestParserAliases(unittest.TestCase):
     """Tests for verb-first parser aliases and wiring."""
 
-    def test_board_command_maps_to_board_handler(self):
-        args = repl_parser.parse_args(["board", "main"])
-        self.assertEqual(args.command, "board")
-        self.assertEqual(args.board, "main")
-        self.assertIs(args.func, handle_board_change)
+    def test_boards_command_maps_to_board_list_handler(self):
+        args = repl_parser.parse_args(["boards"])
+        self.assertEqual(args.command, "boards")
+        self.assertFalse(args.slugs)
+        self.assertIs(args.func, handle_board_list)
 
-    def test_board_command_requires_name(self):
-        with self.assertRaises(SystemExit):
-            repl_parser.parse_args(["board"])
+    def test_boards_slugs_flag(self):
+        """`boards --slugs` sets slugs to True."""
+        args = repl_parser.parse_args(["boards", "--slugs"])
+        self.assertTrue(args.slugs)
 
-    def test_column_command_maps_to_column_handler(self):
-        args = repl_parser.parse_args(["column", "todo"])
-        self.assertEqual(args.command, "column")
-        self.assertEqual(args.column, "todo")
-        self.assertIs(args.func, handle_column_change)
+    def test_columns_and_cols_alias_map_to_column_list_handler(self):
+        args = repl_parser.parse_args(["columns"])
+        self.assertEqual(args.command, "columns")
+        self.assertIsNone(args.board)
+        self.assertFalse(args.slugs)
+        self.assertIs(args.func, handle_column_list)
 
-    def test_column_command_requires_name(self):
-        with self.assertRaises(SystemExit):
-            repl_parser.parse_args(["column"])
+        args = repl_parser.parse_args(["cols", "alpha"])
+        self.assertEqual(args.command, "cols")
+        self.assertEqual(args.board, "alpha")
+        self.assertIs(args.func, handle_column_list)
+
+    def test_columns_slugs_flag(self):
+        """`columns ... --slugs` sets slugs to True."""
+        args = repl_parser.parse_args(["columns", "alpha", "--slugs"])
+        self.assertTrue(args.slugs)
+
+    def test_tasks_maps_to_task_list_handler(self):
+        args = repl_parser.parse_args(["tasks"])
+        self.assertEqual(args.command, "tasks")
+        self.assertIsNone(args.path)
+        self.assertIsNone(args.sort)
+        self.assertFalse(args.reverse)
+        self.assertFalse(args.slugs)
+        self.assertIsNone(args.column)
+        self.assertIs(args.func, handle_task_list)
+
+        args = repl_parser.parse_args(["tasks", "alpha/todo"])
+        self.assertEqual(args.path, "alpha/todo")
+        self.assertIs(args.func, handle_task_list)
+
+    def test_tasks_sort_reverse_and_slugs_flags(self):
+        """`tasks ... --sort <field> --reverse --slugs` sets all three."""
+        args = repl_parser.parse_args(["tasks", "alpha", "--sort", "title", "--reverse", "--slugs"])
+        self.assertEqual(args.sort, "title")
+        self.assertTrue(args.reverse)
+        self.assertTrue(args.slugs)
+
+    def test_tasks_exclude_flag_is_repeatable(self):
+        """`tasks ... -x <column> --exclude <column>` accumulates into a list."""
+        args = repl_parser.parse_args(["tasks", "alpha", "-x", "done", "--exclude", "archive"])
+        self.assertEqual(args.column, ["done", "archive"])
 
     def test_create_aliases_map_to_create_handlers(self):
         args = repl_parser.parse_args(["new", "board", "main"])
@@ -137,12 +173,32 @@ class TestParserAliases(unittest.TestCase):
         args = repl_parser.parse_args(["list", "--slugs"])
         self.assertTrue(args.slugs)
 
+    def test_list_exclude_flag_is_repeatable(self):
+        """`list ... -x <column> --exclude <column>` accumulates into a list."""
+        args = repl_parser.parse_args(["list", "-x", "done", "--exclude", "archive"])
+        self.assertEqual(args.column, ["done", "archive"])
+
     def test_assign_maps_to_assign_handler(self):
         args = repl_parser.parse_args(["assign", "main/todo/fix-login", "alice"])
         self.assertEqual(args.command, "assign")
         self.assertEqual(args.path, "main/todo/fix-login")
         self.assertEqual(args.assigned_to, "alice")
         self.assertIs(args.func, handle_task_assign)
+
+    def test_show_maps_to_show_handler_and_defaults_plain_to_false(self):
+        args = repl_parser.parse_args(["show", "main/todo/fix-login"])
+        self.assertEqual(args.command, "show")
+        self.assertEqual(args.path, "main/todo/fix-login")
+        self.assertFalse(args.plain)
+        self.assertIs(args.func, handle_task_show)
+
+    def test_show_plain_flag(self):
+        """`show ... -p`/`--plain` sets plain to True."""
+        args = repl_parser.parse_args(["show", "main/todo/fix-login", "-p"])
+        self.assertTrue(args.plain)
+
+        args = repl_parser.parse_args(["show", "main/todo/fix-login", "--plain"])
+        self.assertTrue(args.plain)
 
     def test_assign_requires_path_and_user(self):
         with self.assertRaises(SystemExit):
@@ -258,18 +314,11 @@ class TestParserAliases(unittest.TestCase):
         args = parser.parse_args(["cd"])
         self.assertEqual(args.command, "cd")
         self.assertIsNone(args.path)
-        self.assertFalse(args.clear)
         self.assertIs(args.func, handle_change_dir)
 
         args = parser.parse_args(["cd", "main/todo"])
         self.assertEqual(args.command, "cd")
         self.assertEqual(args.path, "main/todo")
-        self.assertFalse(args.clear)
-        self.assertIs(args.func, handle_change_dir)
-
-        args = parser.parse_args(["cd", "--clear"])
-        self.assertTrue(args.clear)
-        self.assertIsNone(args.path)
         self.assertIs(args.func, handle_change_dir)
 
 

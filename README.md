@@ -99,6 +99,8 @@ CONFIG
     - eg `task-cols:96=title,assigned-to,tags,due`
 - Allow the user to customize the default column names
 - Allow the user to configure rich layout properties (eg table box style)
+- Allow the user to customize the rich colors (Theme)
+- Allow the user to render markdown normally
 
 VERSION 1.1
 
