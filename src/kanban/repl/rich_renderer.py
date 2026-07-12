@@ -132,13 +132,14 @@ class RichRenderer:
 	def render_board_list_rich(self, args: argparse.Namespace, result: list[Board]) -> None:
 		"""Render a detailed list of boards, including their column counts."""
 		table = Table(title=f"Boards ({len(result)})", box=box.ASCII2, show_header=True, header_style="bold")
-		
+
 		table.add_column("Name", width=32, no_wrap=True)
-		table.add_column("Tasks", width=8, no_wrap=True)
+		table.add_column("Slug", width=32, no_wrap=True)
 		table.add_column("Columns", width=8, no_wrap=True)
+		table.add_column("Tasks", width=8, no_wrap=True)
 
 		for board in result:
-			table.add_row(board.name, str(board.task_count), str(board.column_count))
+			table.add_row(board.name, board.slug, str(board.column_count), str(board.task_count))
 
 		self._emit(args, table)
 
@@ -203,12 +204,13 @@ class RichRenderer:
 	def render_column_list_rich(self, args: argparse.Namespace, result: list[Column]) -> None:
 		"""Render a detailed list of columns, including their board names and positions."""
 		table = Table(title=f"Columns ({len(result)})", box=box.ASCII2, show_header=True, header_style="bold")
-		
+
 		table.add_column("Name", width=32, no_wrap=True)
+		table.add_column("Slug", width=32, no_wrap=True)
 		table.add_column("Tasks", width=8, no_wrap=True)
-		
+
 		for column in result:
-			table.add_row(column.name, str(column.task_count))
+			table.add_row(column.name, column.slug, str(column.task_count))
         
 		self._emit(args, table)
 
