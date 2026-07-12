@@ -26,8 +26,8 @@ class TestReplCommandHandlers(unittest.TestCase):
     def _args(self, **kwargs) -> Namespace:
         return Namespace(**kwargs)
 
-    def test_handle_change_dir_defaults_to_clear_without_path(self):
-        args = self._args(path=None)
+    def test_handle_change_dir_defaults_to_clear_without_board(self):
+        args = self._args(board=None)
         result = object()
         self.svc.change_dir.return_value = result
 
@@ -36,14 +36,14 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.change_dir.assert_called_once_with(clear=True)
         self.renderer.render_change_dir.assert_called_once_with(args, result)
 
-    def test_handle_change_dir_with_path(self):
-        args = self._args(path="alpha/todo")
+    def test_handle_change_dir_with_board(self):
+        args = self._args(board="alpha")
         result = object()
-        self.svc.change_dir.return_value = result
+        self.svc.set_board.return_value = result
 
         commands.handle_change_dir(args, self.svc, self.renderer)
 
-        self.svc.change_dir.assert_called_once_with(path="alpha/todo")
+        self.svc.set_board.assert_called_once_with(board="alpha")
         self.renderer.render_change_dir.assert_called_once_with(args, result)
 
     def test_handle_list_renders_board_list(self):

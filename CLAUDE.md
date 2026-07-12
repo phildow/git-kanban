@@ -462,7 +462,7 @@ The REPL command structure follows:
 ```
 init [-b|--bootstrap]
 
-cd [BOARD[/COLUMN]]    # omit to clear the active context
+cd [BOARD]    # sets the active board (clearing any active column); omit to clear the active context
 
 boards [--slugs]
 columns <board> [--slugs]

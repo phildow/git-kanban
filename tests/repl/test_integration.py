@@ -197,13 +197,15 @@ class TestReplContext(_InitializedReplBase):
         out = self.run_repl("cd", "proj")
         self.assertEqual(out, "")
 
-    def test_cd_board_column_sets_context_and_produces_no_output(self) -> None:
-        """cd <board>/<column> sets board+column context and prints nothing."""
-        out = self.run_repl("cd", "proj/todo")
-        self.assertEqual(out, "")
+    def test_cd_board_clears_any_previously_active_column(self) -> None:
+        """cd <board> resets the active column, even if one was previously set."""
+        self.svc.set_board("proj")
+        self.svc.set_column("todo")
+        self.run_repl("cd", "proj")
+        self.assertIsNone(self.svc.user_context.column)
 
-    def test_cd_no_path_clears_context_and_produces_no_output(self) -> None:
-        """cd with no path clears the context and prints nothing."""
+    def test_cd_no_board_clears_context_and_produces_no_output(self) -> None:
+        """cd with no board clears the context and prints nothing."""
         self.run_repl("cd", "proj")
         out = self.run_repl("cd")
         self.assertEqual(out, "")
