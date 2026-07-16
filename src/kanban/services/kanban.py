@@ -80,27 +80,6 @@ def _task_matches_filter(task: Task, filter: TaskFilter) -> bool:
 
 class KanbanService:
 
-    # def __getattribute__(self, name: str):
-    #     """Intercept attribute access and wrap callables with debug logging.
-
-    #     For non-dunder callables, this returns a wrapper that prints the
-    #     method name plus positional/keyword arguments before delegating to the
-    #     original bound method. Non-callable attributes and dunder attributes
-    #     are returned unchanged.
-    #     """
-    #     attr = object.__getattribute__(self, name)
-
-    #     if name.startswith("__"):
-    #         return attr 
-    #     if callable(attr):
-    #         def _wrapped(*_args, **_kwargs):
-    #             print(f"Service method '{name}' called with args: {_args}, kwargs: {_kwargs}")
-    #             return attr(*_args, **_kwargs)
-
-    #         return _wrapped
-        
-    #     return attr
-
     def __init__(self, repository: KanbanRepository, index_service: IndexService, git_service: GitService) -> None:
         """
         Assemble the facade from its domain services.  All services are
