@@ -4,9 +4,12 @@
 
 - Use python as the programming language
 - The name of the root python package is `kanban`
-- When writing python prefer dot notation over `getattr`, especially when the type is known
+- Use dot notation instead `getattr`, especially when the type is known
 - Prefer explicit types over `object` and add type whenever possible
 - Use double quotes `"..."` for strings
-- When a python dependency is required add it to the pyproject files
-- Add documenation when you create types and methods, including for tests
+- When typing optionals prefer `typ | None` instead of `Optional(typ)`
+- When a python dependency is required add it to pyproject.toml
+- Add documentation when creating types and methods, including for tests
 - Break up tests, keep unit tests small
+- Run tests from the current working directory with the bash command `python -m unittest discover -s tests`
+- Tab indent key-value pairs in INI files

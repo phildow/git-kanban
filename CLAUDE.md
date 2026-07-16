@@ -511,7 +511,7 @@ show <board/column/task> [-p|--plain]
 edit <board/column/task>
 
 update <board/column/title>
-    [-c|--column <column>]      # move the task to this column
+    [--column <column>]
     [--assigned-to <name>]
     [--priority <low|medium|high>]
     [--tag <tag>]
