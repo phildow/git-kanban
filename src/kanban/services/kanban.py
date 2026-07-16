@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from pathlib import Path
 from datetime import datetime, timezone
+import logging
 import os
 import shlex
 import subprocess
@@ -306,6 +307,33 @@ class KanbanService:
         self.update_user_context(board=board, column=column.slug)
         return self.user_context
 
+    # ── All Items ─────────────────────────────────────────────────────────────
+
+    def get_list(
+            self, 
+            path: str | None = None, 
+            filter: TaskFilter = TaskFilter(), 
+            sort: str | None = "column", 
+            reverse: bool = False
+        ) -> tuple[type, list[Board | Column | Task]]:
+        """
+        Return a list of boards, columns, or tasks based on the given path.
+        If path is None, returns all boards.  If path is a board, returns all
+        columns in that board.  If path is a board/column, returns all tasks in
+        that column.  Applies filters and sort to tasks if applicable.
+        """
+        board, column, task = self.path_components(path)
+
+        if task:
+            raise ValueError(f"Invalid path: {path} (cannot list a task)")
+
+        if board and column:
+            return Task, self.get_tasks(path=f"/{board}/{column}", filter=filter, sort=sort, reverse=reverse)
+        elif board:
+            return Column, self.get_columns(board=board)
+        else:
+            return Board, self.get_boards()
+
     # ── Boards ────────────────────────────────────────────────────────────────
 
     def get_boards(self) -> list[Board]:
@@ -398,7 +426,11 @@ class KanbanService:
         board's .metadata file.  Falls back to the current context board if
         board is None; raises NoBoardInContext if neither is set.
         """
-        board, _, _ = self.path_components(board)
+        if board is None:
+            board = self.working_board
+        if board is None:
+            raise ValueError("No board specified and no board in context")
+        
         return self.repository.get_columns(board)
 
     def get_column(self, board: str, column: str) -> Column | None:

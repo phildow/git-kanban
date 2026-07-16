@@ -174,46 +174,35 @@ class TestParserAliases(unittest.TestCase):
         self.assertEqual(args.command, "list")
         self.assertIs(args.func, handle_list)
         self.assertFalse(args.slugs)
+        self.assertIsNone(args.column)
+        self.assertIsNone(args.path)
 
         args = repl_parser.parse_args(["ls"])
         self.assertEqual(args.command, "ls")
         self.assertIs(args.func, handle_list)
         self.assertFalse(args.slugs)
+        self.assertIsNone(args.column)
+        self.assertIsNone(args.path)
 
         args = repl_parser.parse_args(["list", "--slugs"])
         self.assertTrue(args.slugs)
 
-    def test_list_exclude_flag_is_repeatable(self):
-        """`list ... -x <column> --exclude <column>` accumulates into a list."""
-        args = repl_parser.parse_args(["list", "-x", "done", "--exclude", "archive"])
-        self.assertEqual(args.column, ["done", "archive"])
-
-    def test_list_boards_flag(self):
-        """`list -b`/`--boards` sets boards to True."""
-        args = repl_parser.parse_args(["list", "-b"])
-        self.assertTrue(args.boards)
-        self.assertFalse(args.columns)
-
-        args = repl_parser.parse_args(["list", "--boards"])
-        self.assertTrue(args.boards)
-
-    def test_list_columns_flag_and_aliases(self):
-        """`list -c`/`--columns`/`--cols` all set columns to True."""
-        for flag in ("-c", "--columns", "--cols"):
-            args = repl_parser.parse_args(["list", flag])
-            self.assertTrue(args.columns)
-            self.assertFalse(args.boards)
-
-    def test_list_boards_and_columns_flags_are_mutually_exclusive(self):
+    def test_list_exclude_flag_is_not_supported(self):
+        """`list` rejects -x/--exclude (supported by `tasks`, not `list`)."""
         with self.assertRaises(SystemExit):
-            repl_parser.parse_args(["list", "-b", "-c"])
+            repl_parser.parse_args(["list", "-x", "done"])
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["list", "--exclude", "archive"])
 
-    def test_assign_maps_to_assign_handler(self):
-        args = repl_parser.parse_args(["assign", "main/todo/fix-login", "alice"])
-        self.assertEqual(args.command, "assign")
-        self.assertEqual(args.path, "main/todo/fix-login")
-        self.assertEqual(args.assigned_to, "alice")
-        self.assertIs(args.func, handle_task_assign)
+    def test_list_accepts_relative_path(self):
+        """`list <board[/column]>` binds path as provided."""
+        args = repl_parser.parse_args(["list", "main/todo"])
+        self.assertEqual(args.path, "main/todo")
+
+    def test_list_accepts_absolute_path(self):
+        """`list /<board[/column]>` binds absolute path."""
+        args = repl_parser.parse_args(["list", "/main/todo"])
+        self.assertEqual(args.path, "/main/todo")
 
     def test_show_maps_to_show_handler_and_defaults_plain_to_false(self):
         args = repl_parser.parse_args(["show", "main/todo/fix-login"])

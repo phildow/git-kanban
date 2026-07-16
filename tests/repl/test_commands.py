@@ -46,55 +46,35 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.set_board.assert_called_once_with(board="alpha")
         self.renderer.render_change_dir.assert_called_once_with(args, result)
 
-    def test_handle_list_renders_task_list(self):
-        args = self._args(path="alpha/todo", boards=False, columns=False)
+    def test_handle_list_renders_board_list(self):
+        args = self._args(path=None)
         result = [object()]
-        with patch("kanban.repl.commands.handle_list_helper", return_value=result):
+        with patch("kanban.repl.commands.handle_list_helper", return_value=(Board, result)):
+            commands.handle_list(args, self.svc, self.renderer)
+
+        self.renderer.render_board_list.assert_called_once_with(args, result)
+
+    def test_handle_list_renders_column_list(self):
+        args = self._args(path="alpha")
+        result = [object()]
+        with patch("kanban.repl.commands.handle_list_helper", return_value=(Column, result)):
+            commands.handle_list(args, self.svc, self.renderer)
+
+        self.renderer.render_column_list.assert_called_once_with(args, result)
+
+    def test_handle_list_renders_task_list(self):
+        args = self._args(path="alpha/todo")
+        result = [object()]
+        with patch("kanban.repl.commands.handle_list_helper", return_value=(Task, result)):
             commands.handle_list(args, self.svc, self.renderer)
 
         self.renderer.render_task_list.assert_called_once_with(args, result)
 
-    def test_handle_list_boards_flag_renders_board_list(self):
-        args = self._args(path=None, boards=True, columns=False)
-        result = [object()]
-        self.svc.get_boards.return_value = result
-
-        commands.handle_list(args, self.svc, self.renderer)
-
-        self.svc.get_boards.assert_called_once_with()
-        self.renderer.render_board_list.assert_called_once_with(args, result)
-
-    def test_handle_list_boards_flag_with_path_raises(self):
-        args = self._args(path="alpha", boards=True, columns=False)
-        with self.assertRaises(ValueError):
-            commands.handle_list(args, self.svc, self.renderer)
-
-    def test_handle_list_columns_flag_uses_explicit_path_as_board(self):
-        args = self._args(path="alpha", boards=False, columns=True)
-        result = [object()]
-        self.svc.get_columns.return_value = result
-
-        commands.handle_list(args, self.svc, self.renderer)
-
-        self.svc.get_columns.assert_called_once_with(board="alpha")
-        self.renderer.render_column_list.assert_called_once_with(args, result)
-
-    def test_handle_list_columns_flag_falls_back_to_active_board(self):
-        args = self._args(path=None, boards=False, columns=True)
-        result = [object()]
-        self.svc.working_board = "alpha"
-        self.svc.get_columns.return_value = result
-
-        commands.handle_list(args, self.svc, self.renderer)
-
-        self.svc.get_columns.assert_called_once_with(board="alpha")
-        self.renderer.render_column_list.assert_called_once_with(args, result)
-
-    def test_handle_list_columns_flag_raises_without_board(self):
-        args = self._args(path=None, boards=False, columns=True)
-        self.svc.working_board = None
-        with self.assertRaises(ValueError):
-            commands.handle_list(args, self.svc, self.renderer)
+    def test_handle_list_raises_for_unexpected_type(self):
+        args = self._args(path="alpha")
+        with patch("kanban.repl.commands.handle_list_helper", return_value=(str, [object()])):
+            with self.assertRaises(ValueError):
+                commands.handle_list(args, self.svc, self.renderer)
 
     def test_handle_delete_renders_board_delete(self):
         args = self._args(path="alpha")
@@ -236,10 +216,11 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.get_columns.assert_called_once_with(board="alpha")
         self.renderer.render_column_list.assert_called_once_with(args, result)
 
-    def test_handle_column_list_defaults(self):
-        """`columns` with no board falls back to None so KanbanService uses context."""
+    def test_handle_column_list_defaults_to_active_board(self):
+        """`columns` with no board falls back to the active board context."""
         args = self._args(board=None)
         result = object()
+        self.svc.working_board = "alpha"
         self.svc.get_columns.return_value = result
 
         commands.handle_column_list(args, self.svc, self.renderer)
@@ -247,12 +228,14 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.get_columns.assert_called_once_with(board=None)
         self.renderer.render_column_list.assert_called_once_with(args, result)
 
-        args = self._args(path="alpha/todo", position=2)
-        result = object()
-        self.svc.reorder_column.return_value = result
-        commands.handle_column_reorder(args, self.svc, self.renderer)
-        self.svc.reorder_column.assert_called_once_with("alpha/todo", 2)
-        self.renderer.render_column_reorder.assert_called_once_with(args, result)
+    def test_handle_column_list_raises_without_any_board(self):
+        """`columns` with no board argument and no active board raises."""
+        args = self._args(board=None)
+        self.svc.working_board = None
+        self.svc.get_columns.side_effect = ValueError("No board specified and no board in context")
+
+        with self.assertRaises(ValueError):
+            commands.handle_column_list(args, self.svc, self.renderer)
 
     def test_handle_task_create_defaults(self):
         args = self._args(column="todo", title="fix-parser", edit=False, assigned_to=None, priority=None, tags=None, due_date=None, created_by=None)

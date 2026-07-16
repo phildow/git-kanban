@@ -18,7 +18,7 @@ from .utils.debug import __DEBUG__, FILESYSTEM, MEMORY
 
 def main() -> None:
     """Main entry point for the kanban CLI."""
-    setup_logging(logging.INFO)
+    setup_logging(logging.DEBUG)
     
     repository = get_repository(FILESYSTEM)
     index_base = InMemoryIndex()

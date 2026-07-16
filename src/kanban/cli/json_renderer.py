@@ -61,6 +61,7 @@ def _column_dict(column: Column) -> dict:
         "slug": column.slug,
         "board": column.board,
         "position": column.position,
+        "task_count": column.task_count,
     }
 
 

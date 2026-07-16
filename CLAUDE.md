@@ -86,6 +86,7 @@ The index does cache data from the filesystem for search and to ensure consisten
 - Orchestrates across domain services, storage, the index, and git
 - Sequences operations, handles cross-domain validation, manages partial failure
 - Only orchestrates — never contains domain logic
+- Raises exceptions if conditions required to call into domain services or repository layer are missing
 
 **Domain Services**
 
@@ -490,7 +491,6 @@ list [BOARD[/COLUMN]]
     [--boards]
     [--columns]
     [--slugs]
-    [--exclude <column>]
     [--sort <title|priority|due-date|created-at|updated-at|created-by|column>]
     [--reverse]
     [--assigned-to <name>]

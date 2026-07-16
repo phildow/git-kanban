@@ -39,30 +39,16 @@ def _build_task_filter(args: argparse.Namespace) -> TaskFilter:
         exclude_columns=args.column or [],
     )
 
-# ---------------------------------------------------------------------------
-# Private helpers
-# ---------------------------------------------------------------------------
 
-def handle_list_helper(args: argparse.Namespace, svc: KanbanService) -> list[Task]:
+# TODO: REMOVE
+def handle_list_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[type, list[Board | Column | Task]]:
     """
-    List tasks scoped to a board or board/column path, falling back to the
-    current user context.  This is the main entry point for all list/ls
-    commands in the REPL.  A board-only scope returns every task in that
-    board, across all columns.  Raises if no board can be resolved from
-    the path or context.
+    List the contents at the path applying filters and sort.  This is
+    the main entry point for all list/ls commands in the REPL, which pass a
+    user-provided path that may be absolute or relative to the current
+    context.
     """
-    path = args.path or ""
-    board, column, _ = svc.path_components(path)
-
-    filter = _build_task_filter(args)
-    sort = args.sort
-    reverse = args.reverse
-
-    if board is None:
-        raise ValueError("No active board; provide a board or board/column, or set one with `cd`")
-
-    task_path = f"/{board}/{column}" if column else f"/{board}"
-    return svc.get_tasks(path=task_path, filter=filter, sort=sort, reverse=reverse)
+    return svc.get_list(path=args.path, filter=_build_task_filter(args), sort=args.sort, reverse=args.reverse)
 
 
 def handle_task_list_helper(args: argparse.Namespace, svc: KanbanService) -> list[Task]:
@@ -72,7 +58,7 @@ def handle_task_list_helper(args: argparse.Namespace, svc: KanbanService) -> lis
     omitted, falls back to every task in the active board (all columns),
     raising if no board is active.
     """
-    path = args.path or ""
+    path = args.path
     filter = _build_task_filter(args)
     sort = args.sort
     reverse = args.reverse

@@ -1,5 +1,11 @@
 """
 Subcommand handlers for the kanban REPL.
+
+Command handlers do not query user context, working board or column, or the repository directly.  
+They delegate to the KanbanService.
+
+Command handlers do not render output directly.  They delegate to a renderer, 
+which is responsible for formatting and printing the output.
 """
 
 from __future__ import annotations
@@ -47,23 +53,16 @@ def handle_change_dir(args: argparse.Namespace, svc: KanbanService, renderer: ob
 # ---------------------------------------------------------------------------
 
 def handle_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	if args.boards:
-		if args.path is not None:
-			raise ValueError("Cannot combine --boards with a path")
-		result = svc.get_boards()
-		renderer.render_board_list(args, result)
-		return
-
-	if args.columns:
-		board = args.path or svc.working_board
-		if not board:
-			raise ValueError("No active board; provide a board or set one with `cd`")
-		result = svc.get_columns(board=board)
-		renderer.render_column_list(args, result)
-		return
-
-	result = handle_list_helper(args, svc)
-	renderer.render_task_list(args, result)
+	typ, results = handle_list_helper(args, svc)
+	
+	if typ is Board:
+		renderer.render_board_list(args, results)
+	elif typ is Column:
+		renderer.render_column_list(args, results)
+	elif typ is Task:
+		renderer.render_task_list(args, results)
+	else:
+		raise ValueError("Unexpected result type from handle_list: {}".format(typ))
 
 
 def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:

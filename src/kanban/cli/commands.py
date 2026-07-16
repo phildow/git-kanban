@@ -1,5 +1,11 @@
 """
 Subcommand handlers for the kanban CLI.
+
+Command handlers do not query user context, working board or column, or the repository directly.  
+They delegate to the KanbanService.
+
+Command handlers do not render output directly.  They delegate to a renderer, 
+which is responsible for formatting and printing the output.
 """
 
 from __future__ import annotations

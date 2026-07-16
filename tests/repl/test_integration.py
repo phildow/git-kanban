@@ -364,17 +364,26 @@ class TestReplList(_InitializedReplBase):
         self.repo.create_column("proj", "done", slug="done")
         self.svc.create_task("proj/todo/fix-login", TaskCreateParams())
 
-    def test_list_no_path_and_no_active_board_raises(self) -> None:
-        """list with no path and no active board raises rather than listing nothing."""
-        with self.assertRaises(ValueError):
-            self.run_repl("list")
+    def test_list_no_path_with_no_context_lists_boards(self) -> None:
+        """list with no path and no context lists boards."""
+        self.repo.create_board("ops", slug="ops")
+        out = self.run_repl("list")
+        self.assertIn("proj", out)
+        self.assertIn("ops", out)
 
-    def test_list_board_shows_all_tasks_in_board(self) -> None:
-        """list <board> (no column) produces output for every column's tasks."""
-        self.svc.create_task("proj/done/task-done", TaskCreateParams())
-        out = self.run_repl("list", "proj")
+    def test_list_no_path_with_active_board_lists_columns(self) -> None:
+        """list with no path and active board lists that board's columns."""
+        self.svc.set_board("proj")
+        out = self.run_repl("list")
+        self.assertIn("todo", out)
+        self.assertIn("done", out)
+
+    def test_list_no_path_with_active_column_lists_tasks(self) -> None:
+        """list with no path and active board/column lists tasks in the active column."""
+        self.svc.set_board("proj")
+        self.svc.set_column("todo")
+        out = self.run_repl("list")
         self.assertIn("fix-login", out)
-        self.assertIn("task-done", out)
 
     def test_list_board_column_shows_tasks(self) -> None:
         """list <board>/<column> produces output when tasks exist."""
@@ -386,10 +395,26 @@ class TestReplList(_InitializedReplBase):
         out = self.run_repl("list", "proj/todo")
         self.assertIn("fix-login", out)
 
+    def test_list_relative_board_path_lists_columns(self) -> None:
+        """list <board> (relative path) lists columns."""
+        out = self.run_repl("list", "proj")
+        self.assertIn("todo", out)
+        self.assertIn("done", out)
+
+    def test_list_absolute_board_path_lists_columns(self) -> None:
+        """list /<board> (absolute path) lists columns."""
+        out = self.run_repl("list", "/proj")
+        self.assertIn("todo", out)
+        self.assertIn("done", out)
+
+    def test_list_absolute_board_column_path_lists_tasks(self) -> None:
+        """list /<board>/<column> (absolute path) lists tasks in that column."""
+        out = self.run_repl("list", "/proj/todo")
+        self.assertIn("fix-login", out)
+
     def test_ls_alias_produces_output(self) -> None:
-        """ls (alias for list) produces output when a board is active."""
-        self.svc.set_board("proj")
-        out = self.run_repl("ls")
+        """ls (alias for list) produces output for an explicit path."""
+        out = self.run_repl("ls", "proj")
         self.assertTrue(out.strip())
 
     def test_list_sort_produces_output(self) -> None:
@@ -428,33 +453,6 @@ class TestReplList(_InitializedReplBase):
         self.assertIn("task-tagged", out)
         self.assertNotIn("fix-login", out)
 
-    def test_list_no_path_with_active_board_lists_its_tasks(self) -> None:
-        """list with no path falls back to every task in the active board."""
-        self.svc.create_task("/proj/done/task-done", TaskCreateParams())
-        self.svc.set_board("proj")
-        out = self.run_repl("list")
-        self.assertIn("fix-login", out)
-        self.assertIn("task-done", out)
-
-    def test_list_boards_flag_lists_boards(self) -> None:
-        """list -b/--boards lists boards instead of tasks."""
-        self.repo.create_board("ops", slug="ops")
-        out = self.run_repl("list", "-b")
-        self.assertIn("proj", out)
-        self.assertIn("ops", out)
-
-    def test_list_columns_flag_with_explicit_board(self) -> None:
-        """list <board> -c/--cols lists that board's columns instead of tasks."""
-        out = self.run_repl("list", "proj", "--cols")
-        self.assertIn("todo", out)
-        self.assertIn("done", out)
-
-    def test_list_columns_flag_falls_back_to_active_board(self) -> None:
-        """list -c with no path falls back to the active board's columns."""
-        self.svc.set_board("proj")
-        out = self.run_repl("list", "-c")
-        self.assertIn("todo", out)
-        self.assertIn("done", out)
 
 
 # ---------------------------------------------------------------------------
