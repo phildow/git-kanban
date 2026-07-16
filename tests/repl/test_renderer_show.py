@@ -50,9 +50,9 @@ class TestRichRendererTaskShowPlainFlag(unittest.TestCase):
         self.assertIn("**bold**", out)
         self.assertIn("# Heading", out)
 
-    def test_missing_plain_attribute_defaults_to_markdown(self) -> None:
+    def test_false_plain_attribute_defaults_to_markdown(self) -> None:
         """Namespaces without a plain attribute (e.g. other callers) default to Markdown."""
-        args = Namespace()
+        args = Namespace(plain=False)
         out = _capture(self.renderer.render_task_show, args, self.task)
         self.assertNotIn("**bold**", out)
 

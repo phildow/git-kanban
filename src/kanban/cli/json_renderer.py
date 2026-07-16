@@ -13,7 +13,7 @@ from ..services.kanban import GitCommit, KanbanStatus
 def _requires_verbose(method):
     @wraps(method)
     def _wrapped(self, args: argparse.Namespace, result):
-        if not getattr(args, "verbose", False):
+        if not args.verbose:
             return None
         else:
             return method(self, args, result)
@@ -95,7 +95,7 @@ class JsonRenderer:
     @_requires_verbose
     def render_board_delete(self, args: argparse.Namespace, result: None) -> None:
         _ = result
-        self._emit(args, json.dumps({"deleted": getattr(args, "board", None)}, indent=2))
+        self._emit(args, json.dumps({"deleted": args.board}, indent=2))
 
     # ── Columns ───────────────────────────────────────────────────────────────
 
@@ -117,7 +117,7 @@ class JsonRenderer:
     @_requires_verbose
     def render_column_delete(self, args: argparse.Namespace, result: None) -> None:
         _ = result
-        self._emit(args, json.dumps({"deleted": getattr(args, "path", None)}, indent=2))
+        self._emit(args, json.dumps({"deleted": args.path}, indent=2))
 
     # ── Tasks ─────────────────────────────────────────────────────────────────
 
@@ -160,7 +160,7 @@ class JsonRenderer:
     @_requires_verbose
     def render_task_delete(self, args: argparse.Namespace, result: None) -> None:
         _ = result
-        self._emit(args, json.dumps({"deleted": getattr(args, "path", None)}, indent=2))
+        self._emit(args, json.dumps({"deleted": args.path}, indent=2))
 
     # ── Search, log, status, config ───────────────────────────────────────────
 

@@ -13,7 +13,7 @@ def _requires_verbose(method):
 	""""Decorator to ensure that the decorated method only executes when verbose mode is enabled."""
 	@wraps(method)
 	def _wrapped(self, args: argparse.Namespace, result):
-		if not getattr(args, "verbose", False):
+		if not args.verbose:
 			return None
 		else:
 			return method(self, args, result)
@@ -43,7 +43,7 @@ class Renderer:
 # ---------------------------------------------------------------------------
 
 	def render_board_list(self, args: argparse.Namespace, result: list[Board]) -> None:
-		fmt = getattr(args, "format", "plain")
+		fmt = args.format
 
 		if not result:
 			self._emit(args, "No boards")
@@ -60,19 +60,19 @@ class Renderer:
 
 	@_requires_verbose
 	def render_board_create(self, args: argparse.Namespace, result: Board) -> None:
-		board_name = result.name or getattr(args, "board", None)
+		board_name = result.name or args.board
 		self._emit(args, f"Board created: {board_name}")
 
 	@_requires_verbose
 	def render_board_rename(self, args: argparse.Namespace, result: Board) -> None:
-		old_name = getattr(args, "board", None)
-		new_name = result.name or getattr(args, "new_name", None)
+		old_name = args.board
+		new_name = result.name or args.new_name
 		self._emit(args, f"Board renamed: {old_name} -> {new_name}")
 
 	@_requires_verbose
 	def render_board_delete(self, args: argparse.Namespace, result: None) -> None:
 		_ = result
-		board_name = getattr(args, "board", None)
+		board_name = args.board
 		self._emit(args, f"Board deleted: {board_name}")
 
 # ---------------------------------------------------------------------------
@@ -80,7 +80,7 @@ class Renderer:
 # ---------------------------------------------------------------------------
 
 	def render_column_list(self, args: argparse.Namespace, result: list[Column]) -> None:
-		fmt = getattr(args, "format", "plain")
+		fmt = args.format
 
 		if not result:
 			self._emit(args, "No columns")
@@ -106,10 +106,10 @@ class Renderer:
 
 	@_requires_verbose
 	def render_column_rename(self, args: argparse.Namespace, result: Column) -> None:
-		path = getattr(args, "path", "") or ""
+		path = args.path or ""
 		old_name = path.split("/", 1)[1] if "/" in path else path
 		board_name = result.board or (path.split("/", 1)[0] if "/" in path else None)
-		new_name = result.name or getattr(args, "new_name", None)
+		new_name = result.name or args.new_name
 
 		if board_name:
 			self._emit(args, f"Column renamed: {board_name}/{old_name} -> {board_name}/{new_name}")
@@ -118,10 +118,10 @@ class Renderer:
 
 	@_requires_verbose
 	def render_column_reorder(self, args: argparse.Namespace, result: list[Column]) -> None:
-		path = getattr(args, "path", "") or ""
+		path = args.path or ""
 		column_name = path.split("/", 1)[1] if "/" in path else path
 		board_name = path.split("/", 1)[0] if "/" in path else None
-		position = getattr(args, "position", None)
+		position = args.position
 		target = f"{board_name}/{column_name}" if board_name else column_name
 
 		if isinstance(position, int):
@@ -132,7 +132,7 @@ class Renderer:
 	@_requires_verbose
 	def render_column_delete(self, args: argparse.Namespace, result: None) -> None:
 		_ = result
-		path = getattr(args, "path", "") or ""
+		path = args.path or ""
 		column_name = path.split("/", 1)[1] if "/" in path else path
 		board_name = path.split("/", 1)[0] if "/" in path else None
 		if board_name:
@@ -145,7 +145,7 @@ class Renderer:
 # ---------------------------------------------------------------------------
 
 	def render_task_list(self, args: argparse.Namespace, result: list[Task]) -> None:
-		fmt = getattr(args, "format", "plain")
+		fmt = args.format
 
 		if not result:
 			self._emit(args, "No tasks")
@@ -190,7 +190,7 @@ class Renderer:
 	# TODO: ==== TEST ====
 	@_requires_verbose
 	def render_task_rename(self, args: argparse.Namespace, result: Task) -> None:
-		old_slug = getattr(args, "path", "") or ""
+		old_slug = args.path or ""
 		new_slug = result.slug
 		self._emit(args, f"Task renamed: {result.title}: {old_slug} -> {new_slug}")
 
@@ -216,7 +216,7 @@ class Renderer:
 	@_requires_verbose
 	def render_task_delete(self, args: argparse.Namespace, result: None) -> None:
 		_ = result
-		path = getattr(args, "path", None)
+		path = args.path
 		if path:
 			self._emit(args, f"Task deleted: {path}")
 		else:

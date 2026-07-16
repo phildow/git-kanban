@@ -11,16 +11,6 @@ from ..models import UserContext, Board, Column, Task
 from ..repl.render_helper import RenderHelper
 from ..services.kanban import GitCommit, KanbanStatus
 
-def _requires_verbose(method):
-	@wraps(method)
-	def _wrapped(self, args: argparse.Namespace, result):
-		if not getattr(args, "verbose", False):
-			return None
-		else:
-			return method(self, args, result)
-
-	return _wrapped
-
 @deprecated("The RichRenderer is used by default. This class is deprecated and will be removed in a future version.")
 class Renderer:
 	def __init__(self, render_helper: RenderHelper):
@@ -49,7 +39,7 @@ class Renderer:
 		else:
 			self._emit(args, "Failed to initialize Kanban system.")
 
-	@_requires_verbose
+
 	def render_change_dir(self, args: argparse.Namespace, result: UserContext) -> None:
 		"""Render a message indicating the new current context path, or that the context was cleared."""
 		board = result.board
@@ -70,7 +60,7 @@ class Renderer:
 
 	def render_board_list(self, args: argparse.Namespace, result: list[Board]) -> None:
 		"""Render a list of boards, optionally with their column counts"""
-		if getattr(args, "slugs", False):
+		if args.slugs:
 			self.render_board_list_slug_only(args, result)
 		else:
 			self.render_board_list_rich(args, result)
@@ -124,15 +114,15 @@ class Renderer:
 
 	def render_board_create(self, args: argparse.Namespace, result: Board) -> None:
 		"""Render a message indicating that a board was created, including its name."""
-		board_name = result.name or getattr(args, "board", None)
-		board_slug = result.slug or getattr(args, "board", None)
+		board_name = result.name or args.board
+		board_slug = result.slug or args.board
 		self._emit(args, f"Created board: {board_name} ({board_slug})")
 
 	def render_board_rename(self, args: argparse.Namespace, result: Board) -> None:
 		"""Render a message indicating that a board was renamed, including the old and new names."""
-		old_name = getattr(args, "board", None)
-		new_name = result.name or getattr(args, "new_name", None)
-		new_slug = result.slug or getattr(args, "new_name", None)
+		old_name = args.path
+		new_name = result.name or args.new_name
+		new_slug = result.slug or args.new_name
 		self._emit(args, f"Renamed board: {old_name} -> {new_name} ({new_slug})")
 
 	def render_board_delete(self, args: argparse.Namespace, result: Board) -> None:
@@ -145,7 +135,7 @@ class Renderer:
 
 	def render_column_list(self, args: argparse.Namespace, result: list[Column]) -> None:
 		"""Render a list of columns, optionally with their board names and positions"""
-		if getattr(args, "slugs", False):
+		if args.slugs:
 			self.render_column_list_slug_only(args, result)
 		else:
 			self.render_column_list_rich(args, result)
@@ -215,11 +205,11 @@ class Renderer:
 		Render a message indicating that a column was renamed, including the old and new names,
 		and optionally the board if available.
 		"""
-		path = getattr(args, "path", "") or ""
+		path = args.path or ""
 		old_name = path.split("/", 1)[1] if "/" in path else path
 		board_name = result.board or (path.split("/", 1)[0] if "/" in path else None)
-		new_name = result.name or getattr(args, "new_name", None)
-		new_slug = result.slug or getattr(args, "new_slug", None)
+		new_name = result.name or args.new_name
+		new_slug = result.slug or args.new_slug
 
 		self._emit(args, f"Column renamed: {old_name} -> {new_name} ({new_slug})")
 
@@ -228,10 +218,10 @@ class Renderer:
 		Render a message indicating that a column was reordered, including its name and new position,
 		and optionally the board if available.
 		"""
-		path = getattr(args, "path", "") or ""
+		path = args.path or ""
 		column_name = path.split("/", 1)[1] if "/" in path else path
 		board_name = path.split("/", 1)[0] if "/" in path else None
-		position = getattr(args, "position", None)
+		position = args.position
 		target = f"{board_name}/{column_name}" if board_name else column_name
 
 		if isinstance(position, int):
@@ -252,7 +242,7 @@ class Renderer:
 
 	def render_task_list(self, args: argparse.Namespace, result: list[Task]) -> None:
 		"""Render a list of tasks, optionally with their slugs, titles, and locations."""
-		if getattr(args, "slugs", False):
+		if args.slugs:
 			self.render_task_list_slug_only(args, result)
 		else:
 			self.render_task_list_rich(args, result)
@@ -383,7 +373,7 @@ class Renderer:
 		self._emit(args, msg)
 	
 	def render_task_rename(self, args: argparse.Namespace, result: Task) -> None:
-		old_slug = getattr(args, "path", "") or ""
+		old_slug = args.path or ""
 		new_slug = result.slug
 		self._emit(args, f"Task renamed: {result.title}: {old_slug} -> {new_slug}")
 
