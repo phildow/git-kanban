@@ -46,35 +46,77 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.set_board.assert_called_once_with(board="alpha")
         self.renderer.render_change_dir.assert_called_once_with(args, result)
 
-    def test_handle_list_renders_board_list(self):
-        args = self._args(path=None)
-        result = [object()]
-        with patch("kanban.repl.commands.handle_list_helper", return_value=(Board, result)):
-            commands.handle_list(args, self.svc, self.renderer)
+    def _list_args(self, path: str | None) -> Namespace:
+        return self._args(
+            path=path,
+            sort=None,
+            reverse=False,
+            assigned_to=None,
+            priority=None,
+            tags=None,
+            due_before=None,
+            due_after=None,
+            created_by=None,
+            column=None,
+        )
 
+    def test_handle_list_no_path_calls_svc_and_renders_boards(self):
+        args = self._list_args(path=None)
+        result = [object()]
+        self.svc.get_list.return_value = (Board, result)
+
+        commands.handle_list(args, self.svc, self.renderer)
+
+        self.svc.get_list.assert_called_once()
+        self.assertIsNone(self.svc.get_list.call_args.kwargs["path"])
         self.renderer.render_board_list.assert_called_once_with(args, result)
 
-    def test_handle_list_renders_column_list(self):
-        args = self._args(path="alpha")
+    def test_handle_list_relative_board_path_renders_columns(self):
+        args = self._list_args(path="alpha")
         result = [object()]
-        with patch("kanban.repl.commands.handle_list_helper", return_value=(Column, result)):
-            commands.handle_list(args, self.svc, self.renderer)
+        self.svc.get_list.return_value = (Column, result)
 
+        commands.handle_list(args, self.svc, self.renderer)
+
+        self.assertEqual(self.svc.get_list.call_args.kwargs["path"], "alpha")
         self.renderer.render_column_list.assert_called_once_with(args, result)
 
-    def test_handle_list_renders_task_list(self):
-        args = self._args(path="alpha/todo")
+    def test_handle_list_relative_board_column_path_renders_tasks(self):
+        args = self._list_args(path="alpha/todo")
         result = [object()]
-        with patch("kanban.repl.commands.handle_list_helper", return_value=(Task, result)):
-            commands.handle_list(args, self.svc, self.renderer)
+        self.svc.get_list.return_value = (Task, result)
 
+        commands.handle_list(args, self.svc, self.renderer)
+
+        self.assertEqual(self.svc.get_list.call_args.kwargs["path"], "alpha/todo")
+        self.renderer.render_task_list.assert_called_once_with(args, result)
+
+    def test_handle_list_absolute_board_path_renders_columns(self):
+        args = self._list_args(path="/alpha")
+        result = [object()]
+        self.svc.get_list.return_value = (Column, result)
+
+        commands.handle_list(args, self.svc, self.renderer)
+
+        self.assertEqual(self.svc.get_list.call_args.kwargs["path"], "/alpha")
+        self.renderer.render_column_list.assert_called_once_with(args, result)
+
+    def test_handle_list_absolute_board_column_path_renders_tasks(self):
+        args = self._list_args(path="/alpha/todo")
+        result = [object()]
+        self.svc.get_list.return_value = (Task, result)
+
+        commands.handle_list(args, self.svc, self.renderer)
+
+        self.assertEqual(self.svc.get_list.call_args.kwargs["path"], "/alpha/todo")
         self.renderer.render_task_list.assert_called_once_with(args, result)
 
     def test_handle_list_raises_for_unexpected_type(self):
-        args = self._args(path="alpha")
-        with patch("kanban.repl.commands.handle_list_helper", return_value=(str, [object()])):
-            with self.assertRaises(ValueError):
-                commands.handle_list(args, self.svc, self.renderer)
+        args = self._list_args(path="alpha")
+        self.svc.get_list.return_value = (str, [object()])
+
+        with self.assertRaises(ValueError):
+            commands.handle_list(args, self.svc, self.renderer)
 
     def test_handle_delete_renders_board_delete(self):
         args = self._args(path="alpha")

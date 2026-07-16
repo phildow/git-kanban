@@ -15,8 +15,8 @@ import logging
 
 from ..models import Board, Column, Task
 from ..repl.command_helpers import (
-    _parse_priority,
-    handle_list_helper,
+	build_task_filter,
+    parse_priority,
     handle_task_list_helper,
     handle_delete_helper,
     handle_rename_helper
@@ -53,7 +53,7 @@ def handle_change_dir(args: argparse.Namespace, svc: KanbanService, renderer: ob
 # ---------------------------------------------------------------------------
 
 def handle_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	typ, results = handle_list_helper(args, svc)
+	typ, results = svc.get_list(path=args.path, filter=build_task_filter(args), sort=args.sort, reverse=args.reverse)
 	
 	if typ is Board:
 		renderer.render_board_list(args, results)
@@ -159,7 +159,7 @@ def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: o
 
 	params = TaskCreateParams(
 		assigned_to=args.assigned_to,
-		priority=_parse_priority(args),
+		priority=parse_priority(args),
 		tags=args.tags or [],
 		due_date=args.due_date,
 		created_by=args.created_by,
@@ -188,7 +188,7 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: o
 	updates = TaskUpdateParams(
 		title=None,
 		assigned_to=args.assigned_to,
-		priority=_parse_priority(args),
+		priority=parse_priority(args),
 		tags=args.tags,
 		due_date=args.due_date,
 		created_by=args.created_by,

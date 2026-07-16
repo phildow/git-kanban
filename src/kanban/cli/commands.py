@@ -45,7 +45,8 @@ def _pick(args: argparse.Namespace, renderer: object, json_renderer: object) -> 
     return renderer
 
 
-def _parse_priority(args: argparse.Namespace) -> Priority | None:
+# TODO: REMOVE duplicate (in command_helpers.py)
+def parse_priority(args: argparse.Namespace) -> Priority | None:
     """Return the --priority argument as a Priority, or None if not provided."""
     priority = args.priority
     return Priority(priority) if priority else None
@@ -123,14 +124,15 @@ def handle_column_delete(args: argparse.Namespace, svc: KanbanService, renderer:
 # Task subcommands
 # ---------------------------------------------------------------------------
 
-def _build_task_filter(args: argparse.Namespace) -> TaskFilter:
+# TODO: REMOVE duplicate (in command_helpers.py)
+def build_task_filter(args: argparse.Namespace) -> TaskFilter:
 	"""Build a TaskFilter from parsed CLI/REPL filter arguments."""
 	def _parse_date(s: str | None) -> datetime | None:
 		return datetime.strptime(s, "%Y-%m-%d").replace(tzinfo=timezone.utc) if s else None
 
 	return TaskFilter(
 		assigned_to=args.assigned_to,
-		priority=_parse_priority(args),
+		priority=parse_priority(args),
 		tags=args.tags or [],
 		due_before=_parse_date(args.due_before),
 		due_after=_parse_date(args.due_after),
@@ -140,7 +142,7 @@ def _build_task_filter(args: argparse.Namespace) -> TaskFilter:
 
 @with_absolute_path
 def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
-	result = svc.get_tasks(path=args.path, filter=_build_task_filter(args), sort=args.sort, reverse=args.reverse)
+	result = svc.get_tasks(path=args.path, filter=build_task_filter(args), sort=args.sort, reverse=args.reverse)
 	_pick(args, renderer, json_renderer).render_task_list(args, result)
 
 
@@ -148,7 +150,7 @@ def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: obj
 def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	params = TaskCreateParams(
 		assigned_to=args.assigned_to,
-		priority=_parse_priority(args),
+		priority=parse_priority(args),
 		tags=args.tags or [],
 		due_date=args.due_date,
 		created_by=args.created_by,
@@ -180,7 +182,7 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: o
 	updates = TaskUpdateParams(
 		title=None,
 		assigned_to=args.assigned_to,
-		priority=_parse_priority(args),
+		priority=parse_priority(args),
 		tags=args.tags,
 		due_date=args.due_date,
 		created_by=args.created_by,

@@ -14,7 +14,7 @@ Be succinct.
 
 - Use python as the programming language
 - The name of the root python package is `kanban`
-- Use dot notation instead `getattr`, especially when the type is known
+- Use dot notation instead of `getattr`, especially when the type is known
 - Prefer explicit types over `object` and add type whenever possible
 - Use double quotes `"..."` for strings
 - When typing optionals prefer `typ | None` instead of `Optional(typ)`

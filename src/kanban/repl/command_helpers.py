@@ -19,36 +19,26 @@ from ..utils.shell import prompt_for_confirmation
 # Private helpers
 # ---------------------------------------------------------------------------
 
-def _parse_priority(args: argparse.Namespace) -> Priority | None:
+def parse_priority(args: argparse.Namespace) -> Priority | None:
     """Return the --priority argument as a Priority, or None if not provided."""
-    return Priority(args.priority) if args.priority else None
+    priority = args.priority
+    return Priority(priority) if priority else None
 
 
-def _build_task_filter(args: argparse.Namespace) -> TaskFilter:
+def build_task_filter(args: argparse.Namespace) -> TaskFilter:
     """Build a TaskFilter from parsed CLI/REPL filter arguments."""
     def _parse_date(s: str | None) -> datetime | None:
         return datetime.strptime(s, "%Y-%m-%d").replace(tzinfo=timezone.utc) if s else None
 
     return TaskFilter(
         assigned_to=args.assigned_to,
-        priority=_parse_priority(args),
+        priority=parse_priority(args),
         tags=args.tags or [],
         due_before=_parse_date(args.due_before),
         due_after=_parse_date(args.due_after),
         created_by=args.created_by,
         exclude_columns=args.column or [],
     )
-
-
-# TODO: REMOVE
-def handle_list_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[type, list[Board | Column | Task]]:
-    """
-    List the contents at the path applying filters and sort.  This is
-    the main entry point for all list/ls commands in the REPL, which pass a
-    user-provided path that may be absolute or relative to the current
-    context.
-    """
-    return svc.get_list(path=args.path, filter=_build_task_filter(args), sort=args.sort, reverse=args.reverse)
 
 
 def handle_task_list_helper(args: argparse.Namespace, svc: KanbanService) -> list[Task]:
@@ -59,7 +49,7 @@ def handle_task_list_helper(args: argparse.Namespace, svc: KanbanService) -> lis
     raising if no board is active.
     """
     path = args.path
-    filter = _build_task_filter(args)
+    filter = build_task_filter(args)
     sort = args.sort
     reverse = args.reverse
 
