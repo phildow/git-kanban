@@ -33,18 +33,20 @@ def _requires_verbose(method):
 # Custom Rich Markdown renderer that left-justifies headings instead of centering them.
 
 class LeftJustifiedHeading(Heading):
-    def __rich_console__(
-        self,
-        console: Console,
-        options: ConsoleOptions,
-    ) -> RenderResult:
-        yield from console.render(self.text, options=options.update(justify="left"))
+	def __rich_console__(
+		self,
+		console: Console,
+		options: ConsoleOptions,
+	) -> RenderResult:
+		"""Render the heading with left justification."""
+		yield from console.render(self.text, options=options.update(justify="left"))
+
 
 class KanbanMarkdown(Markdown):
-    elements = {
-        **Markdown.elements,
-        "heading_open": LeftJustifiedHeading,
-    }
+	elements = {
+		**Markdown.elements,
+		"heading_open": LeftJustifiedHeading,
+	}
 
 # The class responsible for rendering output to the console in a rich format.
 
@@ -214,7 +216,7 @@ class RichRenderer:
 
 		for column in result:
 			table.add_row(column.name, column.slug, str(column.task_count))
-        
+		
 		self._emit(args, table)
 
 	def render_column_create(self, args: argparse.Namespace, result: Column) -> None:
@@ -308,7 +310,7 @@ class RichRenderer:
 	def render_task_list_rich(self, args: argparse.Namespace, result: list[Task]) -> None:
 		"""Render a detailed list of tasks, including their slugs, titles, and locations."""
 		# date_format = "%Y-%m-%d"
-        # date_format = "%B %d"
+		# date_format = "%B %d"
 		# date().isoformat()
 
 		width, height = shutil.get_terminal_size(fallback=(80, 24))
@@ -363,11 +365,16 @@ class RichRenderer:
 	def render_task_show(self, args: argparse.Namespace, result: Task) -> None:
 		"""Render detailed information about a single task, including all metadata and the body/description."""
 		
-		table = Table(box=box.ASCII2, show_header=True, header_style="bold", title_justify="left")
+		self._emit(args, "")
+		self._emit(args, Text(result.title, style="bold underline"))
 
-		table.add_column("Title", width=12, justify="right", no_wrap=True)
-		table.add_column(result.title, width=40, justify="left", no_wrap=False)
+		table = Table(box=box.ASCII2, show_header=False, header_style="bold", title_justify="left")
 
+		# table.add_column("Title", width=12, justify="right", no_wrap=True)
+		# table.add_column(result.title, width=40, justify="left", no_wrap=False)
+
+		table.add_column("", width=12, justify="right", no_wrap=True)
+		table.add_column("", width=40, justify="left", no_wrap=False)
 
 		table.add_row("Slug", result.slug)
 		table.add_row("ID", str(result.id))
