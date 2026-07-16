@@ -26,7 +26,7 @@ _UPDATED_AT = datetime(2026, 1, 2, 9, 0, 0, tzinfo=timezone.utc)
 
 
 def _args(**kwargs) -> Namespace:
-    return Namespace(**{"verbose": False, "quiet": False, **kwargs})
+    return Namespace(**{"verbose": False, **kwargs})
 
 
 def _capture(fn) -> str:
@@ -570,28 +570,6 @@ class TestJsonRendererConfig(unittest.TestCase):
         """render_config_set emits the value when verbose."""
         out = _capture(lambda: self.r.render_config_set(_args(verbose=True, key="name", value="bob"), None))
         self.assertEqual(json.loads(out)["value"], "bob")
-
-
-class TestJsonRendererQuiet(unittest.TestCase):
-    """--quiet suppresses all JSON output regardless of format."""
-
-    def setUp(self) -> None:
-        self.r = JsonRenderer()
-
-    def test_quiet_suppresses_board_list(self) -> None:
-        """render_board_list emits nothing when --quiet is set."""
-        out = _capture(lambda: self.r.render_board_list(_args(quiet=True), [_board()]))
-        self.assertEqual(out, "")
-
-    def test_quiet_suppresses_task_list(self) -> None:
-        """render_task_list emits nothing when --quiet is set."""
-        out = _capture(lambda: self.r.render_task_list(_args(quiet=True), [_task()]))
-        self.assertEqual(out, "")
-
-    def test_quiet_suppresses_task_show(self) -> None:
-        """render_task_show emits nothing when --quiet is set."""
-        out = _capture(lambda: self.r.render_task_show(_args(quiet=True), _task()))
-        self.assertEqual(out, "")
 
 
 if __name__ == "__main__":

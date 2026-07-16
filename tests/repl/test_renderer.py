@@ -17,7 +17,7 @@ class TestRendererSearchDelegatesToTaskList(unittest.TestCase):
         self.renderer = Renderer(render_helper=MagicMock())
 
     def test_render_search_calls_render_task_list_with_same_args_and_result(self) -> None:
-        args = Namespace(slugs=False, quiet=False)
+        args = Namespace(slugs=False)
         result = [object(), object()]
 
         with patch.object(self.renderer, "render_task_list") as mock_render_task_list:
@@ -26,7 +26,7 @@ class TestRendererSearchDelegatesToTaskList(unittest.TestCase):
         mock_render_task_list.assert_called_once_with(args, result)
 
     def test_render_search_respects_slugs_flag_like_task_list(self) -> None:
-        args = Namespace(slugs=True, quiet=False)
+        args = Namespace(slugs=True)
         result = [object()]
 
         with patch.object(self.renderer, "render_task_list_slug_only") as slug_only, \
@@ -44,7 +44,7 @@ class TestRichRendererSearchDelegatesToTaskList(unittest.TestCase):
         self.renderer = RichRenderer(render_helper=MagicMock())
 
     def test_render_search_calls_render_task_list_with_same_args_and_result(self) -> None:
-        args = Namespace(slugs=False, quiet=False)
+        args = Namespace(slugs=False)
         result = [object(), object()]
 
         with patch.object(self.renderer, "render_task_list") as mock_render_task_list:
@@ -53,7 +53,7 @@ class TestRichRendererSearchDelegatesToTaskList(unittest.TestCase):
         mock_render_task_list.assert_called_once_with(args, result)
 
     def test_render_search_respects_slugs_flag_like_task_list(self) -> None:
-        args = Namespace(slugs=True, quiet=False)
+        args = Namespace(slugs=True)
         result = [object()]
 
         with patch.object(self.renderer, "render_task_list_slug_only") as slug_only, \

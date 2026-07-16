@@ -444,9 +444,6 @@ kanban status [--format <table|plain|json>]
 
 kanban config set <key> <value>    # key: name
 kanban config get <key>            # key: name
-
-# Global flags (all commands):
-#   --quiet
 ```
 
 Every command that does not have `--format` options of `table|plain|json` has instead `--format` options of `plain|json` defaulting to `plain`.

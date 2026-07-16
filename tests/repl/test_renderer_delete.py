@@ -28,7 +28,7 @@ class _DeleteRenderingMixin:
 
     def setUp(self) -> None:
         self.renderer = self.renderer_cls(render_helper=MagicMock())
-        self.args = Namespace(quiet=False)
+        self.args = Namespace()
 
     def test_render_board_delete_includes_name_and_slug(self) -> None:
         board = Board(id=uuid4(), name="My Project", slug="my-project")

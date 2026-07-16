@@ -71,7 +71,6 @@ def _add_global_flags(parser: argparse.ArgumentParser) -> None:
     # note:: These flags are not currently used, but they are defined here for possible future use.
     #
     # parser.add_argument("--color", action="store_true", default=False, help="Enable colored output")
-    # parser.add_argument("--quiet", action="store_true", default=False, help="Suppress non-essential output")
     # parser.add_argument("--verbose", action="store_true", default=False, help="Enable verbose output")
 
 

@@ -36,7 +36,7 @@ class TestRichRendererTaskShowPlainFlag(unittest.TestCase):
 
     def test_default_renders_body_as_markdown(self) -> None:
         """Without --plain, markdown syntax is interpreted rather than shown literally."""
-        args = Namespace(quiet=False, plain=False)
+        args = Namespace(plain=False)
         out = _capture(self.renderer.render_task_show, args, self.task)
         self.assertNotIn("**bold**", out)
         self.assertNotIn("# Heading", out)
@@ -45,22 +45,22 @@ class TestRichRendererTaskShowPlainFlag(unittest.TestCase):
 
     def test_plain_flag_renders_body_as_literal_text(self) -> None:
         """With --plain, markdown syntax is shown literally, not interpreted."""
-        args = Namespace(quiet=False, plain=True)
+        args = Namespace(plain=True)
         out = _capture(self.renderer.render_task_show, args, self.task)
         self.assertIn("**bold**", out)
         self.assertIn("# Heading", out)
 
     def test_missing_plain_attribute_defaults_to_markdown(self) -> None:
         """Namespaces without a plain attribute (e.g. other callers) default to Markdown."""
-        args = Namespace(quiet=False)
+        args = Namespace()
         out = _capture(self.renderer.render_task_show, args, self.task)
         self.assertNotIn("**bold**", out)
 
     def test_empty_body_renders_nothing_in_either_mode(self) -> None:
         """A task with no body produces no crash and no stray markdown/text artifacts."""
         empty_task = Task(id=uuid4(), title="No body", slug="no-body", board="alpha", column="todo")
-        out_markdown = _capture(self.renderer.render_task_show, Namespace(quiet=False, plain=False), empty_task)
-        out_plain = _capture(self.renderer.render_task_show, Namespace(quiet=False, plain=True), empty_task)
+        out_markdown = _capture(self.renderer.render_task_show, Namespace(plain=False), empty_task)
+        out_plain = _capture(self.renderer.render_task_show, Namespace(plain=True), empty_task)
         self.assertNotIn("None", out_markdown)
         self.assertNotIn("None", out_plain)
 

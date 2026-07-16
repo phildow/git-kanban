@@ -23,8 +23,6 @@ def _requires_verbose(method):
 
 class Renderer:
 	def _emit(self, args: argparse.Namespace, value: object) -> None:
-		if getattr(args, "quiet", False):
-			return
 		if value is None:
 			return
 		print(value)

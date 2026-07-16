@@ -44,7 +44,6 @@ PRIORITY_CHOICES = [p.value for p in Priority]
 
 def _add_global_flags(parser: argparse.ArgumentParser) -> None:
     # parser.add_argument("--color", action="store_true", default=False, help="Enable colored output")
-    parser.add_argument("--quiet", action="store_true", default=False, help="Suppress non-essential output")
     parser.add_argument("--verbose", action="store_true", default=False, help="Enable verbose output")
 
 

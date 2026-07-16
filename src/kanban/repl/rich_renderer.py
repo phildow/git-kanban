@@ -57,8 +57,6 @@ class RichRenderer:
 		self.render_helper = render_helper
 
 	def _emit(self, args: argparse.Namespace, value: object) -> None:
-		if getattr(args, "quiet", False):
-			return
 		if value is None:
 			return
 		self.console.print(value)
