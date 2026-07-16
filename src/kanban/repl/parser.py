@@ -204,6 +204,7 @@ def _add_update_parser(subparsers: argparse._SubParsersAction) -> None:
     update_parser = subparsers.add_parser("update", help="Update a task")
     _add_global_flags(update_parser)
     update_parser.add_argument("path", metavar="BOARD/COLUMN/TITLE", help="Fully qualified task path")
+    update_parser.add_argument("-c", "--column", dest="column", metavar="COLUMN", help="Move the task to this column")
     _add_task_create_args(update_parser)
     update_parser.set_defaults(func=handle_task_update)
 

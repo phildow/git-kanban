@@ -404,6 +404,31 @@ class TestReplCommandHandlers(unittest.TestCase):
         )
         self.renderer.render_task_update.assert_called_once_with(args, result)
 
+    def test_handle_task_update_without_column_does_not_move(self):
+        """`update` without --column applies updates only and never calls move_task."""
+        args = self._args(path="alpha/todo/fix-parser", column=None)
+        result = object()
+        self.svc.update_task.return_value = result
+
+        commands.handle_task_update(args, self.svc, self.renderer)
+
+        self.svc.move_task.assert_not_called()
+        self.renderer.render_task_update.assert_called_once_with(args, result)
+
+    def test_handle_task_update_with_column_moves_task(self):
+        """`update --column` moves the updated task to the given column and renders the moved result."""
+        args = self._args(path="alpha/todo/fix-parser", column="done")
+        updated = MagicMock()
+        updated.path = "/alpha/todo/fix-parser"
+        moved = object()
+        self.svc.update_task.return_value = updated
+        self.svc.move_task.return_value = moved
+
+        commands.handle_task_update(args, self.svc, self.renderer)
+
+        self.svc.move_task.assert_called_once_with("/alpha/todo/fix-parser", "done")
+        self.renderer.render_task_update.assert_called_once_with(args, moved)
+
     def test_handle_task_move(self):
         """`move` with a column forwards path and column to move_task and renders via render_task_move."""
         args = self._args(path="alpha/todo/fix-parser", column="done")

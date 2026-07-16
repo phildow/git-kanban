@@ -196,6 +196,11 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: o
 	)
 
 	result = svc.update_task(args.path, updates=updates)
+
+	column = getattr(args, "column", None)
+	if column is not None:
+		result = svc.move_task(result.path, column)
+
 	renderer.render_task_update(args, result)
 
 

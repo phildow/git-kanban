@@ -469,7 +469,7 @@ columns <board> [--slugs]
 
 tasks [BOARD[/COLUMN]]
     [--slugs]
-    [--exclude <column>]        # repeatable
+    [--exclude <column>]
     [--sort <title|priority|due-date|created-at|updated-at|created-by|column>]
     [--reverse]
     [--assigned-to <name>]
@@ -480,8 +480,8 @@ tasks [BOARD[/COLUMN]]
     [--created-by <name>]
 
 create board <board>
-create column <column>    # created in the active board; raises if no board is active
-create task <column> <title>    # column in the active board; raises if no board is active
+create column <column>
+create task <column> <title>
     [--edit]
     [--assigned-to <name>]
     [--priority <low|medium|high>]
@@ -489,11 +489,11 @@ create task <column> <title>    # column in the active board; raises if no board
     [--due-date <date>]
     [--created-by <name>]
 
-list [BOARD[/COLUMN]]    # lists tasks; falls back to the active board/column context
-    [-b|--boards]                       # list all boards instead of tasks (no path)
-    [-c|--columns|--cols]               # list columns in the active or provided board instead of tasks
+list [BOARD[/COLUMN]]
+    [--boards]
+    [--columns]
     [--slugs]
-    [--exclude <column>]        # repeatable
+    [--exclude <column>]
     [--sort <title|priority|due-date|created-at|updated-at|created-by|column>]
     [--reverse]
     [--assigned-to <name>]
@@ -514,6 +514,7 @@ show <board/column/task> [-p|--plain]
 edit <board/column/task>
 
 update <board/column/title>
+    [-c|--column <column>]      # move the task to this column
     [--assigned-to <name>]
     [--priority <low|medium|high>]
     [--tag <tag>]

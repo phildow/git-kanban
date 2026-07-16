@@ -590,6 +590,7 @@ class KanbanService:
             tags=tags,
             due_date=due_date,
             created_by=created_by,
+            body="# Description\n\n",
         )
         filename = task.slug
         created_task = self.repository.create_task(task, filename)

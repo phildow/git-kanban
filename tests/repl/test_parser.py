@@ -158,7 +158,16 @@ class TestParserAliases(unittest.TestCase):
         self.assertEqual(args.tags, ["cli"])
         self.assertEqual(args.due_date, "2026-06-20")
         self.assertEqual(args.created_by, "philip")
+        self.assertIsNone(args.column)
         self.assertIs(args.func, handle_task_update)
+
+    def test_update_task_column_flag_sets_column(self):
+        """`update --column` (and its -c alias) populate dest="column"."""
+        long = repl_parser.parse_args(["update", "main/todo/fix-parser", "--column", "done"])
+        self.assertEqual(long.column, "done")
+
+        short = repl_parser.parse_args(["update", "main/todo/fix-parser", "-c", "done"])
+        self.assertEqual(short.column, "done")
 
     def test_list_and_ls_alias_map_to_list_handler(self):
         args = repl_parser.parse_args(["list"])
