@@ -21,8 +21,7 @@ from ..utils.shell import prompt_for_confirmation
 
 def _parse_priority(args: argparse.Namespace) -> Priority | None:
     """Return the --priority argument as a Priority, or None if not provided."""
-    priority = getattr(args, "priority", None)
-    return Priority(priority) if priority else None
+    return Priority(args.priority) if args.priority else None
 
 
 def _build_task_filter(args: argparse.Namespace) -> TaskFilter:
@@ -31,13 +30,13 @@ def _build_task_filter(args: argparse.Namespace) -> TaskFilter:
         return datetime.strptime(s, "%Y-%m-%d").replace(tzinfo=timezone.utc) if s else None
 
     return TaskFilter(
-        assigned_to=getattr(args, "assigned_to", None),
+        assigned_to=args.assigned_to,
         priority=_parse_priority(args),
-        tags=getattr(args, "tags", None) or [],
-        due_before=_parse_date(getattr(args, "due_before", None)),
-        due_after=_parse_date(getattr(args, "due_after", None)),
-        created_by=getattr(args, "created_by", None),
-        exclude_columns=getattr(args, "column", None) or [],
+        tags=args.tags or [],
+        due_before=_parse_date(args.due_before),
+        due_after=_parse_date(args.due_after),
+        created_by=args.created_by,
+        exclude_columns=args.column or [],
     )
 
 # ---------------------------------------------------------------------------
@@ -52,12 +51,12 @@ def handle_list_helper(args: argparse.Namespace, svc: KanbanService) -> list[Tas
     board, across all columns.  Raises if no board can be resolved from
     the path or context.
     """
-    path = getattr(args, "path", "") or ""
+    path = args.path or ""
     board, column, _ = svc.path_components(path)
 
     filter = _build_task_filter(args)
-    sort = getattr(args, "sort", None)
-    reverse = getattr(args, "reverse", False)
+    sort = args.sort
+    reverse = args.reverse
 
     if board is None:
         raise ValueError("No active board; provide a board or board/column, or set one with `cd`")
@@ -73,10 +72,10 @@ def handle_task_list_helper(args: argparse.Namespace, svc: KanbanService) -> lis
     omitted, falls back to every task in the active board (all columns),
     raising if no board is active.
     """
-    path = getattr(args, "path", "") or ""
+    path = args.path or ""
     filter = _build_task_filter(args)
-    sort = getattr(args, "sort", None)
-    reverse = getattr(args, "reverse", False)
+    sort = args.sort
+    reverse = args.reverse
 
     if not path:
         board = svc.working_board
@@ -98,8 +97,8 @@ def handle_delete_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[
     all delete/rm commands in the REPL, which pass a user-provided path that
     may be absolute or relative to the current context.
     """
-    path = getattr(args, "path", "") or ""
-    force = getattr(args, "force", False)
+    path = args.path or ""
+    force = args.force
     board, column, task = svc.path_components(path)
 
     def _confirm(message: str) -> bool:
@@ -126,8 +125,8 @@ def handle_rename_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[
     Rename the entity at the given path to a new name.  This is the main
     entry point for all rename commands in the REPL, which pass a user-provided
     """
-    path = getattr(args, "path", "") or ""
-    new_name = getattr(args, "new_name", None)
+    path = args.path or ""
+    new_name = args.new_name
 
     if not new_name:
         raise ValueError("New name must be provided for rename operation")

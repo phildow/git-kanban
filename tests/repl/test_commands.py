@@ -47,7 +47,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.renderer.render_change_dir.assert_called_once_with(args, result)
 
     def test_handle_list_renders_task_list(self):
-        args = self._args(path="alpha/todo")
+        args = self._args(path="alpha/todo", boards=False, columns=False)
         result = [object()]
         with patch("kanban.repl.commands.handle_list_helper", return_value=result):
             commands.handle_list(args, self.svc, self.renderer)
@@ -238,7 +238,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
     def test_handle_column_list_defaults(self):
         """`columns` with no board falls back to None so KanbanService uses context."""
-        args = self._args()
+        args = self._args(board=None)
         result = object()
         self.svc.get_columns.return_value = result
 
@@ -255,7 +255,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.renderer.render_column_reorder.assert_called_once_with(args, result)
 
     def test_handle_task_create_defaults(self):
-        args = self._args(column="todo", title="fix-parser", edit=False)
+        args = self._args(column="todo", title="fix-parser", edit=False, assigned_to=None, priority=None, tags=None, due_date=None, created_by=None)
         self.svc.working_board = "alpha"
         result = object()
         self.svc.create_task.return_value = result
@@ -276,7 +276,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
     def test_handle_task_create_without_edit_flag_does_not_open_editor(self):
         """create task without --edit does not call svc.edit_task."""
-        args = self._args(column="todo", title="fix-parser", edit=False)
+        args = self._args(column="todo", title="fix-parser", edit=False, assigned_to=None, priority=None, tags=None, due_date=None, created_by=None)
         self.svc.working_board = "alpha"
         result = object()
         self.svc.create_task.return_value = result
@@ -288,7 +288,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
     def test_handle_task_create_with_edit_flag_opens_editor(self):
         """create task --edit opens the newly created task in the editor."""
-        args = self._args(column="todo", title="fix-parser", edit=True)
+        args = self._args(column="todo", title="fix-parser", edit=True, assigned_to=None, priority=None, tags=None, due_date=None, created_by=None)
         self.svc.working_board = "alpha"
         created = Task(id=uuid4(), title="Fix parser", slug="fix-parser", board="alpha", column="todo")
         edited = Task(id=uuid4(), title="Fix parser", slug="fix-parser", board="alpha", column="todo")
@@ -357,7 +357,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.renderer.render_task_edit.assert_called_once_with(args, result)
 
     def test_handle_task_update_defaults(self):
-        args = self._args(path="alpha/todo/fix-parser")
+        args = self._args(path="alpha/todo/fix-parser", assigned_to=None, priority=None, tags=None, due_date=None, created_by=None, column=None)
         result = object()
         self.svc.update_task.return_value = result
 
@@ -379,12 +379,12 @@ class TestReplCommandHandlers(unittest.TestCase):
     def test_handle_task_update_with_fields(self):
         args = self._args(
             path="alpha/todo/fix-parser",
-            title="fix parser",
             assigned_to="philip",
             priority="medium",
             tags=["cli"],
             due_date="2026-07-01",
             created_by="alice",
+            column=None,
         )
         result = object()
         self.svc.update_task.return_value = result
@@ -394,7 +394,6 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.update_task.assert_called_once_with(
             "alpha/todo/fix-parser",
             updates=TaskUpdateParams(
-                title="fix parser",
                 assigned_to="philip",
                 priority="medium",
                 tags=["cli"],
@@ -406,7 +405,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
     def test_handle_task_update_without_column_does_not_move(self):
         """`update` without --column applies updates only and never calls move_task."""
-        args = self._args(path="alpha/todo/fix-parser", column=None)
+        args = self._args(path="alpha/todo/fix-parser", column=None, assigned_to=None, priority=None, tags=None, due_date=None, created_by=None)
         result = object()
         self.svc.update_task.return_value = result
 
@@ -417,7 +416,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
     def test_handle_task_update_with_column_moves_task(self):
         """`update --column` moves the updated task to the given column and renders the moved result."""
-        args = self._args(path="alpha/todo/fix-parser", column="done")
+        args = self._args(path="alpha/todo/fix-parser", column="done", assigned_to=None, priority=None, tags=None, due_date=None, created_by=None)
         updated = MagicMock()
         updated.path = "/alpha/todo/fix-parser"
         moved = object()

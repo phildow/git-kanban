@@ -24,7 +24,7 @@ from ..storage.seeds import BOOTSTRAP_CONFIG
 # ---------------------------------------------------------------------------
 
 def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	config = BOOTSTRAP_CONFIG if getattr(args, "bootstrap", False) else None
+	config = BOOTSTRAP_CONFIG if args.bootstrap == True else None
 	result = svc.initialize_kanban(config=config)
 	renderer.render_init(args, result)
 
@@ -33,7 +33,7 @@ def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: object) 
 # ---------------------------------------------------------------------------
 
 def handle_change_dir(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	if getattr(args, "board", None) is None:
+	if args.board is None:
 		result = svc.change_dir(clear=True)
 		renderer.render_change_dir(args, result)
 		return
@@ -47,15 +47,15 @@ def handle_change_dir(args: argparse.Namespace, svc: KanbanService, renderer: ob
 # ---------------------------------------------------------------------------
 
 def handle_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	if getattr(args, "boards", False):
-		if getattr(args, "path", None):
+	if args.boards:
+		if args.path is not None:
 			raise ValueError("Cannot combine --boards with a path")
 		result = svc.get_boards()
 		renderer.render_board_list(args, result)
 		return
 
-	if getattr(args, "columns", False):
-		board = getattr(args, "path", None) or svc.working_board
+	if args.columns:
+		board = args.path or svc.working_board
 		if not board:
 			raise ValueError("No active board; provide a board or set one with `cd`")
 		result = svc.get_columns(board=board)
@@ -121,7 +121,7 @@ def handle_board_rename(args: argparse.Namespace, svc: KanbanService, renderer: 
 # ---------------------------------------------------------------------------
 
 def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	result = svc.get_columns(board=getattr(args, "board", None))
+	result = svc.get_columns(board=args.board)
 	renderer.render_column_list(args, result)
 
 
@@ -159,11 +159,11 @@ def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: o
 		raise ValueError("No active board; set one with `cd` before creating a task")
 
 	params = TaskCreateParams(
-		assigned_to=getattr(args, "assigned_to", None),
+		assigned_to=args.assigned_to,
 		priority=_parse_priority(args),
-		tags=getattr(args, "tags", None) or [],
-		due_date=getattr(args, "due_date", None),
-		created_by=getattr(args, "created_by", None),
+		tags=args.tags or [],
+		due_date=args.due_date,
+		created_by=args.created_by,
 	)
 
 	task_path = f"/{board}/{args.column}/{args.title}"
@@ -187,19 +187,18 @@ def handle_task_edit(args: argparse.Namespace, svc: KanbanService, renderer: obj
 
 def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
 	updates = TaskUpdateParams(
-		title=getattr(args, "title", None),
-		assigned_to=getattr(args, "assigned_to", None),
+		title=None,
+		assigned_to=args.assigned_to,
 		priority=_parse_priority(args),
-		tags=getattr(args, "tags", None),
-		due_date=getattr(args, "due_date", None),
-		created_by=getattr(args, "created_by", None),
+		tags=args.tags,
+		due_date=args.due_date,
+		created_by=args.created_by,
 	)
 
 	result = svc.update_task(args.path, updates=updates)
 
-	column = getattr(args, "column", None)
-	if column is not None:
-		result = svc.move_task(result.path, column)
+	if args.column is not None:
+		result = svc.move_task(result.path, args.column)
 
 	renderer.render_task_update(args, result)
 

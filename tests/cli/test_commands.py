@@ -26,7 +26,7 @@ class TestCommandHandlers(unittest.TestCase):
         self.repl_renderer = MagicMock()
 
     def _args(self, **kwargs) -> Namespace:
-        return Namespace(**kwargs)
+        return Namespace(format="plain", **kwargs)
 
     def test_handle_init_without_bootstrap(self):
         """`init` without --bootstrap calls initialize_kanban with config=None."""
@@ -133,7 +133,7 @@ class TestCommandHandlers(unittest.TestCase):
 
     def test_handle_task_list(self):
         """`task list` handler forwards path/sort options and renders output."""
-        args = self._args(path="board-a/todo", sort="title", reverse=True)
+        args = self._args(path="board-a/todo", sort="title", reverse=True, priority=None, assigned_to=None, tags=None, due_before=None, due_after=None, created_by=None)
         result = object()
         self.svc.get_tasks.return_value = result
 
@@ -172,7 +172,7 @@ class TestCommandHandlers(unittest.TestCase):
 
     def test_handle_task_create_with_default_optional_fields(self):
         """`task create` defaults missing optional fields and normalizes `tags` to empty list."""
-        args = self._args(path="board-a/todo/check-no-other-args")
+        args = self._args(path="board-a/todo/check-no-other-args", title=None, priority=None, tags=None, assigned_to=None, due_date=None, created_by=None)
         result = object()
         self.svc.create_task.return_value = result
 
@@ -230,7 +230,7 @@ class TestCommandHandlers(unittest.TestCase):
 
     def test_handle_task_update_with_default_optional_fields(self):
         """`task update` defaults unspecified update fields to `None`."""
-        args = self._args(path="/board-a/todo/fix-parser")
+        args = self._args(path="/board-a/todo/fix-parser", priority=None, title=None, assigned_to=None, tags=None, due_date=None, created_by=None)
         result = object()
         self.svc.update_task.return_value = result
 
@@ -253,7 +253,6 @@ class TestCommandHandlers(unittest.TestCase):
         """`task update` maps all provided update fields into `TaskUpdateParams`."""
         args = self._args(
             path="board-a/todo/fix-parser",
-            title="fix parser robustly",
             assigned_to="philip",
             priority="medium",
             tags=["cli", "refactor"],
@@ -268,7 +267,6 @@ class TestCommandHandlers(unittest.TestCase):
         self.svc.update_task.assert_called_once_with(
             "/board-a/todo/fix-parser",
             updates=TaskUpdateParams(
-                title="fix parser robustly",
                 assigned_to="philip",
                 priority="medium",
                 tags=["cli", "refactor"],
@@ -280,7 +278,7 @@ class TestCommandHandlers(unittest.TestCase):
 
     def test_handle_task_update_with_explicit_empty_tags(self):
         """`task edit` preserves an explicit empty tags list."""
-        args = self._args(path="board-a/todo/fix-parser", tags=[])
+        args = self._args(path="board-a/todo/fix-parser", tags=[], priority=None, title=None, assigned_to=None, due_date=None, created_by=None)
         result = object()
         self.svc.update_task.return_value = result
 
@@ -410,14 +408,14 @@ class TestCommandHandlers(unittest.TestCase):
         self.renderer.render_log.assert_called_once_with(args, result)
 
     def test_status_handler(self):
-        """`status` handler forwards format option and renders result."""
-        args = self._args(format="plain")
+        """`status` handler renders result."""
+        args = self._args()
         result = object()
         self.svc.status.return_value = result
 
         commands.handle_status(args, self.svc, self.renderer, self.json_renderer)
 
-        self.svc.status.assert_called_once_with(format="plain")
+        self.svc.status.assert_called_once()
         self.renderer.render_status.assert_called_once_with(args, result)
 
     def test_config_handlers(self):

@@ -36,7 +36,7 @@ class TestHandleTaskListHelper(unittest.TestCase):
         self.t2 = self.svc.create_task("alpha/done/Write docs", TaskCreateParams())
 
     def _args(self, **kwargs) -> Namespace:
-        defaults = {"path": None, "sort": None, "reverse": False}
+        defaults = {"path": None, "sort": None, "reverse": False, "assigned_to": None, "priority": None, "tags": None, "due_before": None, "due_after": None, "created_by": None, "column": None}
         defaults.update(kwargs)
         return Namespace(**defaults)
 
@@ -93,7 +93,7 @@ class TestHandleListHelper(unittest.TestCase):
         self.t2 = self.svc.create_task("alpha/done/Write docs", TaskCreateParams())
 
     def _args(self, **kwargs) -> Namespace:
-        defaults = {"path": None, "sort": None, "reverse": False}
+        defaults = {"path": None, "sort": None, "reverse": False, "assigned_to": None, "priority": None, "tags": None, "due_before": None, "due_after": None, "created_by": None, "column": None}
         defaults.update(kwargs)
         return Namespace(**defaults)
 

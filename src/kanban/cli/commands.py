@@ -23,7 +23,7 @@ def with_absolute_path(method):
 	@wraps(method)
 	def _wrapped(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 		"""Rewrite the path in the result to include the board/column context if applicable."""
-		path = getattr(args, "path", None)
+		path = args.path
 
 		if path is not None and isinstance(path, str) and not path.startswith("/"):
 			setattr(args, "path", f"/{path}")
@@ -34,14 +34,14 @@ def with_absolute_path(method):
 
 def _pick(args: argparse.Namespace, renderer: object, json_renderer: object) -> object:
     """Return the JSON renderer when --format json is requested, otherwise the default."""
-    if getattr(args, "format", None) == "json":
+    if args.format == "json":
         return json_renderer
     return renderer
 
 
 def _parse_priority(args: argparse.Namespace) -> Priority | None:
     """Return the --priority argument as a Priority, or None if not provided."""
-    priority = getattr(args, "priority", None)
+    priority = args.priority
     return Priority(priority) if priority else None
 
 
@@ -50,7 +50,7 @@ def _parse_priority(args: argparse.Namespace) -> Priority | None:
 # ---------------------------------------------------------------------------
 
 def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
-	config = BOOTSTRAP_CONFIG if getattr(args, "bootstrap", False) else None
+	config = BOOTSTRAP_CONFIG if args.bootstrap else None
 	result = svc.initialize_kanban(config=config)
 	_pick(args, renderer, json_renderer).render_init(args, result)
 
@@ -123,12 +123,12 @@ def _build_task_filter(args: argparse.Namespace) -> TaskFilter:
 		return datetime.strptime(s, "%Y-%m-%d").replace(tzinfo=timezone.utc) if s else None
 
 	return TaskFilter(
-		assigned_to=getattr(args, "assigned_to", None),
+		assigned_to=args.assigned_to,
 		priority=_parse_priority(args),
-		tags=getattr(args, "tags", None) or [],
-		due_before=_parse_date(getattr(args, "due_before", None)),
-		due_after=_parse_date(getattr(args, "due_after", None)),
-		created_by=getattr(args, "created_by", None),
+		tags=args.tags or [],
+		due_before=_parse_date(args.due_before),
+		due_after=_parse_date(args.due_after),
+		created_by=args.created_by,
 	)
 
 
@@ -141,11 +141,11 @@ def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: obj
 @with_absolute_path
 def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	params = TaskCreateParams(
-		assigned_to=getattr(args, "assigned_to", None),
+		assigned_to=args.assigned_to,
 		priority=_parse_priority(args),
-		tags=getattr(args, "tags", None) or [],
-		due_date=getattr(args, "due_date", None),
-		created_by=getattr(args, "created_by", None),
+		tags=args.tags or [],
+		due_date=args.due_date,
+		created_by=args.created_by,
 	)
 
 	result = svc.create_task(args.path, params)
@@ -172,12 +172,12 @@ def handle_task_edit(args: argparse.Namespace, svc: KanbanService, renderer: obj
 @with_absolute_path
 def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: object, json_renderer: object) -> None:
 	updates = TaskUpdateParams(
-		title=getattr(args, "title", None),
-		assigned_to=getattr(args, "assigned_to", None),
+		title=None,
+		assigned_to=args.assigned_to,
 		priority=_parse_priority(args),
-		tags=getattr(args, "tags", None),
-		due_date=getattr(args, "due_date", None),
-		created_by=getattr(args, "created_by", None),
+		tags=args.tags,
+		due_date=args.due_date,
+		created_by=args.created_by,
 	)
 
 	result = svc.update_task(args.path, updates=updates)
@@ -245,7 +245,7 @@ def handle_repl(args: argparse.Namespace, svc: KanbanService, renderer: object, 
 
 	render_helper = RenderHelper(service=svc)
 
-	if getattr(args, "no_rich", False):
+	if args.no_rich:
 		from ..repl.renderer import Renderer as REPLRenderer
 		repl_renderer = REPLRenderer(render_helper=render_helper)
 	else:
