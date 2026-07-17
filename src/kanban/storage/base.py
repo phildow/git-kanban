@@ -50,26 +50,26 @@ class RepositoryAlreadyInitialized(RepositoryError):
 class BoardNotFound(RepositoryError):
     """Raised when a board lookup fails."""
     def __init__(self, name: str):
-        super().__init__(f"Board not found: {name}")
+        super().__init__(f"Board not found: /{name}")
         self.name = name
 
 class BoardAlreadyExists(RepositoryError):
     """Raised when a board creation fails due to a name collision."""
     def __init__(self, name: str):
-        super().__init__(f"Board already exists: {name}")
+        super().__init__(f"Board already exists: /{name}")
         self.name = name
 
 class ColumnNotFound(RepositoryError):
     """Raised when a column lookup fails."""
     def __init__(self, board: str, name: str):
-        super().__init__(f"Column not found: {board}/{name}")
+        super().__init__(f"Column not found: /{board}/{name}")
         self.board = board
         self.name = name
 
 class ColumnAlreadyExists(RepositoryError):
     """Raised when a column creation fails due to a name collision."""
     def __init__(self, board: str, name: str):
-        super().__init__(f"Column already exists: {board}/{name}")
+        super().__init__(f"Column already exists: /{board}/{name}")
         self.board = board
         self.name = name
 
@@ -82,7 +82,7 @@ class TaskNotFound(RepositoryError):
 class TaskAlreadyExists(RepositoryError):
     """Raised when a task creation fails due to a name collision."""
     def __init__(self, board: str, column: str, title: str):
-        super().__init__(f"Task already exists: {board}/{column}/{title}")
+        super().__init__(f"Task already exists: /{board}/{column}/{title}")
         self.board = board
         self.column = column
         self.title = title
