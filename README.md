@@ -124,6 +124,15 @@ TOOD: is this right?
 python -m unittest discover -s tests
 ```
 
+### Static type checking (mypy)
+
+Install development dependencies and run mypy:
+
+```bash
+pip install -e ".[dev]"
+python -m mypy
+```
+
 ### Installing after changes
 
 ```
