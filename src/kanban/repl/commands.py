@@ -125,11 +125,7 @@ def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: o
 
 
 def handle_column_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	board = svc.working_board
-	if not board:
-		raise ValueError("No active board; set one with `cd` before creating a column")
-
-	result = svc.create_column(f"/{board}/{args.column}")
+	result = svc.create_column(args.column)
 	renderer.render_column_create(args, result)
 
 
@@ -153,10 +149,6 @@ def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: obj
 	
 
 def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
-	board = svc.working_board
-	if not board:
-		raise ValueError("No active board; set one with `cd` before creating a task")
-
 	params = TaskCreateParams(
 		assigned_to=args.assigned_to,
 		priority=parse_priority(args),
@@ -165,7 +157,7 @@ def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: o
 		created_by=args.created_by,
 	)
 
-	task_path = f"/{board}/{args.column}/{args.title}"
+	task_path = f"{args.column}/{args.title}"
 	result = svc.create_task(task_path, params)
 
 	if args.edit:

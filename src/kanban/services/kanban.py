@@ -170,6 +170,8 @@ class KanbanService:
     # User Context
     # ------------------------------------------------------------------
 
+    # TODO: clean up
+
     @property
     def user_context(self) -> UserContext:
         """Return the current user context without modifying it."""
@@ -445,6 +447,10 @@ class KanbanService:
         column to the board's .metadata file and commits.
         """
         board, column, _ = self.path_components(path)
+
+        if not board or not column:
+            raise ValueError(f"Invalid path: {path} (board and column names are required)")
+
         slug = slug_it(column)
         return self.repository.create_column(board, column, slug)
 
