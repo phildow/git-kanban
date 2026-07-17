@@ -14,6 +14,7 @@ from rich.text import Text
 from rich import box, print
 
 from ..models import UserContext, Board, Column, Task
+from ..utils.command_renderer import CommandRenderer
 from ..repl.render_helper import RenderHelper
 from ..services.kanban import GitCommit, KanbanStatus
 
@@ -40,7 +41,7 @@ class KanbanMarkdown(Markdown):
 
 # The class responsible for rendering output to the console in a rich format.
 
-class RichRenderer:
+class RichRenderer(CommandRenderer):
 	console = Console(color_system="auto")
 
 	def __init__(self, render_helper: RenderHelper):

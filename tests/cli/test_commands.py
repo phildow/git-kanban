@@ -264,7 +264,7 @@ class TestCommandHandlers(unittest.TestCase):
                 created_by=None,
             ),
         )
-        self.renderer.render_task_edit.assert_called_once_with(args, result)
+        self.renderer.render_task_update.assert_called_once_with(args, result)
 
     def test_handle_task_update_with_all_optional_fields(self):
         """`task update` maps all provided update fields into `TaskUpdateParams`."""
@@ -291,7 +291,7 @@ class TestCommandHandlers(unittest.TestCase):
                 created_by="mark",
             ),
         )
-        self.renderer.render_task_edit.assert_called_once_with(args, result)
+        self.renderer.render_task_update.assert_called_once_with(args, result)
 
     def test_handle_task_update_with_explicit_empty_tags(self):
         """`task edit` preserves an explicit empty tags list."""
@@ -312,7 +312,7 @@ class TestCommandHandlers(unittest.TestCase):
                 created_by=None,
             ),
         )
-        self.renderer.render_task_edit.assert_called_once_with(args, result)
+        self.renderer.render_task_update.assert_called_once_with(args, result)
 
     def test_handle_task_rename(self):
         """`task rename` forwards path and new name to rename_task and renders result."""

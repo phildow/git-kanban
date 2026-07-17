@@ -8,11 +8,12 @@ import shutil
 from warnings import deprecated
 
 from ..models import UserContext, Board, Column, Task
+from ..utils.command_renderer import CommandRenderer
 from ..repl.render_helper import RenderHelper
 from ..services.kanban import GitCommit, KanbanStatus
 
 @deprecated("The RichRenderer is used by default. This class is deprecated and will be removed in a future version.")
-class Renderer:
+class Renderer(CommandRenderer):
 	def __init__(self, render_helper: RenderHelper):
 		self.render_helper = render_helper
 

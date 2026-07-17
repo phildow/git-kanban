@@ -14,6 +14,7 @@ import argparse
 import logging
 
 from ..models import Board, Column, Task
+from ..utils.command_renderer import CommandRenderer
 from ..repl.command_helpers import (
 	build_task_filter,
     parse_priority,
@@ -29,7 +30,7 @@ from ..storage.seeds import BOOTSTRAP_CONFIG
 # Initialization commands
 # ---------------------------------------------------------------------------
 
-def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	config = BOOTSTRAP_CONFIG if args.bootstrap == True else None
 	result = svc.initialize_kanban(config=config)
 	renderer.render_init(args, result)
@@ -38,7 +39,7 @@ def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: object) 
 # Working context commands (cd)
 # ---------------------------------------------------------------------------
 
-def handle_change_dir(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_change_dir(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	if args.board is None:
 		result = svc.change_dir(clear=True)
 		renderer.render_change_dir(args, result)
@@ -52,7 +53,7 @@ def handle_change_dir(args: argparse.Namespace, svc: KanbanService, renderer: ob
 # Common commands (list, delete)
 # ---------------------------------------------------------------------------
 
-def handle_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_list(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	typ, results = svc.get_list(path=args.path, filter=build_task_filter(args), sort=args.sort, reverse=args.reverse)
 	
 	if typ is Board:
@@ -65,7 +66,7 @@ def handle_list(args: argparse.Namespace, svc: KanbanService, renderer: object) 
 		raise ValueError("Unexpected result type from handle_list: {}".format(typ))
 
 
-def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	typ, result = handle_delete_helper(args, svc)
 
 	if typ is None:
@@ -81,7 +82,7 @@ def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: object
 		raise ValueError("Unexpected result type from handle_delete: {}".format(typ))
 
 
-def handle_rename(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_rename(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	typ, result = handle_rename_helper(args, svc)
 
 	if typ is None:
@@ -100,18 +101,18 @@ def handle_rename(args: argparse.Namespace, svc: KanbanService, renderer: object
 # Board subcommands
 # ---------------------------------------------------------------------------
 
-def handle_board_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_board_list(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.get_boards()
 	renderer.render_board_list(args, result)
 
 
-def handle_board_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_board_create(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.create_board(args.board)
 	renderer.render_board_create(args, result)
 
 
 # TODO: REMOVE
-def handle_board_rename(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_board_rename(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.rename_board(args.board, args.new_name)
 	renderer.render_board_rename(args, result)
 
@@ -119,23 +120,23 @@ def handle_board_rename(args: argparse.Namespace, svc: KanbanService, renderer: 
 # Column subcommands
 # ---------------------------------------------------------------------------
 
-def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.get_columns(board=args.board)
 	renderer.render_column_list(args, result)
 
 
-def handle_column_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_column_create(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.create_column(args.column)
 	renderer.render_column_create(args, result)
 
 
 # TODO: REMOVE
-def handle_column_rename(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_column_rename(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.rename_column(args.path, args.new_name)
 	renderer.render_column_rename(args, result)
 
 
-def handle_column_reorder(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_column_reorder(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.reorder_column(args.path, args.position)
 	renderer.render_column_reorder(args, result)
 
@@ -143,12 +144,12 @@ def handle_column_reorder(args: argparse.Namespace, svc: KanbanService, renderer
 # Task subcommands
 # ---------------------------------------------------------------------------
 
-def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = handle_task_list_helper(args, svc)
 	renderer.render_task_list(args, result)
 	
 
-def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	params = TaskCreateParams(
 		assigned_to=args.assigned_to,
 		priority=parse_priority(args),
@@ -166,17 +167,17 @@ def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: o
 	renderer.render_task_create(args, result)
 
 
-def handle_task_show(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_task_show(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.get_task(args.path)
 	renderer.render_task_show(args, result)
 
 
-def handle_task_edit(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_task_edit(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.edit_task(args.path)
 	renderer.render_task_edit(args, result)
 
 
-def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	updates = TaskUpdateParams(
 		title=None,
 		assigned_to=args.assigned_to,
@@ -195,12 +196,12 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: o
 
 
 # TODO: REMOVE
-def handle_task_rename(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_task_rename(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.rename_task(args.path, args.new_name)
 	renderer.render_task_rename(args, result)
 
 
-def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	if args.column is not None:
 		result = svc.move_task(args.path, args.column)
 		renderer.render_task_move(args, result)
@@ -210,7 +211,7 @@ def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: obj
 		renderer.render_task_reorder(args, (result, op))
 
 
-def handle_task_assign(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_task_assign(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.assign_task(args.path, args.assigned_to)
 	renderer.render_task_assign(args, result)
 
@@ -218,27 +219,27 @@ def handle_task_assign(args: argparse.Namespace, svc: KanbanService, renderer: o
 # Additional commands (search, log, status, config)
 # ---------------------------------------------------------------------------
 
-def handle_search(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_search(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.search(args.query, board=args.board, sort=args.sort, reverse=args.reverse)
 	renderer.render_search(args, result)
 
 
-def handle_log(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_log(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.log(path=args.path, limit=args.limit)
 	renderer.render_log(args, result)
 
 
-def handle_status(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_status(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.status(format=args.format)
 	renderer.render_status(args, result)
 
 
-def handle_config_set(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_config_set(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.config_set(args.key, args.value)
 	renderer.render_config_set(args, result)
 
 
-def handle_config_get(args: argparse.Namespace, svc: KanbanService, renderer: object) -> None:
+def handle_config_get(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.config_get(args.key)
 	renderer.render_config_get(args, result)
 

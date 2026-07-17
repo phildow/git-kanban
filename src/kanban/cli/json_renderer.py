@@ -6,7 +6,8 @@ import argparse
 import json
 from functools import wraps
 
-from ..models import Board, Column, Task
+from ..models import Board, Column, Task, UserContext
+from ..utils.command_renderer import CommandRenderer
 from ..services.kanban import GitCommit, KanbanStatus
 
 
@@ -65,7 +66,7 @@ def _column_dict(column: Column) -> dict:
     }
 
 
-class JsonRenderer:
+class JsonRenderer(CommandRenderer):
     """Renders all CLI output as JSON."""
 
     def _emit(self, args: argparse.Namespace, value: object) -> None:
@@ -79,6 +80,10 @@ class JsonRenderer:
     def render_init(self, args: argparse.Namespace, result: bool) -> None:
         _ = result
         self._emit(args, json.dumps({"initialized": result}, indent=2))
+
+    @_requires_verbose
+    def render_change_dir(self, args: argparse.Namespace, result: UserContext) -> None:
+        raise NotImplementedError("Change directory is not supported by the CLI JSON renderer. Use the `cd` command in the REPL instead.")
 
     # ── Boards ────────────────────────────────────────────────────────────────
 

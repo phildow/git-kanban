@@ -6,6 +6,7 @@ import argparse
 from functools import wraps
 
 from ..models import Board, Column, Task
+from ..utils.command_renderer import CommandRenderer
 from ..services.kanban import GitCommit, KanbanStatus
 
 
@@ -21,7 +22,7 @@ def _requires_verbose(method):
 	return _wrapped
 
 
-class Renderer:
+class Renderer(CommandRenderer):
 	def _emit(self, args: argparse.Namespace, value: object) -> None:
 		if value is None:
 			return
@@ -37,6 +38,11 @@ class Renderer:
 			self._emit(args, "Kanban system initialized successfully.")
 		else:
 			self._emit(args, "Failed to initialize Kanban system.")
+
+	@_requires_verbose
+	def render_change_dir(self, args: argparse.Namespace, result: object) -> None:
+		_ = args, result
+		raise NotImplementedError("Change directory is not supported by the CLI JSON renderer. Use the `cd` command in the REPL instead.")
 
 # ---------------------------------------------------------------------------
 # Board rendering
@@ -195,6 +201,10 @@ class Renderer:
 		self._emit(args, f"Task renamed: {result.title}: {old_slug} -> {new_slug}")
 
 	def render_task_edit(self, args: argparse.Namespace, result: Task) -> None:
+		self._emit(args, result)
+
+	@_requires_verbose
+	def render_task_update(self, args: argparse.Namespace, result: Task) -> None:
 		self._emit(args, result)
 
 	@_requires_verbose
