@@ -143,6 +143,10 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
             "task",
             "list",
             "board-a/todo",
+            "-x",
+            "done",
+            "--exclude",
+            "archive",
             "--assigned-to",
             "philip",
             "--priority",
@@ -156,6 +160,7 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
             "--reverse",
         ])
         self.assertEqual(args.path, "board-a/todo")
+        self.assertEqual(args.column, ["done", "archive"])
         self.assertEqual(args.assigned_to, "philip")
         self.assertEqual(args.priority, "high")
         self.assertEqual(args.tags, ["bug", "urgent"])
@@ -164,6 +169,7 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         self.assertIs(args.func, handle_task_list)
 
         args = cli_parser.parse_args(["task", "list", "board-a/todo"])
+        self.assertIsNone(args.column)
 
         args = cli_parser.parse_args([
             "task",

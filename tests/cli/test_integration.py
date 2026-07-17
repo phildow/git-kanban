@@ -563,6 +563,14 @@ class TestTaskCLI(_InitializedBase):
         self.assertIn("task-a", out)
         self.assertNotIn("task-b", out)
 
+    def test_task_list_exclude_column(self) -> None:
+        """task list -x/--exclude omits tasks from excluded columns."""
+        self.run_cli("task", "create", "proj/todo/task-a")
+        self.run_cli("task", "create", "proj/done/task-b")
+        out = self.run_cli("task", "list", "proj", "-x", "done")
+        self.assertIn("task-a", out)
+        self.assertNotIn("task-b", out)
+
     def test_task_list_sort(self) -> None:
         """task list --sort title includes all tasks."""
         self.run_cli("task", "create", "proj/todo/alpha-task")
