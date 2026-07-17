@@ -85,6 +85,7 @@ def _add_task_update_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("-w", "--assigned-to", dest="assigned_to", metavar="NAME", help="Assign task to a user")
     parser.add_argument("-p", "--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
     parser.add_argument("-t", "--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
+    parser.add_argument("-c", "--column", dest="column", metavar="COLUMN", help="Move the task to this column")
     parser.add_argument("--due-date", dest="due_date", metavar="DATE", help="Due date (YYYY-MM-DD)")
     parser.add_argument("--created-by", dest="created_by", metavar="NAME", help="Creator name")
 

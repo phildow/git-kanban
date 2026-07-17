@@ -682,6 +682,19 @@ class TestTaskCLI(_InitializedBase):
         self.assertEqual(fm.get("due_date"), _iso("2025-01-01"))
         self.assertEqual(fm.get("created_by"), "mark")
 
+    def test_task_update_column_moves_task_to_destination_column(self) -> None:
+        """task update --column updates and then moves the task to the destination column."""
+        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli(
+            "task", "update", "proj/todo/fix-login",
+            "--assigned-to", "alice",
+            "--column", "done",
+        )
+        self.assertTrue((self.boards_dir / "proj" / "done" / "fix-login.md").is_file())
+        self.assertFalse((self.boards_dir / "proj" / "todo" / "fix-login.md").exists())
+        fm = self._read_frontmatter("proj", "done", "fix-login")
+        self.assertEqual(fm.get("assigned_to"), "alice")
+
     # -- move -----------------------------------------------------------------
 
     def test_task_move_creates_file_at_destination(self) -> None:

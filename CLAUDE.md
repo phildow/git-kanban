@@ -410,6 +410,7 @@ kanban task create <board>/<column>/<title>
     [--created-by <name>]
 
 kanban task update <board>/<column>/<title>
+    [--column <column>]
     [--assigned-to <name>]
     [--priority <low|medium|high>]
     [--tag <tag>]

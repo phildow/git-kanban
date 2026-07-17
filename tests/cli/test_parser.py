@@ -211,6 +211,8 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
             "medium",
             "--tag",
             "cli",
+            "--column",
+            "done",
             "--due-date",
             "2026-06-16",
             "--created-by",
@@ -220,6 +222,7 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         self.assertEqual(args.assigned_to, "philip")
         self.assertEqual(args.priority, "medium")
         self.assertEqual(args.tags, ["cli"])
+        self.assertEqual(args.column, "done")
         self.assertEqual(args.due_date, "2026-06-16")
         self.assertEqual(args.created_by, "philip")
         self.assertIs(args.func, handle_task_update)

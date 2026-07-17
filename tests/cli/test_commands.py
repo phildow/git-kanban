@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import unittest
 from argparse import Namespace
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from kanban.cli import commands
@@ -247,7 +248,7 @@ class TestCommandHandlers(unittest.TestCase):
 
     def test_handle_task_update_with_default_optional_fields(self):
         """`task update` defaults unspecified update fields to `None`."""
-        args = self._args(path="/board-a/todo/fix-parser", priority=None, title=None, assigned_to=None, tags=None, due_date=None, created_by=None)
+        args = self._args(path="/board-a/todo/fix-parser", priority=None, title=None, assigned_to=None, tags=None, due_date=None, created_by=None, column=None)
         result = object()
         self.svc.update_task.return_value = result
 
@@ -275,6 +276,7 @@ class TestCommandHandlers(unittest.TestCase):
             tags=["cli", "refactor"],
             due_date="2026-07-01",
             created_by="mark",
+            column=None,
         )
         result = object()
         self.svc.update_task.return_value = result
@@ -293,9 +295,40 @@ class TestCommandHandlers(unittest.TestCase):
         )
         self.renderer.render_task_update.assert_called_once_with(args, result)
 
+    def test_handle_task_update_with_column_moves_after_update(self):
+        """`task update --column` updates first, then moves using the updated task path."""
+        args = self._args(
+            path="board-a/todo/fix-parser",
+            assigned_to="philip",
+            priority="medium",
+            tags=["cli", "refactor"],
+            due_date="2026-07-01",
+            created_by="mark",
+            column="done",
+        )
+        updated = SimpleNamespace(path="/board-a/todo/fix-parser")
+        moved = object()
+        self.svc.update_task.return_value = updated
+        self.svc.move_task.return_value = moved
+
+        commands.handle_task_update(args, self.svc, self.renderer, self.json_renderer)
+
+        self.svc.update_task.assert_called_once_with(
+            "/board-a/todo/fix-parser",
+            updates=TaskUpdateParams(
+                assigned_to="philip",
+                priority="medium",
+                tags=["cli", "refactor"],
+                due_date="2026-07-01",
+                created_by="mark",
+            ),
+        )
+        self.svc.move_task.assert_called_once_with("/board-a/todo/fix-parser", "done")
+        self.renderer.render_task_update.assert_called_once_with(args, moved)
+
     def test_handle_task_update_with_explicit_empty_tags(self):
         """`task edit` preserves an explicit empty tags list."""
-        args = self._args(path="board-a/todo/fix-parser", tags=[], priority=None, title=None, assigned_to=None, due_date=None, created_by=None)
+        args = self._args(path="board-a/todo/fix-parser", tags=[], priority=None, title=None, assigned_to=None, due_date=None, created_by=None, column=None)
         result = object()
         self.svc.update_task.return_value = result
 
