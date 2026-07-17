@@ -91,5 +91,49 @@ class TestKanbanServiceResolvePath(unittest.TestCase):
         self.assertEqual(result, Path("/infra/backlog/task-two"))
 
 
+class TestKanbanServiceWorkingContextSetters(unittest.TestCase):
+    def setUp(self) -> None:
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+        temp_dir.mkdir()
+        self.repo = InMemoryRepository(root=temp_dir)
+        self.svc = KanbanService(
+            repository=self.repo,
+            index_service=IndexService(index_base=InMemoryIndex(), repository=self.repo),
+            git_service=GitService(),
+        )
+
+    def test_working_board_setter_updates_board_and_clears_column(self) -> None:
+        self.svc.update_user_context(board="alpha", column="todo")
+
+        self.svc.working_board = "beta"
+
+        self.assertEqual(self.svc.working_board, "beta")
+        self.assertIsNone(self.svc.working_column)
+
+    def test_working_board_setter_persists_userdata(self) -> None:
+        self.svc.update_user_context(board="alpha", column="todo")
+
+        self.svc.working_board = "beta"
+
+        self.assertEqual(self.svc.get_userdata("user-context.board"), "beta")
+        self.assertIsNone(self.svc.get_userdata("user-context.column"))
+
+    def test_working_column_setter_updates_column_and_keeps_board(self) -> None:
+        self.svc.update_user_context(board="alpha", column="todo")
+
+        self.svc.working_column = "doing"
+
+        self.assertEqual(self.svc.working_board, "alpha")
+        self.assertEqual(self.svc.working_column, "doing")
+
+    def test_working_column_setter_persists_userdata(self) -> None:
+        self.svc.update_user_context(board="alpha", column="todo")
+
+        self.svc.working_column = "doing"
+
+        self.assertEqual(self.svc.get_userdata("user-context.board"), "alpha")
+        self.assertEqual(self.svc.get_userdata("user-context.column"), "doing")
+
+
 if __name__ == "__main__":
     unittest.main()
