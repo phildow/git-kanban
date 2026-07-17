@@ -598,6 +598,12 @@ class TestReplRename(_InitializedReplBase):
         out = self.run_repl("rename", "/proj", "work")
         self.assertTrue(out.strip())
 
+    def test_rename_active_board_updates_userdata_board(self) -> None:
+        """Renaming the active board via REPL persists user-context.board with the new slug."""
+        self.run_repl("cd", "proj")
+        self.run_repl("rename", "/proj", "work")
+        self.assertEqual(self.repo.get_userdata("user-context.board"), "work")
+
     def test_rename_column_creates_new_directory(self) -> None:
         """rename column creates the destination directory."""
         self.run_repl("rename", "/proj/todo", "doing")
@@ -612,6 +618,13 @@ class TestReplRename(_InitializedReplBase):
         """rename column prints something."""
         out = self.run_repl("rename", "/proj/todo", "doing")
         self.assertTrue(out.strip())
+
+    def test_rename_active_column_updates_userdata_column(self) -> None:
+        """Renaming the active column via REPL persists user-context.column with the new slug."""
+        self.svc.set_board("proj")
+        self.svc.set_column("todo")
+        self.run_repl("rename", "/proj/todo", "doing")
+        self.assertEqual(self.repo.get_userdata("user-context.column"), "doing")
 
     def test_rename_task_creates_new_file(self) -> None:
         """rename task creates a file with the new slug."""
@@ -673,6 +686,13 @@ class TestReplDelete(_InitializedReplBase):
         """delete <board>/<column> prints something."""
         out = self.run_repl("delete", "proj/todo", "--force")
         self.assertTrue(out.strip())
+
+    def test_delete_active_column_clears_userdata_column(self) -> None:
+        """Deleting the active column via REPL persists user-context.column as empty."""
+        self.svc.set_board("proj")
+        self.svc.set_column("todo")
+        self.run_repl("delete", "/proj/todo", "--force")
+        self.assertIsNone(self.repo.get_userdata("user-context.column"))
 
     def test_delete_task_removes_file(self) -> None:
         """delete <board>/<column>/<task> removes the markdown file."""

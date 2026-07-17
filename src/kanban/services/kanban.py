@@ -195,14 +195,12 @@ class KanbanService:
         self._user_context.column = column
         self.set_userdata("user-context.board", board)
         self.set_userdata("user-context.column", column)
-        return self._user_context
+        return self.user_context
 
     def clear_user_context(self) -> UserContext:
         """Clear the user context with initial default values."""
-        self._user_context = UserContext()
-        self.set_userdata("user-context.board", None)
-        self.set_userdata("user-context.column", None)
-        return self._user_context
+        self.update_user_context(board=None, column=None)
+        return self.user_context
 
     # ------------------------------------------------------------------
     # Path Resolution and Completions
@@ -384,8 +382,8 @@ class KanbanService:
         board = self.repository.rename_board(old_board, new_name, new_slug=new_slug)
 
         # Keep current context in sync.
-        if self._user_context.board == old_board:
-            self._user_context.board = board.slug
+        if self.working_board == old_board:
+            self.update_user_context(board=board.slug, column=self.working_column)
 
         # Update index entries for tasks in the renamed board.
         for task in self.get_tasks(f"/{board.slug}"):
@@ -407,7 +405,7 @@ class KanbanService:
         self.repository.delete_board(board)
 
         # Clear current context if it points to the deleted board.
-        if self._user_context.board == board:
+        if self.working_board == board:
             self.clear_user_context()
 
         # Remove all index entries for tasks in the deleted board.
@@ -467,8 +465,8 @@ class KanbanService:
         renamed_column = self.repository.rename_column(board, column, new_name, new_slug=new_slug)
 
         # Update current context if it points at the renamed column.
-        if self._user_context.board == board and self._user_context.column == column:
-            self._user_context.column = renamed_column.slug
+        if self.working_board == board and self.working_column == column:
+            self.update_user_context(board=board, column=renamed_column.slug)
 
         # Update index entries for tasks in the renamed column.
         for task in self.get_tasks(f"/{board}/{new_slug}"):
@@ -501,8 +499,8 @@ class KanbanService:
         self.repository.delete_column(board, column)
 
         # If current context points at this column, clear column only.
-        if self._user_context.board == board and self._user_context.column == column:
-            self._user_context.column = None
+        if self.working_board == board and self.working_column == column:
+            self.update_user_context(board=board, column=None)
 
         # Remove all index entries for tasks in the deleted column.
         for task in tasks:

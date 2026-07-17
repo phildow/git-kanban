@@ -222,7 +222,5 @@ class TestKanbanInitializeKanbanFilesystemCustomBoard(unittest.TestCase):
         self.svc.initialize_kanban(config=self.config)
         slug = self.repo.get_board_metadata("my-project", "fields.slug")
         self.assertEqual(slug, "my-project")
-
-
 if __name__ == "__main__":
     unittest.main()
