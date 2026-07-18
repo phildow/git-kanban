@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kanban"
 version = "0.5.0"
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 dependencies = ["rich"]
 authors = [
     {name = "Philip Dow"}
@@ -33,7 +33,7 @@ where = ["src"]
 exclude = ["tests*"]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.13"
 files = ["src"]
 mypy_path = "src"
 namespace_packages = true

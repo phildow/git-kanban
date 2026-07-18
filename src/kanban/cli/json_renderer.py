@@ -7,7 +7,7 @@ import json
 from functools import wraps
 
 from ..models import Board, Column, Task, UserContext
-from ..utils.command_renderer import CommandRenderer
+from ..protocols.command_renderer import CommandRenderer
 from ..services.kanban import GitCommit, KanbanStatus
 
 
@@ -189,10 +189,10 @@ class JsonRenderer(CommandRenderer):
         }, indent=2))
 
     @_requires_verbose
-    def render_config_set(self, args: argparse.Namespace, result: None) -> None:
+    def render_set_config(self, args: argparse.Namespace, result: None) -> None:
         _ = result
         self._emit(args, json.dumps({"key": args.key, "value": args.value}))
 
     @_requires_verbose
-    def render_config_get(self, args: argparse.Namespace, result: str) -> None:
+    def render_get_config(self, args: argparse.Namespace, result: str) -> None:
         self._emit(args, json.dumps({"key": args.key, "value": result}, indent=2))

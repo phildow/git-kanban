@@ -548,27 +548,27 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_status(args, self.svc, self.renderer)
 
-        self.svc.status.assert_called_once_with(format="json")
+        self.svc.status.assert_called_once()
         self.renderer.render_status.assert_called_once_with(args, result)
 
-    def test_handle_config_set_and_get(self):
+    def test_handle_set_config_and_get(self):
         args = self._args(key="name", value="Philip")
         result = object()
-        self.svc.config_set.return_value = result
+        self.svc.set_config.return_value = result
 
-        commands.handle_config_set(args, self.svc, self.renderer)
+        commands.handle_set_config(args, self.svc, self.renderer)
 
-        self.svc.config_set.assert_called_once_with("name", "Philip")
-        self.renderer.render_config_set.assert_called_once_with(args, result)
+        self.svc.set_config.assert_called_once_with("name", "Philip")
+        self.renderer.render_set_config.assert_called_once_with(args, result)
 
         args = self._args(key="name")
         result = object()
-        self.svc.config_get.return_value = result
+        self.svc.get_config.return_value = result
 
-        commands.handle_config_get(args, self.svc, self.renderer)
+        commands.handle_get_config(args, self.svc, self.renderer)
 
-        self.svc.config_get.assert_called_once_with("name")
-        self.renderer.render_config_get.assert_called_once_with(args, result)
+        self.svc.get_config.assert_called_once_with("name")
+        self.renderer.render_get_config.assert_called_once_with(args, result)
 
 if __name__ == "__main__":
     unittest.main()

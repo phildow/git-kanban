@@ -21,8 +21,8 @@ from ..repl.commands import (
     handle_delete,
     handle_column_create,
     handle_column_reorder,
-    handle_config_get,
-    handle_config_set,
+    handle_get_config,
+    handle_set_config,
     handle_log,
     handle_rename,
     handle_search,
@@ -228,12 +228,12 @@ def _add_config_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("key", metavar="KEY", help="Configuration key (e.g. name)")
     p.add_argument("value", metavar="VALUE", help="Configuration value")
     _add_global_flags(p)
-    p.set_defaults(func=handle_config_set)
+    p.set_defaults(func=handle_set_config)
 
     p = config_sub.add_parser("get", help="Get a configuration value")
     p.add_argument("key", metavar="KEY", help="Configuration key (e.g. name)")
     _add_global_flags(p)
-    p.set_defaults(func=handle_config_get)
+    p.set_defaults(func=handle_get_config)
 
 
 def _add_cd_parser(subparsers: argparse._SubParsersAction) -> None:

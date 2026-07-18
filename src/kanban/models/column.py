@@ -5,9 +5,10 @@ from pathlib import Path
 from uuid import UUID
 
 from ..models.slug import Slug
+from ..protocols.sluggable import Sluggable
 
 @dataclass
-class Column:
+class Column(Sluggable):
     """
     A single workflow column within a board.
 

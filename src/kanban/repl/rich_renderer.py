@@ -6,6 +6,7 @@ import argparse
 from functools import wraps
 import logging
 import shutil
+from typing import Any
 
 from rich.console import Console, ConsoleOptions, RenderResult
 from rich.markdown import Heading, Markdown
@@ -14,7 +15,7 @@ from rich.text import Text
 from rich import box, print
 
 from ..models import UserContext, Board, Column, Task
-from ..utils.command_renderer import CommandRenderer
+from ..protocols.command_renderer import CommandRenderer
 from ..repl.render_helper import RenderHelper
 from ..services.kanban import GitCommit, KanbanStatus
 
@@ -47,7 +48,7 @@ class RichRenderer(CommandRenderer):
 	def __init__(self, render_helper: RenderHelper):
 		self.render_helper = render_helper
 
-	def _emit(self, args: argparse.Namespace, value: object) -> None:
+	def _emit(self, args: argparse.Namespace, value: Any) -> None:
 		if value is None:
 			return
 		self.console.print(value)
@@ -376,13 +377,18 @@ class RichRenderer(CommandRenderer):
 		self._emit(args, "")
 		self._emit(args, table)
 		self._emit(args, "")
+
+		body: str | Text | KanbanMarkdown = ""
+
 		if not result.body:
 			body = ""
 		elif args.plain:
 			body = Text(result.body)
 		else:
 			body = KanbanMarkdown(result.body, justify="left")
+			
 		self._emit(args, body)
+
 		self._emit(args, "")
 
 	def render_task_edit(self, args: argparse.Namespace, result: Task) -> None:
@@ -439,8 +445,8 @@ class RichRenderer(CommandRenderer):
 	def render_status(self, args: argparse.Namespace, result: KanbanStatus) -> None:
 		self._emit(args, result)
 
-	def render_config_set(self, args: argparse.Namespace, result: None) -> None:
+	def render_set_config(self, args: argparse.Namespace, result: None) -> None:
 		self._emit(args, result)
 
-	def render_config_get(self, args: argparse.Namespace, result: str) -> None:
+	def render_get_config(self, args: argparse.Namespace, result: str) -> None:
 		self._emit(args, result)

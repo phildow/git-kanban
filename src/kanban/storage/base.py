@@ -43,7 +43,7 @@ class RepositoryError(Exception):
 
 class RepositoryAlreadyInitialized(RepositoryError):
     """Raised when an attempt is made to initialize an already-initialized repository."""
-    def __init__(self, path: str):
+    def __init__(self, path: Path):
         super().__init__(f"Repository already initialized at {path}")
         self.path = path
 
@@ -293,7 +293,7 @@ class KanbanRepository(ABC):
         """
 
     @abstractmethod
-    def get_task(self, board: Slug, column: Slug, filename: str) -> Task:
+    def get_task(self, board: Slug, column: Slug, filename: Slug) -> Task:
         """
         Return a single task by its exact board/column/filename path.
 
@@ -370,7 +370,7 @@ class KanbanRepository(ABC):
         """
 
     @abstractmethod
-    def reorder_task(self, path: str, op: str) -> Task:
+    def reorder_task(self, path: Task, op: str) -> Task:
         """
         Bump a task's priority up or down or to the top or bottom.
         

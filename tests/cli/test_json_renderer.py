@@ -541,34 +541,34 @@ class TestJsonRendererConfig(unittest.TestCase):
     def setUp(self) -> None:
         self.r = JsonRenderer()
 
-    def test_config_get_silent_without_verbose(self) -> None:
-        """render_config_get emits nothing when --verbose is not set."""
-        out = _capture(lambda: self.r.render_config_get(_args(verbose=False, key="name"), "alice"))
+    def test_get_config_silent_without_verbose(self) -> None:
+        """render_get_config emits nothing when --verbose is not set."""
+        out = _capture(lambda: self.r.render_get_config(_args(verbose=False, key="name"), "alice"))
         self.assertEqual(out, "")
 
-    def test_config_get_key_field(self) -> None:
-        """render_config_get emits the key when verbose."""
-        out = _capture(lambda: self.r.render_config_get(_args(verbose=True, key="name"), "alice"))
+    def test_get_config_key_field(self) -> None:
+        """render_get_config emits the key when verbose."""
+        out = _capture(lambda: self.r.render_get_config(_args(verbose=True, key="name"), "alice"))
         self.assertEqual(json.loads(out)["key"], "name")
 
-    def test_config_get_value_field(self) -> None:
-        """render_config_get emits the value when verbose."""
-        out = _capture(lambda: self.r.render_config_get(_args(verbose=True, key="name"), "alice"))
+    def test_get_config_value_field(self) -> None:
+        """render_get_config emits the value when verbose."""
+        out = _capture(lambda: self.r.render_get_config(_args(verbose=True, key="name"), "alice"))
         self.assertEqual(json.loads(out)["value"], "alice")
 
-    def test_config_set_silent_without_verbose(self) -> None:
-        """render_config_set emits nothing when --verbose is not set."""
-        out = _capture(lambda: self.r.render_config_set(_args(verbose=False, key="name", value="bob"), None))
+    def test_set_config_silent_without_verbose(self) -> None:
+        """render_set_config emits nothing when --verbose is not set."""
+        out = _capture(lambda: self.r.render_set_config(_args(verbose=False, key="name", value="bob"), None))
         self.assertEqual(out, "")
 
-    def test_config_set_key_field(self) -> None:
-        """render_config_set emits the key when verbose."""
-        out = _capture(lambda: self.r.render_config_set(_args(verbose=True, key="name", value="bob"), None))
+    def test_set_config_key_field(self) -> None:
+        """render_set_config emits the key when verbose."""
+        out = _capture(lambda: self.r.render_set_config(_args(verbose=True, key="name", value="bob"), None))
         self.assertEqual(json.loads(out)["key"], "name")
 
-    def test_config_set_value_field(self) -> None:
-        """render_config_set emits the value when verbose."""
-        out = _capture(lambda: self.r.render_config_set(_args(verbose=True, key="name", value="bob"), None))
+    def test_set_config_value_field(self) -> None:
+        """render_set_config emits the value when verbose."""
+        out = _capture(lambda: self.r.render_set_config(_args(verbose=True, key="name", value="bob"), None))
         self.assertEqual(json.loads(out)["value"], "bob")
 
 

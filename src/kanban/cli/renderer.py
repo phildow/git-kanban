@@ -6,7 +6,7 @@ import argparse
 from functools import wraps
 
 from ..models import Board, Column, Task
-from ..utils.command_renderer import CommandRenderer
+from ..protocols.command_renderer import CommandRenderer
 from ..services.kanban import GitCommit, KanbanStatus
 
 
@@ -250,9 +250,9 @@ class Renderer(CommandRenderer):
 		self._emit(args, result)
 
 	@_requires_verbose
-	def render_config_set(self, args: argparse.Namespace, result: None) -> None:
+	def render_set_config(self, args: argparse.Namespace, result: None) -> None:
 		self._emit(args, result)
 
 	@_requires_verbose
-	def render_config_get(self, args: argparse.Namespace, result: str) -> None:
+	def render_get_config(self, args: argparse.Namespace, result: str) -> None:
 		self._emit(args, result)

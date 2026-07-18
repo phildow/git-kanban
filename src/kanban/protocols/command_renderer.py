@@ -108,9 +108,9 @@ class CommandRenderer(ABC):
         ...
 
     @abstractmethod
-    def render_config_set(self, args: argparse.Namespace, result) -> None:
+    def render_set_config(self, args: argparse.Namespace, result) -> None:
         ...
 
     @abstractmethod
-    def render_config_get(self, args: argparse.Namespace, result) -> None:
+    def render_get_config(self, args: argparse.Namespace, result) -> None:
         ...

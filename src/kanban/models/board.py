@@ -5,9 +5,10 @@ from pathlib import Path
 from uuid import UUID
 
 from ..models.slug import Slug
+from ..protocols.sluggable import Sluggable
 
 @dataclass
-class Board:
+class Board(Sluggable):
     """A kanban board containing an ordered list of columns."""
     
     id:   UUID

@@ -7,9 +7,10 @@ from uuid import UUID
 
 from ..models.priority import Priority
 from ..models.slug import Slug
+from ..protocols.sluggable import Sluggable
 
 @dataclass
-class Task:
+class Task(Sluggable):
     """
     Canonical task entity used by repository and service layers.
 

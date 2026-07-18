@@ -11,6 +11,7 @@ from uuid import uuid4
 from ..index.query import SearchQuery, SortField
 from ..models import Board, Column, Priority, Slug, Task, TaskFilter, UserContext
 from ..models.priority import PRIORITY_ORDER
+from ..protocols.completion_data_source import CompletionDataSource
 from ..storage.base import KanbanRepository, ColumnNotFound, BoardNotFound
 from ..storage.seeds import BootstrapConfig, DEFAULT_COLUMNS
 from ..services.git import GitService
@@ -79,7 +80,7 @@ def _task_matches_filter(task: Task, filter: TaskFilter) -> bool:
 
 # ── KanbanService ─────────────────────────────────────────────────────────────
 
-class KanbanService:
+class KanbanService(CompletionDataSource):
 
     def __init__(self, repository: KanbanRepository, index_service: IndexService, git_service: GitService) -> None:
         """
@@ -204,8 +205,8 @@ class KanbanService:
         """Set the board/column context"""
         self._user_context.board = board
         self._user_context.column = column
-        self.set_userdata("user-context.board", board)
-        self.set_userdata("user-context.column", column)
+        self.set_userdata("user-context.board", str(board) if board else None)
+        self.set_userdata("user-context.column", str(column) if column else None)
         return self.user_context
 
     def clear_user_context(self) -> UserContext:
@@ -300,7 +301,7 @@ class KanbanService:
         if not board:
             raise BoardNotFound(board)
 
-        self.update_user_context(board=board.slug, column=None)
+        self.working_board = board.slug
         return self.user_context
 
     def set_column(self, column: str) -> UserContext:
@@ -315,7 +316,7 @@ class KanbanService:
         if not column:
             raise ColumnNotFound(board, column)
 
-        self.update_user_context(board=board, column=column.slug)
+        self.working_column = column.slug
         return self.user_context
 
     # ── All Items ─────────────────────────────────────────────────────────────
@@ -897,10 +898,8 @@ class KanbanService:
 
     def log(
         self,
-        board:       str | None = None,
-        column:      str | None = None,
-        title:       str | None = None,
-        limit:       int = 20,
+        path:   str | None = None,
+        limit:  int = 20,
     ) -> list[GitCommit]:
         """
         Return structured commit history, optionally scoped to a board, column,
@@ -928,13 +927,14 @@ class KanbanService:
         """
         return self.repository.get_config(keypath)
 
-    def set_config(self, keypath: str, value: str) -> None:
+    def set_config(self, keypath: str, value: str) -> str | None:
         """
         Persist a configuration value to .kanban/.config under the given key.
         Raises InvalidConfigKey if the key is not in the supported set.  No
         git commit — config is local working state, like current context.
         """
         self.repository.set_config(keypath, value)
+        return self.get_config(keypath)
 
     # ── Userdata ──────────────────────────────────────────────────────────────
 
@@ -962,7 +962,6 @@ class KanbanService:
         index freshness, and whether there are uncommitted changes in git.
         """
         raise NotImplementedError()
-
 
     # ── Internal helpers ──────────────────────────────────────────────────────
 

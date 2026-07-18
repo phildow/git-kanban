@@ -19,8 +19,8 @@ from kanban.cli.commands import (
     handle_column_list,
     handle_column_rename,
     handle_column_reorder,
-    handle_config_get,
-    handle_config_set,
+    handle_get_config,
+    handle_set_config,
     handle_init,
     handle_log,
     handle_repl,
@@ -264,11 +264,11 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         args = cli_parser.parse_args(["config", "set", "name", "Philip"])
         self.assertEqual(args.key, "name")
         self.assertEqual(args.value, "Philip")
-        self.assertIs(args.func, handle_config_set)
+        self.assertIs(args.func, handle_set_config)
 
         args = cli_parser.parse_args(["config", "get", "name"])
         self.assertEqual(args.key, "name")
-        self.assertIs(args.func, handle_config_get)
+        self.assertIs(args.func, handle_get_config)
 
 
     def test_task_rename_path_new_name_and_handler(self) -> None:

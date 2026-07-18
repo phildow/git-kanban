@@ -8,7 +8,7 @@ import shutil
 from warnings import deprecated
 
 from ..models import UserContext, Board, Column, Task
-from ..utils.command_renderer import CommandRenderer
+from ..protocols.command_renderer import CommandRenderer
 from ..repl.render_helper import RenderHelper
 from ..services.kanban import GitCommit, KanbanStatus
 
@@ -409,8 +409,8 @@ class Renderer(CommandRenderer):
 	def render_status(self, args: argparse.Namespace, result: KanbanStatus) -> None:
 		self._emit(args, result)
 
-	def render_config_set(self, args: argparse.Namespace, result: None) -> None:
+	def render_set_config(self, args: argparse.Namespace, result: None) -> None:
 		self._emit(args, result)
 
-	def render_config_get(self, args: argparse.Namespace, result: str) -> None:
+	def render_get_config(self, args: argparse.Namespace, result: str) -> None:
 		self._emit(args, result)

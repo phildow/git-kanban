@@ -30,51 +30,14 @@ from __future__ import annotations
 
 import argparse
 import shlex
-from typing import Protocol
+
+from ..protocols.sluggable import Sluggable
+from ..protocols.completion_data_source import CompletionDataSource
 
 # Positional/flag dest names that complete as a full board/column/task
 # path rather than a single segment. "path" is the parser's own
 # convention for fully-specified paths.
 PATH_LIKE_DESTS = frozenset({"path"})
-
-
-class Sluggable(Protocol):
-    """A task-like object completion can read a filename slug from."""
-
-    slug: str
-
-
-class CompletionDataSource(Protocol):
-    """The subset of KanbanService that path completion needs.
-
-    Matches the existing ``get_boards``/``get_columns``/``get_tasks``
-    methods on KanbanService. Defined as a Protocol so tests can supply
-    a lightweight fake instead of a real service.
-    """
-
-    def get_boards(self) -> list[Sluggable]:
-        ...
-
-    def get_columns(self, board: str) -> list[Sluggable]:
-        ...
-
-    def get_tasks(self, path: str | None = None) -> list[Sluggable]:
-        ...
-
-    def path_components(self, path: str | None = None) -> tuple[str | None, str | None, str | None]:
-        ...
-
-    def get_tags(self, board: str | None = None) -> list[str]:
-        ...
-
-    def get_assigned_tos(self, board: str | None = None) -> list[str]:
-        ...
-
-
-    @property
-    def working_board(self) -> str | None:
-        ...
-
 
 class CompletionEngine:
     """Computes tab-completion candidates for a REPL input line.

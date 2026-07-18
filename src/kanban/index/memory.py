@@ -156,7 +156,7 @@ def _value_key(sort: SortField) -> Callable[[Task], Any]:
         case SortField.TITLE:
             return lambda t: t.title.lower()
         case SortField.PRIORITY:
-            return lambda t: PRIORITY_ORDER.get(t.priority, 0)
+            return lambda t: PRIORITY_ORDER.get(t.priority, 0) if t.priority is not None else 0
         case SortField.DUE_DATE:
             return lambda t: t.due_date or date.min
         case SortField.CREATED_AT:
@@ -164,7 +164,7 @@ def _value_key(sort: SortField) -> Callable[[Task], Any]:
         case SortField.UPDATED_AT:
             return lambda t: t.updated_at or _DATETIME_MIN
         case SortField.CREATED_BY:
-            return lambda t: t.created_by.lower()
+            return lambda t: t.created_by.lower() if t.created_by is not None else ""
 
 
 def _none_key(sort: SortField) -> Callable[[Task], bool]:

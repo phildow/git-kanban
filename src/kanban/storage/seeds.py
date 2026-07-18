@@ -36,10 +36,10 @@ class BootstrapConfig(TypedDict, total=False):
 
 
 DEFAULT_COLUMNS: list[tuple[str, Slug]] = [
-    ("To Do", "todo"),
-    ("In Progress", "in-progress"),
-    ("In Review", "in-review"),
-    ("Done", "done"),
+    ("To Do", Slug("todo")),
+    ("In Progress", Slug("in-progress")),
+    ("In Review", Slug("in-review")),
+    ("Done", Slug("done")),
 ]
 
 BOOTSTRAP_CONFIG: BootstrapConfig = {

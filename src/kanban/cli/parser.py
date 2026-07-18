@@ -17,8 +17,8 @@ from ..cli.commands import (
     handle_column_list,
     handle_column_rename,
     handle_column_reorder,
-    handle_config_get,
-    handle_config_set,
+    handle_get_config,
+    handle_set_config,
     handle_init,
     handle_log,
     handle_repl,
@@ -331,13 +331,13 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("value", metavar="VALUE", help="Configuration value")
     _add_format_arg(p)
     _add_global_flags(p)
-    p.set_defaults(func=handle_config_set)
+    p.set_defaults(func=handle_set_config)
 
     p = config_sub.add_parser("get", help="Get a configuration value")
     p.add_argument("key", metavar="KEY", help="Configuration key (e.g. name)")
     _add_format_arg(p)
     _add_global_flags(p)
-    p.set_defaults(func=handle_config_get)
+    p.set_defaults(func=handle_get_config)
 
     # repl
     p = subparsers.add_parser("repl", help="Start an interactive kanban shell")

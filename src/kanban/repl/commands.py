@@ -14,7 +14,7 @@ import argparse
 import logging
 
 from ..models import Board, Column, Task
-from ..utils.command_renderer import CommandRenderer
+from ..protocols.command_renderer import CommandRenderer
 from ..repl.command_helpers import (
 	build_task_filter,
     parse_priority,
@@ -230,16 +230,16 @@ def handle_log(args: argparse.Namespace, svc: KanbanService, renderer: CommandRe
 
 
 def handle_status(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	result = svc.status(format=args.format)
+	result = svc.status()
 	renderer.render_status(args, result)
 
 
-def handle_config_set(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	result = svc.config_set(args.key, args.value)
-	renderer.render_config_set(args, result)
+def handle_set_config(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
+	result = svc.set_config(args.key, args.value)
+	renderer.render_set_config(args, result)
 
 
-def handle_config_get(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	result = svc.config_get(args.key)
-	renderer.render_config_get(args, result)
+def handle_get_config(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
+	result = svc.get_config(args.key)
+	renderer.render_get_config(args, result)
 

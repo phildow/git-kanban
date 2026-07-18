@@ -78,6 +78,8 @@ def get_repository(typ: str) -> KanbanRepository:
         return InMemoryRepository(root=cwd)
     elif typ == FILESYSTEM:
         return FilesystemRepository(root=cwd)
+    else:
+        raise ValueError(f"Unknown repository type: {typ}")
     
 
 if __name__ == "__main__":

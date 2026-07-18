@@ -10,6 +10,7 @@ import signal
 
 from argparse import Namespace
 from contextlib import contextmanager
+import readline
 
 from ..repl.completion_engine import CompletionEngine
 from ..repl.parser import build_parser
@@ -23,12 +24,7 @@ from ..storage.base import (
     TaskAlreadyExists,
     TaskNotFound,
 )
-
-try:
-    import readline
-except ImportError:  # pragma: no cover
-    readline = None
-
+from ..protocols.command_renderer import CommandRenderer
 
 class _ReplExit(Exception):
     """Internal sentinel exception used to terminate the REPL loop."""
@@ -81,7 +77,7 @@ def _prompt(svc: KanbanService) -> str:
     return f"kanban ({svc.working_path}) > "
 
 
-def _initialize_kanban(svc: KanbanService, renderer: object) -> bool:
+def _initialize_kanban(svc: KanbanService, renderer: CommandRenderer) -> bool:
     """Prompt the user to initialize a kanban repository if not already initialized."""
     if svc.is_initialized:
         return True
@@ -94,12 +90,12 @@ def _initialize_kanban(svc: KanbanService, renderer: object) -> bool:
     if should_init in {"y", "yes"}:
         try:
             svc.initialize_kanban()
-            renderer.render_init(None, True)
+            renderer.render_init(Namespace(), True)
             return True
         except Exception as exc:
             exc_desc = str(exc) or exc.__class__.__name__
             logging.error("Failed to initialize repository: %s", exc_desc)
-            renderer.render_init(None, False)
+            renderer.render_init(Namespace(), False)
             return False
     return False
 
@@ -192,7 +188,7 @@ def _save_command_history(svc: KanbanService) -> None:
         logging.error("Failed to save REPL history file: %s", exc_desc)
 
 
-def run_repl(*, svc: KanbanService, renderer: object) -> None:
+def run_repl(*, svc: KanbanService, renderer: CommandRenderer) -> None:
     """Run a simple command loop that reuses the CLI parser/handlers."""
 
     if not _initialize_kanban(svc, renderer):

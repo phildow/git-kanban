@@ -3,6 +3,7 @@ from __future__ import annotations
 import configparser
 from os import name
 import shutil
+from typing import cast
 
 from datetime import datetime, timezone
 from pathlib import Path
@@ -51,15 +52,15 @@ class FilesystemRepository(KanbanRepository):
     
     @property
     def config_file(self) -> Path:
-        return self.kanban_dir / "config"
+        return cast(Path, self.kanban_dir) / "config"
 
     @property
     def userdata_file(self) -> Path:
-        return self.kanban_dir / "userdata"
+        return cast(Path, self.kanban_dir) / "userdata"
 
     @property
     def index_file(self) -> Path:
-        return self.kanban_dir / "index.db"
+        return cast(Path, self.kanban_dir) / "index.db"
 
     # ------------------------------------------------------------------
     # Initialization (setup)
@@ -67,13 +68,14 @@ class FilesystemRepository(KanbanRepository):
 
     @property
     def is_initialized(self) -> bool:
-        return self.kanban_dir.exists() and self.kanban_store_dir.exists()
+        kanban_dir = cast(Path, self.kanban_dir)
+        return kanban_dir.exists() and self.kanban_store_dir.exists()
 
     def init_storage(self) -> None:
         if self.is_initialized:
             raise RepositoryAlreadyInitialized(self.root)
 
-        kanban_dir = self.kanban_dir
+        kanban_dir = cast(Path, self.kanban_dir)
         kanban_dir.mkdir()
         (kanban_dir / "history").touch()
         self.config_file.touch()
@@ -113,7 +115,7 @@ class FilesystemRepository(KanbanRepository):
                 for f in col.iterdir()
                 if f.is_file() and not f.name.startswith(".")
             )
-            slug = entry.name
+            slug = Slug(entry.name)
             name = self.get_board_metadata(slug, "fields.name")
             slug = self.get_board_metadata(slug, "fields.slug")
             uuid = self.get_board_metadata(slug, "fields.id")   
