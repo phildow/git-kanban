@@ -87,26 +87,21 @@ def _add_task_create_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("-w", "--assigned-to", dest="assigned_to", metavar="NAME", help="Assign task to a user")
     parser.add_argument("-p", "--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
     parser.add_argument("-t", "--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
-    parser.add_argument("--due-date", dest="due_date", metavar="DATE", help="Due date (YYYY-MM-DD)")
-    parser.add_argument("--created-by", dest="created_by", metavar="NAME", help="Creator name")
+    parser.add_argument("-d", "--due-date", dest="due_date", metavar="DATE", help="Due date (YYYY-MM-DD)")
+    parser.add_argument("-b", "--created-by", dest="created_by", metavar="NAME", help="Creator name")
 
 
 def _add_task_update_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("-w", "--assigned-to", dest="assigned_to", metavar="NAME", help="Assign task to a user")
     parser.add_argument("-p", "--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
     parser.add_argument("-t", "--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
-    parser.add_argument("--due-date", dest="due_date", metavar="DATE", help="Due date (YYYY-MM-DD)")
-    parser.add_argument("--created-by", dest="created_by", metavar="NAME", help="Creator name")
+    parser.add_argument("-d", "--due-date", dest="due_date", metavar="DATE", help="Due date (YYYY-MM-DD)")
+    parser.add_argument("-b", "--created-by", dest="created_by", metavar="NAME", help="Creator name")
 
 
 def _add_list_args(parser: argparse.ArgumentParser, sort_choices: list[str]) -> None:
     parser.add_argument("-s", "--sort", choices=sort_choices, metavar="FIELD", help="Field to sort by")
     parser.add_argument("-r", "--reverse", action="store_true", default=False, help="Reverse the sort order")
-
-# UNUSED
-def _add_help_message(parser: argparse.ArgumentParser) -> None:
-    """Print the help message for the REPL."""
-    parser.add_argument("--h", action="help", default=argparse.SUPPRESS, help="Display this custom help message and exit.")
 
 # ---------------------------------------------------------------------------
 # Verb-first subcommands
@@ -132,7 +127,7 @@ def _add_create_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # create task
     p = create_sub.add_parser("task", aliases=["t"], help="Create a new task")
-    p.add_argument("column", metavar="COLUMN", help="Column in the active board to create the task in")
+    p.add_argument("column", metavar="COLUMN", help="Column of the active board to create the task in")
     p.add_argument("title", metavar="TITLE", help="Title of the new task")
     p.add_argument("--edit", action="store_true", default=False, help="Open the new task in the editor after creating it")
     _add_task_update_args(p)
@@ -141,8 +136,15 @@ def _add_create_parser(subparsers: argparse._SubParsersAction) -> None:
 
 
 def _add_list_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser("list", aliases=["ls"], help="List all boards, columns, or tasks in the current context or at a specified path")
-    p.add_argument("path", metavar="BOARD[/COLUMN]", nargs="?", help="Board or board/column to list tasks for (optional, falls back to the active board)")
+    examples = """
+examples:
+  ls
+  ls column
+  ls /board
+  ls /board/column
+    """
+    p = subparsers.add_parser("list", aliases=["ls"], help="List all boards, columns, or tasks in the current context or at a specified path", epilog=examples, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument("path", metavar="PATH", nargs="?", help="The board or column to list tasks for (optional, falls back to the active board)")
     p.add_argument("--slugs", action="store_true", default=False, help="Render a compact list of slugs only, like filenames")
     _add_list_args(p, SORT_TASK_CHOICES)
     _add_task_filter_args(p)
@@ -151,17 +153,25 @@ def _add_list_parser(subparsers: argparse._SubParsersAction) -> None:
 
 
 def _add_delete_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser("delete", aliases=["del", "rm"], help="Delete a board, column, or task")
+    examples = """
+examples:
+  delete column/task
+  delete column
+  delete /board
+    """
+    p = subparsers.add_parser("delete", aliases=["del", "rm"], help="Delete a board, column, or task", epilog=examples, formatter_class=argparse.RawDescriptionHelpFormatter)
     _add_global_flags(p)
-    group = p.add_mutually_exclusive_group(required=True)
-    group.add_argument("path", metavar="BOARD[/COLUMN][/TASK]", nargs="?", help="Board, column, or task to delete")
+    # group = p.add_mutually_exclusive_group(required=True)
+    # group.add_argument("path", metavar="COLUMN[/TASK]", nargs="?", help="The column or task in the active board to delete")
+    # group.add_argument("-b", "--board", dest="board", metavar="BOARD", help="The board to delete")
+    p.add_argument("path", metavar="COLUMN[/TASK]", help="The column or task to delete")
     p.add_argument("-f", "--force", action="store_true", default=False, help="Skip confirmation prompt")
     p.set_defaults(func=handle_delete)
 
 
 def _add_rename_parser(subparsers: argparse._SubParsersAction) -> None:
     rename_parser = subparsers.add_parser("rename", help="Rename a board, column, or task")
-    rename_parser.add_argument("path", metavar="BOARD/COLUMN/TASK", help="The board, column, or task to rename")
+    rename_parser.add_argument("path", metavar="/BOARD[/COLUMN[/TASK]]", help="The board, column, or task to rename")
     rename_parser.add_argument("new_name", metavar="NEW-NAME", help="The new name for the board, column, or task")
     _add_global_flags(rename_parser)
     rename_parser.set_defaults(func=handle_rename)
@@ -261,7 +271,7 @@ def _add_columns_parser(subparsers: argparse._SubParsersAction) -> None:
 def _add_tasks_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("tasks", help="List tasks, optionally scoped to a board or board/column")
     p.add_argument("path", metavar="BOARD[/COLUMN]", nargs="?",
-                    help="Board or board/column to list tasks for (optional, falls back to every task in the active board)")
+                    help="The board and/or column to list tasks for (optional, falls back to every task in the active board)")
     p.add_argument("--slugs", action="store_true", default=False, help="Render a compact list of slugs only, like filenames")
     p.add_argument("-x", "--exclude", metavar="COLUMN", action="append", dest="column", help="Exclude tasks in this column (repeatable)")
     _add_list_args(p, SORT_TASK_CHOICES)

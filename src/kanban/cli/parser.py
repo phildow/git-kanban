@@ -44,7 +44,7 @@ PRIORITY_CHOICES = [p.value for p in Priority]
 
 def _add_global_flags(parser: argparse.ArgumentParser) -> None:
     # parser.add_argument("--color", action="store_true", default=False, help="Enable colored output")
-    parser.add_argument("--verbose", action="store_true", default=False, help="Enable verbose output")
+    parser.add_argument("-v","--verbose", action="store_true", default=False, help="Enable verbose output")
 
 
 def _add_format_arg(parser: argparse.ArgumentParser) -> None:
@@ -77,8 +77,8 @@ def _add_task_create_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("-w", "--assigned-to", dest="assigned_to", metavar="NAME", help="Assign task to a user")
     parser.add_argument("-p", "--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
     parser.add_argument("-t", "--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
-    parser.add_argument("--due-date", dest="due_date", metavar="DATE", help="Due date (YYYY-MM-DD)")
-    parser.add_argument("--created-by", dest="created_by", metavar="NAME", help="Creator name")
+    parser.add_argument("-d", "--due-date", dest="due_date", metavar="DATE", help="Due date (YYYY-MM-DD)")
+    parser.add_argument("-b","--created-by", dest="created_by", metavar="NAME", help="Creator name")
 
 
 def _add_task_update_args(parser: argparse.ArgumentParser) -> None:
@@ -86,8 +86,8 @@ def _add_task_update_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("-p", "--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
     parser.add_argument("-t", "--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
     parser.add_argument("-c", "--column", dest="column", metavar="COLUMN", help="Move the task to this column")
-    parser.add_argument("--due-date", dest="due_date", metavar="DATE", help="Due date (YYYY-MM-DD)")
-    parser.add_argument("--created-by", dest="created_by", metavar="NAME", help="Creator name")
+    parser.add_argument("-d", "--due-date", dest="due_date", metavar="DATE", help="Due date (YYYY-MM-DD)")
+    parser.add_argument("-b", "--created-by", dest="created_by", metavar="NAME", help="Creator name")
 
 
 # ---------------------------------------------------------------------------
@@ -115,7 +115,7 @@ def _add_board_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # board rename
     p = board_sub.add_parser("rename", help="Rename a board")
-    p.add_argument("board", metavar="BOARD", help="Current board name")
+    p.add_argument("board", metavar="BOARD", help="Fully qualified /board path")
     p.add_argument("new_name", metavar="NEW-NAME", help="New board name")
     _add_format_arg(p)
     _add_global_flags(p)
@@ -123,7 +123,7 @@ def _add_board_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # board delete
     p = board_sub.add_parser("delete", help="Delete a board")
-    p.add_argument("board", metavar="BOARD", help="Board name")
+    p.add_argument("board", metavar="BOARD", help="Fully qualified /board path")
     p.add_argument("-f", "--force", action="store_true", default=False, help="Skip confirmation prompt")
     _add_format_arg(p)
     _add_global_flags(p)
@@ -142,14 +142,14 @@ def _add_column_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # column list
     p = col_sub.add_parser("list", help="List columns")
-    p.add_argument("board", metavar="BOARD", help="Board name")
+    p.add_argument("board", metavar="BOARD", help="Fully qualified /board path")
     _add_table_format_arg(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_column_list)
 
     # column create
     p = col_sub.add_parser("create", help="Create a new column")
-    p.add_argument("path", metavar="BOARD", help="Absolute board path")
+    p.add_argument("path", metavar="BOARD", help="Fully qualified /board path")
     p.add_argument("title", metavar="TITLE", help="Column title")
     _add_format_arg(p)
     _add_global_flags(p)
@@ -157,7 +157,7 @@ def _add_column_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # column rename
     p = col_sub.add_parser("rename", help="Rename a column")
-    p.add_argument("path", metavar="BOARD/COLUMN", help="Column path")
+    p.add_argument("path", metavar="BOARD/COLUMN", help="Fully qualified /board/column path")
     p.add_argument("new_name", metavar="NEW-NAME", help="New column name")
     _add_format_arg(p)
     _add_global_flags(p)
@@ -165,7 +165,7 @@ def _add_column_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # column reorder
     p = col_sub.add_parser("reorder", help="Move a column to a position")
-    p.add_argument("path", metavar="BOARD/COLUMN", help="Column path")
+    p.add_argument("path", metavar="BOARD/COLUMN", help="Fully qualified /board/column path")
     p.add_argument("position", metavar="POSITION", type=int, help="1-based target position")
     _add_format_arg(p)
     _add_global_flags(p)
@@ -173,7 +173,7 @@ def _add_column_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # column delete
     p = col_sub.add_parser("delete", help="Delete a column")
-    p.add_argument("path", metavar="BOARD/COLUMN", help="Column path")
+    p.add_argument("path", metavar="BOARD/COLUMN", help="Fully qualified /board/column path")
     p.add_argument("-f", "--force", action="store_true", default=False, help="Skip confirmation prompt")
     _add_format_arg(p)
     _add_global_flags(p)
@@ -192,7 +192,7 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # task list
     p = task_sub.add_parser("list", help="List tasks")
-    p.add_argument("path", metavar="/BOARD[/COLUMN]", help="Board/column path")
+    p.add_argument("path", metavar="BOARD[/COLUMN]", help="Fuly qualifed /board or /board/column path")
     p.add_argument("-x", "--exclude", metavar="COLUMN", action="append", dest="column", help="Exclude tasks in this column (repeatable)")
     _add_list_format_and_sort_args(p, SORT_TASK_CHOICES)
     _add_task_filter_args(p)
@@ -201,7 +201,7 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # task create
     p = task_sub.add_parser("create", help="Create a new task")
-    p.add_argument("path", metavar="/BOARD/COLUMN", help="Absolute board/column path")
+    p.add_argument("path", metavar="BOARD/COLUMN", help="Fully qualified /board/column path")
     p.add_argument("title", metavar="TITLE", help="Task title")
     _add_task_create_args(p)
     _add_format_arg(p)
@@ -210,21 +210,21 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # task show
     p = task_sub.add_parser("show", help="Show task details")
-    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
+    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified /board/column/task path")
     _add_format_arg(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_task_show)
 
     # task edit
     p = task_sub.add_parser("edit", help="Open task in editor")
-    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
+    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified /board/column/task path")
     _add_format_arg(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_task_edit)
 
     # task update
     p = task_sub.add_parser("update", help="Update task fields")
-    p.add_argument("path", metavar="BOARD/COLUMN/TITLE", help="Fully qualified task path")
+    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified /board/column/task path")
     _add_task_update_args(p)
     _add_format_arg(p)
     _add_global_flags(p)
@@ -232,15 +232,15 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # task delete
     p = task_sub.add_parser("delete", help="Delete a task")
-    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
+    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified /board/column/task path")
     p.add_argument("-f", "--force", action="store_true", default=False, help="Skip confirmation prompt")
     _add_format_arg(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_task_delete)
 
-    # task reneame
+    # task rename
     p = task_sub.add_parser("rename", help="Rename a task")
-    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
+    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified /board/column/task path")
     p.add_argument("new_name", metavar="NEW-NAME", help="New task name")
     _add_format_arg(p)
     _add_global_flags(p)
@@ -248,7 +248,7 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # task move
     p = task_sub.add_parser("move", help="Move task to another column")
-    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
+    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified /board/column/task path")
     group = p.add_mutually_exclusive_group()
     group.add_argument("column", type=str, nargs="?", help="The destination column")
     group.add_argument("--top", action="store_true", default=False, help="The top of the current column")
@@ -261,7 +261,7 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # task assign
     p = task_sub.add_parser("assign", help="Assign a task to a user")
-    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
+    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified /board/column/task path")
     p.add_argument("assigned_to", metavar="USER", help="User to assign the task to")
     _add_format_arg(p)
     _add_global_flags(p)
@@ -310,7 +310,7 @@ def build_parser() -> argparse.ArgumentParser:
     # log
     p = subparsers.add_parser("log", help="Show git log for a task or scope")
     p.add_argument("path", metavar="[BOARD/COLUMN/]TASK", nargs="?",
-                   help="Task path or title (optional)")
+                   help="Fully qualified /board/column/task path (optional)")
     p.add_argument("--limit", metavar="N", type=int, help="Maximum number of log entries to show")
     _add_format_arg(p)
     _add_global_flags(p)

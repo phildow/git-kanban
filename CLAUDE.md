@@ -379,19 +379,18 @@ The command line structure follows:
 kanban init
 kanban repl [--no-rich]
 
-kanban board list [--format <table|plain|json>]
+kanban board list
 kanban board create <board>
 kanban board rename <board> <new-name>
 kanban board delete <board>
 
-kanban column list <board> [--format <table|plain|json>]
-kanban column create <board>/<column>
-kanban column rename <board><column> <new-name>
+kanban column list <board>
+kanban column create <board> <column>
+kanban column rename <board>/<column> <new-name>
 kanban column reorder <board>/<column> <position>
 kanban column delete <board>/<column>
 
 kanban task list <board>[/<column>]
-    [--format <table|plain|json>]
     [--sort <title|priority|due-date|created-at|updated-at|created-by|<column>]
     [--reverse]
     [--exclude <column>]
@@ -402,14 +401,14 @@ kanban task list <board>[/<column>]
     [--due-after <date>]
     [--created-by <name>]
 
-kanban task create <board>/<column>/<title>
+kanban task create <board>/<column> <title>
     [--assigned-to <name>]
     [--priority <low|medium|high>]
     [--tag <tag>]
     [--due-date <date>]
     [--created-by <name>]
 
-kanban task update <board>/<column>/<title>
+kanban task update <board>/<column>/<task>
     [--column <column>]
     [--assigned-to <name>]
     [--priority <low|medium|high>]
@@ -417,21 +416,20 @@ kanban task update <board>/<column>/<title>
     [--due-date <date>]
     [--created-by <name>]
 
-kanban task move <board>/<column>/<task> 
+kanban task move <board>/<column>/<task>
     [<column>]
     [--top]
     [--bottom]
     [--up]
     [--down]
 
-kanban task show <board>/<column>/<task> [--format <table|plain|json>]
+kanban task show <board>/<column>/<task>
 kanban task edit <board>/<column>/<task>
 kanban task delete <board>/<column>/<task>
 kanban task assign <board>/<column>/<task> <name>
 kanban task rename <board><column>/task <new-name>
 
 kanban search <query>
-    [--format <table|plain|json>]
     [--board <board>]
     [--sort <title|priority|due-date|created-at|updated-at|created-by>|<column>]
     [--reverse]
@@ -443,31 +441,33 @@ kanban search <query>
     [--created-by <name>]
 
 kanban log <board>/<column>/<task> [--limit <n>]
-kanban status [--format <table|plain|json>]
+kanban status
 
 kanban config set <key> <value>    # key: name
 kanban config get <key>            # key: name
 ```
 
-Every command that does not have `--format` options of `table|plain|json` has instead `--format` options of `plain|json` defaulting to `plain`.
+The list commands, search, and status take a `--format` argument with options `<table|plain|json>`. Every other command takes a `--format` argument with options `plain|json`. All default to `plain`.
+
+Objects are identified by their absolute path consisting of `/board/column/task` components as available. When creating or updating an object its title or name is slugged to produce its path component. The full path is always printed to the console and is used to identify the object in future calls to the CLI. Absolute paths are implied by the CLI. When executing a command, the CLI adds a forward slash to any identifying path that does not begin with one.
 
 ## The REPL
 
-The REPL is the Read-Evaulate-Print-Loop that runs the command line application in an interactive loop. By default the REPL uses a verb first command structure with a more limited vocabulary.
+The REPL is the Read-Evaulate-Print-Loop that runs the command line application in an interactive loop. By default the REPL uses a verb first command structure.
 
-The REPL sits at the same level in the architecture as the CLI and it consumes the same KanbanService. It has a dedicated renderer, and if adds a user context which keeps track of the current board and colum, modeled as the current working directory.
+The REPL sits at the same level in the architecture as the CLI and it consumes the same KanbanService. It has a dedicated renderer, and it adds a user context which keeps track of the active board, modeled as the current working directory. If a command takes a path argument and it does not begin with a forward slash, the command is executed within the context of the active board.
 
 The REPL command structure follows:
 
 ```
 init [-b|--bootstrap]
 
-cd [BOARD]    # sets the active board (clearing any active column); omit to clear the active context
+cd <board>
 
 boards [--slugs]
-columns <board> [--slugs]
+columns [</board>] [--slugs]
 
-tasks [BOARD[/COLUMN]]
+tasks [<[/board/]column>]
     [--slugs]
     [--exclude <column>]
     [--sort <title|priority|due-date|created-at|updated-at|created-by|column>]
@@ -489,7 +489,7 @@ create task <column> <title>
     [--due-date <date>]
     [--created-by <name>]
 
-list [BOARD[/COLUMN]]
+list [<[/board/]column>]
     [--boards]
     [--columns]
     [--slugs]
@@ -502,17 +502,17 @@ list [BOARD[/COLUMN]]
     [--due-after <date>]
     [--created-by <name>]
 
-rename <board/column/task> <new-name>
+rename <[/board/]column/task> <new-name>
 
-delete <board[/column][/task]> [-f|--force]
+delete </board|[/board/]column|[/board/]column/task> [-f|--force]
 
-reorder column <board/column> <position>
+reorder <column> <position>
 
-show <board/column/task> [-p|--plain]
+show <[/board/]column/task> [-p|--plain]
 
-edit <board/column/task>
+edit <[/board/]column/task>
 
-update <board/column/title>
+update <[/board/]column/task>
     [--column <column>]
     [--assigned-to <name>]
     [--priority <low|medium|high>]
@@ -520,10 +520,14 @@ update <board/column/title>
     [--due-date <date>]
     [--created-by <name>]
 
-move <task> [<column>]
-move <task> [--top|--bottom|--up|--down]
+move <column/task> 
+    [<column>]
+    [--top]
+    [--bottom]
+    [--up]
+    [--down]
 
-assign <board/column/task> <user>
+assign <[/board/]column/task> <user>
 
 config
 config set <key> <value>    # key: name
@@ -541,7 +545,7 @@ search <query>
     [--due-after <date>]
     [--created-by <name>]
 
-log [[BOARD/COLUMN/]TASK] [--limit <n>]
+log [</board|[/board/]column|[/board/]column/task>] [--limit <n>]
 
 status
 
