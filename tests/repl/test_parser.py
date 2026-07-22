@@ -276,6 +276,30 @@ class TestParserAliases(unittest.TestCase):
         with self.assertRaises(SystemExit):
             repl_parser.parse_args(["rename", "proj"])
 
+    def test_delete_path_mode(self) -> None:
+        """delete <column[/task]> binds path mode with board flag disabled."""
+        args = repl_parser.parse_args(["delete", "todo/fix-parser", "--force"])
+        self.assertEqual(args.path, "todo/fix-parser")
+        self.assertFalse(args.board)
+        self.assertTrue(args.force)
+
+    def test_delete_active_board_mode(self) -> None:
+        """delete -b binds active-board mode with no path."""
+        args = repl_parser.parse_args(["delete", "-b", "--force"])
+        self.assertTrue(args.board)
+        self.assertIsNone(args.path)
+        self.assertTrue(args.force)
+
+    def test_delete_requires_path_or_board_flag(self) -> None:
+        """delete requires either a COLUMN[/TASK] path or -b/--board."""
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["delete"])
+
+    def test_delete_rejects_path_and_board_flag_together(self) -> None:
+        """delete rejects combining path and -b/--board at the same time."""
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["delete", "todo", "-b"])
+
     def test_mv_alias_maps_to_move_handler(self) -> None:
         """mv is an alias for move and binds the same handler."""
         args = repl_parser.parse_args(["mv", "todo/fix-parser", "--up"])

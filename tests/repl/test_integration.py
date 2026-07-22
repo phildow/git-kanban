@@ -545,7 +545,7 @@ class TestReplRename(_InitializedReplBase):
 # ---------------------------------------------------------------------------
 
 class TestReplDelete(_InitializedReplBase):
-    """delete/del/rm command for boards, columns, and tasks."""
+    """delete/del/rm command for active board, columns, and tasks."""
 
     def setUp(self) -> None:
         super().setUp()
@@ -553,24 +553,33 @@ class TestReplDelete(_InitializedReplBase):
         self.repo.create_column("proj", "todo", slug="todo")
 
     def test_delete_board_removes_directory(self) -> None:
-        """delete <board> removes the board directory."""
-        self.run_repl("delete", "proj", "--force")
+        """delete -b removes the active board directory."""
+        self.svc.set_board("proj")
+        self.run_repl("delete", "-b", "--force")
         self.assertFalse((self.boards_dir / "proj").exists())
 
     def test_delete_board_produces_output(self) -> None:
-        """delete <board> prints something."""
-        out = self.run_repl("delete", "proj", "--force")
+        """delete -b prints something."""
+        self.svc.set_board("proj")
+        out = self.run_repl("delete", "-b", "--force")
         self.assertTrue(out.strip())
 
     def test_del_alias_removes_board(self) -> None:
-        """del (alias for delete) removes the board directory."""
-        self.run_repl("del", "proj", "--force")
+        """del -b (alias for delete) removes the active board directory."""
+        self.svc.set_board("proj")
+        self.run_repl("del", "-b", "--force")
         self.assertFalse((self.boards_dir / "proj").exists())
 
     def test_rm_alias_removes_board(self) -> None:
-        """rm (alias for delete) removes the board directory."""
-        self.run_repl("rm", "proj", "--force")
+        """rm -b (alias for delete) removes the active board directory."""
+        self.svc.set_board("proj")
+        self.run_repl("rm", "-b", "--force")
         self.assertFalse((self.boards_dir / "proj").exists())
+
+    def test_delete_board_without_active_board_raises(self) -> None:
+        """delete -b raises when no board is active."""
+        with self.assertRaises(ValueError):
+            self.run_repl("delete", "-b", "--force")
 
     def test_delete_column_removes_directory(self) -> None:
         """delete <board>/<column> removes the column directory."""

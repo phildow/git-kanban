@@ -492,8 +492,7 @@ create task <column> <title>
 rename <column[/task]> <new-name>
     [--board <new name>]
 
-delete <column[/task]>
-    [--board]
+delete <column[/task]> | --board
     [--force]
 
 reorder <column> <position>

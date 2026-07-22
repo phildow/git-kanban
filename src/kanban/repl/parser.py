@@ -137,16 +137,15 @@ def _add_create_parser(subparsers: argparse._SubParsersAction) -> None:
 def _add_delete_parser(subparsers: argparse._SubParsersAction) -> None:
     examples = """
 examples:
-  delete column/task
-  delete column
-  delete -b
+    delete todo/fix-login
+    delete todo
+    delete -b
     """
     p = subparsers.add_parser("delete", aliases=["del", "rm"], help="Delete a board, column, or task", epilog=examples, formatter_class=argparse.RawDescriptionHelpFormatter)
     _add_global_flags(p)
-    # group = p.add_mutually_exclusive_group(required=True)
-    # group.add_argument("path", metavar="COLUMN[/TASK]", nargs="?", help="The column or task in the active board to delete")
-    # group.add_argument("-b", "--board", dest="board", metavar="BOARD", help="The board to delete")
-    p.add_argument("path", metavar="COLUMN[/TASK]", help="The column or task to delete")
+    group = p.add_mutually_exclusive_group(required=True)
+    group.add_argument("path", metavar="COLUMN[/TASK]", nargs="?", help="The column or task to delete")
+    group.add_argument("-b", "--board", action="store_true", default=False, help="Delete the active board")
     p.add_argument("-f", "--force", action="store_true", default=False, help="Skip confirmation prompt")
     p.set_defaults(func=handle_delete)
 

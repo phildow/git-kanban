@@ -70,27 +70,35 @@ def handle_task_list_helper(args: argparse.Namespace, svc: KanbanService) -> lis
 def handle_delete_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[type, Board | Column | Task] | tuple[None, None]:
     """
     Delete the entity at the given path.  This is the main entry point for
-    all delete/rm commands in the REPL, which pass a user-provided path that
-    may be absolute or relative to the current context.
+    all delete/rm commands in the REPL, which pass a user-provided path or a flag
+    to delete the active board.  Returns a tuple of (entity_type, deleted_entity) 
+    or (None, None) if the user declines deletion.
     """
-    path = args.path or ""
+    delete_active_board = args.board
+    path = args.path
     force = args.force
-    board, column, task = svc.path_components(path)
 
     def _confirm(message: str) -> bool:
         return force or prompt_for_confirmation(message)
 
-    if board and column and task:
-        if _confirm(f"Are you sure you want to delete the task '{task}'?"):
-            return Task, svc.delete_task(path=f"/{board}/{column}/{task}")
-    elif board and column:
-        if _confirm(f"Are you sure you want to delete the column '{column}'?"):
-            return Column, svc.delete_column(path=f"/{board}/{column}")
-    elif board:
-        if _confirm(f"Are you sure you want to delete the board '{board}'?"):
-            return Board, svc.delete_board(board)
+    if delete_active_board:
+        active_board = svc.working_board
+        if not active_board:
+            raise ValueError("No active board to delete; set one with `cd` first")
+        if _confirm(f"Are you sure you want to delete the board '{active_board}'?"):
+            return Board, svc.delete_board(path=f"/{active_board}")
+    elif path is not None:
+        board, column, task = svc.path_components(path)
+        if board and column and task:
+            if _confirm(f"Are you sure you want to delete the task '{task}'?"):
+                return Task, svc.delete_task(path=f"/{board}/{column}/{task}")
+        elif board and column:
+            if _confirm(f"Are you sure you want to delete the column '{column}'?"):
+                return Column, svc.delete_column(path=f"/{board}/{column}")
+        else:
+            raise ValueError("Delete expects either -b/--board or a COLUMN[/TASK] path")
     else:
-        raise ValueError("Cannot delete without a board name: {}".format(path))
+        raise ValueError("Delete expects either -b/--board or a COLUMN[/TASK] path")
 
     # User declined deletion
     return None, None
