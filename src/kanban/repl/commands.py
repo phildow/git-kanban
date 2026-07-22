@@ -212,7 +212,9 @@ def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: Com
 		result = svc.move_task(args.path, args.column)
 		renderer.render_task_move(args, result)
 	else:
-		op = "top" if args.top else "bottom" if args.bottom else "up" if args.up else "down"
+		op = "top" if args.top else "bottom" if args.bottom else "up" if args.up else "down" if args.down else None
+		if op is None:
+			raise ValueError("Must specify one of --top, --bottom, --up, or --down")
 		result = svc.reorder_task(args.path, op)
 		renderer.render_task_reorder(args, (result, op))
 
