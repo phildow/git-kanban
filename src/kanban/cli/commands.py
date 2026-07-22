@@ -98,7 +98,7 @@ def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: C
 
 @with_absolute_path
 def handle_column_create(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
-	result = svc.create_column(args.path)
+	result = svc.create_column(args.path, args.title)
 	_pick(args, renderer, json_renderer).render_column_create(args, result)
 
 
@@ -151,6 +151,7 @@ def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: Com
 @with_absolute_path
 def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
 	params = TaskCreateParams(
+		title=args.title,
 		assigned_to=args.assigned_to,
 		priority=parse_priority(args),
 		tags=args.tags or [],

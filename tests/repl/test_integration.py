@@ -362,7 +362,7 @@ class TestReplList(_InitializedReplBase):
         self.repo.create_board("proj", slug="proj")
         self.repo.create_column("proj", "todo", slug="todo")
         self.repo.create_column("proj", "done", slug="done")
-        self.svc.create_task("proj/todo/fix-login", TaskCreateParams())
+        self.svc.create_task("proj/todo", TaskCreateParams(title="fix-login"))
 
     def test_list_no_path_with_no_context_lists_boards(self) -> None:
         """list with no path and no context lists boards."""
@@ -434,21 +434,21 @@ class TestReplList(_InitializedReplBase):
 
     def test_list_filter_assigned_to(self) -> None:
         """list --assigned-to filters to matching tasks."""
-        self.svc.create_task("proj/todo/task-a", TaskCreateParams(assigned_to="alice"))
+        self.svc.create_task("proj/todo", TaskCreateParams(title="task-a", assigned_to="alice"))
         out = self.run_repl("list", "proj/todo", "--assigned-to", "alice")
         self.assertIn("task-a", out)
         self.assertNotIn("fix-login", out)
 
     def test_list_filter_priority(self) -> None:
         """list --priority filters to matching tasks."""
-        self.svc.create_task("proj/todo/task-high", TaskCreateParams(priority="high"))
+        self.svc.create_task("proj/todo", TaskCreateParams(title="task-high", priority="high"))
         out = self.run_repl("list", "proj/todo", "--priority", "high")
         self.assertIn("task-high", out)
         self.assertNotIn("fix-login", out)
 
     def test_list_filter_tag(self) -> None:
         """list --tag filters to tasks carrying that tag."""
-        self.svc.create_task("proj/todo/task-tagged", TaskCreateParams(tags=["bug"]))
+        self.svc.create_task("proj/todo", TaskCreateParams(title="task-tagged", tags=["bug"]))
         out = self.run_repl("list", "proj/todo", "--tag", "bug")
         self.assertIn("task-tagged", out)
         self.assertNotIn("fix-login", out)
@@ -529,8 +529,8 @@ class TestReplTasks(_InitializedReplBase):
         self.repo.create_board("proj", slug="proj")
         self.repo.create_column("proj", "todo", slug="todo")
         self.repo.create_column("proj", "done", slug="done")
-        self.svc.create_task("proj/todo/fix-login", TaskCreateParams())
-        self.svc.create_task("proj/done/write-docs", TaskCreateParams())
+        self.svc.create_task("proj/todo", TaskCreateParams(title="fix-login"))
+        self.svc.create_task("proj/done", TaskCreateParams(title="write-docs"))
 
     def test_tasks_with_board_path_shows_all_columns(self) -> None:
         """tasks <board> includes tasks from every column in that board."""
@@ -628,19 +628,19 @@ class TestReplRename(_InitializedReplBase):
 
     def test_rename_task_creates_new_file(self) -> None:
         """rename task creates a file with the new slug."""
-        self.svc.create_task("proj/todo/alpha task", TaskCreateParams())
+        self.svc.create_task("proj/todo", TaskCreateParams(title="alpha task"))
         self.run_repl("rename", "/proj/todo/alpha-task", "Beta Task")
         self.assertTrue((self.boards_dir / "proj" / "todo" / "beta-task.md").is_file())
 
     def test_rename_task_removes_old_file(self) -> None:
         """rename task removes the file with the old slug."""
-        self.svc.create_task("proj/todo/alpha task", TaskCreateParams())
+        self.svc.create_task("proj/todo", TaskCreateParams(title="alpha task"))
         self.run_repl("rename", "/proj/todo/alpha-task", "Beta Task")
         self.assertFalse((self.boards_dir / "proj" / "todo" / "alpha-task.md").exists())
 
     def test_rename_task_produces_output(self) -> None:
         """rename task prints something."""
-        self.svc.create_task("proj/todo/alpha task", TaskCreateParams())
+        self.svc.create_task("proj/todo", TaskCreateParams(title="alpha task"))
         out = self.run_repl("rename", "/proj/todo/alpha-task", "Beta Task")
         self.assertTrue(out.strip())
 
@@ -696,7 +696,7 @@ class TestReplDelete(_InitializedReplBase):
 
     def test_delete_task_removes_file(self) -> None:
         """delete <board>/<column>/<task> removes the markdown file."""
-        self.svc.create_task("proj/todo/fix-login", TaskCreateParams())
+        self.svc.create_task("proj/todo", TaskCreateParams(title="fix-login"))
         self.run_repl("delete", "proj/todo/fix-login", "--force")
         self.assertFalse(
             (self.boards_dir / "proj" / "todo" / "fix-login.md").exists()
@@ -704,7 +704,7 @@ class TestReplDelete(_InitializedReplBase):
 
     def test_delete_task_produces_output(self) -> None:
         """delete <board>/<column>/<task> prints something."""
-        self.svc.create_task("proj/todo/fix-login", TaskCreateParams())
+        self.svc.create_task("proj/todo", TaskCreateParams(title="fix-login"))
         out = self.run_repl("delete", "proj/todo/fix-login", "--force")
         self.assertTrue(out.strip())
 
@@ -744,7 +744,7 @@ class TestReplShow(_InitializedReplBase):
         super().setUp()
         self.repo.create_board("proj", slug="proj")
         self.repo.create_column("proj", "todo", slug="todo")
-        self.svc.create_task("proj/todo/fix-login", TaskCreateParams())
+        self.svc.create_task("proj/todo", TaskCreateParams(title="fix-login"))
 
     def test_show_produces_output(self) -> None:
         """show <task-path> prints task details."""
@@ -778,7 +778,7 @@ class TestReplUpdate(_InitializedReplBase):
         super().setUp()
         self.repo.create_board("proj", slug="proj")
         self.repo.create_column("proj", "todo", slug="todo")
-        self.svc.create_task("proj/todo/fix-login", TaskCreateParams())
+        self.svc.create_task("proj/todo", TaskCreateParams(title="fix-login"))
 
     def test_update_task_writes_assigned_to_to_file(self) -> None:
         """update task --assigned-to persists the assigned_to to the markdown file."""
@@ -842,7 +842,7 @@ class TestReplMove(_InitializedReplBase):
         self.repo.create_board("proj", slug="proj")
         self.repo.create_column("proj", "todo", slug="todo")
         self.repo.create_column("proj", "done", slug="done")
-        self.svc.create_task("proj/todo/fix-login", TaskCreateParams())
+        self.svc.create_task("proj/todo", TaskCreateParams(title="fix-login"))
 
     def test_move_creates_file_at_destination(self) -> None:
         """move places the task file in the destination column."""
@@ -878,9 +878,9 @@ class TestReplMoveReorder(_InitializedReplBase):
         super().setUp()
         self.repo.create_board("proj", slug="proj")
         self.repo.create_column("proj", "todo", slug="todo")
-        self.svc.create_task("proj/todo/first", TaskCreateParams())
-        self.svc.create_task("proj/todo/second", TaskCreateParams())
-        self.svc.create_task("proj/todo/third", TaskCreateParams())
+        self.svc.create_task("proj/todo", TaskCreateParams(title="first"))
+        self.svc.create_task("proj/todo", TaskCreateParams(title="second"))
+        self.svc.create_task("proj/todo", TaskCreateParams(title="third"))
 
     def test_move_top_updates_metadata_order(self) -> None:
         """move --top places the task first in the column's metadata order."""
@@ -920,7 +920,7 @@ class TestReplAssign(_InitializedReplBase):
         super().setUp()
         self.repo.create_board("proj", slug="proj")
         self.repo.create_column("proj", "todo", slug="todo")
-        self.svc.create_task("proj/todo/fix-login", TaskCreateParams())
+        self.svc.create_task("proj/todo", TaskCreateParams(title="fix-login"))
 
     def test_assign_writes_assigned_to_frontmatter(self) -> None:
         """assign persists assigned_to to the task's frontmatter."""

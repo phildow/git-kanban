@@ -34,14 +34,14 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
 
     def test_create_task_calls_index_update(self) -> None:
         """Creating a task invokes index_service.upsert_task with the created task."""
-        created = self.svc.create_task("alpha/todo/t1", TaskCreateParams())
+        created = self.svc.create_task("alpha/todo", TaskCreateParams(title="t1"))
 
         self.index_service.upsert_task.assert_called_once()
         self.assertEqual(self.index_service.upsert_task.call_args.args[0].id, created.id)
 
     def test_update_task_calls_index_update(self) -> None:
         """Updating a task invokes index_service.upsert_task with the updated task."""
-        self.svc.create_task("alpha/todo/t1", TaskCreateParams())
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="t1"))
         self.index_service.reset_mock()
 
         updated = self.svc.update_task("alpha/todo/t1", TaskUpdateParams(assigned_to="alice"))
@@ -51,7 +51,7 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
 
     def test_assign_task_calls_index_update(self) -> None:
         """Assigning a task invokes index_service.upsert_task with the updated task."""
-        self.svc.create_task("alpha/todo/t1", TaskCreateParams())
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="t1"))
         self.index_service.reset_mock()
 
         updated = self.svc.assign_task("alpha/todo/t1", "alice")
@@ -61,7 +61,7 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
 
     def test_move_task_calls_index_update(self) -> None:
         """Moving a task invokes index_service.upsert_task with the moved task."""
-        self.svc.create_task("alpha/todo/t1", TaskCreateParams())
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="t1"))
         self.index_service.reset_mock()
 
         moved = self.svc.move_task("alpha/todo/t1", "done")
@@ -71,8 +71,8 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
 
     def test_reorder_task_calls_index_update(self) -> None:
         """Reordering a task invokes index_service.upsert_task with the reordered task."""
-        self.svc.create_task("alpha/todo/t1", TaskCreateParams())
-        self.svc.create_task("alpha/todo/t2", TaskCreateParams())
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="t1"))
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="t2"))
         self.index_service.reset_mock()
 
         result = self.svc.reorder_task("alpha/todo/t2", "up")
@@ -82,7 +82,7 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
 
     def test_reorder_task_index_update_not_called_for_invalid_op(self) -> None:
         """index_service.upsert_task is not called when reorder_task raises for an invalid op."""
-        self.svc.create_task("alpha/todo/t1", TaskCreateParams())
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="t1"))
         self.index_service.reset_mock()
 
         with self.assertRaises(ValueError):
@@ -92,7 +92,7 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
 
     def test_delete_task_calls_index_delete(self) -> None:
         """Deleting a task invokes index_service.remove_task with the deleted task."""
-        created = self.svc.create_task("alpha/todo/t1", TaskCreateParams())
+        created = self.svc.create_task("alpha/todo", TaskCreateParams(title="t1"))
         self.index_service.reset_mock()
 
         self.svc.delete_task("alpha/todo/t1")
@@ -102,8 +102,8 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
 
     def test_delete_column_calls_index_delete_for_each_task(self) -> None:
         """Deleting a column invokes index_service.remove_task once per task it contained."""
-        t1 = self.svc.create_task("alpha/todo/t1", TaskCreateParams())
-        t2 = self.svc.create_task("alpha/todo/t2", TaskCreateParams())
+        t1 = self.svc.create_task("alpha/todo", TaskCreateParams(title="t1"))
+        t2 = self.svc.create_task("alpha/todo", TaskCreateParams(title="t2"))
         self.index_service.reset_mock()
 
         self.svc.delete_column("alpha/todo")
@@ -120,9 +120,9 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
 
     def test_delete_board_calls_index_delete_for_each_task(self) -> None:
         """Deleting a board invokes index_service.remove_task once per task across all columns."""
-        t1 = self.svc.create_task("alpha/todo/t1", TaskCreateParams())
-        t2 = self.svc.create_task("alpha/todo/t2", TaskCreateParams())
-        t3 = self.svc.create_task("alpha/done/t3", TaskCreateParams())
+        t1 = self.svc.create_task("alpha/todo", TaskCreateParams(title="t1"))
+        t2 = self.svc.create_task("alpha/todo", TaskCreateParams(title="t2"))
+        t3 = self.svc.create_task("alpha/done", TaskCreateParams(title="t3"))
         self.index_service.reset_mock()
 
         self.svc.delete_board("alpha")
@@ -139,8 +139,8 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
 
     def test_rename_column_calls_index_upsert_for_each_task(self) -> None:
         """Renaming a column invokes index_service.upsert_task once per task in that column."""
-        t1 = self.svc.create_task("alpha/todo/t1", TaskCreateParams())
-        t2 = self.svc.create_task("alpha/todo/t2", TaskCreateParams())
+        t1 = self.svc.create_task("alpha/todo", TaskCreateParams(title="t1"))
+        t2 = self.svc.create_task("alpha/todo", TaskCreateParams(title="t2"))
         self.index_service.reset_mock()
 
         self.svc.rename_column("alpha/todo", "doing")
@@ -151,7 +151,7 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
 
     def test_rename_column_index_update_reflects_new_column_name(self) -> None:
         """Tasks passed to index_service.upsert_task after rename carry the new column name."""
-        self.svc.create_task("alpha/todo/t1", TaskCreateParams())
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="t1"))
         self.index_service.reset_mock()
 
         self.svc.rename_column("alpha/todo", "doing")
@@ -161,8 +161,8 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
 
     def test_rename_board_calls_index_upsert_for_each_task(self) -> None:
         """Renaming a board invokes index_service.upsert_task once per task in that board."""
-        t1 = self.svc.create_task("alpha/todo/t1", TaskCreateParams())
-        t2 = self.svc.create_task("alpha/todo/t2", TaskCreateParams())
+        t1 = self.svc.create_task("alpha/todo", TaskCreateParams(title="t1"))
+        t2 = self.svc.create_task("alpha/todo", TaskCreateParams(title="t2"))
         self.index_service.reset_mock()
 
         self.svc.rename_board("alpha", "beta")
@@ -173,7 +173,7 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
 
     def test_rename_board_index_update_reflects_new_board_name(self) -> None:
         """Tasks passed to index_service.upsert_task after rename carry the new board name."""
-        self.svc.create_task("alpha/todo/t1", TaskCreateParams())
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="t1"))
         self.index_service.reset_mock()
 
         self.svc.rename_board("alpha", "beta")

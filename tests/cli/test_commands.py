@@ -104,11 +104,11 @@ class TestCommandHandlers(unittest.TestCase):
         self.svc.get_columns.assert_called_once_with(board="board-a")
         self.renderer.render_column_list.assert_called_once_with(args, result)
 
-        args = self._args(path="board-a/todo")
+        args = self._args(path="board-a", title="todo")
         result = object()
         self.svc.create_column.return_value = result
         commands.handle_column_create(args, self.svc, self.renderer, self.json_renderer)
-        self.svc.create_column.assert_called_once_with("/board-a/todo")
+        self.svc.create_column.assert_called_once_with("/board-a", "todo")
         self.renderer.render_column_create.assert_called_once_with(args, result)
 
         args = self._args(path="board-a/todo", new_name="doing")
@@ -164,7 +164,8 @@ class TestCommandHandlers(unittest.TestCase):
     def test_handle_task_create_with_all_optional_fields(self):
         """`task create` maps all optional CLI fields into `TaskCreateParams`."""
         args = self._args(
-            path="board-a/todo/fix-parser",
+            path="board-a/todo",
+            title="fix-parser",
             assigned_to="philip",
             priority="high",
             tags=["cli", "tests"],
@@ -177,8 +178,9 @@ class TestCommandHandlers(unittest.TestCase):
         commands.handle_task_create(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.create_task.assert_called_once_with(
-            "/board-a/todo/fix-parser",
+            "/board-a/todo",
             TaskCreateParams(
+                title="fix-parser",
                 assigned_to="philip",
                 priority="high",
                 tags=["cli", "tests"],
@@ -190,15 +192,16 @@ class TestCommandHandlers(unittest.TestCase):
 
     def test_handle_task_create_with_default_optional_fields(self):
         """`task create` defaults missing optional fields and normalizes `tags` to empty list."""
-        args = self._args(path="board-a/todo/check-no-other-args", title=None, priority=None, tags=None, assigned_to=None, due_date=None, created_by=None)
+        args = self._args(path="board-a/todo", title="check-no-other-args", priority=None, tags=None, assigned_to=None, due_date=None, created_by=None)
         result = object()
         self.svc.create_task.return_value = result
 
         commands.handle_task_create(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.create_task.assert_called_once_with(
-            "/board-a/todo/check-no-other-args",
+            "/board-a/todo",
             TaskCreateParams(
+                title="check-no-other-args",
                 assigned_to=None,
                 priority=None,
                 tags=[],
@@ -211,7 +214,8 @@ class TestCommandHandlers(unittest.TestCase):
     def test_handle_task_create_with_explicit_none_tags(self):
         """`task create` treats explicit `tags=None` the same as omitted tags."""
         args = self._args(
-            path="board-a/todo/check-tags-none",
+            path="board-a/todo",
+            title="check-tags-none",
             assigned_to="alex",
             priority=None,
             tags=None,
@@ -224,8 +228,9 @@ class TestCommandHandlers(unittest.TestCase):
         commands.handle_task_create(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.create_task.assert_called_once_with(
-            "/board-a/todo/check-tags-none",
+            "/board-a/todo",
             TaskCreateParams(
+                title="check-tags-none",
                 assigned_to="alex",
                 priority=None,
                 tags=[],

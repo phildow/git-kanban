@@ -119,8 +119,9 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
 
         args = cli_parser.parse_args(["column", "list", "board-a"])
 
-        args = cli_parser.parse_args(["column", "create", "board-a/todo"])
-        self.assertEqual(args.path, "board-a/todo")
+        args = cli_parser.parse_args(["column", "create", "/board-a", "todo"])
+        self.assertEqual(args.path, "/board-a")
+        self.assertEqual(args.title, "todo")
         self.assertIs(args.func, handle_column_create)
 
         args = cli_parser.parse_args(["column", "rename", "board-a/todo", "doing"])
@@ -174,7 +175,8 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         args = cli_parser.parse_args([
             "task",
             "create",
-            "board-a/todo/fix-parser",
+            "/board-a/todo",
+            "fix-parser",
             "--assigned-to",
             "philip",
             "--priority",
@@ -186,7 +188,8 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
             "--created-by",
             "philip",
         ])
-        self.assertEqual(args.path, "board-a/todo/fix-parser")
+        self.assertEqual(args.path, "/board-a/todo")
+        self.assertEqual(args.title, "fix-parser")
         self.assertEqual(args.assigned_to, "philip")
         self.assertEqual(args.priority, "medium")
         self.assertEqual(args.tags, ["cli"])

@@ -73,13 +73,13 @@ class TestKanbanServiceEnglishNames(unittest.TestCase):
     def test_create_column_preserves_display_name(self) -> None:
         """A multi-word column name is stored exactly as given."""
         self.svc.create_board("My Project", columns=[])
-        column = self.svc.create_column("my-project/In Progress")
+        column = self.svc.create_column("my-project", "In Progress")
         self.assertEqual(column.name, "In Progress")
 
     def test_create_column_derives_slug(self) -> None:
         """A multi-word column name produces a kebab-case slug."""
         self.svc.create_board("My Project", columns=[])
-        column = self.svc.create_column("my-project/In Progress")
+        column = self.svc.create_column("my-project", "In Progress")
         self.assertEqual(column.slug, "in-progress")
 
     def test_rename_column_preserves_new_display_name(self) -> None:
@@ -99,26 +99,26 @@ class TestKanbanServiceEnglishNames(unittest.TestCase):
     def test_create_task_preserves_title(self) -> None:
         """A multi-word task title is stored exactly as given."""
         self.svc.create_board("My Project", columns=[("To Do", "todo")])
-        task = self.svc.create_task("my-project/todo/Fix Login Bug", TaskCreateParams())
+        task = self.svc.create_task("my-project/todo", TaskCreateParams(title="Fix Login Bug"))
         self.assertEqual(task.title, "Fix Login Bug")
 
     def test_create_task_derives_slug(self) -> None:
         """A multi-word task title produces a kebab-case slug."""
         self.svc.create_board("My Project", columns=[("To Do", "todo")])
-        task = self.svc.create_task("my-project/todo/Fix Login Bug", TaskCreateParams())
+        task = self.svc.create_task("my-project/todo", TaskCreateParams(title="Fix Login Bug"))
         self.assertEqual(task.slug, "fix-login-bug")
 
     def test_task_is_retrievable_by_slug(self) -> None:
         """A task created with a display name is retrievable via its slug path."""
         self.svc.create_board("My Project", columns=[("To Do", "todo")])
-        self.svc.create_task("my-project/todo/Fix Login Bug", TaskCreateParams())
+        self.svc.create_task("my-project/todo", TaskCreateParams(title="Fix Login Bug"))
         task = self.svc.get_task("my-project/todo/fix-login-bug")
         self.assertEqual(task.title, "Fix Login Bug")
 
     def test_update_task_title_preserves_new_display_name(self) -> None:
         """Updating a task title stores the new multi-word name exactly."""
         self.svc.create_board("My Project", columns=[("To Do", "todo")])
-        self.svc.create_task("my-project/todo/Fix Login Bug", TaskCreateParams())
+        self.svc.create_task("my-project/todo", TaskCreateParams(title="Fix Login Bug"))
         updated = self.svc.update_task(
             "my-project/todo/fix-login-bug",
             TaskUpdateParams(title="Fix Registration Bug"),
@@ -128,7 +128,7 @@ class TestKanbanServiceEnglishNames(unittest.TestCase):
     def test_update_task_title_updates_slug(self) -> None:
         """Updating a task title changes the slug to match the new name."""
         self.svc.create_board("My Project", columns=[("To Do", "todo")])
-        self.svc.create_task("my-project/todo/Fix Login Bug", TaskCreateParams())
+        self.svc.create_task("my-project/todo", TaskCreateParams(title="Fix Login Bug"))
         updated = self.svc.update_task(
             "my-project/todo/fix-login-bug",
             TaskUpdateParams(title="Fix Registration Bug"),

@@ -209,7 +209,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.create_column.return_value = result
         commands.handle_column_create(args, self.svc, self.renderer)
-        self.svc.create_column.assert_called_once_with("todo")
+        self.svc.create_column.assert_called_once_with(".", "todo")
         self.renderer.render_column_create.assert_called_once_with(args, result)
 
         args = self._args(path="alpha/todo", new_name="doing")
@@ -223,7 +223,6 @@ class TestReplCommandHandlers(unittest.TestCase):
         """create column with no active board raises rather than resolving nonsense."""
         args = self._args(column="todo")
         self.svc.working_board = None
-        self.svc.create_column.side_effect = ValueError("No active board; set one with `cd` before creating a column")
         with self.assertRaises(ValueError):
             commands.handle_column_create(args, self.svc, self.renderer)
 
@@ -289,8 +288,9 @@ class TestReplCommandHandlers(unittest.TestCase):
         commands.handle_task_create(args, self.svc, self.renderer)
 
         self.svc.create_task.assert_called_once_with(
-            "todo/fix-parser",
+            "todo",
             TaskCreateParams(
+                title="fix-parser",
                 assigned_to=None,
                 priority=None,
                 tags=[],
@@ -344,8 +344,9 @@ class TestReplCommandHandlers(unittest.TestCase):
         commands.handle_task_create(args, self.svc, self.renderer)
 
         self.svc.create_task.assert_called_once_with(
-            "todo/fix-parser",
+            "todo",
             TaskCreateParams(
+                title="fix-parser",
                 assigned_to="philip",
                 priority="high",
                 tags=["cli", "tests"],

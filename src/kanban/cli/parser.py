@@ -149,7 +149,8 @@ def _add_column_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # column create
     p = col_sub.add_parser("create", help="Create a new column")
-    p.add_argument("path", metavar="BOARD/COLUMN", help="Column path")
+    p.add_argument("path", metavar="BOARD", help="Absolute board path")
+    p.add_argument("title", metavar="TITLE", help="Column title")
     _add_format_arg(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_column_create)
@@ -200,7 +201,8 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # task create
     p = task_sub.add_parser("create", help="Create a new task")
-    p.add_argument("path", metavar="BOARD/COLUMN/TITLE", help="Fully qualified task path")
+    p.add_argument("path", metavar="/BOARD/COLUMN", help="Absolute board/column path")
+    p.add_argument("title", metavar="TITLE", help="Task title")
     _add_task_create_args(p)
     _add_format_arg(p)
     _add_global_flags(p)

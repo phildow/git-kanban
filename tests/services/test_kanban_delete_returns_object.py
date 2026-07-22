@@ -32,7 +32,7 @@ class TestKanbanServiceDeleteReturnsObject(unittest.TestCase):
 
     def test_delete_task_returns_deleted_task(self) -> None:
         """delete_task returns the Task that was removed, not None."""
-        created = self.svc.create_task("my-project/todo/Fix login", TaskCreateParams())
+        created = self.svc.create_task("my-project/todo", TaskCreateParams(title="Fix login"))
         deleted = self.svc.delete_task("my-project/todo/fix-login")
 
         self.assertIsInstance(deleted, Task)
@@ -41,7 +41,7 @@ class TestKanbanServiceDeleteReturnsObject(unittest.TestCase):
 
     def test_delete_task_removes_it_from_repository(self) -> None:
         """The task is actually gone after delete_task returns it."""
-        self.svc.create_task("my-project/todo/Fix login", TaskCreateParams())
+        self.svc.create_task("my-project/todo", TaskCreateParams(title="Fix login"))
         self.svc.delete_task("my-project/todo/fix-login")
 
         self.assertEqual(self.svc.get_tasks("my-project/todo"), [])

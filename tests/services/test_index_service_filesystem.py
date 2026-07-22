@@ -52,8 +52,8 @@ class TestIndexServiceDiffFilesystem(unittest.TestCase):
 
     def test_no_diff_after_service_creates_tasks(self) -> None:
         """Tasks created through the service are indexed immediately; diff() is empty."""
-        self.svc.create_task("main/todo/Fix login bug", TaskCreateParams())
-        self.svc.create_task("main/todo/Write docs", TaskCreateParams())
+        self.svc.create_task("main/todo", TaskCreateParams(title="Fix login bug"))
+        self.svc.create_task("main/todo", TaskCreateParams(title="Write docs"))
 
         result = self.index_service.diff()
 
@@ -62,7 +62,7 @@ class TestIndexServiceDiffFilesystem(unittest.TestCase):
 
     def test_no_diff_after_service_deletes_a_task(self) -> None:
         """Deleting through the service removes the index entry too; diff() stays empty."""
-        self.svc.create_task("main/todo/Fix login bug", TaskCreateParams())
+        self.svc.create_task("main/todo", TaskCreateParams(title="Fix login bug"))
         self.svc.delete_task("main/todo/fix-login-bug")
 
         result = self.index_service.diff()
@@ -72,7 +72,7 @@ class TestIndexServiceDiffFilesystem(unittest.TestCase):
 
     def test_file_deleted_directly_on_disk_is_missing_from_repository(self) -> None:
         """Removing a .md file outside the service leaves a stale, orphaned index entry."""
-        task = self.svc.create_task("main/todo/Fix login bug", TaskCreateParams())
+        task = self.svc.create_task("main/todo", TaskCreateParams(title="Fix login bug"))
         (self.repo.boards_dir / "main" / "todo" / "fix-login-bug.md").unlink()
 
         result = self.index_service.diff()
@@ -92,7 +92,7 @@ class TestIndexServiceDiffFilesystem(unittest.TestCase):
 
     def test_diff_reports_both_directions_after_mixed_changes(self) -> None:
         """A deletion and an out-of-band addition are both surfaced in one diff() call."""
-        stale_task = self.svc.create_task("main/todo/Fix login bug", TaskCreateParams())
+        stale_task = self.svc.create_task("main/todo", TaskCreateParams(title="Fix login bug"))
         (self.repo.boards_dir / "main" / "todo" / "fix-login-bug.md").unlink()
 
         self._write_raw_task_file("main", "backlog", "add-rate-limiting", "Add rate limiting")

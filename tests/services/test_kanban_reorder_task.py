@@ -27,9 +27,9 @@ class TestKanbanServiceReorderTask(unittest.TestCase):
         )
         self.repo.create_board("alpha", slug="alpha")
         self.repo.create_column("alpha", "todo", slug="todo")
-        self.svc.create_task("alpha/todo/first", TaskCreateParams())
-        self.svc.create_task("alpha/todo/second", TaskCreateParams())
-        self.svc.create_task("alpha/todo/third", TaskCreateParams())
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="first"))
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="second"))
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="third"))
 
     def _slugs(self) -> list[str]:
         return [t.slug for t in self.svc.get_tasks("alpha/todo")]

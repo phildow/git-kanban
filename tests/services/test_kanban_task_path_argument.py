@@ -31,8 +31,8 @@ class TestKanbanServiceTaskPathArgument(unittest.TestCase):
 
     def test_create_task_accepts_str_and_path(self) -> None:
         """create_task resolves an equivalent location whether path is str or Path."""
-        via_str = self.svc.create_task("alpha/todo/fix-login", TaskCreateParams())
-        via_path = self.svc.create_task(Path("alpha/todo/write-docs"), TaskCreateParams())
+        via_str = self.svc.create_task("alpha/todo", TaskCreateParams(title="fix-login"))
+        via_path = self.svc.create_task(Path("alpha/todo"), TaskCreateParams(title="write-docs"))
 
         self.assertEqual(via_str.slug, "fix-login")
         self.assertEqual(via_path.slug, "write-docs")
@@ -41,7 +41,7 @@ class TestKanbanServiceTaskPathArgument(unittest.TestCase):
 
     def test_get_task_accepts_str_and_path(self) -> None:
         """get_task resolves the same task whether path is str or Path."""
-        created = self.svc.create_task("alpha/todo/fix-login", TaskCreateParams())
+        created = self.svc.create_task("alpha/todo", TaskCreateParams(title="fix-login"))
 
         via_str = self.svc.get_task("alpha/todo/fix-login")
         via_path = self.svc.get_task(Path("alpha/todo/fix-login"))
@@ -51,8 +51,8 @@ class TestKanbanServiceTaskPathArgument(unittest.TestCase):
 
     def test_rename_task_accepts_str_and_path(self) -> None:
         """rename_task renames the correct task whether path is str or Path."""
-        self.svc.create_task("alpha/todo/fix-login", TaskCreateParams())
-        self.svc.create_task("alpha/todo/write-docs", TaskCreateParams())
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="fix-login"))
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="write-docs"))
 
         via_str = self.svc.rename_task("alpha/todo/fix-login", "Fix login bug")
         via_path = self.svc.rename_task(Path("alpha/todo/write-docs"), "Write API docs")
@@ -62,8 +62,8 @@ class TestKanbanServiceTaskPathArgument(unittest.TestCase):
 
     def test_update_task_accepts_str_and_path(self) -> None:
         """update_task applies updates to the correct task whether path is str or Path."""
-        self.svc.create_task("alpha/todo/fix-login", TaskCreateParams())
-        self.svc.create_task("alpha/todo/write-docs", TaskCreateParams())
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="fix-login"))
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="write-docs"))
 
         via_str = self.svc.update_task("alpha/todo/fix-login", TaskUpdateParams(assigned_to="alice"))
         via_path = self.svc.update_task(Path("alpha/todo/write-docs"), TaskUpdateParams(assigned_to="bob"))
@@ -73,8 +73,8 @@ class TestKanbanServiceTaskPathArgument(unittest.TestCase):
 
     def test_move_task_accepts_str_and_path(self) -> None:
         """move_task relocates the correct task whether path is str or Path."""
-        self.svc.create_task("alpha/todo/fix-login", TaskCreateParams())
-        self.svc.create_task("alpha/todo/write-docs", TaskCreateParams())
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="fix-login"))
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="write-docs"))
 
         via_str = self.svc.move_task("alpha/todo/fix-login", "done")
         via_path = self.svc.move_task(Path("alpha/todo/write-docs"), "done")
@@ -84,8 +84,8 @@ class TestKanbanServiceTaskPathArgument(unittest.TestCase):
 
     def test_reorder_task_accepts_str_and_path(self) -> None:
         """reorder_task changes position for the correct task whether path is str or Path."""
-        self.svc.create_task("alpha/todo/first", TaskCreateParams())
-        self.svc.create_task("alpha/todo/second", TaskCreateParams())
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="first"))
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="second"))
 
         self.svc.reorder_task("alpha/todo/second", "up")
         self.assertEqual([t.slug for t in self.svc.get_tasks("alpha/todo")], ["second", "first"])
@@ -95,8 +95,8 @@ class TestKanbanServiceTaskPathArgument(unittest.TestCase):
 
     def test_assign_task_accepts_str_and_path(self) -> None:
         """assign_task assigns the correct task whether path is str or Path."""
-        self.svc.create_task("alpha/todo/fix-login", TaskCreateParams())
-        self.svc.create_task("alpha/todo/write-docs", TaskCreateParams())
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="fix-login"))
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="write-docs"))
 
         via_str = self.svc.assign_task("alpha/todo/fix-login", "alice")
         via_path = self.svc.assign_task(Path("alpha/todo/write-docs"), "bob")
@@ -106,8 +106,8 @@ class TestKanbanServiceTaskPathArgument(unittest.TestCase):
 
     def test_delete_task_accepts_str_and_path(self) -> None:
         """delete_task removes the correct task whether path is str or Path."""
-        self.svc.create_task("alpha/todo/fix-login", TaskCreateParams())
-        self.svc.create_task("alpha/todo/write-docs", TaskCreateParams())
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="fix-login"))
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="write-docs"))
 
         self.svc.delete_task("alpha/todo/fix-login")
         self.svc.delete_task(Path("alpha/todo/write-docs"))
@@ -118,8 +118,8 @@ class TestKanbanServiceTaskPathArgument(unittest.TestCase):
     def test_edit_task_accepts_str_and_path(self, mock_run: MagicMock) -> None:
         """edit_task resolves the correct task whether path is str or Path (editor is a no-op)."""
         mock_run.return_value = None
-        created_via_str = self.svc.create_task("alpha/todo/fix-login", TaskCreateParams())
-        created_via_path = self.svc.create_task("alpha/todo/write-docs", TaskCreateParams())
+        created_via_str = self.svc.create_task("alpha/todo", TaskCreateParams(title="fix-login"))
+        created_via_path = self.svc.create_task("alpha/todo", TaskCreateParams(title="write-docs"))
 
         via_str = self.svc.edit_task("alpha/todo/fix-login")
         via_path = self.svc.edit_task(Path("alpha/todo/write-docs"))

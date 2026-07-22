@@ -32,8 +32,8 @@ class TestHandleTaskListHelper(unittest.TestCase):
         self.repo.create_board("alpha", slug="alpha")
         self.repo.create_column("alpha", "todo", slug="todo")
         self.repo.create_column("alpha", "done", slug="done")
-        self.t1 = self.svc.create_task("alpha/todo/Fix login", TaskCreateParams())
-        self.t2 = self.svc.create_task("alpha/done/Write docs", TaskCreateParams())
+        self.t1 = self.svc.create_task("alpha/todo", TaskCreateParams(title="Fix login"))
+        self.t2 = self.svc.create_task("alpha/done", TaskCreateParams(title="Write docs"))
 
     def _args(self, **kwargs) -> Namespace:
         defaults = {"path": None, "sort": None, "reverse": False, "assigned_to": None, "priority": None, "tags": None, "due_before": None, "due_after": None, "created_by": None, "column": None}

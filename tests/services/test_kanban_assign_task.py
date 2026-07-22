@@ -27,7 +27,7 @@ class TestKanbanServiceAssignTask(unittest.TestCase):
         )
         self.repo.create_board("alpha", slug="alpha")
         self.repo.create_column("alpha", "todo", slug="todo")
-        self.svc.create_task("alpha/todo/fix-login", TaskCreateParams())
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="fix-login"))
 
     def test_returns_task_with_new_assigned_to(self) -> None:
         """assign_task returns a Task whose assigned_to matches the given user."""

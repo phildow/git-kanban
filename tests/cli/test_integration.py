@@ -296,17 +296,17 @@ class TestColumnCLI(_InitializedBase):
 
     def test_column_create_creates_directory(self) -> None:
         """column create creates a column directory."""
-        self.run_cli("column", "create", "proj/todo")
+        self.run_cli("column", "create", "/proj", "todo")
         self.assertTrue((self.boards_dir / "proj" / "todo").is_dir())
 
     def test_column_create_verbose_prints_output(self) -> None:
         """column create --verbose prints something."""
-        out = self.run_cli("column", "create", "proj/todo", "--verbose")
+        out = self.run_cli("column", "create", "/proj", "todo", "--verbose")
         self.assertTrue(out.strip())
 
     def test_column_create_without_verbose_produces_no_output(self) -> None:
         """column create without --verbose produces no output."""
-        out = self.run_cli("column", "create", "proj/todo")
+        out = self.run_cli("column", "create", "/proj", "todo")
         self.assertEqual(out, "")
 
     def test_column_list_empty(self) -> None:
@@ -431,13 +431,13 @@ class TestTaskCLI(_InitializedBase):
 
     def test_task_create_creates_file(self) -> None:
         """task create creates a markdown file at the expected path."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         self.assertTrue((self.boards_dir / "proj" / "todo" / "fix-login.md").is_file())
 
     def test_task_create_with_all_optional_fields(self) -> None:
         """task create with all optional flags creates the file."""
         self.run_cli(
-            "task", "create", "proj/todo/new-task",
+            "task", "create", "/proj/todo", "new-task",
             "--assigned-to", "alice",
             "--priority", "high",
             "--tag", "bug",
@@ -449,7 +449,7 @@ class TestTaskCLI(_InitializedBase):
     def test_task_create_optional_fields_in_frontmatter(self) -> None:
         """Optional fields passed to task create appear in the file's frontmatter."""
         self.run_cli(
-            "task", "create", "proj/todo/new-task",
+            "task", "create", "/proj/todo", "new-task",
             "--assigned-to", "alice",
             "--priority", "high",
             "--due-date", "2026-12-31",
@@ -466,7 +466,7 @@ class TestTaskCLI(_InitializedBase):
     def test_task_create_multiple_tags_all_written_to_frontmatter(self) -> None:
         """task create with multiple --tag flags writes all tags to the frontmatter."""
         self.run_cli(
-            "task", "create", "proj/todo/new-task",
+            "task", "create", "/proj/todo", "new-task",
             "--tag", "bug",
             "--tag", "auth",
             "--tag", "refactor",
@@ -479,12 +479,12 @@ class TestTaskCLI(_InitializedBase):
 
     def test_task_create_verbose_prints_output(self) -> None:
         """task create --verbose prints something."""
-        out = self.run_cli("task", "create", "proj/todo/fix-login", "--verbose")
+        out = self.run_cli("task", "create", "/proj/todo", "fix-login", "--verbose")
         self.assertTrue(out.strip())
 
     def test_task_create_without_verbose_produces_no_output(self) -> None:
         """task create without --verbose produces no output."""
-        out = self.run_cli("task", "create", "proj/todo/fix-login")
+        out = self.run_cli("task", "create", "/proj/todo", "fix-login")
         self.assertEqual(out, "")
 
     # -- list -----------------------------------------------------------------
@@ -496,93 +496,93 @@ class TestTaskCLI(_InitializedBase):
 
     def test_task_list_plain_includes_slug(self) -> None:
         """task list (plain) includes the created task slug."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         out = self.run_cli("task", "list", "proj/todo")
         self.assertIn("fix-login", out)
 
     def test_task_list_table_prints_output(self) -> None:
         """task list --format table produces output."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         out = self.run_cli("task", "list", "proj/todo", "--format", "table")
         self.assertTrue(out.strip())
 
     def test_task_list_json_is_array(self) -> None:
         """task list --format json emits a JSON array."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         data = self.run_json("task", "list", "proj/todo", "--format", "json")
         self.assertIsInstance(data, list)
 
     def test_task_list_json_id_field(self) -> None:
         """task list --format json includes the task UUID."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         data = self.run_json("task", "list", "proj/todo", "--format", "json")
         self.assertIn("id", data[0])
 
     def test_task_list_json_slug_field(self) -> None:
         """task list --format json includes the slug."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         data = self.run_json("task", "list", "proj/todo", "--format", "json")
         self.assertEqual(data[0]["slug"], "fix-login")
 
     def test_task_list_json_board_and_column_fields(self) -> None:
         """task list --format json includes board and column fields."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         data = self.run_json("task", "list", "proj/todo", "--format", "json")
         self.assertEqual(data[0]["board"], "proj")
         self.assertEqual(data[0]["column"], "todo")
 
     def test_task_list_board_scope_includes_all_columns(self) -> None:
         """task list scoped to a board includes tasks from all columns."""
-        self.run_cli("task", "create", "proj/todo/task-a")
-        self.run_cli("task", "create", "proj/done/task-b")
+        self.run_cli("task", "create", "/proj/todo", "task-a")
+        self.run_cli("task", "create", "/proj/done", "task-b")
         out = self.run_cli("task", "list", "proj")
         self.assertIn("task-a", out)
         self.assertIn("task-b", out)
 
     def test_task_list_filter_assigned_to(self) -> None:
         """task list --assigned-to filters to only matching tasks."""
-        self.run_cli("task", "create", "proj/todo/task-a", "--assigned-to", "alice")
-        self.run_cli("task", "create", "proj/todo/task-b")
+        self.run_cli("task", "create", "/proj/todo", "task-a", "--assigned-to", "alice")
+        self.run_cli("task", "create", "/proj/todo", "task-b")
         out = self.run_cli("task", "list", "proj/todo", "--assigned-to", "alice")
         self.assertIn("task-a", out)
         self.assertNotIn("task-b", out)
 
     def test_task_list_filter_priority(self) -> None:
         """task list --priority filters to only matching tasks."""
-        self.run_cli("task", "create", "proj/todo/task-a", "--priority", "high")
-        self.run_cli("task", "create", "proj/todo/task-b", "--priority", "low")
+        self.run_cli("task", "create", "/proj/todo", "task-a", "--priority", "high")
+        self.run_cli("task", "create", "/proj/todo", "task-b", "--priority", "low")
         out = self.run_cli("task", "list", "proj/todo", "--priority", "high")
         self.assertIn("task-a", out)
         self.assertNotIn("task-b", out)
 
     def test_task_list_filter_tag(self) -> None:
         """task list --tag filters to only tasks carrying that tag."""
-        self.run_cli("task", "create", "proj/todo/task-a", "--tag", "bug")
-        self.run_cli("task", "create", "proj/todo/task-b")
+        self.run_cli("task", "create", "/proj/todo", "task-a", "--tag", "bug")
+        self.run_cli("task", "create", "/proj/todo", "task-b")
         out = self.run_cli("task", "list", "proj/todo", "--tag", "bug")
         self.assertIn("task-a", out)
         self.assertNotIn("task-b", out)
 
     def test_task_list_exclude_column(self) -> None:
         """task list -x/--exclude omits tasks from excluded columns."""
-        self.run_cli("task", "create", "proj/todo/task-a")
-        self.run_cli("task", "create", "proj/done/task-b")
+        self.run_cli("task", "create", "/proj/todo", "task-a")
+        self.run_cli("task", "create", "/proj/done", "task-b")
         out = self.run_cli("task", "list", "proj", "-x", "done")
         self.assertIn("task-a", out)
         self.assertNotIn("task-b", out)
 
     def test_task_list_sort(self) -> None:
         """task list --sort title includes all tasks."""
-        self.run_cli("task", "create", "proj/todo/alpha-task")
-        self.run_cli("task", "create", "proj/todo/beta-task")
+        self.run_cli("task", "create", "/proj/todo", "alpha-task")
+        self.run_cli("task", "create", "/proj/todo", "beta-task")
         out = self.run_cli("task", "list", "proj/todo", "--sort", "title")
         self.assertIn("alpha-task", out)
         self.assertIn("beta-task", out)
 
     def test_task_list_reverse(self) -> None:
         """task list --reverse includes all tasks."""
-        self.run_cli("task", "create", "proj/todo/alpha-task")
-        self.run_cli("task", "create", "proj/todo/beta-task")
+        self.run_cli("task", "create", "/proj/todo", "alpha-task")
+        self.run_cli("task", "create", "/proj/todo", "beta-task")
         out = self.run_cli("task", "list", "proj/todo", "--reverse")
         self.assertIn("alpha-task", out)
         self.assertIn("beta-task", out)
@@ -591,38 +591,38 @@ class TestTaskCLI(_InitializedBase):
 
     def test_task_show_plain_prints_output(self) -> None:
         """task show (plain) prints task details."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         out = self.run_cli("task", "show", "proj/todo/fix-login")
         self.assertTrue(out.strip())
 
     def test_task_show_plain_includes_slug(self) -> None:
         """task show (plain) includes the task slug."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         out = self.run_cli("task", "show", "proj/todo/fix-login")
         self.assertIn("fix-login", out)
 
     def test_task_show_json_is_object(self) -> None:
         """task show --format json emits a JSON object."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         data = self.run_json("task", "show", "proj/todo/fix-login", "--format", "json")
         self.assertIsInstance(data, dict)
 
     def test_task_show_json_id_field(self) -> None:
         """task show --format json includes the task UUID."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         data = self.run_json("task", "show", "proj/todo/fix-login", "--format", "json")
         self.assertIn("id", data)
 
     def test_task_show_json_includes_timestamps(self) -> None:
         """task show --format json includes created_at and updated_at."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         data = self.run_json("task", "show", "proj/todo/fix-login", "--format", "json")
         self.assertIn("created_at", data)
         self.assertIn("updated_at", data)
 
     def test_task_show_json_includes_body(self) -> None:
         """task show --format json includes the body field."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         data = self.run_json("task", "show", "proj/todo/fix-login", "--format", "json")
         self.assertIn("body", data)
 
@@ -630,21 +630,21 @@ class TestTaskCLI(_InitializedBase):
 
     def test_task_update_writes_assigned_to_file(self) -> None:
         """task update --assigned-to persists the assigned_to to the markdown file."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         self.run_cli("task", "update", "proj/todo/fix-login", "--assigned-to", "alice")
         fm = self._read_frontmatter("proj", "todo", "fix-login")
         self.assertEqual(fm.get("assigned_to"), "alice")
 
     def test_task_update_writes_priority_to_file(self) -> None:
         """task update --priority persists the priority to the markdown file."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         self.run_cli("task", "update", "proj/todo/fix-login", "--priority", "high")
         fm = self._read_frontmatter("proj", "todo", "fix-login")
         self.assertEqual(fm.get("priority"), "high")
 
     def test_task_update_multiple_tags_all_written_to_frontmatter(self) -> None:
         """task update with multiple --tag flags writes all tags to the frontmatter."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         self.run_cli(
             "task", "update", "proj/todo/fix-login",
             "--tag", "bug",
@@ -659,14 +659,14 @@ class TestTaskCLI(_InitializedBase):
 
     def test_task_update_verbose_prints_output(self) -> None:
         """task update --verbose prints something."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         out = self.run_cli("task", "update", "proj/todo/fix-login",
                            "--assigned-to", "alice", "--verbose")
         self.assertTrue(out.strip())
 
     def test_task_update_with_all_fields(self) -> None:
         """update task with every optional field persists all values."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         self.run_cli(
             "task", "update", "proj/todo/fix-login",
             "--assigned-to", "bob",
@@ -684,7 +684,7 @@ class TestTaskCLI(_InitializedBase):
 
     def test_task_update_column_moves_task_to_destination_column(self) -> None:
         """task update --column updates and then moves the task to the destination column."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         self.run_cli(
             "task", "update", "proj/todo/fix-login",
             "--assigned-to", "alice",
@@ -699,25 +699,25 @@ class TestTaskCLI(_InitializedBase):
 
     def test_task_move_creates_file_at_destination(self) -> None:
         """task move creates the file in the destination column."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         self.run_cli("task", "move", "proj/todo/fix-login", "done")
         self.assertTrue((self.boards_dir / "proj" / "done" / "fix-login.md").is_file())
 
     def test_task_move_removes_file_from_source(self) -> None:
         """task move removes the file from the source column."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         self.run_cli("task", "move", "proj/todo/fix-login", "done")
         self.assertFalse((self.boards_dir / "proj" / "todo" / "fix-login.md").exists())
 
     def test_task_move_verbose_prints_output(self) -> None:
         """task move --verbose prints something."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         out = self.run_cli("task", "move", "proj/todo/fix-login", "done", "--verbose")
         self.assertTrue(out.strip())
 
     def test_task_move_without_verbose_produces_no_output(self) -> None:
         """task move without --verbose produces no output."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         out = self.run_cli("task", "move", "proj/todo/fix-login", "done")
         self.assertEqual(out, "")
 
@@ -725,62 +725,62 @@ class TestTaskCLI(_InitializedBase):
 
     def test_task_move_top_updates_metadata_order(self) -> None:
         """task move --top places the task first in the column's metadata order."""
-        self.run_cli("task", "create", "proj/todo/first")
-        self.run_cli("task", "create", "proj/todo/second")
-        self.run_cli("task", "create", "proj/todo/third")
+        self.run_cli("task", "create", "/proj/todo", "first")
+        self.run_cli("task", "create", "/proj/todo", "second")
+        self.run_cli("task", "create", "/proj/todo", "third")
         self.run_cli("task", "move", "proj/todo/third", "--top")
         self.assertEqual(self._read_task_order("proj", "todo"), ["third", "first", "second"])
 
     def test_task_move_bottom_updates_metadata_order(self) -> None:
         """task move --bottom places the task last in the column's metadata order."""
-        self.run_cli("task", "create", "proj/todo/first")
-        self.run_cli("task", "create", "proj/todo/second")
-        self.run_cli("task", "create", "proj/todo/third")
+        self.run_cli("task", "create", "/proj/todo", "first")
+        self.run_cli("task", "create", "/proj/todo", "second")
+        self.run_cli("task", "create", "/proj/todo", "third")
         self.run_cli("task", "move", "proj/todo/first", "--bottom")
         self.assertEqual(self._read_task_order("proj", "todo"), ["second", "third", "first"])
 
     def test_task_move_up_updates_metadata_order(self) -> None:
         """task move --up moves the task one position earlier in the column's metadata order."""
-        self.run_cli("task", "create", "proj/todo/first")
-        self.run_cli("task", "create", "proj/todo/second")
-        self.run_cli("task", "create", "proj/todo/third")
+        self.run_cli("task", "create", "/proj/todo", "first")
+        self.run_cli("task", "create", "/proj/todo", "second")
+        self.run_cli("task", "create", "/proj/todo", "third")
         self.run_cli("task", "move", "proj/todo/third", "--up")
         self.assertEqual(self._read_task_order("proj", "todo"), ["first", "third", "second"])
 
     def test_task_move_down_updates_metadata_order(self) -> None:
         """task move --down moves the task one position later in the column's metadata order."""
-        self.run_cli("task", "create", "proj/todo/first")
-        self.run_cli("task", "create", "proj/todo/second")
-        self.run_cli("task", "create", "proj/todo/third")
+        self.run_cli("task", "create", "/proj/todo", "first")
+        self.run_cli("task", "create", "/proj/todo", "second")
+        self.run_cli("task", "create", "/proj/todo", "third")
         self.run_cli("task", "move", "proj/todo/first", "--down")
         self.assertEqual(self._read_task_order("proj", "todo"), ["second", "first", "third"])
 
     def test_task_move_reorder_verbose_prints_output(self) -> None:
         """task move --up --verbose prints something."""
-        self.run_cli("task", "create", "proj/todo/first")
-        self.run_cli("task", "create", "proj/todo/second")
+        self.run_cli("task", "create", "/proj/todo", "first")
+        self.run_cli("task", "create", "/proj/todo", "second")
         out = self.run_cli("task", "move", "proj/todo/second", "--up", "--verbose")
         self.assertTrue(out.strip())
 
     def test_task_move_reorder_without_verbose_produces_no_output(self) -> None:
         """task move --up without --verbose produces no output."""
-        self.run_cli("task", "create", "proj/todo/first")
-        self.run_cli("task", "create", "proj/todo/second")
+        self.run_cli("task", "create", "/proj/todo", "first")
+        self.run_cli("task", "create", "/proj/todo", "second")
         out = self.run_cli("task", "move", "proj/todo/second", "--up")
         self.assertEqual(out, "")
 
     def test_task_move_reorder_json_verbose_includes_slug(self) -> None:
         """task move --up --verbose --format json includes the reordered task's slug."""
-        self.run_cli("task", "create", "proj/todo/first")
-        self.run_cli("task", "create", "proj/todo/second")
+        self.run_cli("task", "create", "/proj/todo", "first")
+        self.run_cli("task", "create", "/proj/todo", "second")
         data = self.run_json("task", "move", "proj/todo/second", "--up",
                              "--verbose", "--format", "json")
         self.assertEqual(data["slug"], "second")
 
     def test_task_move_reorder_json_verbose_column_unchanged(self) -> None:
         """task move --up --verbose --format json reflects the task's column (unchanged)."""
-        self.run_cli("task", "create", "proj/todo/first")
-        self.run_cli("task", "create", "proj/todo/second")
+        self.run_cli("task", "create", "/proj/todo", "first")
+        self.run_cli("task", "create", "/proj/todo", "second")
         data = self.run_json("task", "move", "proj/todo/second", "--up",
                              "--verbose", "--format", "json")
         self.assertEqual(data["column"], "todo")
@@ -789,33 +789,33 @@ class TestTaskCLI(_InitializedBase):
 
     def test_task_assign_writes_assigned_to_frontmatter(self) -> None:
         """task assign persists assigned_to to the task's frontmatter."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         self.run_cli("task", "assign", "proj/todo/fix-login", "alice")
         fm = self._read_frontmatter("proj", "todo", "fix-login")
         self.assertEqual(fm.get("assigned_to"), "alice")
 
     def test_task_assign_overwrites_previous_assigned_to(self) -> None:
         """task assign replaces an existing assigned_to value."""
-        self.run_cli("task", "create", "proj/todo/fix-login", "--assigned-to", "alice")
+        self.run_cli("task", "create", "/proj/todo", "fix-login", "--assigned-to", "alice")
         self.run_cli("task", "assign", "proj/todo/fix-login", "bob")
         fm = self._read_frontmatter("proj", "todo", "fix-login")
         self.assertEqual(fm.get("assigned_to"), "bob")
 
     def test_task_assign_verbose_prints_output(self) -> None:
         """task assign --verbose prints something."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         out = self.run_cli("task", "assign", "proj/todo/fix-login", "alice", "--verbose")
         self.assertTrue(out.strip())
 
     def test_task_assign_without_verbose_produces_no_output(self) -> None:
         """task assign without --verbose produces no output."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         out = self.run_cli("task", "assign", "proj/todo/fix-login", "alice")
         self.assertEqual(out, "")
 
     def test_task_assign_json_includes_assigned_to(self) -> None:
         """task assign --verbose --format json includes the assigned_to field."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         data = self.run_json("task", "assign", "proj/todo/fix-login", "alice",
                              "--verbose", "--format", "json")
         self.assertEqual(data["assigned_to"], "alice")
@@ -824,52 +824,52 @@ class TestTaskCLI(_InitializedBase):
 
     def test_task_rename_creates_new_file(self) -> None:
         """task rename creates a file at the new slug path."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         self.run_cli("task", "rename", "proj/todo/fix-login", "Fix Login Bug")
         self.assertTrue((self.boards_dir / "proj" / "todo" / "fix-login-bug.md").is_file())
 
     def test_task_rename_removes_old_file(self) -> None:
         """task rename removes the file at the old slug path."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         self.run_cli("task", "rename", "proj/todo/fix-login", "Fix Login Bug")
         self.assertFalse((self.boards_dir / "proj" / "todo" / "fix-login.md").exists())
 
     def test_task_rename_updates_title_in_frontmatter(self) -> None:
         """task rename writes the new title to the frontmatter."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         self.run_cli("task", "rename", "proj/todo/fix-login", "Fix Login Bug")
         fm = self._read_frontmatter("proj", "todo", "fix-login-bug")
         self.assertEqual(fm.get("title"), "Fix Login Bug")
 
     def test_task_rename_updates_slug_in_frontmatter(self) -> None:
         """task rename writes the new slug to the frontmatter."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         self.run_cli("task", "rename", "proj/todo/fix-login", "Fix Login Bug")
         fm = self._read_frontmatter("proj", "todo", "fix-login-bug")
         self.assertEqual(fm.get("slug"), "fix-login-bug")
 
     def test_task_rename_verbose_prints_output(self) -> None:
         """task rename --verbose prints something."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         out = self.run_cli("task", "rename", "proj/todo/fix-login", "Fix Login Bug", "--verbose")
         self.assertTrue(out.strip())
 
     def test_task_rename_without_verbose_produces_no_output(self) -> None:
         """task rename without --verbose produces no output."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         out = self.run_cli("task", "rename", "proj/todo/fix-login", "Fix Login Bug")
         self.assertEqual(out, "")
 
     def test_task_rename_json_verbose_includes_new_slug(self) -> None:
         """task rename --verbose --format json includes the new slug."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         data = self.run_json("task", "rename", "proj/todo/fix-login", "Fix Login Bug",
                              "--verbose", "--format", "json")
         self.assertEqual(data["slug"], "fix-login-bug")
 
     def test_task_rename_json_verbose_includes_new_title(self) -> None:
         """task rename --verbose --format json includes the new title."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         data = self.run_json("task", "rename", "proj/todo/fix-login", "Fix Login Bug",
                              "--verbose", "--format", "json")
         self.assertEqual(data["title"], "Fix Login Bug")
@@ -878,20 +878,20 @@ class TestTaskCLI(_InitializedBase):
 
     def test_task_delete_removes_file(self) -> None:
         """task delete removes the markdown file."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         self.run_cli("task", "delete", "proj/todo/fix-login", "--force")
         self.assertFalse((self.boards_dir / "proj" / "todo" / "fix-login.md").exists())
 
     def test_task_delete_verbose_prints_output(self) -> None:
         """task delete --verbose prints something."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         out = self.run_cli("task", "delete", "proj/todo/fix-login",
                            "--force", "--verbose")
         self.assertTrue(out.strip())
 
     def test_task_delete_without_verbose_produces_no_output(self) -> None:
         """task delete without --verbose produces no output."""
-        self.run_cli("task", "create", "proj/todo/fix-login")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
         out = self.run_cli("task", "delete", "proj/todo/fix-login", "--force")
         self.assertEqual(out, "")
 
@@ -955,43 +955,43 @@ class TestColumnCLIEnglishNames(_InitializedBase):
 
     def test_create_uses_slug_for_directory(self) -> None:
         """column create with a space-containing name creates a directory at the kebab slug."""
-        self.run_cli("column", "create", "my-project/On Hold")
+        self.run_cli("column", "create", "/my-project", "On Hold")
         self.assertTrue((self.boards_dir / "my-project" / "on-hold").is_dir())
 
     def test_create_json_name(self) -> None:
         """column create --format json --verbose emits the full display name."""
-        data = self.run_json("column", "create", "my-project/On Hold",
+        data = self.run_json("column", "create", "/my-project", "On Hold",
                              "--format", "json", "--verbose")
         self.assertEqual(data["name"], "On Hold")
 
     def test_create_json_slug(self) -> None:
         """column create --format json --verbose emits the kebab-case slug."""
-        data = self.run_json("column", "create", "my-project/On Hold",
+        data = self.run_json("column", "create", "/my-project", "On Hold",
                              "--format", "json", "--verbose")
         self.assertEqual(data["slug"], "on-hold")
 
     def test_rename_uses_new_slug_for_directory(self) -> None:
         """column rename moves the directory to the slug derived from the new display name."""
-        self.run_cli("column", "create", "my-project/backlog")
+        self.run_cli("column", "create", "/my-project", "backlog")
         self.run_cli("column", "rename", "my-project/backlog", "Work Queue")
         self.assertTrue((self.boards_dir / "my-project" / "work-queue").is_dir())
 
     def test_rename_removes_old_slug_directory(self) -> None:
         """column rename removes the old slug directory."""
-        self.run_cli("column", "create", "my-project/backlog")
+        self.run_cli("column", "create", "/my-project", "backlog")
         self.run_cli("column", "rename", "my-project/backlog", "Work Queue")
         self.assertFalse((self.boards_dir / "my-project" / "backlog").exists())
 
     def test_rename_json_name(self) -> None:
         """column rename --format json --verbose emits the new full display name."""
-        self.run_cli("column", "create", "my-project/backlog")
+        self.run_cli("column", "create", "/my-project", "backlog")
         data = self.run_json("column", "rename", "my-project/backlog", "Work Queue",
                              "--format", "json", "--verbose")
         self.assertEqual(data["name"], "Work Queue")
 
     def test_rename_json_slug(self) -> None:
         """column rename --format json --verbose emits the new kebab-case slug."""
-        self.run_cli("column", "create", "my-project/backlog")
+        self.run_cli("column", "create", "/my-project", "backlog")
         data = self.run_json("column", "rename", "my-project/backlog", "Work Queue",
                              "--format", "json", "--verbose")
         self.assertEqual(data["slug"], "work-queue")
@@ -1007,20 +1007,20 @@ class TestTaskCLIEnglishNames(_InitializedBase):
 
     def test_create_uses_slug_for_filename(self) -> None:
         """task create with a space-containing title creates a file at the kebab slug."""
-        self.run_cli("task", "create", "my-project/todo/Fix Login Bug")
+        self.run_cli("task", "create", "/my-project/todo", "Fix Login Bug")
         self.assertTrue(
             (self.boards_dir / "my-project" / "todo" / "fix-login-bug.md").is_file()
         )
 
     def test_create_json_title(self) -> None:
         """task create --format json --verbose emits the full display title."""
-        data = self.run_json("task", "create", "my-project/todo/Fix Login Bug",
+        data = self.run_json("task", "create", "/my-project/todo", "Fix Login Bug",
                              "--format", "json", "--verbose")
         self.assertEqual(data["title"], "Fix Login Bug")
 
     def test_create_json_slug(self) -> None:
         """task create --format json --verbose emits the kebab-case slug."""
-        data = self.run_json("task", "create", "my-project/todo/Fix Login Bug",
+        data = self.run_json("task", "create", "/my-project/todo", "Fix Login Bug",
                              "--format", "json", "--verbose")
         self.assertEqual(data["slug"], "fix-login-bug")
 

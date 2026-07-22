@@ -23,8 +23,7 @@ from ..utils.str import slug_it
 
 @dataclass
 class TaskCreateParams:
-    # TODO: the title is supplied by the path, but should it be included here
-    # title:      str
+    title:       str
     assigned_to: str | None = None
     priority:    Priority | None = None
     tags:        list[str] = field(default_factory=list)
@@ -449,20 +448,22 @@ class KanbanService(CompletionDataSource):
         """Return the column with the given name in the given board, or None if not found."""
         return self.repository.get_column(board, column)
 
-    def create_column(self, path: str) -> Column:
+    def create_column(self, path: str, title: str) -> Column:
         """
-        Create a new column subdirectory for the provided path.  Raises
+        Create a new column subdirectory for the provided board path and title.  Raises
         BoardNotFound if the board does not exist and ColumnAlreadyExists if
         the column name is already taken within that board.  Appends the new
         column to the board's .metadata file and commits.
         """
-        board, column, _ = self.path_components(path)
+        path = self._strip_trailing_slash(path)
+        slug = slug_it(title)
+        column_path = f"{path}/{slug}"
+        board, column, _ = self.path_components(column_path)
 
         if not board or not column:
-            raise ValueError(f"Invalid path: {path} (board and column names are required)")
+            raise ValueError(f"Invalid path: {path} (a board path is required)")
 
-        slug = slug_it(column)
-        return self.repository.create_column(board, column, slug)
+        return self.repository.create_column(board, title, slug)
 
     def rename_column(self, path: str, new_name: str) -> Column:
         """
@@ -583,25 +584,27 @@ class KanbanService(CompletionDataSource):
         if isinstance(path, Path):
             path = str(path)
 
-        board, column, title = self.path_components(path)
+        path = self._strip_trailing_slash(path)
+        slug = slug_it(params.title)
+        task_path = f"{path}/{slug}"
+        board, column, _ = self.path_components(task_path)
 
-        if board is None or column is None or title is None:
-            raise ValueError(f"No working board/column and no explicit path or title provided: {path}")
+        if board is None or column is None:
+            raise ValueError(f"No working board/column and no explicit path provided: {path}")
 
         assigned_to: str | None
         priority: Priority | None
+        title: str
         tags: list[str]
         due_date: datetime | None
         created_by: str | None
 
-        # if params.title and params.title != title:
-        #    raise ValueError("Task title in params does not match task path title")
+        title = params.title
         assigned_to = params.assigned_to
         priority = params.priority
         tags = params.tags or []
         due_date = params.due_date
         created_by = params.created_by
-        slug = slug_it(title)
 
         if isinstance(due_date, str):
             due_date = datetime.fromisoformat(due_date)

@@ -34,17 +34,11 @@ class TestKanbanServiceSearch(unittest.TestCase):
         self.repo.create_board("beta", slug="beta")
         self.repo.create_column("beta", "todo", slug="todo")
 
-        self.t1 = self.svc.create_task(
-            "alpha/todo/Fix login bug",
-            TaskCreateParams(assigned_to="alice", priority=Priority.HIGH, tags=["bug", "auth"]),
+        self.t1 = self.svc.create_task("alpha/todo", TaskCreateParams(title="Fix login bug", assigned_to="alice", priority=Priority.HIGH, tags=["bug", "auth"]),
         )
-        self.t2 = self.svc.create_task(
-            "alpha/todo/Write API docs",
-            TaskCreateParams(assigned_to="bob", priority=Priority.MEDIUM, tags=["docs"]),
+        self.t2 = self.svc.create_task("alpha/todo", TaskCreateParams(title="Write API docs", assigned_to="bob", priority=Priority.MEDIUM, tags=["docs"]),
         )
-        self.t3 = self.svc.create_task(
-            "beta/todo/Deploy staging",
-            TaskCreateParams(assigned_to="alice", priority=Priority.LOW),
+        self.t3 = self.svc.create_task("beta/todo", TaskCreateParams(title="Deploy staging", assigned_to="alice", priority=Priority.LOW),
         )
 
     def test_search_returns_task_instances(self) -> None:
