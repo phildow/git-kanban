@@ -37,7 +37,7 @@ def build_task_filter(args: argparse.Namespace) -> TaskFilter:
         due_before=_parse_date(args.due_before),
         due_after=_parse_date(args.due_after),
         created_by=args.created_by,
-        exclude_columns=args.column or [],
+        exclude_columns=args.exclude_columns or [],
     )
 
 
@@ -48,7 +48,7 @@ def handle_task_list_helper(args: argparse.Namespace, svc: KanbanService) -> lis
     omitted, falls back to every task in the active board (all columns),
     raising if no board is active.
     """
-    path = args.path
+    path = args.column
     filter = build_task_filter(args)
     sort = args.sort
     reverse = args.reverse

@@ -38,6 +38,7 @@ from ..protocols.completion_data_source import CompletionDataSource
 # path rather than a single segment. "path" is the parser's own
 # convention for fully-specified paths.
 PATH_LIKE_DESTS = frozenset({"path"})
+COL_LIKE_DESTS = frozenset({"column", "exclude_columns"})
 
 class CompletionEngine:
     """Computes tab-completion candidates for a REPL input line.
@@ -208,7 +209,7 @@ class CompletionEngine:
             return self._complete_path(partial)
         if action.dest == "board":
             return self._matching([b.slug for b in self._service.get_boards()], partial)
-        if action.dest == "column":
+        if action.dest in COL_LIKE_DESTS:
             if self._service.working_board is None:
                 return []
             return self._matching(

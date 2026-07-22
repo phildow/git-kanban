@@ -59,15 +59,15 @@ class TestParserAliases(unittest.TestCase):
     def test_tasks_maps_to_task_list_handler(self):
         args = repl_parser.parse_args(["tasks"])
         self.assertEqual(args.command, "tasks")
-        self.assertIsNone(args.path)
+        self.assertIsNone(args.column)
         self.assertIsNone(args.sort)
         self.assertFalse(args.reverse)
         self.assertFalse(args.slugs)
-        self.assertIsNone(args.column)
+        self.assertIsNone(args.exclude_columns)
         self.assertIs(args.func, handle_task_list)
 
         args = repl_parser.parse_args(["tasks", "alpha/todo"])
-        self.assertEqual(args.path, "alpha/todo")
+        self.assertEqual(args.column, "alpha/todo")
         self.assertIs(args.func, handle_task_list)
 
     def test_tasks_sort_reverse_and_slugs_flags(self):
@@ -80,7 +80,7 @@ class TestParserAliases(unittest.TestCase):
     def test_tasks_exclude_flag_is_repeatable(self):
         """`tasks ... -x <column> --exclude <column>` accumulates into a list."""
         args = repl_parser.parse_args(["tasks", "alpha", "-x", "done", "--exclude", "archive"])
-        self.assertEqual(args.column, ["done", "archive"])
+        self.assertEqual(args.exclude_columns, ["done", "archive"])
 
     def test_create_aliases_map_to_create_handlers(self):
         args = repl_parser.parse_args(["new", "board", "main"])
@@ -321,6 +321,12 @@ class TestParserAliases(unittest.TestCase):
             repl_parser.parse_args(["move", "todo/fix-parser", "--top", "--bottom"])
         with self.assertRaises(SystemExit):
             repl_parser.parse_args(["move", "todo/fix-parser", "--up", "--down"])
+
+    def test_reorder_column_binds_column_and_position(self) -> None:
+        """reorder column binds the target column into args.column (not args.path)."""
+        args = repl_parser.parse_args(["reorder", "column", "proj/done", "2"])
+        self.assertEqual(args.column, "proj/done")
+        self.assertEqual(args.position, 2)
 
     def test_cd_alias_maps_to_set_path_handler(self):
         parser = repl_parser.build_parser()

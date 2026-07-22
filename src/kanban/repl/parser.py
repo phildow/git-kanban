@@ -168,7 +168,7 @@ def _add_reorder_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # reorder column
     p = reorder_sub.add_parser("column", help="Move a column to a position")
-    p.add_argument("path", metavar="COLUMN", help="The column to reorder")
+    p.add_argument("column", metavar="COLUMN", help="The column to reorder")
     p.add_argument("position", metavar="POSITION", type=int, help="1-based target position")
     _add_global_flags(p)
     p.set_defaults(func=handle_column_reorder)
@@ -199,7 +199,7 @@ def _add_update_parser(subparsers: argparse._SubParsersAction) -> None:
 
 def _add_move_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("move", aliases=["mv"], help="Move a task to another column")
-    p.add_argument("path", type=str, help="The task to move")
+    p.add_argument("path", metavar="COLUMN/TASK", type=str, help="The task to move")
     group = p.add_mutually_exclusive_group()
     group.add_argument("column", type=str, nargs="?", help="The destination column")
     group.add_argument("--top", action="store_true", default=False, help="The top of the current column")
@@ -253,10 +253,10 @@ def _add_columns_parser(subparsers: argparse._SubParsersAction) -> None:
 
 
 def _add_tasks_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser("tasks", help="List tasks, optionally scoped to a board or board/column")
-    p.add_argument("path", metavar="COLUMN", nargs="?", help="The column to list tasks for or none to list all tasks in the active board")
+    p = subparsers.add_parser("tasks", help="List tasks, optionally scoped to a column")
+    p.add_argument("column", metavar="COLUMN", nargs="?", help="The column to list tasks for or none to list all tasks in the active board")
     p.add_argument("--slugs", action="store_true", default=False, help="Render a compact list of slugs only, like filenames")
-    p.add_argument("-x", "--exclude", metavar="COLUMN", action="append", dest="column", help="Exclude tasks in this column (repeatable)")
+    p.add_argument("-x", "--exclude", metavar="COLUMN", action="append", dest="exclude_columns", help="Exclude tasks in this column (repeatable)")
     _add_list_args(p, SORT_TASK_CHOICES)
     _add_task_filter_args(p)
     _add_global_flags(p)

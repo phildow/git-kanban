@@ -16,7 +16,6 @@ import logging
 from ..models import Board, Column, Task
 from ..protocols.command_renderer import CommandRenderer
 from ..repl.command_helpers import (
-	build_task_filter,
     parse_priority,
     handle_task_list_helper,
     handle_delete_helper,
@@ -127,7 +126,7 @@ def handle_column_rename(args: argparse.Namespace, svc: KanbanService, renderer:
 
 
 def handle_column_reorder(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	result = svc.reorder_column(args.path, args.position)
+	result = svc.reorder_column(args.column, args.position)
 	renderer.render_column_reorder(args, result)
 
 # ---------------------------------------------------------------------------

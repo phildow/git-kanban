@@ -237,7 +237,7 @@ class RichRenderer(CommandRenderer):
 		Render a message indicating that a column was reordered, including its name and new position,
 		and optionally the board if available.
 		"""
-		path = args.path or ""
+		path = args.column
 		column_name = path.split("/", 1)[1] if "/" in path else path
 		board_name = path.split("/", 1)[0] if "/" in path else None
 		position = args.position
