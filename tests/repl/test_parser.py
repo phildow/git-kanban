@@ -8,14 +8,12 @@ from __future__ import annotations
 
 import unittest
 
-# TODO: add handle_list tests
 from kanban.repl import parser as repl_parser
 from kanban.repl.commands import (
     handle_board_create,
     handle_board_list,
     handle_column_create,
     handle_column_list,
-    handle_list,
     handle_change_dir,
     handle_rename,
     handle_search,
@@ -168,41 +166,6 @@ class TestParserAliases(unittest.TestCase):
 
         short = repl_parser.parse_args(["update", "main/todo/fix-parser", "-c", "done"])
         self.assertEqual(short.column, "done")
-
-    def test_list_and_ls_alias_map_to_list_handler(self):
-        args = repl_parser.parse_args(["list"])
-        self.assertEqual(args.command, "list")
-        self.assertIs(args.func, handle_list)
-        self.assertFalse(args.slugs)
-        self.assertIsNone(args.column)
-        self.assertIsNone(args.path)
-
-        args = repl_parser.parse_args(["ls"])
-        self.assertEqual(args.command, "ls")
-        self.assertIs(args.func, handle_list)
-        self.assertFalse(args.slugs)
-        self.assertIsNone(args.column)
-        self.assertIsNone(args.path)
-
-        args = repl_parser.parse_args(["list", "--slugs"])
-        self.assertTrue(args.slugs)
-
-    def test_list_exclude_flag_is_not_supported(self):
-        """`list` rejects -x/--exclude (supported by `tasks`, not `list`)."""
-        with self.assertRaises(SystemExit):
-            repl_parser.parse_args(["list", "-x", "done"])
-        with self.assertRaises(SystemExit):
-            repl_parser.parse_args(["list", "--exclude", "archive"])
-
-    def test_list_accepts_relative_path(self):
-        """`list <board[/column]>` binds path as provided."""
-        args = repl_parser.parse_args(["list", "main/todo"])
-        self.assertEqual(args.path, "main/todo")
-
-    def test_list_accepts_absolute_path(self):
-        """`list /<board[/column]>` binds absolute path."""
-        args = repl_parser.parse_args(["list", "/main/todo"])
-        self.assertEqual(args.path, "/main/todo")
 
     def test_show_maps_to_show_handler_and_defaults_plain_to_false(self):
         args = repl_parser.parse_args(["show", "main/todo/fix-login"])

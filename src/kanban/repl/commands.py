@@ -50,21 +50,8 @@ def handle_change_dir(args: argparse.Namespace, svc: KanbanService, renderer: Co
 
 
 # ---------------------------------------------------------------------------
-# Common commands (list, delete)
+# Common commands (delete)
 # ---------------------------------------------------------------------------
-
-def handle_list(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	typ, results = svc.get_list(path=args.path, filter=build_task_filter(args), sort=args.sort, reverse=args.reverse)
-	
-	if typ is Board:
-		renderer.render_board_list(args, results)
-	elif typ is Column:
-		renderer.render_column_list(args, results)
-	elif typ is Task:
-		renderer.render_task_list(args, results)
-	else:
-		raise ValueError("Unexpected result type from handle_list: {}".format(typ))
-
 
 def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	typ, result = handle_delete_helper(args, svc)

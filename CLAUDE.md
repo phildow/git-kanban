@@ -489,17 +489,6 @@ create task <column> <title>
     [--due-date <date>]
     [--created-by <name>]
 
-list [<column>]
-    [--slugs]
-    [--sort <title|priority|due-date|created-at|updated-at|created-by|column>]
-    [--reverse]
-    [--assigned-to <name>]
-    [--priority <low|medium|high>]
-    [--tag <tag>]
-    [--due-before <date>]
-    [--due-after <date>]
-    [--created-by <name>]
-
 rename <column[/task]> <new-name>
     [--board <new name>]
 
@@ -567,7 +556,6 @@ The following command aliases are registered by default:
 ```
  new = create        (subcommands: board|b, column|c, task|t)
    n = create
-  ls = list
 cols = columns
   mv = move
  del = delete

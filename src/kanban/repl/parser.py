@@ -17,7 +17,6 @@ from ..repl.commands import (
     handle_board_create,
     handle_column_list,
     handle_init,
-    handle_list,
     handle_delete,
     handle_column_create,
     handle_column_reorder,
@@ -133,23 +132,6 @@ def _add_create_parser(subparsers: argparse._SubParsersAction) -> None:
     _add_task_update_args(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_task_create)
-
-
-def _add_list_parser(subparsers: argparse._SubParsersAction) -> None:
-    examples = """
-examples:
-  ls
-  ls todo
-  ls done --assigned-to alice
-  ls in-review --sort title --reverse
-    """
-    p = subparsers.add_parser("list", aliases=["ls"], help="List all boards, columns, or tasks in the current context or at a specified path", epilog=examples, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("path", metavar="COLUMN", nargs="?", help="The column to list tasks for, or none to list the columns in the active board")
-    p.add_argument("--slugs", action="store_true", default=False, help="Render a compact list of slugs only, like filenames")
-    _add_list_args(p, SORT_TASK_CHOICES)
-    _add_task_filter_args(p)
-    _add_global_flags(p)
-    p.set_defaults(func=handle_list, column=None)
 
 
 def _add_delete_parser(subparsers: argparse._SubParsersAction) -> None:
@@ -319,7 +301,6 @@ def build_parser() -> argparse.ArgumentParser:
     _add_columns_parser(subparsers)
     _add_tasks_parser(subparsers)
     _add_create_parser(subparsers)
-    _add_list_parser(subparsers)
     _add_rename_parser(subparsers)
     _add_delete_parser(subparsers)
     _add_reorder_parser(subparsers)
