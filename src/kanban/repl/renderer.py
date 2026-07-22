@@ -325,12 +325,9 @@ class Renderer(CommandRenderer):
 		self._emit(args, "\n".join(items))
 
 	def render_task_create(self, args: argparse.Namespace, result: Task) -> None:
-		"""
-		Render a message indicating that a task was created, 
-		including its slug and optionally its board/column if available.
-		"""
-		
-		self._emit(args, f"Task created: {result.title} ({result.slug})")
+		"""Render a message indicating that a task was created"""
+		self._emit(args, f"Created Task: {result.title}")
+		self._emit(args, f"Path: {result.path}")
 
 	def render_task_show(self, args: argparse.Namespace, result: Task) -> None:
 		"""Render detailed information about a single task, including all metadata and the body/description."""
@@ -338,7 +335,7 @@ class Renderer(CommandRenderer):
 		lines = [
 			"---------------------",
 			result.title,
-			"---------------------"
+			"---------------------",
 			"",
 			f"Slug: {result.slug}",
 			f"ID: {result.id}",
@@ -390,7 +387,8 @@ class Renderer(CommandRenderer):
 
 	def render_task_delete(self, args: argparse.Namespace, result: Task) -> None:
 		"""Render a message indicating that a task was deleted, including its title."""
-		self._emit(args, f"Task deleted: {result.title} ({result.slug})")
+		self._emit(args, f"Deleted Task: {result.title}")
+		self._emit(args, f"Path: {result.path}")
 
 	def render_task_assign(self, args: argparse.Namespace, result: Task) -> None:
 		self._emit(args, f"Task assigned to: {result.assigned_to}")

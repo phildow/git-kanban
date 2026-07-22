@@ -173,12 +173,8 @@ class Renderer(CommandRenderer):
 
 	@_requires_verbose
 	def render_task_create(self, args: argparse.Namespace, result: Task) -> None:
-		# TODO: Consider more detailed output for verbose mode, and a more concise message for non-verbose
-		# TODO: Reconsider whether board/column should be Optional
-		if result.board and result.column:
-			self._emit(args, f"Task created: {result.board}/{result.column}/{result.slug}")
-		else:
-			self._emit(args, f"Task created: {result.slug}")
+		self._emit(args, f"Created Task: {result.title}")
+		self._emit(args, f"Path: {result.path}")
 
 	def render_task_show(self, args: argparse.Namespace, result: Task) -> None:
 		lines = [
@@ -224,13 +220,9 @@ class Renderer(CommandRenderer):
 		self._emit(args, msg)
 
 	@_requires_verbose
-	def render_task_delete(self, args: argparse.Namespace, result: None) -> None:
-		_ = result
-		path = args.path
-		if path:
-			self._emit(args, f"Task deleted: {path}")
-		else:
-			self._emit(args, "Task deleted")
+	def render_task_delete(self, args: argparse.Namespace, result: Task) -> None:
+		self._emit(args, f"Deleted Task: {result.title}")
+		self._emit(args, f"Path: {result.path}")
 
 	@_requires_verbose
 	def render_task_assign(self, args: argparse.Namespace, result: Task) -> None:
