@@ -152,7 +152,9 @@ examples:
 
 def _add_rename_parser(subparsers: argparse._SubParsersAction) -> None:
     rename_parser = subparsers.add_parser("rename", help="Rename a board, column, or task")
-    rename_parser.add_argument("path", metavar="COLUMN[/TASK]", help="The column or task to rename")
+    group = rename_parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("path", metavar="COLUMN[/TASK]", nargs="?", help="The column or task to rename")
+    group.add_argument("-b", "--board", action="store_true", default=False, help="Rename the active board")
     rename_parser.add_argument("new_name", metavar="NEW-NAME", help="The new name for the board, column, or task")
     _add_global_flags(rename_parser)
     rename_parser.set_defaults(func=handle_rename)

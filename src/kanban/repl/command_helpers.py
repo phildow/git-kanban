@@ -109,11 +109,21 @@ def handle_rename_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[
     Rename the entity at the given path to a new name.  This is the main
     entry point for all rename commands in the REPL, which pass a user-provided
     """
-    path = args.path or ""
+    path = args.path
+    rename_active_board = args.board
     new_name = args.new_name
 
     if not new_name:
         raise ValueError("New name must be provided for rename operation")
+
+    if rename_active_board:
+        active_board = svc.working_board
+        if not active_board:
+            raise ValueError("No active board to rename; set one with `cd` first")
+        return Board, svc.rename_board(path=f"/{active_board}", new_name=new_name)
+
+    if path is None:
+        raise ValueError("Rename expects either -b/--board or a COLUMN[/TASK] path")
 
     board, column, task = svc.path_components(path)
 
@@ -121,7 +131,5 @@ def handle_rename_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[
         return Task, svc.rename_task(path=f"/{board}/{column}/{task}", new_title=new_name)
     elif board and column:
         return Column, svc.rename_column(path=f"/{board}/{column}", new_name=new_name)
-    elif board:
-        return Board, svc.rename_board(path=f"/{board}", new_name=new_name)
     else:
-        raise ValueError("Cannot rename without a board name: {}".format(path))
+        raise ValueError("Rename expects either -b/--board or a COLUMN[/TASK] path")

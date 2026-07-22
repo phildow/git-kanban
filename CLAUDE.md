@@ -490,7 +490,7 @@ create task <column> <title>
     [--created-by <name>]
 
 rename <column[/task]> <new-name>
-    [--board <new name>]
+rename --board <new-name>
 
 delete <column[/task]> | --board
     [--force]
@@ -498,7 +498,6 @@ delete <column[/task]> | --board
 reorder <column> <position>
 
 show <column/task> [-p|--plain]
-
 edit <column/task>
 
 update <column/task>

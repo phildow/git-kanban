@@ -96,11 +96,11 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.renderer.render_board_rename.assert_called_once_with(args, result)
 
     def test_handle_rename_board(self) -> None:
-        """`rename` with a board-only path calls rename_board and renders the result."""
-        self.svc.path_components.return_value = ("proj", None, None)
+        """`rename -b` calls rename_board for the active board and renders the result."""
         result = object()
         self.svc.rename_board.return_value = result
-        args = self._args(path="proj", new_name="Work")
+        self.svc.working_board = "proj"
+        args = self._args(path=None, board=True, new_name="Work")
 
         commands.handle_rename(args, self.svc, self.renderer)
 
@@ -112,7 +112,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.path_components.return_value = ("proj", "todo", None)
         result = object()
         self.svc.rename_column.return_value = result
-        args = self._args(path="proj/todo", new_name="Doing")
+        args = self._args(path="proj/todo", board=False, new_name="Doing")
 
         commands.handle_rename(args, self.svc, self.renderer)
 
@@ -124,7 +124,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.path_components.return_value = ("proj", "todo", "fix-parser")
         result = object()
         self.svc.rename_task.return_value = result
-        args = self._args(path="proj/todo/fix-parser", new_name="Fixed Parser")
+        args = self._args(path="proj/todo/fix-parser", board=False, new_name="Fixed Parser")
 
         commands.handle_rename(args, self.svc, self.renderer)
 
