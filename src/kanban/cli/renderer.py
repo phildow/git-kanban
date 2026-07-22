@@ -171,7 +171,7 @@ class Renderer(CommandRenderer):
 			lines.append(f"- {task.slug}{location}")
 		self._emit(args, "\n".join(lines))
 
-	# @_requires_verbose
+	@_requires_verbose
 	def render_task_create(self, args: argparse.Namespace, result: Task) -> None:
 		self._emit(args, f"Created Task: {result.title}")
 		self._emit(args, f"Path: {result.path}")
