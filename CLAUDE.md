@@ -465,9 +465,9 @@ init [-b|--bootstrap]
 cd <board>
 
 boards [--slugs]
-columns [</board>] [--slugs]
+columns [--slugs]
 
-tasks [<[/board/]column>]
+tasks [<column>]
     [--slugs]
     [--exclude <column>]
     [--sort <title|priority|due-date|created-at|updated-at|created-by|column>]
@@ -489,9 +489,7 @@ create task <column> <title>
     [--due-date <date>]
     [--created-by <name>]
 
-list [<[/board/]column>]
-    [--boards]
-    [--columns]
+list [<column>]
     [--slugs]
     [--sort <title|priority|due-date|created-at|updated-at|created-by|column>]
     [--reverse]
@@ -502,17 +500,20 @@ list [<[/board/]column>]
     [--due-after <date>]
     [--created-by <name>]
 
-rename <[/board/]column/task> <new-name>
+rename <column[/task]> <new-name>
+    [--board <new name>]
 
-delete </board|[/board/]column|[/board/]column/task> [-f|--force]
+delete <column[/task]>
+    [--board]
+    [--force]
 
 reorder <column> <position>
 
-show <[/board/]column/task> [-p|--plain]
+show <column/task> [-p|--plain]
 
-edit <[/board/]column/task>
+edit <column/task>
 
-update <[/board/]column/task>
+update <column/task>
     [--column <column>]
     [--assigned-to <name>]
     [--priority <low|medium|high>]
@@ -520,14 +521,13 @@ update <[/board/]column/task>
     [--due-date <date>]
     [--created-by <name>]
 
-move <column/task> 
-    [<column>]
+move <column/task> [<column>]
     [--top]
     [--bottom]
     [--up]
     [--down]
 
-assign <[/board/]column/task> <user>
+assign <column/task> <user>
 
 config
 config set <key> <value>    # key: name

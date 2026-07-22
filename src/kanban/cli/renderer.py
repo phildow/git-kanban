@@ -158,7 +158,7 @@ class Renderer(CommandRenderer):
 			return
 
 		if fmt == "plain":
-			self._emit(args, "\n".join(task.slug for task in result))
+			self._emit(args, "\n".join(str(task.path) for task in result))
 			return
 
 		lines = ["Tasks", "-----"]
@@ -171,13 +171,14 @@ class Renderer(CommandRenderer):
 			lines.append(f"- {task.slug}{location}")
 		self._emit(args, "\n".join(lines))
 
-	@_requires_verbose
+	# @_requires_verbose
 	def render_task_create(self, args: argparse.Namespace, result: Task) -> None:
 		self._emit(args, f"Created Task: {result.title}")
 		self._emit(args, f"Path: {result.path}")
 
 	def render_task_show(self, args: argparse.Namespace, result: Task) -> None:
 		lines = [
+			f"Title: {result.title}",
 			f"Slug: {result.slug}",
 			f"ID: {result.id}",
 			f"Location: {result.board}/{result.column}" if result.board and result.column else "Location: (unscoped)",
@@ -187,9 +188,9 @@ class Renderer(CommandRenderer):
 			f"Tags: {", ".join(result.tags) if result.tags else "-"}",
 			f"Created by: {result.created_by or "-"}",
 		]
+		# TODO: add body
 		self._emit(args, "\n".join(lines))
 
-	# TODO: ==== TEST ====
 	@_requires_verbose
 	def render_task_rename(self, args: argparse.Namespace, result: Task) -> None:
 		old_slug = args.path or ""
@@ -207,7 +208,6 @@ class Renderer(CommandRenderer):
 	def render_task_move(self, args: argparse.Namespace, result: Task) -> None:
 		self._emit(args, result)
 
-	# ----- TODO: TEST -----
 	@_requires_verbose
 	def render_task_reorder(self, args: argparse.Namespace, task_op: tuple[Task, str]) -> None:
 		result, op = task_op

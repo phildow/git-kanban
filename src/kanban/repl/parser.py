@@ -127,7 +127,7 @@ def _add_create_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # create task
     p = create_sub.add_parser("task", aliases=["t"], help="Create a new task")
-    p.add_argument("column", metavar="COLUMN", help="Column of the active board to create the task in")
+    p.add_argument("column", metavar="COLUMN", help="Column to create the task in, created in the active board")
     p.add_argument("title", metavar="TITLE", help="Title of the new task")
     p.add_argument("--edit", action="store_true", default=False, help="Open the new task in the editor after creating it")
     _add_task_update_args(p)
@@ -139,12 +139,12 @@ def _add_list_parser(subparsers: argparse._SubParsersAction) -> None:
     examples = """
 examples:
   ls
-  ls column
-  ls /board
-  ls /board/column
+  ls todo
+  ls done --assigned-to alice
+  ls in-review --sort title --reverse
     """
     p = subparsers.add_parser("list", aliases=["ls"], help="List all boards, columns, or tasks in the current context or at a specified path", epilog=examples, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("path", metavar="PATH", nargs="?", help="The board or column to list tasks for (optional, falls back to the active board)")
+    p.add_argument("path", metavar="COLUMN", nargs="?", help="The column to list tasks for, or none to list the columns in the active board")
     p.add_argument("--slugs", action="store_true", default=False, help="Render a compact list of slugs only, like filenames")
     _add_list_args(p, SORT_TASK_CHOICES)
     _add_task_filter_args(p)
@@ -157,7 +157,7 @@ def _add_delete_parser(subparsers: argparse._SubParsersAction) -> None:
 examples:
   delete column/task
   delete column
-  delete /board
+  delete -b
     """
     p = subparsers.add_parser("delete", aliases=["del", "rm"], help="Delete a board, column, or task", epilog=examples, formatter_class=argparse.RawDescriptionHelpFormatter)
     _add_global_flags(p)
@@ -171,7 +171,7 @@ examples:
 
 def _add_rename_parser(subparsers: argparse._SubParsersAction) -> None:
     rename_parser = subparsers.add_parser("rename", help="Rename a board, column, or task")
-    rename_parser.add_argument("path", metavar="/BOARD[/COLUMN[/TASK]]", help="The board, column, or task to rename")
+    rename_parser.add_argument("path", metavar="COLUMN[/TASK]", help="The column or task to rename")
     rename_parser.add_argument("new_name", metavar="NEW-NAME", help="The new name for the board, column, or task")
     _add_global_flags(rename_parser)
     rename_parser.set_defaults(func=handle_rename)
@@ -185,7 +185,7 @@ def _add_reorder_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # reorder column
     p = reorder_sub.add_parser("column", help="Move a column to a position")
-    p.add_argument("path", metavar="BOARD/COLUMN", help="Column path")
+    p.add_argument("path", metavar="COLUMN", help="The column to reorder")
     p.add_argument("position", metavar="POSITION", type=int, help="1-based target position")
     _add_global_flags(p)
     p.set_defaults(func=handle_column_reorder)
@@ -193,7 +193,7 @@ def _add_reorder_parser(subparsers: argparse._SubParsersAction) -> None:
 
 def _add_show_parser(subparsers: argparse._SubParsersAction) -> None:
     show_parser = subparsers.add_parser("show", aliases=["view", "v", "s"], help="Show task details")
-    show_parser.add_argument("path", metavar="BOARD/COLUMN/TASK", help="The task to show")
+    show_parser.add_argument("path", metavar="COLUMN/TASK", help="The task to show")
     show_parser.add_argument("-p", "--plain", action="store_true", default=False, help="Render the task body as plain text instead of Markdown")
     show_parser.set_defaults(func=handle_task_show)
 
@@ -201,14 +201,14 @@ def _add_show_parser(subparsers: argparse._SubParsersAction) -> None:
 def _add_edit_parser(subparsers: argparse._SubParsersAction) -> None:
     edit_parser = subparsers.add_parser("edit", help="Edit a task in the default editor")
     _add_global_flags(edit_parser)
-    edit_parser.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
+    edit_parser.add_argument("path", metavar="COLUMN/TASK", help="The task to edit")
     edit_parser.set_defaults(func=handle_task_edit)
 
 
 def _add_update_parser(subparsers: argparse._SubParsersAction) -> None:
     update_parser = subparsers.add_parser("update", help="Update a task")
     _add_global_flags(update_parser)
-    update_parser.add_argument("path", metavar="BOARD/COLUMN/TITLE", help="Fully qualified task path")
+    update_parser.add_argument("path", metavar="COLUMN/TASK", help="The task to update")
     update_parser.add_argument("-c", "--column", dest="column", metavar="COLUMN", help="Move the task to this column")
     _add_task_create_args(update_parser)
     update_parser.set_defaults(func=handle_task_update)
@@ -262,6 +262,7 @@ def _add_boards_parser(subparsers: argparse._SubParsersAction) -> None:
 
 def _add_columns_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("columns", aliases=["cols"], help="List columns for a board")
+    # TODO: remove board argument and use current context instead
     p.add_argument("board", metavar="BOARD", nargs="?", help="Board to list columns for (optional, falls back to current context)")
     p.add_argument("--slugs", action="store_true", default=False, help="Render a compact list of slugs only, like filenames")
     _add_global_flags(p)
@@ -270,8 +271,7 @@ def _add_columns_parser(subparsers: argparse._SubParsersAction) -> None:
 
 def _add_tasks_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("tasks", help="List tasks, optionally scoped to a board or board/column")
-    p.add_argument("path", metavar="BOARD[/COLUMN]", nargs="?",
-                    help="The board and/or column to list tasks for (optional, falls back to every task in the active board)")
+    p.add_argument("path", metavar="COLUMN", nargs="?", help="The column to list tasks for or none to list all tasks in the active board")
     p.add_argument("--slugs", action="store_true", default=False, help="Render a compact list of slugs only, like filenames")
     p.add_argument("-x", "--exclude", metavar="COLUMN", action="append", dest="column", help="Exclude tasks in this column (repeatable)")
     _add_list_args(p, SORT_TASK_CHOICES)
@@ -282,7 +282,7 @@ def _add_tasks_parser(subparsers: argparse._SubParsersAction) -> None:
 
 def _add_assign_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("assign", help="Assign a task to a user")
-    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified task path")
+    p.add_argument("path", metavar="COLUMN/TASK", help="The task to assign")
     p.add_argument("assigned_to", metavar="USER", help="User to assign the task to")
     _add_global_flags(p)
     p.set_defaults(func=handle_task_assign)
@@ -342,8 +342,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     # log
     p = subparsers.add_parser("log", help="Show git log for a task or scope")
-    p.add_argument("path", metavar="[BOARD/COLUMN/]TASK", nargs="?",
-                   help="Task path or title (optional)")
+    p.add_argument("path", metavar="COLUMN[/TASK]", nargs="?", help="The column or path to show the log for, or none to show the log for the active board")
     p.add_argument("--limit", metavar="N", type=int, help="Maximum number of log entries to show")
     _add_global_flags(p)
     p.set_defaults(func=handle_log)
