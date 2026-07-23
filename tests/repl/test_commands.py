@@ -124,7 +124,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_rename(args, self.svc, self.renderer)
 
-        self.svc.rename_task.assert_called_once_with(path="/proj/todo/fix-parser", new_title="Fixed Parser")
+        self.svc.rename_task.assert_called_once_with(path=Path("/proj/todo/fix-parser"), new_title="Fixed Parser")
         self.renderer.render_task_rename.assert_called_once_with(args, result)
 
     def test_column_handlers(self):

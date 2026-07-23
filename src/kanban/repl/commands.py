@@ -197,7 +197,7 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: C
 
 @with_relative_path
 def handle_task_rename(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	result = svc.rename_task(args.path, args.new_name)
+	result = svc.rename_task(Path(args.path), args.new_name)
 	renderer.render_task_rename(args, result)
 
 

@@ -379,7 +379,7 @@ class TestCommandHandlers(unittest.TestCase):
 
         commands.handle_task_rename(args, self.svc, self.renderer, self.json_renderer)
 
-        self.svc.rename_task.assert_called_once_with("/board-a/todo/fix-parser", "Fixed Parser")
+        self.svc.rename_task.assert_called_once_with(Path("/board-a/todo/fix-parser"), "Fixed Parser")
         self.renderer.render_task_rename.assert_called_once_with(args, result)
 
     def test_handle_task_move(self):

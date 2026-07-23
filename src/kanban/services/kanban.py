@@ -673,7 +673,7 @@ class KanbanService(CompletionDataSource):
 
     def rename_task(
         self,
-        path: str | Path,
+        path: Path,
         new_title: str,
     ) -> Task:
         """
@@ -682,15 +682,11 @@ class KanbanService(CompletionDataSource):
         resolved, and TaskAlreadyExists if the new title slug is already taken
         in that column.  Updates the index and commits.
         """
-
-        if isinstance(path, Path):
-            path = str(path)
-
         board, column, title = self.path_components(path)
         if board is None or column is None or title is None:
             raise ValueError(f"Unable to locate task at: {path}")
 
-        task = self.get_task(Path(path))
+        task = self.get_task(path)
         slug = task.slug
 
         new_slug = slug_it(new_title)

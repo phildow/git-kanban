@@ -55,15 +55,15 @@ class TestKanbanServiceTaskPathArgument(unittest.TestCase):
         self.assertEqual([c.slug for c in via_slug], ["todo", "done"])
         self.assertEqual([c.slug for c in via_path], ["todo", "done"])
 
-    def test_rename_task_accepts_str_and_path(self) -> None:
-        """rename_task renames the correct task whether path is str or Path."""
+    def test_rename_task_accepts_path(self) -> None:
+        """rename_task renames the correct task when path is a Path."""
         self.svc.create_task("alpha/todo", TaskCreateParams(title="fix-login"))
         self.svc.create_task("alpha/todo", TaskCreateParams(title="write-docs"))
 
-        via_str = self.svc.rename_task("alpha/todo/fix-login", "Fix login bug")
+        via_path_1 = self.svc.rename_task(Path("alpha/todo/fix-login"), "Fix login bug")
         via_path = self.svc.rename_task(Path("alpha/todo/write-docs"), "Write API docs")
 
-        self.assertEqual(via_str.title, "Fix login bug")
+        self.assertEqual(via_path_1.title, "Fix login bug")
         self.assertEqual(via_path.title, "Write API docs")
 
     def test_update_task_accepts_str_and_path(self) -> None:
