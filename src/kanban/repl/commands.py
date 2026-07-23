@@ -190,7 +190,7 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: C
 	result = svc.update_task(Path(args.path), updates=updates)
 
 	if args.column is not None:
-		result = svc.move_task(result.path, args.column)
+		result = svc.move_task(Path(result.path), Slug(args.column))
 
 	renderer.render_task_update(args, result)
 
@@ -204,7 +204,7 @@ def handle_task_rename(args: argparse.Namespace, svc: KanbanService, renderer: C
 @with_relative_path
 def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	if args.column is not None:
-		result = svc.move_task(args.path, args.column)
+		result = svc.move_task(Path(args.path), Slug(args.column))
 		renderer.render_task_move(args, result)
 	else:
 		op = "top" if args.top else "bottom" if args.bottom else "up" if args.up else "down" if args.down else None

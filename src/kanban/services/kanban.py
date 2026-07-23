@@ -783,8 +783,8 @@ class KanbanService(CompletionDataSource):
 
     def move_task(
         self,
-        path:   str | Path,
-        column: str,
+        path:   Path,
+        column: Slug,
     ) -> Task:
         """
         Move a task's .md file to a new column within the same board. 
@@ -792,11 +792,7 @@ class KanbanService(CompletionDataSource):
         Raises TaskNotFound, BoardNotFound, or ColumnNotFound as appropriate.  
         Updates the index and commits.
         """
-        if isinstance(path, Path):
-            path = str(path)
-
-        task = self.get_task(Path(path))
-        column = Slug(column)
+        task = self.get_task(path)
         result = self.repository.move_task(task, column)
         self.index_service.upsert_task(result)
         return result

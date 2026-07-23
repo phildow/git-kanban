@@ -13,6 +13,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from kanban.cli import commands
+from kanban.models import Slug
 from kanban.storage.seeds import BOOTSTRAP_CONFIG
 from kanban.services.kanban import TaskCreateParams, TaskUpdateParams
 
@@ -347,7 +348,7 @@ class TestCommandHandlers(unittest.TestCase):
                 created_by="mark",
             ),
         )
-        self.svc.move_task.assert_called_once_with("/board-a/todo/fix-parser", "done")
+        self.svc.move_task.assert_called_once_with(Path("/board-a/todo/fix-parser"), Slug("done"))
         self.renderer.render_task_update.assert_called_once_with(args, moved)
 
     def test_handle_task_update_with_explicit_empty_tags(self):
@@ -390,7 +391,7 @@ class TestCommandHandlers(unittest.TestCase):
 
         commands.handle_task_move(args, self.svc, self.renderer, self.json_renderer)
 
-        self.svc.move_task.assert_called_once_with("/board-a/todo/fix-parser", "done")
+        self.svc.move_task.assert_called_once_with(Path("/board-a/todo/fix-parser"), Slug("done"))
         self.renderer.render_task_move.assert_called_once_with(args, result)
 
     def test_handle_task_move_top(self):

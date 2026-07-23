@@ -12,7 +12,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
-from kanban.models import Board, Column, Task
+from kanban.models import Board, Column, Slug, Task
 from kanban.repl import commands
 from kanban.services.kanban import TaskCreateParams, TaskUpdateParams
 
@@ -370,7 +370,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_task_update(args, self.svc, self.renderer)
 
-        self.svc.move_task.assert_called_once_with("/alpha/todo/fix-parser", "done")
+        self.svc.move_task.assert_called_once_with(Path("/alpha/todo/fix-parser"), Slug("done"))
         self.renderer.render_task_update.assert_called_once_with(args, moved)
 
     def test_handle_task_move(self):
@@ -381,7 +381,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_task_move(args, self.svc, self.renderer)
 
-        self.svc.move_task.assert_called_once_with("alpha/todo/fix-parser", "done")
+        self.svc.move_task.assert_called_once_with(Path("alpha/todo/fix-parser"), Slug("done"))
         self.renderer.render_task_move.assert_called_once_with(args, result)
 
     def test_handle_task_move_top(self):

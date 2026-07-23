@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from functools import wraps
 
 from ..storage.seeds import BOOTSTRAP_CONFIG
-from ..models import Priority, TaskFilter
+from ..models import Priority, Slug, TaskFilter
 from ..protocols.command_renderer import CommandRenderer
 from ..services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
 from ..utils.shell import prompt_for_confirmation
@@ -211,7 +211,7 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: C
 	result = svc.update_task(Path(args.path), updates=updates)
 
 	if args.column is not None:
-		result = svc.move_task(result.path, args.column)
+		result = svc.move_task(Path(result.path), Slug(args.column))
 
 	_pick(args, renderer, json_renderer).render_task_update(args, result)
 
@@ -219,7 +219,7 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: C
 @with_absolute_path
 def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
 	if args.column is not None:
-		result = svc.move_task(args.path, args.column)
+		result = svc.move_task(Path(args.path), Slug(args.column))
 		_pick(args, renderer, json_renderer).render_task_move(args, result)
 	else:
 		op = "top" if args.top else "bottom" if args.bottom else "up" if args.up else "down" if args.down else None

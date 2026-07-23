@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
+from kanban.models import Slug
 from kanban.services.git import GitService
 from kanban.services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
 from kanban.storage.memory import InMemoryRepository
@@ -77,15 +78,15 @@ class TestKanbanServiceTaskPathArgument(unittest.TestCase):
         self.assertEqual(via_path_1.assigned_to, "alice")
         self.assertEqual(via_path.assigned_to, "bob")
 
-    def test_move_task_accepts_str_and_path(self) -> None:
-        """move_task relocates the correct task whether path is str or Path."""
+    def test_move_task_accepts_path(self) -> None:
+        """move_task relocates the correct task when path is a Path."""
         self.svc.create_task("alpha/todo", TaskCreateParams(title="fix-login"))
         self.svc.create_task("alpha/todo", TaskCreateParams(title="write-docs"))
 
-        via_str = self.svc.move_task("alpha/todo/fix-login", "done")
-        via_path = self.svc.move_task(Path("alpha/todo/write-docs"), "done")
+        via_path_1 = self.svc.move_task(Path("alpha/todo/fix-login"), Slug("done"))
+        via_path = self.svc.move_task(Path("alpha/todo/write-docs"), Slug("done"))
 
-        self.assertEqual(via_str.column, "done")
+        self.assertEqual(via_path_1.column, "done")
         self.assertEqual(via_path.column, "done")
 
     def test_reorder_task_accepts_str_and_path(self) -> None:

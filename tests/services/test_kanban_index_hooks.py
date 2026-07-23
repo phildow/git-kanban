@@ -9,6 +9,7 @@ from pathlib import Path
 from uuid import uuid4
 from unittest.mock import MagicMock
 
+from kanban.models import Slug
 from kanban.services.git import GitService
 from kanban.services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
 from kanban.storage.memory import InMemoryRepository
@@ -64,7 +65,7 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
         self.svc.create_task("alpha/todo", TaskCreateParams(title="t1"))
         self.index_service.reset_mock()
 
-        moved = self.svc.move_task("alpha/todo/t1", "done")
+        moved = self.svc.move_task(Path("alpha/todo/t1"), Slug("done"))
 
         self.index_service.upsert_task.assert_called_once()
         self.assertEqual(self.index_service.upsert_task.call_args.args[0].id, moved.id)
