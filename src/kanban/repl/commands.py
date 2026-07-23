@@ -129,13 +129,6 @@ def handle_column_create(args: argparse.Namespace, svc: KanbanService, renderer:
 	renderer.render_column_create(args, result)
 
 
-# TODO: REMOVE
-@with_relative_path
-def handle_column_rename(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	result = svc.rename_column(args.path, args.new_name)
-	renderer.render_column_rename(args, result)
-
-
 def handle_column_reorder(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.reorder_column(args.column, args.position)
 	renderer.render_column_reorder(args, result)

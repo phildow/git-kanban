@@ -84,6 +84,11 @@ class TestJsonRendererBoards(unittest.TestCase):
         out = _capture(lambda: self.r.render_board_list(_args(), [_board("My Project", "my-project")]))
         self.assertEqual(json.loads(out)[0]["slug"], "my-project")
 
+    def test_board_list_path_field_present(self) -> None:
+        """Each board entry contains a path field."""
+        out = _capture(lambda: self.r.render_board_list(_args(), [_board("alpha")]))
+        self.assertIn("path", json.loads(out)[0])
+
     def test_board_list_column_count_field(self) -> None:
         """Each board entry contains the correct column_count."""
         out = _capture(lambda: self.r.render_board_list(_args(), [_board("alpha", "alpha", 4)]))
@@ -118,6 +123,11 @@ class TestJsonRendererBoards(unittest.TestCase):
         """render_board_info emits the board slug."""
         out = _capture(lambda: self.r.render_board_info(_args(), _board("My Project", "my-project")))
         self.assertEqual(json.loads(out)["slug"], "my-project")
+
+    def test_board_info_path_field_present(self) -> None:
+        """render_board_info emits a path field."""
+        out = _capture(lambda: self.r.render_board_info(_args(), _board("proj")))
+        self.assertIn("path", json.loads(out))
 
     def test_board_rename_silent_without_verbose(self) -> None:
         """render_board_rename emits nothing when --verbose is not set."""
@@ -176,6 +186,11 @@ class TestJsonRendererColumns(unittest.TestCase):
         out = _capture(lambda: self.r.render_column_list(_args(), [_column("In Progress", "main", 1, "in-progress")]))
         self.assertEqual(json.loads(out)[0]["slug"], "in-progress")
 
+    def test_column_list_path_field_present(self) -> None:
+        """Each column entry contains a path field."""
+        out = _capture(lambda: self.r.render_column_list(_args(), [_column("todo", "main", 0)]))
+        self.assertIn("path", json.loads(out)[0])
+
     def test_column_list_empty_array(self) -> None:
         """render_column_list emits an empty JSON array for an empty list."""
         out = _capture(lambda: self.r.render_column_list(_args(), []))
@@ -190,6 +205,11 @@ class TestJsonRendererColumns(unittest.TestCase):
         """render_column_info emits the owning board."""
         out = _capture(lambda: self.r.render_column_info(_args(), _column("todo", "main", 0)))
         self.assertEqual(json.loads(out)["board"], "main")
+
+    def test_column_info_path_field_present(self) -> None:
+        """render_column_info emits a path field."""
+        out = _capture(lambda: self.r.render_column_info(_args(), _column("todo", "main", 0)))
+        self.assertIn("path", json.loads(out))
 
     def test_column_create_silent_without_verbose(self) -> None:
         """render_column_create emits nothing when --verbose is not set."""
@@ -248,6 +268,11 @@ class TestJsonRendererTasks(unittest.TestCase):
         out = _capture(lambda: self.r.render_task_list(_args(), [_task()]))
         self.assertEqual(json.loads(out)[0]["slug"], "fix-login-bug")
 
+    def test_task_list_path_field_present(self) -> None:
+        """Each task entry contains a path field."""
+        out = _capture(lambda: self.r.render_task_list(_args(), [_task()]))
+        self.assertIn("path", json.loads(out)[0])
+
     def test_task_list_board_field(self) -> None:
         """Each task entry contains the board name."""
         out = _capture(lambda: self.r.render_task_list(_args(), [_task()]))
@@ -303,6 +328,11 @@ class TestJsonRendererTasks(unittest.TestCase):
         """render_task_show emits the task slug."""
         out = _capture(lambda: self.r.render_task_show(_args(), _task()))
         self.assertEqual(json.loads(out)["slug"], "fix-login-bug")
+
+    def test_task_show_path_field_present(self) -> None:
+        """render_task_show emits a path field."""
+        out = _capture(lambda: self.r.render_task_show(_args(), _task()))
+        self.assertIn("path", json.loads(out))
 
     def test_task_show_includes_timestamps(self) -> None:
         """render_task_show includes created_at and updated_at."""

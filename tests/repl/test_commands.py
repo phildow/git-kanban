@@ -135,13 +135,6 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.create_column.assert_called_once_with(".", "todo")
         self.renderer.render_column_create.assert_called_once_with(args, result)
 
-        args = self._args(path="alpha/todo", new_name="doing")
-        result = object()
-        self.svc.rename_column.return_value = result
-        commands.handle_column_rename(args, self.svc, self.renderer)
-        self.svc.rename_column.assert_called_once_with("alpha/todo", "doing")
-        self.renderer.render_column_rename.assert_called_once_with(args, result)
-
     def test_handle_column_create_raises_without_active_board(self):
         """create column with no active board raises rather than resolving nonsense."""
         args = self._args(column="todo")

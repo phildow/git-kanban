@@ -27,9 +27,9 @@ def _task_dict(task: Task) -> dict:
         "id": str(task.id),
         "title": task.title,
         "path": str(task.path),
-        # "slug": task.slug,
-        # "board": task.board,
-        # "column": task.column,
+        "slug": task.slug,
+        "board": task.board,
+        "column": task.column,
         "assigned_to": task.assigned_to,
         "priority": task.priority,
         "due_date": task.due_date.isoformat() if task.due_date else None,
@@ -51,8 +51,8 @@ def _task_detail_dict(task: Task) -> dict:
 def _board_dict(board: Board) -> dict:
     return {
         "name": board.name,
-        # "slug": board.slug,
         "path": str(board.path),
+        "slug": board.slug,
         "column_count": board.column_count,
         "task_count": board.task_count,
     }
@@ -62,8 +62,8 @@ def _column_dict(column: Column) -> dict:
     return {
         "name": column.name,
         "path": str(column.path),
-        # "slug": column.slug,
-        # "board": column.board,
+        "slug": column.slug,
+        "board": column.board,
         "position": column.position,
         "task_count": column.task_count,
     }

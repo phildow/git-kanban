@@ -245,7 +245,7 @@ class KanbanService(CompletionDataSource):
         resolved_path = base.joinpath(*components).resolve(strict=False)
         return resolved_path
         
-    def path_components(self, path: str | None = None) -> tuple[Slug | None, Slug | None, Slug | None]:
+    def path_components(self, path: str | Path | None = None) -> tuple[Slug | None, Slug | None, Slug | None]:
         """Resolve a [BOARD/][COLUMN/]TITLE path into its components."""
         path = self.resolve_path(path)
         parts = path.parts # ["/", board|None, column|None, title|None]
@@ -353,7 +353,6 @@ class KanbanService(CompletionDataSource):
         """
         return self.repository.get_boards()
 
-    # UNUSED
     def get_board(self, board: str) -> Board | None:
         """Return the board with the given name, or None if not found."""
         return self.repository.get_board(board)
