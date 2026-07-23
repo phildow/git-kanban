@@ -104,7 +104,7 @@ class TestCommandHandlers(unittest.TestCase):
 
         commands.handle_board_delete(args, self.svc, self.renderer, self.json_renderer)
 
-        self.svc.delete_board.assert_called_once_with("/my-board")
+        self.svc.delete_board.assert_called_once_with(Path("/my-board"))
         self.renderer.render_board_delete.assert_called_once_with(args, result)
 
     def test_column_handlers(self):

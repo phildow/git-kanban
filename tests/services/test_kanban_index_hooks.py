@@ -125,7 +125,7 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
         t3 = self.svc.create_task("alpha/done", TaskCreateParams(title="t3"))
         self.index_service.reset_mock()
 
-        self.svc.delete_board("alpha")
+        self.svc.delete_board(Path("alpha"))
 
         self.assertEqual(self.index_service.remove_task.call_count, 3)
         deleted_ids = {c.args[0].id for c in self.index_service.remove_task.call_args_list}
@@ -133,7 +133,7 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
 
     def test_delete_board_with_no_tasks_calls_no_index_delete(self) -> None:
         """Deleting a board with no tasks does not invoke index_service.remove_task."""
-        self.svc.delete_board("alpha")
+        self.svc.delete_board(Path("alpha"))
 
         self.index_service.remove_task.assert_not_called()
 

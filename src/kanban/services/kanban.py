@@ -409,7 +409,7 @@ class KanbanService(CompletionDataSource):
 
         return board
 
-    def delete_board(self, path: str | None) -> Board:
+    def delete_board(self, path: Path | None) -> Board:
         """
         Recursively delete a board directory and remove it from .kanban-store/boards/.metadata.
         Raises BoardNotFound if the board does not exist.  Also removes all

@@ -94,7 +94,7 @@ def handle_board_rename(args: argparse.Namespace, svc: KanbanService, renderer: 
 def handle_board_delete(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
 	if not args.force and not prompt_for_confirmation(f"Delete board '{args.path}'?"):
 		return
-	result = svc.delete_board(args.path)
+	result = svc.delete_board(Path(args.path))
 	_pick(args, renderer, json_renderer).render_board_delete(args, result)
 
 # ---------------------------------------------------------------------------

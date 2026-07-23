@@ -63,7 +63,7 @@ class TestKanbanServiceDeleteReturnsObject(unittest.TestCase):
 
     def test_delete_board_returns_deleted_board(self) -> None:
         """delete_board returns the Board that was removed, not just its slug."""
-        deleted = self.svc.delete_board("my-project")
+        deleted = self.svc.delete_board(Path("my-project"))
 
         self.assertIsInstance(deleted, Board)
         self.assertEqual(deleted.slug, "my-project")
@@ -71,7 +71,7 @@ class TestKanbanServiceDeleteReturnsObject(unittest.TestCase):
 
     def test_delete_board_removes_it_from_repository(self) -> None:
         """The board is actually gone after delete_board returns it."""
-        self.svc.delete_board("my-project")
+        self.svc.delete_board(Path("my-project"))
 
         self.assertFalse(self.repo.board_exists("my-project"))
 
