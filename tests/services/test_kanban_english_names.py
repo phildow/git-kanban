@@ -120,7 +120,7 @@ class TestKanbanServiceEnglishNames(unittest.TestCase):
         self.svc.create_board("My Project", columns=[("To Do", "todo")])
         self.svc.create_task("my-project/todo", TaskCreateParams(title="Fix Login Bug"))
         updated = self.svc.update_task(
-            "my-project/todo/fix-login-bug",
+            Path("my-project/todo/fix-login-bug"),
             TaskUpdateParams(title="Fix Registration Bug"),
         )
         self.assertEqual(updated.title, "Fix Registration Bug")
@@ -130,7 +130,7 @@ class TestKanbanServiceEnglishNames(unittest.TestCase):
         self.svc.create_board("My Project", columns=[("To Do", "todo")])
         self.svc.create_task("my-project/todo", TaskCreateParams(title="Fix Login Bug"))
         updated = self.svc.update_task(
-            "my-project/todo/fix-login-bug",
+            Path("my-project/todo/fix-login-bug"),
             TaskUpdateParams(title="Fix Registration Bug"),
         )
         self.assertEqual(updated.slug, "fix-registration-bug")

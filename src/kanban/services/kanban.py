@@ -742,7 +742,7 @@ class KanbanService(CompletionDataSource):
 
     def update_task(
         self,
-        path:     str | Path,
+        path:     Path,
         updates:  TaskUpdateParams,
     ) -> Task:
         """
@@ -751,10 +751,7 @@ class KanbanService(CompletionDataSource):
         current title, the file is renamed to match the new slug.  Raises
         TaskNotFound via path_components. Updates the index entry and commits.
         """
-        if isinstance(path, Path):
-            path = str(path)
-
-        task = self.get_task(Path(path))
+        task = self.get_task(path)
 
         # TODO: how do we handle removing a field?
         # If the user wants to remove a due date, for example, they would have to pass in updates.due_date = None, but that is indistinguishable from "don't change the due date".

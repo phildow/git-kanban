@@ -44,7 +44,7 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
         self.svc.create_task("alpha/todo", TaskCreateParams(title="t1"))
         self.index_service.reset_mock()
 
-        updated = self.svc.update_task("alpha/todo/t1", TaskUpdateParams(assigned_to="alice"))
+        updated = self.svc.update_task(Path("alpha/todo/t1"), TaskUpdateParams(assigned_to="alice"))
 
         self.index_service.upsert_task.assert_called_once()
         self.assertEqual(self.index_service.upsert_task.call_args.args[0].id, updated.id)

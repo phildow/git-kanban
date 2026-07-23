@@ -208,7 +208,7 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: C
 		created_by=args.created_by,
 	)
 
-	result = svc.update_task(args.path, updates=updates)
+	result = svc.update_task(Path(args.path), updates=updates)
 
 	if args.column is not None:
 		result = svc.move_task(result.path, args.column)

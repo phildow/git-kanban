@@ -309,7 +309,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         commands.handle_task_update(args, self.svc, self.renderer)
 
         self.svc.update_task.assert_called_once_with(
-            "alpha/todo/fix-parser",
+            Path("alpha/todo/fix-parser"),
             updates=TaskUpdateParams(
                 title=None,
                 assigned_to=None,
@@ -337,7 +337,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         commands.handle_task_update(args, self.svc, self.renderer)
 
         self.svc.update_task.assert_called_once_with(
-            "alpha/todo/fix-parser",
+            Path("alpha/todo/fix-parser"),
             updates=TaskUpdateParams(
                 assigned_to="philip",
                 priority="medium",
