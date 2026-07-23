@@ -58,14 +58,14 @@ def handle_task_list_helper(args: argparse.Namespace, svc: KanbanService) -> lis
         board = svc.working_board
         if not board:
             raise ValueError("No active board; provide a board or board/column, or set one with `board`/`cd`")
-        return svc.get_tasks(path=f"/{board}", filter=filter, sort=sort, reverse=reverse)
+        return svc.get_tasks(path=Path(f"/{board}"), filter=filter, sort=sort, reverse=reverse)
 
     board, column, _ = svc.path_components(path)
     if board is None:
         raise ValueError(f"Cannot resolve board from: {path}")
     if column:
-        return svc.get_tasks(path=f"/{board}/{column}", filter=filter, sort=sort, reverse=reverse)
-    return svc.get_tasks(path=f"/{board}", filter=filter, sort=sort, reverse=reverse)
+        return svc.get_tasks(path=Path(f"/{board}/{column}"), filter=filter, sort=sort, reverse=reverse)
+    return svc.get_tasks(path=Path(f"/{board}"), filter=filter, sort=sort, reverse=reverse)
 
 
 def handle_delete_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[type, Board | Column | Task] | tuple[None, None]:

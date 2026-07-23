@@ -183,7 +183,7 @@ class FakeKanbanService:
     def get_columns(self, board: str) -> list[_Slugged]:
         return [_Slugged(slug) for slug in self._BOARDS[board]]
 
-    def get_tasks(self, path: str | None = None) -> list[_Task]:
+    def get_tasks(self, path: Path | None = None) -> list[_Task]:
         board, column, _ = self.path_components(path)
         if board is None or column is None:
             return []
@@ -203,8 +203,11 @@ class FakeKanbanService:
             names = set(self._ASSIGNED_TOS.get(board, []))
         return sorted(names)
 
-    def path_components(self, path: str | None = None) -> tuple[str | None, str | None, str | None]:
+    def path_components(self, path: str | Path | None = None) -> tuple[str | None, str | None, str | None]:
         """Resolve path against the stored user context, mirroring KanbanService."""
+        if isinstance(path, Path):
+            path = str(path)
+
         raw = path or ""
         if raw.startswith("/"):
             base = Path("/")

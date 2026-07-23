@@ -342,7 +342,7 @@ class KanbanService(CompletionDataSource):
             raise ValueError(f"Invalid path: {path} (cannot list a task)")
 
         if board and column:
-            return Task, self.get_tasks(path=f"/{board}/{column}", filter=filter, sort=sort, reverse=reverse)
+            return Task, self.get_tasks(path=Path(f"/{board}/{column}"), filter=filter, sort=sort, reverse=reverse)
         elif board:
             return Column, self.get_columns(board=board)
         else:
@@ -404,7 +404,7 @@ class KanbanService(CompletionDataSource):
             self.working_board = board.slug
 
         # Update index entries for tasks in the renamed board.
-        for task in self.get_tasks(f"/{board.slug}"):
+        for task in self.get_tasks(Path(f"/{board.slug}")):
             self.index_service.upsert_task(task)
 
         return board
@@ -508,7 +508,7 @@ class KanbanService(CompletionDataSource):
             self.working_column = renamed_column.slug
 
         # Update index entries for tasks in the renamed column.
-        for task in self.get_tasks(f"/{board}/{new_slug}"):
+        for task in self.get_tasks(Path(f"/{board}/{new_slug}")):
             self.index_service.upsert_task(task)
 
         return renamed_column
@@ -555,18 +555,22 @@ class KanbanService(CompletionDataSource):
 
     def get_tasks(
         self,
-        path:    str | None = None,
+        path:    Path | None = None,
         filter:  TaskFilter = TaskFilter(),
         sort:    str | None = "column",
         reverse: bool = False,
     ) -> list[Task]:
         """
         Return tasks for the given board/column, applying filters and sort in
-        the service layer rather than in the repository.  board and column both
-        fall back to the current context; omitting column returns tasks across
-        all columns of the board.  sort accepts "title", "priority", "due-date",
+        the service layer rather than in the repository. When path is omitted,
+        the current working board is used if available; otherwise all tasks are
+        returned. Omitting a column returns tasks across all columns of the
+        selected board. sort accepts "title", "priority", "due-date",
         "created-at", "updated-at", or "created-by".
         """
+        if path is None and self.working_board is not None:
+            path = Path(f"/{self.working_board}")
+
         board, column, _ = self.path_components(path)
         tasks = self.repository.get_tasks(board=board, column=column)
 

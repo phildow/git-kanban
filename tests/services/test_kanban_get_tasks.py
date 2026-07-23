@@ -82,6 +82,17 @@ class TestKanbanServiceGetTasksFilter(unittest.TestCase):
         tasks = self.svc.get_tasks(path="/main", filter=TaskFilter(), sort=None)
         self.assertEqual({t.id for t in tasks}, {self.t1.id, self.t2.id, self.t3.id})
 
+    def test_none_path_uses_working_board_when_available(self) -> None:
+        """When path is None, get_tasks scopes to working_board if one is active."""
+        self.svc.create_board("ops", columns=[("To Do", "todo")])
+        other_task = self.repo.create_task(_task("Ops task", board="ops", column="todo"), "ops-task")
+
+        self.svc.set_board("main")
+        tasks = self.svc.get_tasks(path=None, filter=TaskFilter(), sort=None)
+
+        self.assertEqual({t.id for t in tasks}, {self.t1.id, self.t2.id, self.t3.id})
+        self.assertNotIn(other_task.id, {t.id for t in tasks})
+
     def test_filter_by_assigned_to(self) -> None:
         """assigned_to narrows to tasks assigned to that user."""
         tasks = self.svc.get_tasks(path="/main", filter=TaskFilter(assigned_to="alice"), sort=None)

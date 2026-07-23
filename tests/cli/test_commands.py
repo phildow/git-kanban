@@ -160,7 +160,7 @@ class TestCommandHandlers(unittest.TestCase):
         commands.handle_task_list(args, self.svc, self.renderer, self.json_renderer)
 
         from kanban.models import TaskFilter
-        self.svc.get_tasks.assert_called_once_with("/board-a/todo", filter=TaskFilter(), sort="title", reverse=True)
+        self.svc.get_tasks.assert_called_once_with(Path("/board-a/todo"), filter=TaskFilter(), sort="title", reverse=True)
         self.renderer.render_task_list.assert_called_once_with(args, result)
 
     def test_handle_task_list_with_exclude_columns(self):
@@ -173,7 +173,7 @@ class TestCommandHandlers(unittest.TestCase):
 
         from kanban.models import TaskFilter
         self.svc.get_tasks.assert_called_once_with(
-            "/board-a/todo",
+            Path("/board-a/todo"),
             filter=TaskFilter(exclude_columns=["done", "archive"]),
             sort=None,
             reverse=False,

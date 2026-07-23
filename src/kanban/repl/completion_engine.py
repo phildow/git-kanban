@@ -29,6 +29,7 @@ adapts it to readline's ``(text, state)`` protocol.
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 import shlex
 
 from ..protocols.sluggable import Sluggable
@@ -290,7 +291,7 @@ class CompletionEngine:
             names = [c.slug for c in self._service.get_columns(board)]
             suffix = "/"
         else:
-            names = [t.slug for t in self._service.get_tasks(f"/{board}/{column}")]
+            names = [t.slug for t in self._service.get_tasks(Path(f"/{board}/{column}"))]
             suffix = ""
 
         return [f"{name}{suffix}" for name in self._matching(names, partial)]

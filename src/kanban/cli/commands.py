@@ -138,7 +138,7 @@ def handle_column_delete(args: argparse.Namespace, svc: KanbanService, renderer:
 	result = svc.delete_column(Path(args.path))
 	_pick(args, renderer, json_renderer).render_column_delete(args, result)
 
-# ---------------------------------------------------------------------------
+# -----------------------------------get_tasks----------------------------------------
 # Task subcommands
 # ---------------------------------------------------------------------------
 
@@ -161,7 +161,7 @@ def build_task_filter(args: argparse.Namespace) -> TaskFilter:
 
 @with_absolute_path
 def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
-	result = svc.get_tasks(args.path, filter=build_task_filter(args), sort=args.sort, reverse=args.reverse)
+	result = svc.get_tasks(Path(args.path), filter=build_task_filter(args), sort=args.sort, reverse=args.reverse)
 	_pick(args, renderer, json_renderer).render_task_list(args, result)
 
 

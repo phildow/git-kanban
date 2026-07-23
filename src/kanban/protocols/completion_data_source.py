@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Protocol
 
 from ..models import Board, Column, Task
@@ -16,7 +17,7 @@ class CompletionDataSource(Protocol):
     def get_columns(self, board: str) -> list[Column]:
         ...
 
-    def get_tasks(self, path: str | None = None) -> list[Task]:
+    def get_tasks(self, path: Path | None = None) -> list[Task]:
         ...
 
     def path_components(self, path: str | None = None) -> tuple[str | None, str | None, str | None]:
