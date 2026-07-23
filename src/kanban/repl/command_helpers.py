@@ -74,21 +74,19 @@ def handle_delete_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[
     to delete the active board.  Returns a tuple of (entity_type, deleted_entity) 
     or (None, None) if the user declines deletion.
     """
-    delete_active_board = args.board
-    path = args.path
+
+    # args.path | args.board (flag to rename active board)
+
     force = args.force
 
     def _confirm(message: str) -> bool:
         return force or prompt_for_confirmation(message)
 
-    if delete_active_board:
-        active_board = svc.working_board
-        if not active_board:
-            raise ValueError("No active board to delete; set one with `cd` first")
-        if _confirm(f"Are you sure you want to delete the board '{active_board}'?"):
-            return Board, svc.delete_board(path=f"/{active_board}")
-    elif path is not None:
-        board, column, task = svc.path_components(path)
+    if args.board:
+        if _confirm(f"Are you sure you want to delete the board '{args.board}'?"):
+            return Board, svc.delete_board(path=None)
+    elif args.path is not None:
+        board, column, task = svc.path_components(args.path)
         if board and column and task:
             if _confirm(f"Are you sure you want to delete the task '{task}'?"):
                 return Task, svc.delete_task(path=f"/{board}/{column}/{task}")
@@ -109,23 +107,24 @@ def handle_rename_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[
     Rename the entity at the given path to a new name.  This is the main
     entry point for all rename commands in the REPL, which pass a user-provided
     """
-    path = args.path
-    rename_active_board = args.board
+
+    # args.path | args.board (flag to rename active board)
+    # args.new_name
+    
     new_name = args.new_name
 
     if not new_name:
         raise ValueError("New name must be provided for rename operation")
+    
+    if args.board:
+        return Board, svc.rename_board(path=None, new_name=new_name)
 
-    if rename_active_board:
-        active_board = svc.working_board
-        if not active_board:
-            raise ValueError("No active board to rename; set one with `cd` first")
-        return Board, svc.rename_board(path=f"/{active_board}", new_name=new_name)
-
-    if path is None:
+    if args.path is None:
         raise ValueError("Rename expects either -b/--board or a COLUMN[/TASK] path")
 
-    board, column, task = svc.path_components(path)
+    # TODO: move to service method that can route a path preoperly
+
+    board, column, task = svc.path_components(args.path)
 
     if board and column and task:
         return Task, svc.rename_task(path=f"/{board}/{column}/{task}", new_title=new_name)

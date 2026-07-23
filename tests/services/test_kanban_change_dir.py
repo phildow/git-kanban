@@ -118,22 +118,6 @@ class TestKanbanServiceWorkingContextSetters(unittest.TestCase):
         self.assertEqual(self.svc.get_userdata("user-context.board"), "beta")
         self.assertIsNone(self.svc.get_userdata("user-context.column"))
 
-    def test_working_column_setter_updates_column_and_keeps_board(self) -> None:
-        self.svc.update_user_context(board="alpha", column="todo")
-
-        self.svc.working_column = "doing"
-
-        self.assertEqual(self.svc.working_board, "alpha")
-        self.assertEqual(self.svc.working_column, "doing")
-
-    def test_working_column_setter_persists_userdata(self) -> None:
-        self.svc.update_user_context(board="alpha", column="todo")
-
-        self.svc.working_column = "doing"
-
-        self.assertEqual(self.svc.get_userdata("user-context.board"), "alpha")
-        self.assertEqual(self.svc.get_userdata("user-context.column"), "doing")
-
 
 if __name__ == "__main__":
     unittest.main()

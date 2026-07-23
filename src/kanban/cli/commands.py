@@ -77,14 +77,14 @@ def handle_board_create(args: argparse.Namespace, svc: KanbanService, renderer: 
 
 
 def handle_board_rename(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
-	result = svc.rename_board(args.board, args.new_name)
+	result = svc.rename_board(args.path, args.new_name)
 	_pick(args, renderer, json_renderer).render_board_rename(args, result)
 
 
 def handle_board_delete(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
-	if not args.force and not prompt_for_confirmation(f"Delete board '{args.board}'?"):
+	if not args.force and not prompt_for_confirmation(f"Delete board '{args.path}'?"):
 		return
-	result = svc.delete_board(args.board)
+	result = svc.delete_board(args.path)
 	_pick(args, renderer, json_renderer).render_board_delete(args, result)
 
 # ---------------------------------------------------------------------------
@@ -92,7 +92,7 @@ def handle_board_delete(args: argparse.Namespace, svc: KanbanService, renderer: 
 # ---------------------------------------------------------------------------
 
 def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
-	result = svc.get_columns(board=args.board)
+	result = svc.get_columns(args.path)
 	_pick(args, renderer, json_renderer).render_column_list(args, result)
 
 
@@ -144,7 +144,7 @@ def build_task_filter(args: argparse.Namespace) -> TaskFilter:
 
 @with_absolute_path
 def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
-	result = svc.get_tasks(path=args.path, filter=build_task_filter(args), sort=args.sort, reverse=args.reverse)
+	result = svc.get_tasks(args.path, filter=build_task_filter(args), sort=args.sort, reverse=args.reverse)
 	_pick(args, renderer, json_renderer).render_task_list(args, result)
 
 

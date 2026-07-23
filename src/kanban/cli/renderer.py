@@ -71,14 +71,14 @@ class Renderer(CommandRenderer):
 
 	@_requires_verbose
 	def render_board_rename(self, args: argparse.Namespace, result: Board) -> None:
-		old_name = args.board
+		# TODO: get this from a result parameter as well
+		old_name = args.path
 		new_name = result.name or args.new_name
 		self._emit(args, f"Board renamed: {old_name} -> {new_name}")
 
 	@_requires_verbose
-	def render_board_delete(self, args: argparse.Namespace, result: None) -> None:
-		_ = result
-		board_name = args.board
+	def render_board_delete(self, args: argparse.Namespace, result: Board) -> None:
+		board_name = result.name or args.new_name
 		self._emit(args, f"Board deleted: {board_name}")
 
 # ---------------------------------------------------------------------------

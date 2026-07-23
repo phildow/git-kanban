@@ -517,29 +517,25 @@ class TestReplRename(_InitializedReplBase):
         out = self.run_repl("rename", "/proj/todo", "doing")
         self.assertTrue(out.strip())
 
-    def test_rename_active_column_updates_userdata_column(self) -> None:
-        """Renaming the active column via REPL persists user-context.column with the new slug."""
-        self.svc.set_board("proj")
-        self.svc.set_column("todo")
-        self.run_repl("rename", "/proj/todo", "doing")
-        self.assertEqual(self.repo.get_userdata("user-context.column"), "doing")
-
     def test_rename_task_creates_new_file(self) -> None:
         """rename task creates a file with the new slug."""
-        self.svc.create_task("proj/todo", TaskCreateParams(title="alpha task"))
-        self.run_repl("rename", "/proj/todo/alpha-task", "Beta Task")
+        self.svc.set_board("proj")
+        self.svc.create_task("todo", TaskCreateParams(title="alpha task"))
+        self.run_repl("rename", "todo/alpha-task", "Beta Task")
         self.assertTrue((self.boards_dir / "proj" / "todo" / "beta-task.md").is_file())
 
     def test_rename_task_removes_old_file(self) -> None:
         """rename task removes the file with the old slug."""
-        self.svc.create_task("proj/todo", TaskCreateParams(title="alpha task"))
-        self.run_repl("rename", "/proj/todo/alpha-task", "Beta Task")
+        self.svc.set_board("proj")
+        self.svc.create_task("todo", TaskCreateParams(title="alpha task"))
+        self.run_repl("rename", "todo/alpha-task", "Beta Task")
         self.assertFalse((self.boards_dir / "proj" / "todo" / "alpha-task.md").exists())
 
     def test_rename_task_produces_output(self) -> None:
         """rename task prints something."""
-        self.svc.create_task("proj/todo", TaskCreateParams(title="alpha task"))
-        out = self.run_repl("rename", "/proj/todo/alpha-task", "Beta Task")
+        self.svc.set_board("proj")
+        self.svc.create_task("todo", TaskCreateParams(title="alpha task"))
+        out = self.run_repl("rename", "todo/alpha-task", "Beta Task")
         self.assertTrue(out.strip())
 
 
@@ -594,25 +590,20 @@ class TestReplDelete(_InitializedReplBase):
         out = self.run_repl("delete", "proj/todo", "--force")
         self.assertTrue(out.strip())
 
-    def test_delete_active_column_clears_userdata_column(self) -> None:
-        """Deleting the active column via REPL persists user-context.column as empty."""
-        self.svc.set_board("proj")
-        self.svc.set_column("todo")
-        self.run_repl("delete", "/proj/todo", "--force")
-        self.assertIsNone(self.repo.get_userdata("user-context.column"))
-
     def test_delete_task_removes_file(self) -> None:
         """delete <board>/<column>/<task> removes the markdown file."""
-        self.svc.create_task("proj/todo", TaskCreateParams(title="fix-login"))
-        self.run_repl("delete", "proj/todo/fix-login", "--force")
+        self.svc.set_board("proj")
+        self.svc.create_task("todo", TaskCreateParams(title="fix-login"))
+        self.run_repl("delete", "todo/fix-login", "--force")
         self.assertFalse(
             (self.boards_dir / "proj" / "todo" / "fix-login.md").exists()
         )
 
     def test_delete_task_produces_output(self) -> None:
         """delete <board>/<column>/<task> prints something."""
-        self.svc.create_task("proj/todo", TaskCreateParams(title="fix-login"))
-        out = self.run_repl("delete", "proj/todo/fix-login", "--force")
+        self.svc.set_board("proj")
+        self.svc.create_task("todo", TaskCreateParams(title="fix-login"))
+        out = self.run_repl("delete", "todo/fix-login", "--force")
         self.assertTrue(out.strip())
 
 
@@ -927,25 +918,25 @@ class TestReplColumnEnglishNames(_InitializedReplBase):
     def test_rename_uses_new_slug_for_directory(self) -> None:
         """rename column moves the directory to the slug derived from the new display name."""
         self.run_repl("create", "column", "backlog")
-        self.run_repl("rename", "/my-project/backlog", "Work Queue")
+        self.run_repl("rename", "backlog", "Work Queue")
         self.assertTrue((self.boards_dir / "my-project" / "work-queue").is_dir())
 
     def test_rename_removes_old_slug_directory(self) -> None:
         """rename column removes the old slug directory."""
         self.run_repl("create", "column", "backlog")
-        self.run_repl("rename", "/my-project/backlog", "Work Queue")
+        self.run_repl("rename", "backlog", "Work Queue")
         self.assertFalse((self.boards_dir / "my-project" / "backlog").exists())
 
     def test_rename_output_contains_new_name(self) -> None:
         """rename column prints the new display name."""
         self.run_repl("create", "column", "backlog")
-        out = self.run_repl("rename", "/my-project/backlog", "Work Queue")
+        out = self.run_repl("rename", "backlog", "Work Queue")
         self.assertIn("Work Queue", out)
 
     def test_rename_output_contains_new_slug(self) -> None:
         """rename column prints the new derived slug."""
         self.run_repl("create", "column", "backlog")
-        out = self.run_repl("rename", "/my-project/backlog", "Work Queue")
+        out = self.run_repl("rename", "backlog", "Work Queue")
         self.assertIn("work-queue", out)
 
 

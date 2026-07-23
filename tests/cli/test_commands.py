@@ -75,7 +75,7 @@ class TestCommandHandlers(unittest.TestCase):
 
     def test_handle_board_rename(self):
         """`board rename` forwards old/new board names and renders result."""
-        args = self._args(board="old", new_name="new")
+        args = self._args(path="old", new_name="new")
         result = object()
         self.svc.rename_board.return_value = result
 
@@ -86,7 +86,7 @@ class TestCommandHandlers(unittest.TestCase):
 
     def test_handle_board_delete(self):
         """`board delete` forwards board name and renders deletion result."""
-        args = self._args(board="my-board", force=True)
+        args = self._args(path="my-board", force=True)
         result = object()
         self.svc.delete_board.return_value = result
 
@@ -97,11 +97,11 @@ class TestCommandHandlers(unittest.TestCase):
 
     def test_column_handlers(self):
         """Column handlers parse path arguments and dispatch correctly."""
-        args = self._args(board="board-a", sort="title", reverse=False)
+        args = self._args(path="board-a", sort="title", reverse=False)
         result = object()
         self.svc.get_columns.return_value = result
         commands.handle_column_list(args, self.svc, self.renderer, self.json_renderer)
-        self.svc.get_columns.assert_called_once_with(board="board-a")
+        self.svc.get_columns.assert_called_once_with("board-a")
         self.renderer.render_column_list.assert_called_once_with(args, result)
 
         args = self._args(path="board-a", title="todo")
@@ -141,7 +141,7 @@ class TestCommandHandlers(unittest.TestCase):
         commands.handle_task_list(args, self.svc, self.renderer, self.json_renderer)
 
         from kanban.models import TaskFilter
-        self.svc.get_tasks.assert_called_once_with(path="/board-a/todo", filter=TaskFilter(), sort="title", reverse=True)
+        self.svc.get_tasks.assert_called_once_with("/board-a/todo", filter=TaskFilter(), sort="title", reverse=True)
         self.renderer.render_task_list.assert_called_once_with(args, result)
 
     def test_handle_task_list_with_exclude_columns(self):
@@ -154,7 +154,7 @@ class TestCommandHandlers(unittest.TestCase):
 
         from kanban.models import TaskFilter
         self.svc.get_tasks.assert_called_once_with(
-            path="/board-a/todo",
+            "/board-a/todo",
             filter=TaskFilter(exclude_columns=["done", "archive"]),
             sort=None,
             reverse=False,

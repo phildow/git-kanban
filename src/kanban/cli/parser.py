@@ -115,7 +115,7 @@ def _add_board_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # board rename
     p = board_sub.add_parser("rename", help="Rename a board")
-    p.add_argument("board", metavar="BOARD", help="Fully qualified /board path")
+    p.add_argument("path", metavar="BOARD", help="Fully qualified /board path")
     p.add_argument("new_name", metavar="NEW-NAME", help="New board name")
     _add_format_arg(p)
     _add_global_flags(p)
@@ -123,7 +123,7 @@ def _add_board_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # board delete
     p = board_sub.add_parser("delete", help="Delete a board")
-    p.add_argument("board", metavar="BOARD", help="Fully qualified /board path")
+    p.add_argument("path", metavar="BOARD", help="Fully qualified /board path")
     p.add_argument("-f", "--force", action="store_true", default=False, help="Skip confirmation prompt")
     _add_format_arg(p)
     _add_global_flags(p)
@@ -142,7 +142,7 @@ def _add_column_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # column list
     p = col_sub.add_parser("list", help="List columns")
-    p.add_argument("board", metavar="BOARD", help="Fully qualified /board path")
+    p.add_argument("path", metavar="BOARD", help="Fully qualified /board path")
     _add_table_format_arg(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_column_list)

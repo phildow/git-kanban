@@ -360,7 +360,7 @@ class KanbanService(CompletionDataSource):
 
     def create_board(
         self, 
-        path: str, 
+        name: str, 
         columns: list[tuple[str, Slug]] = DEFAULT_COLUMNS
     ) -> Board:
         """
@@ -368,10 +368,6 @@ class KanbanService(CompletionDataSource):
         BoardAlreadyExists if a board with that name is already present.
         Appends the new board to .kanban-store/boards/.metadata and commits.
         """
-        if path.startswith("/"):
-            path = path.lstrip("/")
-
-        name = path
         slug = slug_it(name)
         board = self.repository.create_board(name, slug)
     
@@ -380,7 +376,7 @@ class KanbanService(CompletionDataSource):
 
         return board
 
-    def rename_board(self, path: str, new_name: str) -> Board:
+    def rename_board(self, path: str | None, new_name: str) -> Board:
         """
         Rename a board directory and update .kanban-store/boards/.metadata in place.  Raises
         BoardNotFound if the source board does not exist, and BoardAlreadyExists
@@ -388,7 +384,15 @@ class KanbanService(CompletionDataSource):
         UUIDs; only the directory name (and therefore the board's slug) changes.
         Updates the current context if the renamed board was the current one.
         """
-        old_board, _, _ = self.path_components(path)
+
+        if path is None:
+            old_board = self.working_board
+        else:
+            old_board, _, _ = self.path_components(path)
+
+        if old_board is None:
+            raise ValueError("No board specified and no board in context")
+        
         new_slug = slug_it(new_name)
         board = self.repository.rename_board(old_board, new_name, new_slug=new_slug)
 
@@ -402,7 +406,7 @@ class KanbanService(CompletionDataSource):
 
         return board
 
-    def delete_board(self, path: str) -> Board:
+    def delete_board(self, path: str | None) -> Board:
         """
         Recursively delete a board directory and remove it from .kanban-store/boards/.metadata.
         Raises BoardNotFound if the board does not exist.  Also removes all
@@ -410,7 +414,14 @@ class KanbanService(CompletionDataSource):
         context if it pointed at the deleted board.  Returns the deleted Board.
         """
 
-        board, _, _ = self.path_components(path)
+        if path is None:
+            board = self.working_board
+        else:
+            board, _, _ = self.path_components(path)
+        
+        if board is None:
+            raise ValueError("No board specified and no board in context")
+
         deleted_board = self.repository.get_board(board)
         tasks = self.get_tasks(path)
         self.repository.delete_board(board)

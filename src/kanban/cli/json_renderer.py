@@ -99,9 +99,8 @@ class JsonRenderer(CommandRenderer):
         self._emit(args, json.dumps(_board_dict(result), indent=2))
 
     @_requires_verbose
-    def render_board_delete(self, args: argparse.Namespace, result: None) -> None:
-        _ = result
-        self._emit(args, json.dumps({"deleted": args.board}, indent=2))
+    def render_board_delete(self, args: argparse.Namespace, result: Board) -> None:
+        self._emit(args, json.dumps({"deleted": result.name}, indent=2))
 
     # ── Columns ───────────────────────────────────────────────────────────────
 

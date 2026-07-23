@@ -104,7 +104,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_rename(args, self.svc, self.renderer)
 
-        self.svc.rename_board.assert_called_once_with(path="/proj", new_name="Work")
+        self.svc.rename_board.assert_called_once_with(path=None, new_name="Work")
         self.renderer.render_board_rename.assert_called_once_with(args, result)
 
     def test_handle_rename_column(self) -> None:

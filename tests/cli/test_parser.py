@@ -102,18 +102,18 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         self.assertIs(args.func, handle_board_create)
 
         args = cli_parser.parse_args(["board", "rename", "old", "new"])
-        self.assertEqual(args.board, "old")
+        self.assertEqual(args.path, "old")
         self.assertEqual(args.new_name, "new")
         self.assertIs(args.func, handle_board_rename)
 
         args = cli_parser.parse_args(["board", "delete", "my-board"])
-        self.assertEqual(args.board, "my-board")
+        self.assertEqual(args.path, "my-board")
         self.assertIs(args.func, handle_board_delete)
 
     def test_column_commands(self):
         """Column subcommands parse arguments and bind the correct handlers."""
         args = cli_parser.parse_args(["column", "list", "board-a"])
-        self.assertEqual(args.board, "board-a")
+        self.assertEqual(args.path, "board-a")
         self.assertEqual(args.format, "plain")
         self.assertIs(args.func, handle_column_list)
 

@@ -24,6 +24,19 @@ from ..repl.command_helpers import (
 from ..services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
 from ..storage.seeds import BOOTSTRAP_CONFIG
 
+# ---------------------------------------------------------------------------
+# Private helpers
+# ---------------------------------------------------------------------------
+
+def with_relative_path(method):
+	"""Decorator to rewrite the path to a relative path, removing any forward slashes"""
+	def _wrapped(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer):
+		path = args.path
+
+		if path is not None and isinstance(path, str):
+			args.path = args.path.lstrip("/")
+		return method(args, svc, renderer)
+	return _wrapped
 
 # ---------------------------------------------------------------------------
 # Initialization commands
@@ -49,9 +62,10 @@ def handle_change_dir(args: argparse.Namespace, svc: KanbanService, renderer: Co
 
 
 # ---------------------------------------------------------------------------
-# Common commands (delete)
+# Common commands
 # ---------------------------------------------------------------------------
 
+@with_relative_path
 def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	typ, result = handle_delete_helper(args, svc)
 
@@ -68,6 +82,7 @@ def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: Comman
 		raise ValueError("Unexpected result type from handle_delete: {}".format(typ))
 
 
+@with_relative_path
 def handle_rename(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	typ, result = handle_rename_helper(args, svc)
 
@@ -120,6 +135,7 @@ def handle_column_create(args: argparse.Namespace, svc: KanbanService, renderer:
 
 
 # TODO: REMOVE
+@with_relative_path
 def handle_column_rename(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.rename_column(args.path, args.new_name)
 	renderer.render_column_rename(args, result)
@@ -159,16 +175,19 @@ def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: C
 	renderer.render_task_create(args, result)
 
 
+@with_relative_path
 def handle_task_show(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.get_task(args.path)
 	renderer.render_task_show(args, result)
 
 
+@with_relative_path
 def handle_task_edit(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.edit_task(args.path)
 	renderer.render_task_edit(args, result)
 
 
+@with_relative_path
 def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	updates = TaskUpdateParams(
 		title=None,
@@ -187,12 +206,13 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: C
 	renderer.render_task_update(args, result)
 
 
-# TODO: REMOVE
+@with_relative_path
 def handle_task_rename(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.rename_task(args.path, args.new_name)
 	renderer.render_task_rename(args, result)
 
 
+@with_relative_path
 def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	if args.column is not None:
 		result = svc.move_task(args.path, args.column)
@@ -205,6 +225,7 @@ def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: Com
 		renderer.render_task_reorder(args, (result, op))
 
 
+@with_relative_path
 def handle_task_assign(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.assign_task(args.path, args.assigned_to)
 	renderer.render_task_assign(args, result)
@@ -218,6 +239,7 @@ def handle_search(args: argparse.Namespace, svc: KanbanService, renderer: Comman
 	renderer.render_search(args, result)
 
 
+@with_relative_path
 def handle_log(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.log(path=args.path, limit=args.limit)
 	renderer.render_log(args, result)

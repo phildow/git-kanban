@@ -126,12 +126,12 @@ class TestJsonRendererBoards(unittest.TestCase):
 
     def test_board_delete_silent_without_verbose(self) -> None:
         """render_board_delete emits nothing when --verbose is not set."""
-        out = _capture(lambda: self.r.render_board_delete(_args(verbose=False, board="proj"), None))
+        out = _capture(lambda: self.r.render_board_delete(_args(verbose=False, board="proj"), _board("proj")))
         self.assertEqual(out, "")
 
     def test_board_delete_deleted_field(self) -> None:
         """render_board_delete emits a JSON object with the deleted board name when verbose."""
-        out = _capture(lambda: self.r.render_board_delete(_args(verbose=True, board="proj"), None))
+        out = _capture(lambda: self.r.render_board_delete(_args(verbose=True, board="proj"), _board("proj")))
         self.assertEqual(json.loads(out)["deleted"], "proj")
 
 
