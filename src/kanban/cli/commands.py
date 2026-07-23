@@ -11,6 +11,7 @@ which is responsible for formatting and printing the output.
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 from datetime import datetime, timezone
 from functools import wraps
 
@@ -85,7 +86,7 @@ def handle_board_info(args: argparse.Namespace, svc: KanbanService, renderer: Co
 
 @with_absolute_path
 def handle_board_rename(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
-	result = svc.rename_board(args.path, args.new_name)
+	result = svc.rename_board(Path(args.path), args.new_name)
 	_pick(args, renderer, json_renderer).render_board_rename(args, result)
 
 

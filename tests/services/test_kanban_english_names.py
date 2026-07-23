@@ -59,13 +59,13 @@ class TestKanbanServiceEnglishNames(unittest.TestCase):
     def test_rename_board_preserves_new_display_name(self) -> None:
         """Renaming a board to a multi-word name stores it exactly."""
         self.svc.create_board("My Project", columns=[])
-        board = self.svc.rename_board("my-project", "My Renamed Project")
+        board = self.svc.rename_board(Path("my-project"), "My Renamed Project")
         self.assertEqual(board.name, "My Renamed Project")
 
     def test_rename_board_updates_slug(self) -> None:
         """Renaming a board updates the slug to match the new display name."""
         self.svc.create_board("My Project", columns=[])
-        board = self.svc.rename_board("my-project", "My Renamed Project")
+        board = self.svc.rename_board(Path("my-project"), "My Renamed Project")
         self.assertEqual(board.slug, "my-renamed-project")
 
     # ── Columns ───────────────────────────────────────────────────────────────

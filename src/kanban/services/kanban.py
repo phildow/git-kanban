@@ -247,6 +247,10 @@ class KanbanService(CompletionDataSource):
         
     def path_components(self, path: str | Path | None = None) -> tuple[Slug | None, Slug | None, Slug | None]:
         """Resolve a [BOARD/][COLUMN/]TITLE path into its components."""
+        # TODO: temporary until full path migration
+        if isinstance(path, Path):
+            path = str(path)
+
         path = self.resolve_path(path)
         parts = path.parts # ["/", board|None, column|None, title|None]
         return parts[1] if len(parts) > 1 else None, \
@@ -375,7 +379,7 @@ class KanbanService(CompletionDataSource):
 
         return board
 
-    def rename_board(self, path: str | None, new_name: str) -> Board:
+    def rename_board(self, path: Path | None, new_name: str) -> Board:
         """
         Rename a board directory and update .kanban-store/boards/.metadata in place.  Raises
         BoardNotFound if the source board does not exist, and BoardAlreadyExists
