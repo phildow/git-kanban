@@ -463,7 +463,7 @@ class KanbanService(CompletionDataSource):
         
         return self.repository.get_columns(board)
 
-    def get_column(self, path: str | None = None) -> Column:
+    def get_column(self, path: Path | Slug) -> Column:
         """Return a single column resolved from a board/column path."""
         board, column, task = self.path_components(path)
 

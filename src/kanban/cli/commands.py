@@ -109,7 +109,7 @@ def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: C
 
 @with_absolute_path
 def handle_column_info(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
-	result = svc.get_column(args.path)
+	result = svc.get_column(Path(args.path))
 	_pick(args, renderer, json_renderer).render_column_info(args, result)
 
 

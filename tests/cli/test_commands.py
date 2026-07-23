@@ -120,7 +120,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.get_column.return_value = result
         commands.handle_column_info(args, self.svc, self.renderer, self.json_renderer)
-        self.svc.get_column.assert_called_once_with("/board-a/todo")
+        self.svc.get_column.assert_called_once_with(Path("/board-a/todo"))
         self.renderer.render_column_info.assert_called_once_with(args, result)
 
         args = self._args(path="board-a", title="todo")
