@@ -357,8 +357,13 @@ class KanbanService(CompletionDataSource):
         """
         return self.repository.get_boards()
 
-    def get_board(self, board: str) -> Board | None:
-        """Return the board with the given name, or None if not found."""
+    def get_board(self, path: Path | Slug) -> Board | None:
+        """Return the board for the given board path or slug, or None if not found."""
+        board: Slug
+        if isinstance(path, Path):
+            board = Slug(str(path).lstrip("/"))
+        else:
+            board = path
         return self.repository.get_board(board)
 
     def create_board(

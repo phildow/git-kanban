@@ -83,7 +83,7 @@ class TestCommandHandlers(unittest.TestCase):
 
         commands.handle_board_info(args, self.svc, self.renderer, self.json_renderer)
 
-        self.svc.get_board.assert_called_once_with("my-board")
+        self.svc.get_board.assert_called_once_with(Path("/my-board"))
         self.renderer.render_board_info.assert_called_once_with(args, result)
 
     def test_handle_board_rename(self):
