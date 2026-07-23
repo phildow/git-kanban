@@ -57,7 +57,7 @@ def handle_task_list_helper(args: argparse.Namespace, svc: KanbanService) -> lis
     if not path:
         board = svc.working_board
         if not board:
-            raise ValueError("No active board; provide a board or board/column, or set one with `board`/`cd`")
+            raise ValueError("No active board; provide a board or board/column, or set one with `board`")
         return svc.get_tasks(path=Path(f"/{board}"), filter=filter, sort=sort, reverse=reverse)
 
     board, column, _ = svc.path_components(path)

@@ -14,7 +14,7 @@ from kanban.repl.commands import (
     handle_board_list,
     handle_column_create,
     handle_column_list,
-    handle_change_dir,
+    handle_set_board,
     handle_rename,
     handle_search,
     handle_task_assign,
@@ -328,18 +328,13 @@ class TestParserAliases(unittest.TestCase):
         self.assertEqual(args.column, "proj/done")
         self.assertEqual(args.position, 2)
 
-    def test_cd_alias_maps_to_set_path_handler(self):
+    def test_board_command_maps_to_set_path_handler(self):
         parser = repl_parser.build_parser()
 
-        args = parser.parse_args(["cd"])
-        self.assertEqual(args.command, "cd")
-        self.assertIsNone(args.board)
-        self.assertIs(args.func, handle_change_dir)
-
-        args = parser.parse_args(["cd", "main"])
-        self.assertEqual(args.command, "cd")
+        args = parser.parse_args(["board", "main"])
+        self.assertEqual(args.command, "board")
         self.assertEqual(args.board, "main")
-        self.assertIs(args.func, handle_change_dir)
+        self.assertIs(args.func, handle_set_board)
 
 
 if __name__ == "__main__":

@@ -81,7 +81,7 @@ class RichRenderer(CommandRenderer):
 		else:
 			self._emit(args, "Failed to initialize Kanban system.")
 
-	def render_change_dir(self, args: argparse.Namespace, result: UserContext) -> None:
+	def render_set_board(self, args: argparse.Namespace, result: UserContext) -> None:
 		"""Render a message indicating the new current context path, or that the context was cleared."""
 		board = result.board
 		

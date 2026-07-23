@@ -50,7 +50,7 @@ class Renderer(CommandRenderer):
 			self._emit(args, "Failed to initialize Kanban system.")
 
 	@_requires_verbose
-	def render_change_dir(self, args: argparse.Namespace, result: object) -> None:
+	def render_set_board(self, args: argparse.Namespace, result: object) -> None:
 		_ = args, result
 		raise NotImplementedError("Change directory is not supported by the CLI JSON renderer. Use the `cd` command in the REPL instead.")
 
@@ -67,12 +67,6 @@ class Renderer(CommandRenderer):
 
 		if fmt == "plain":
 			self._emit(args, "\n".join(board.name for board in result))
-			return
-
-		lines = ["Boards", "------"]
-		for board in result:
-			lines.append(f"{board.name} ({board.column_count} columns)")
-		self._emit(args, "\n".join(lines))
 
 	@_requires_verbose
 	def render_board_create(self, args: argparse.Namespace, result: Board) -> None:
@@ -193,7 +187,7 @@ class Renderer(CommandRenderer):
 
 		if fmt == "plain":
 			self._emit(args, "\n".join(str(task.path) for task in result))
-			return
+	def render_set_board(self, args: argparse.Namespace, result: object) -> None:
 
 		lines = ["Tasks", "-----"]
 		for task in result:

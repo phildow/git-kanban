@@ -27,25 +27,25 @@ class TestReplCommandHandlers(unittest.TestCase):
     def _args(self, **kwargs) -> Namespace:
         return Namespace(**kwargs)
 
-    def test_handle_change_dir_defaults_to_clear_without_board(self):
+    def test_handle_set_board_defaults_to_clear_without_board(self):
         args = self._args(board=None)
         result = object()
         self.svc.change_dir.return_value = result
 
-        commands.handle_change_dir(args, self.svc, self.renderer)
+        commands.handle_set_board(args, self.svc, self.renderer)
 
         self.svc.change_dir.assert_called_once_with(clear=True)
-        self.renderer.render_change_dir.assert_called_once_with(args, result)
+        self.renderer.render_set_board.assert_called_once_with(args, result)
 
-    def test_handle_change_dir_with_board(self):
+    def test_handle_set_board_with_board(self):
         args = self._args(board="alpha")
         result = object()
         self.svc.set_board.return_value = result
 
-        commands.handle_change_dir(args, self.svc, self.renderer)
+        commands.handle_set_board(args, self.svc, self.renderer)
 
         self.svc.set_board.assert_called_once_with(board="alpha")
-        self.renderer.render_change_dir.assert_called_once_with(args, result)
+        self.renderer.render_set_board.assert_called_once_with(args, result)
 
     def test_handle_delete_renders_board_delete(self):
         args = self._args(path="alpha")
@@ -277,7 +277,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         """create task with no active board raises rather than resolving nonsense."""
         args = self._args(column="todo", title="fix-parser", edit=False, assigned_to=None, priority=None, tags=None, due_date=None, created_by=None)
         self.svc.working_board = None
-        self.svc.create_task.side_effect = ValueError("No active board; set one with `cd` before creating a task")
+        self.svc.create_task.side_effect = ValueError("No active board; set one with `board` before creating a task")
         with self.assertRaises(ValueError):
             commands.handle_task_create(args, self.svc, self.renderer)
 

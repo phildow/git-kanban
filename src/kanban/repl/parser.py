@@ -33,7 +33,7 @@ from ..repl.commands import (
     handle_task_move,
     handle_task_show,
     handle_task_update,
-    handle_change_dir,
+    handle_set_board,
 )
 
 SORT_TASK_CHOICES = ["title", "priority", "due-date", "created-at", "updated-at", "created-by", "column"]
@@ -229,11 +229,11 @@ def _add_config_parser(subparsers: argparse._SubParsersAction) -> None:
     p.set_defaults(func=handle_get_config)
 
 
-def _add_cd_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser("cd", help="Set or clear the active board")
-    p.add_argument("board", metavar="BOARD", nargs="?", help="Board to set active (omit to clear)")
+def _add_board_parser(subparsers: argparse._SubParsersAction) -> None:
+    p = subparsers.add_parser("board", help="Set the active board")
+    p.add_argument("board", metavar="BOARD", help="Board to set active")
     _add_global_flags(p)
-    p.set_defaults(func=handle_change_dir)
+    p.set_defaults(func=handle_set_board)
 
 
 def _add_boards_parser(subparsers: argparse._SubParsersAction) -> None:
@@ -297,7 +297,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_global_flags(p)
     p.set_defaults(func=handle_init)
 
-    _add_cd_parser(subparsers)
+    _add_board_parser(subparsers)
     _add_boards_parser(subparsers)
     _add_columns_parser(subparsers)
     _add_tasks_parser(subparsers)

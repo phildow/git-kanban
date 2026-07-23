@@ -95,7 +95,7 @@ class JsonRenderer(CommandRenderer):
         self._emit(args, json.dumps({"initialized": result}, indent=2))
 
     @_requires_verbose
-    def render_change_dir(self, args: argparse.Namespace, result: UserContext) -> None:
+    def render_set_board(self, args: argparse.Namespace, result: UserContext) -> None:
         raise NotImplementedError("Change directory is not supported by the CLI JSON renderer. Use the `cd` command in the REPL instead.")
 
     # ── Boards ────────────────────────────────────────────────────────────────

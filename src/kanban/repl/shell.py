@@ -138,8 +138,11 @@ def _print_welcome_message(svc: KanbanService) -> None:
     context = svc.user_context
     board = context.board
 
-    context_str = f"/{board}" if board else "/"
-    print(f"Welcome to the kanban REPL. Current context: {context_str}\nType 'help (h)' for usage, 'quit (:q)' to exit")
+    if board is None:
+        print("Welcome to the kanban REPL. No board is currently selected.\nType 'help (h)' for usage, 'quit (:q)' to exit. Set the active board with 'board <name>'.")
+    else:
+        context_str = f"/{board}"
+        print(f"Welcome to the kanban REPL. The active board is {context_str}.\nType 'help (h)' for usage, 'quit (:q)' to exit")
 
 
 def _print_help_message(parser: argparse.ArgumentParser) -> None:

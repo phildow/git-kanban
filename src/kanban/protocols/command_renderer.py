@@ -16,7 +16,7 @@ class CommandRenderer(ABC):
         ...
 
     @abstractmethod
-    def render_change_dir(self, args: argparse.Namespace, result: UserContext) -> None:
+    def render_set_board(self, args: argparse.Namespace, result: UserContext) -> None:
         ...
 
     @abstractmethod

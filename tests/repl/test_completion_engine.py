@@ -34,11 +34,6 @@ def _build_fixture_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", metavar="COMMAND")
     subparsers.required = True
 
-    # cd: optional path
-    p = subparsers.add_parser("cd")
-    p.add_argument("path", nargs="?")
-    p.set_defaults(func=_NOOP)
-
     # board: single existing-board name
     p = subparsers.add_parser("board")
     p.add_argument("board")

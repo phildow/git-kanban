@@ -17,7 +17,7 @@ Layout
 _ReplBase               setUp/tearDown, run_repl helper, boards_dir
 _InitializedReplBase    Adds repo.init_storage() so commands run immediately
 TestReplInit            `init` and `init --bootstrap` on a fresh repo
-TestReplContext         `cd` context command
+TestReplContext         `board` context command
 TestReplCreate          `create`/`new`/`n` for boards, columns, and tasks
 TestReplList            `list`/`ls` with paths, filters, sort, and -l flag
 TestReplBoards          `boards` listing all boards
@@ -181,7 +181,7 @@ class TestReplInit(_ReplBase):
 
 
 # ---------------------------------------------------------------------------
-# Context commands: cd
+# Context commands: board
 # ---------------------------------------------------------------------------
 
 class TestReplContext(_InitializedReplBase):
@@ -192,23 +192,17 @@ class TestReplContext(_InitializedReplBase):
         self.repo.create_board("proj", slug="proj")
         self.repo.create_column("proj", "todo", slug="todo")
 
-    def test_cd_board_sets_context_and_produces_output(self) -> None:
-        """cd <board> sets the board context and prints something."""
-        out = self.run_repl("cd", "proj")
+    def test_board_sets_context_and_produces_output(self) -> None:
+        """board <board> sets the board context and prints something."""
+        out = self.run_repl("board", "proj")
         self.assertNotEqual(out, "")
 
-    def test_cd_board_clears_any_previously_active_column(self) -> None:
-        """cd <board> keeps the selected board in context."""
+    def test_board_clears_any_previously_active_column(self) -> None:
+        """board <board> keeps the selected board in context."""
         self.svc.set_board("proj")
         self.svc.set_column("todo")
-        self.run_repl("cd", "proj")
+        self.run_repl("board", "proj")
         self.assertEqual(self.svc.user_context.board, "proj")
-
-    def test_cd_no_board_clears_context_and_produces_output(self) -> None:
-        """cd with no board clears the context and prints something."""
-        self.run_repl("cd", "proj")
-        out = self.run_repl("cd")
-        self.assertNotEqual(out, "")
 
 
 # ---------------------------------------------------------------------------
@@ -480,25 +474,25 @@ class TestReplRename(_InitializedReplBase):
 
     def test_rename_board_creates_new_directory(self) -> None:
         """rename -b creates the destination directory for the active board."""
-        self.run_repl("cd", "proj")
+        self.run_repl("board", "proj")
         self.run_repl("rename", "-b", "work")
         self.assertTrue((self.boards_dir / "work").is_dir())
 
     def test_rename_board_removes_old_directory(self) -> None:
         """rename -b removes the source directory for the active board."""
-        self.run_repl("cd", "proj")
+        self.run_repl("board", "proj")
         self.run_repl("rename", "-b", "work")
         self.assertFalse((self.boards_dir / "proj").exists())
 
     def test_rename_board_produces_output(self) -> None:
         """rename -b prints something."""
-        self.run_repl("cd", "proj")
+        self.run_repl("board", "proj")
         out = self.run_repl("rename", "-b", "work")
         self.assertTrue(out.strip())
 
     def test_rename_active_board_updates_userdata_board(self) -> None:
         """Renaming the active board via REPL persists user-context.board with the new slug."""
-        self.run_repl("cd", "proj")
+        self.run_repl("board", "proj")
         self.run_repl("rename", "-b", "work")
         self.assertEqual(self.repo.get_userdata("user-context.board"), "work")
 
@@ -865,28 +859,28 @@ class TestReplBoardEnglishNames(_InitializedReplBase):
     def test_rename_uses_new_slug_for_directory(self) -> None:
         """rename -b moves the active board to the slug derived from the new display name."""
         self.run_repl("create", "board", "My Project")
-        self.run_repl("cd", "my-project")
+        self.run_repl("board", "my-project")
         self.run_repl("rename", "-b", "My Renamed Project")
         self.assertTrue((self.boards_dir / "my-renamed-project").is_dir())
 
     def test_rename_removes_old_slug_directory(self) -> None:
         """rename -b removes the old slug directory for the active board."""
         self.run_repl("create", "board", "My Project")
-        self.run_repl("cd", "my-project")
+        self.run_repl("board", "my-project")
         self.run_repl("rename", "-b", "My Renamed Project")
         self.assertFalse((self.boards_dir / "my-project").exists())
 
     def test_rename_output_contains_new_name(self) -> None:
         """rename -b prints the new display name."""
         self.run_repl("create", "board", "My Project")
-        self.run_repl("cd", "my-project")
+        self.run_repl("board", "my-project")
         out = self.run_repl("rename", "-b", "My Renamed Project")
         self.assertIn("My Renamed Project", out)
 
     def test_rename_output_contains_new_slug(self) -> None:
         """rename -b prints the new derived slug."""
         self.run_repl("create", "board", "My Project")
-        self.run_repl("cd", "my-project")
+        self.run_repl("board", "my-project")
         out = self.run_repl("rename", "-b", "My Renamed Project")
         self.assertIn("my-renamed-project", out)
 

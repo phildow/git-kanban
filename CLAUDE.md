@@ -464,7 +464,7 @@ The REPL command structure follows:
 ```
 init [-b|--bootstrap]
 
-cd <board>
+board <board>
 
 boards [--slugs]
 columns [--slugs]
@@ -599,24 +599,24 @@ An example REPL interaction follows:
 ```
 $ kanban repl
 
-kanban> cd /my-project/todo
+kanban> board my-project
 
-kanban (/my-project/todo)> ls
+kanban (/my-project)> ls todo
   1. Fix login bug         [high]  alice    due 2026-06-20
   2. Write API docs        [med]   bob      due 2026-06-25
 
-kanban (/my-project/todo)> new task "Add rate limiting" --priority high --assigned-to alice
+kanban (/my-project)> new task todo "Add rate limiting" --priority high --assigned-to alice
 Created: Add rate limiting [a3f9c2d1]
 
-kanban (/my-project/todo)> mv "Add rate limiting" in-progress
+kanban (/my-project)> mv todo/add-rate-limiting in-progress
 Moved to: my-project/in-progress
 
-kanban (/my-project/todo)> history
+kanban (/my-project)> history
   task list
   task create "Add rate limiting" --priority high --assigned-to alice
   task move "Add rate limiting" in-progress
 
-kanban (/my-project/todo)> quit
+kanban (/my-project)> quit
 ```
 
 ### Tab Completion

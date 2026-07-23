@@ -52,17 +52,17 @@ def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: CommandR
 	renderer.render_init(args, result)
 
 # ---------------------------------------------------------------------------
-# Working context commands (cd)
+# Working context commands (board)
 # ---------------------------------------------------------------------------
 
-def handle_change_dir(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
+def handle_set_board(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	if args.board is None:
 		result = svc.change_dir(clear=True)
-		renderer.render_change_dir(args, result)
+		renderer.render_set_board(args, result)
 		return
 
 	result = svc.set_board(board=args.board)
-	renderer.render_change_dir(args, result)
+	renderer.render_set_board(args, result)
 
 
 # ---------------------------------------------------------------------------
@@ -127,7 +127,7 @@ def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: C
 
 def handle_column_create(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	if svc.working_board is None:
-		raise ValueError("No active board; set one with `cd` before creating a column")
+		raise ValueError("No active board; set one with `board` before creating a column")
 
 	result = svc.create_column(None, args.column)
 	renderer.render_column_create(args, result)
@@ -148,7 +148,7 @@ def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: Com
 
 def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	if svc.working_board is None and not args.column.startswith("/"):
-		raise ValueError("No active board; set one with `cd` before creating a task")
+		raise ValueError("No active board; set one with `board` before creating a task")
 
 	params = TaskCreateParams(
 		title=args.title,
