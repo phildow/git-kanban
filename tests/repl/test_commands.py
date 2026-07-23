@@ -436,7 +436,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_task_assign(args, self.svc, self.renderer)
 
-        self.svc.assign_task.assert_called_once_with("alpha/todo/fix-parser", "alice")
+        self.svc.assign_task.assert_called_once_with(Path("alpha/todo/fix-parser"), "alice")
         self.renderer.render_task_assign.assert_called_once_with(args, result)
 
     def test_handle_search(self):

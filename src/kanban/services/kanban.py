@@ -828,16 +828,13 @@ class KanbanService(CompletionDataSource):
 
     def assign_task(
         self,
-        path: str | Path,
+        path: Path,
         user: str,
     ) -> Task:
         """
         Assign a task to a user.  Raises TaskNotFound via path_components.  
         Updates the index and commits.
         """
-        if isinstance(path, Path):
-            path = str(path)
-
         task = self.get_task(path)
         task.assigned_to = user
         updated = self.repository.update_task(task, slug=task.slug)

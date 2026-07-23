@@ -216,7 +216,7 @@ def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: Com
 
 @with_relative_path
 def handle_task_assign(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	result = svc.assign_task(args.path, args.assigned_to)
+	result = svc.assign_task(Path(args.path), args.assigned_to)
 	renderer.render_task_assign(args, result)
 
 # ---------------------------------------------------------------------------

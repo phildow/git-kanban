@@ -100,12 +100,12 @@ class TestKanbanServiceTaskPathArgument(unittest.TestCase):
         self.svc.reorder_task(Path("alpha/todo/second"), "down")
         self.assertEqual([t.slug for t in self.svc.get_tasks("alpha/todo")], ["first", "second"])
 
-    def test_assign_task_accepts_str_and_path(self) -> None:
-        """assign_task assigns the correct task whether path is str or Path."""
+    def test_assign_task_accepts_path(self) -> None:
+        """assign_task assigns the correct task when path is a Path."""
         self.svc.create_task("alpha/todo", TaskCreateParams(title="fix-login"))
         self.svc.create_task("alpha/todo", TaskCreateParams(title="write-docs"))
 
-        via_str = self.svc.assign_task("alpha/todo/fix-login", "alice")
+        via_str = self.svc.assign_task(Path("alpha/todo/fix-login"), "alice")
         via_path = self.svc.assign_task(Path("alpha/todo/write-docs"), "bob")
 
         self.assertEqual(via_str.assigned_to, "alice")
