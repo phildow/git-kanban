@@ -699,18 +699,14 @@ class KanbanService(CompletionDataSource):
 
     def edit_task(
         self,
-        path: str | Path,
+        path: Path,
     ) -> Task:
         """Open's the task's .md file in an editor, then reads the updated 
         content and metadata and applies changes to the task.  Raises 
         TaskNotFound if the task cannot be resolved.  
         Updates the index and commits.
         """
-        
-        if isinstance(path, Path):
-            path = str(path)
-
-        task = self.get_task(Path(path))
+        task = self.get_task(path)
         markdown = self._task_to_markdown(task)
 
         tmp_path: str | None = None

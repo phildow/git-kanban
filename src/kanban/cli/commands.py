@@ -193,7 +193,7 @@ def handle_task_show(args: argparse.Namespace, svc: KanbanService, renderer: Com
 
 @with_absolute_path
 def handle_task_edit(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
-	result = svc.edit_task(args.path)
+	result = svc.edit_task(Path(args.path))
 	_pick(args, renderer, json_renderer).render_task_edit(args, result)
 
 

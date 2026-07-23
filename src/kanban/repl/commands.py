@@ -159,7 +159,7 @@ def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: C
 	result = svc.create_task(Slug(args.column), params)
 
 	if args.edit:
-		result = svc.edit_task(result.path)
+		result = svc.edit_task(Path(result.path))
 
 	renderer.render_task_create(args, result)
 
@@ -172,7 +172,7 @@ def handle_task_show(args: argparse.Namespace, svc: KanbanService, renderer: Com
 
 @with_relative_path
 def handle_task_edit(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	result = svc.edit_task(args.path)
+	result = svc.edit_task(Path(args.path))
 	renderer.render_task_edit(args, result)
 
 

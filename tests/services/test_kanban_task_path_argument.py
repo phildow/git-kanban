@@ -121,16 +121,16 @@ class TestKanbanServiceTaskPathArgument(unittest.TestCase):
         self.assertEqual(self.svc.get_tasks("alpha/todo"), [])
 
     @patch("kanban.services.kanban.subprocess.run")
-    def test_edit_task_accepts_str_and_path(self, mock_run: MagicMock) -> None:
-        """edit_task resolves the correct task whether path is str or Path (editor is a no-op)."""
+    def test_edit_task_accepts_path(self, mock_run: MagicMock) -> None:
+        """edit_task resolves the correct task when path is a Path (editor is a no-op)."""
         mock_run.return_value = None
-        created_via_str = self.svc.create_task("alpha/todo", TaskCreateParams(title="fix-login"))
+        created_via_path_1 = self.svc.create_task("alpha/todo", TaskCreateParams(title="fix-login"))
         created_via_path = self.svc.create_task("alpha/todo", TaskCreateParams(title="write-docs"))
 
-        via_str = self.svc.edit_task("alpha/todo/fix-login")
+        via_path_1 = self.svc.edit_task(Path("alpha/todo/fix-login"))
         via_path = self.svc.edit_task(Path("alpha/todo/write-docs"))
 
-        self.assertEqual(via_str.id, created_via_str.id)
+        self.assertEqual(via_path_1.id, created_via_path_1.id)
         self.assertEqual(via_path.id, created_via_path.id)
 
 
