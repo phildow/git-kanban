@@ -176,7 +176,7 @@ def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: C
 		created_by=args.created_by,
 	)
 
-	result = svc.create_task(args.path, params)
+	result = svc.create_task(Path(args.path), params)
 	_pick(args, renderer, json_renderer).render_task_create(args, result)
 
 

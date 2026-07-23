@@ -601,7 +601,7 @@ class KanbanService(CompletionDataSource):
 
     def create_task(
         self,
-        path: str | Path,
+        path: Path | Slug,
         params: TaskCreateParams,
     ) -> Task:
         """
@@ -611,13 +611,8 @@ class KanbanService(CompletionDataSource):
         with the same title slug is already present in that column.  Updates the
         index and commits.
         """
-        if isinstance(path, Path):
-            path = str(path)
-
-        path = self._strip_trailing_slash(path)
         slug = slug_it(params.title)
-        task_path = f"{path}/{slug}"
-        board, column, _ = self.path_components(task_path)
+        board, column, _ = self.path_components(path)
 
         if board is None or column is None:
             raise ValueError(f"No working board/column and no explicit path provided: {path}")

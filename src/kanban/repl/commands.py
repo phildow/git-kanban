@@ -14,7 +14,7 @@ import argparse
 from pathlib import Path
 import logging
 
-from ..models import Board, Column, Task
+from ..models import Board, Column, Slug, Task
 from ..protocols.command_renderer import CommandRenderer
 from ..repl.command_helpers import (
     parse_priority,
@@ -156,7 +156,7 @@ def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: C
 		created_by=args.created_by,
 	)
 
-	result = svc.create_task(args.column, params)
+	result = svc.create_task(Slug(args.column), params)
 
 	if args.edit:
 		result = svc.edit_task(result.path)

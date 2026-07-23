@@ -197,7 +197,7 @@ class TestCommandHandlers(unittest.TestCase):
         commands.handle_task_create(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.create_task.assert_called_once_with(
-            "/board-a/todo",
+            Path("/board-a/todo"),
             TaskCreateParams(
                 title="fix-parser",
                 assigned_to="philip",
@@ -218,7 +218,7 @@ class TestCommandHandlers(unittest.TestCase):
         commands.handle_task_create(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.create_task.assert_called_once_with(
-            "/board-a/todo",
+            Path("/board-a/todo"),
             TaskCreateParams(
                 title="check-no-other-args",
                 assigned_to=None,
@@ -247,7 +247,7 @@ class TestCommandHandlers(unittest.TestCase):
         commands.handle_task_create(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.create_task.assert_called_once_with(
-            "/board-a/todo",
+            Path("/board-a/todo"),
             TaskCreateParams(
                 title="check-tags-none",
                 assigned_to="alex",
