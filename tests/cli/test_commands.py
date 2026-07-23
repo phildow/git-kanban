@@ -113,7 +113,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.get_columns.return_value = result
         commands.handle_column_list(args, self.svc, self.renderer, self.json_renderer)
-        self.svc.get_columns.assert_called_once_with("/board-a")
+        self.svc.get_columns.assert_called_once_with(Path("/board-a"))
         self.renderer.render_column_list.assert_called_once_with(args, result)
 
         args = self._args(path="board-a/todo")
@@ -127,7 +127,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.create_column.return_value = result
         commands.handle_column_create(args, self.svc, self.renderer, self.json_renderer)
-        self.svc.create_column.assert_called_once_with("/board-a", "todo")
+        self.svc.create_column.assert_called_once_with(Path("/board-a"), "todo")
         self.renderer.render_column_create.assert_called_once_with(args, result)
 
         args = self._args(path="board-a/todo", new_name="doing")

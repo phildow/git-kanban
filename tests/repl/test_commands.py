@@ -132,7 +132,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.create_column.return_value = result
         commands.handle_column_create(args, self.svc, self.renderer)
-        self.svc.create_column.assert_called_once_with(".", "todo")
+        self.svc.create_column.assert_called_once_with(None, "todo")
         self.renderer.render_column_create.assert_called_once_with(args, result)
 
     def test_handle_column_create_raises_without_active_board(self):

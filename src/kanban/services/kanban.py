@@ -472,20 +472,22 @@ class KanbanService(CompletionDataSource):
 
         return self.repository.get_column(board, column)
 
-    def create_column(self, path: str, title: str) -> Column:
+    def create_column(self, path: Path | None, title: str) -> Column:
         """
         Create a new column subdirectory for the provided board path and title.  Raises
         BoardNotFound if the board does not exist and ColumnAlreadyExists if
         the column name is already taken within that board.  Appends the new
         column to the board's .metadata file and commits.
         """
-        path = self._strip_trailing_slash(path)
         slug = slug_it(title)
-        column_path = f"{path}/{slug}"
-        board, column, _ = self.path_components(column_path)
 
-        if not board or not column:
-            raise ValueError(f"Invalid path: {path} (a board path is required)")
+        if path is None:
+            board = self.working_board
+        else:
+            board, _, _ = self.path_components(path)
+
+        if not board:
+            raise ValueError("No board specified and no board in context")
 
         return self.repository.create_column(board, title, slug)
 

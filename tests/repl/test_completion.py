@@ -119,10 +119,10 @@ class TestReplCompletion(unittest.TestCase):
             git_service=GitService(),
         )
         self.svc.create_board("alpha", columns=[])
-        self.svc.create_column("alpha", "todo")
-        self.svc.create_column("alpha", "done")
+        self.svc.create_column(Path("alpha"), "todo")
+        self.svc.create_column(Path("alpha"), "done")
         self.svc.create_board("beta", columns=[])
-        self.svc.create_column("beta", "backlog")
+        self.svc.create_column(Path("beta"), "backlog")
 
     # TODO: Add partial command completions tests for the repl
 

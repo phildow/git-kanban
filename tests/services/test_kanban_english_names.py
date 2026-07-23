@@ -73,13 +73,13 @@ class TestKanbanServiceEnglishNames(unittest.TestCase):
     def test_create_column_preserves_display_name(self) -> None:
         """A multi-word column name is stored exactly as given."""
         self.svc.create_board("My Project", columns=[])
-        column = self.svc.create_column("my-project", "In Progress")
+        column = self.svc.create_column(Path("my-project"), "In Progress")
         self.assertEqual(column.name, "In Progress")
 
     def test_create_column_derives_slug(self) -> None:
         """A multi-word column name produces a kebab-case slug."""
         self.svc.create_board("My Project", columns=[])
-        column = self.svc.create_column("my-project", "In Progress")
+        column = self.svc.create_column(Path("my-project"), "In Progress")
         self.assertEqual(column.slug, "in-progress")
 
     def test_rename_column_preserves_new_display_name(self) -> None:
