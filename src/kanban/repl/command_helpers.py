@@ -9,6 +9,7 @@ which call into this service as needed to perform more complex operations.
 
 import argparse
 from datetime import datetime, timezone
+from pathlib import Path
 
 from ..models import Board, Column, Priority, Task, TaskFilter
 from ..services.kanban import KanbanService
@@ -129,6 +130,6 @@ def handle_rename_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[
     if board and column and task:
         return Task, svc.rename_task(path=f"/{board}/{column}/{task}", new_title=new_name)
     elif board and column:
-        return Column, svc.rename_column(path=f"/{board}/{column}", new_name=new_name)
+        return Column, svc.rename_column(path=Path(f"/{board}/{column}"), new_name=new_name)
     else:
         raise ValueError("Rename expects either -b/--board or a COLUMN[/TASK] path")

@@ -134,7 +134,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.rename_column.return_value = result
         commands.handle_column_rename(args, self.svc, self.renderer, self.json_renderer)
-        self.svc.rename_column.assert_called_once_with("/board-a/todo", "doing")
+        self.svc.rename_column.assert_called_once_with(Path("/board-a/todo"), "doing")
         self.renderer.render_column_rename.assert_called_once_with(args, result)
 
         args = self._args(path="board-a/todo", position=2)

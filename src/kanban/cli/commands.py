@@ -121,7 +121,7 @@ def handle_column_create(args: argparse.Namespace, svc: KanbanService, renderer:
 
 @with_absolute_path
 def handle_column_rename(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
-	result = svc.rename_column(args.path, args.new_name)
+	result = svc.rename_column(Path(args.path), args.new_name)
 	_pick(args, renderer, json_renderer).render_column_rename(args, result)
 
 

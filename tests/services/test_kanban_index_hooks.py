@@ -143,7 +143,7 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
         t2 = self.svc.create_task("alpha/todo", TaskCreateParams(title="t2"))
         self.index_service.reset_mock()
 
-        self.svc.rename_column("alpha/todo", "doing")
+        self.svc.rename_column(Path("alpha/todo"), "doing")
 
         self.assertEqual(self.index_service.upsert_task.call_count, 2)
         updated_ids = {c.args[0].id for c in self.index_service.upsert_task.call_args_list}
@@ -154,7 +154,7 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
         self.svc.create_task("alpha/todo", TaskCreateParams(title="t1"))
         self.index_service.reset_mock()
 
-        self.svc.rename_column("alpha/todo", "doing")
+        self.svc.rename_column(Path("alpha/todo"), "doing")
 
         task_arg = self.index_service.upsert_task.call_args.args[0]
         self.assertEqual(task_arg.column, "doing")

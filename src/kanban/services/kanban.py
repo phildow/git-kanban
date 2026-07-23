@@ -491,7 +491,7 @@ class KanbanService(CompletionDataSource):
 
         return self.repository.create_column(board, title, slug)
 
-    def rename_column(self, path: str, new_name: str) -> Column:
+    def rename_column(self, path: Path, new_name: str) -> Column:
         """
         Rename a column subdirectory and update the board's .metadata file.
         Raises BoardNotFound, ColumnNotFound, or ColumnAlreadyExists as

@@ -85,13 +85,13 @@ class TestKanbanServiceEnglishNames(unittest.TestCase):
     def test_rename_column_preserves_new_display_name(self) -> None:
         """Renaming a column to a multi-word name stores it exactly."""
         self.svc.create_board("My Project", columns=[("Backlog", "backlog")])
-        column = self.svc.rename_column("my-project/backlog", "In Progress")
+        column = self.svc.rename_column(Path("my-project/backlog"), "In Progress")
         self.assertEqual(column.name, "In Progress")
 
     def test_rename_column_updates_slug(self) -> None:
         """Renaming a column updates the slug to match the new display name."""
         self.svc.create_board("My Project", columns=[("Backlog", "backlog")])
-        column = self.svc.rename_column("my-project/backlog", "In Progress")
+        column = self.svc.rename_column(Path("my-project/backlog"), "In Progress")
         self.assertEqual(column.slug, "in-progress")
 
     # ── Tasks ─────────────────────────────────────────────────────────────────

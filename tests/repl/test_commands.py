@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import unittest
 from argparse import Namespace
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
@@ -111,7 +112,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_rename(args, self.svc, self.renderer)
 
-        self.svc.rename_column.assert_called_once_with(path="/proj/todo", new_name="Doing")
+        self.svc.rename_column.assert_called_once_with(path=Path("/proj/todo"), new_name="Doing")
         self.renderer.render_column_rename.assert_called_once_with(args, result)
 
     def test_handle_rename_task(self) -> None:
