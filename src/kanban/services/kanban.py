@@ -513,7 +513,7 @@ class KanbanService(CompletionDataSource):
 
         return renamed_column
 
-    def reorder_column(self, path: str, position: int) -> list[Column]:
+    def reorder_column(self, path: Path, position: int) -> list[Column]:
         """
         Move a column to the given 1-based position in the board's .metadata
         file.  Raises BoardNotFound or ColumnNotFound if either does not

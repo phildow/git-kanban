@@ -141,7 +141,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.reorder_column.return_value = result
         commands.handle_column_reorder(args, self.svc, self.renderer, self.json_renderer)
-        self.svc.reorder_column.assert_called_once_with("/board-a/todo", 2)
+        self.svc.reorder_column.assert_called_once_with(Path("/board-a/todo"), 2)
         self.renderer.render_column_reorder.assert_called_once_with(args, result)
 
         args = self._args(path="board-a/todo", force=True)

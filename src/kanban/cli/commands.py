@@ -127,7 +127,7 @@ def handle_column_rename(args: argparse.Namespace, svc: KanbanService, renderer:
 
 @with_absolute_path
 def handle_column_reorder(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
-	result = svc.reorder_column(args.path, args.position)
+	result = svc.reorder_column(Path(args.path), args.position)
 	_pick(args, renderer, json_renderer).render_column_reorder(args, result)
 
 

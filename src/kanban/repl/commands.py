@@ -11,6 +11,7 @@ which is responsible for formatting and printing the output.
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 import logging
 
 from ..models import Board, Column, Task
@@ -130,7 +131,7 @@ def handle_column_create(args: argparse.Namespace, svc: KanbanService, renderer:
 
 
 def handle_column_reorder(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	result = svc.reorder_column(args.column, args.position)
+	result = svc.reorder_column(Path(args.column), args.position)
 	renderer.render_column_reorder(args, result)
 
 # ---------------------------------------------------------------------------
