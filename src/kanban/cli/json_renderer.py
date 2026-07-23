@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from pathlib import Path
 from functools import wraps
 
 from ..models import Board, Column, Task, UserContext
@@ -72,6 +73,15 @@ def _column_dict(column: Column) -> dict:
 class JsonRenderer(CommandRenderer):
     """Renders all CLI output as JSON."""
 
+    def _path_str(self, args: argparse.Namespace) -> str:
+        """Return args.path serialized as a string path."""
+        path = args.path
+        if isinstance(path, Path):
+            return str(path)
+        if path is None:
+            return ""
+        return str(Path(str(path)))
+
     def _emit(self, args: argparse.Namespace, value: object) -> None:
         if value is None:
             return
@@ -131,7 +141,7 @@ class JsonRenderer(CommandRenderer):
     @_requires_verbose
     def render_column_delete(self, args: argparse.Namespace, result: None) -> None:
         _ = result
-        self._emit(args, json.dumps({"deleted": args.path}, indent=2))
+        self._emit(args, json.dumps({"deleted": self._path_str(args)}, indent=2))
 
     # ── Tasks ─────────────────────────────────────────────────────────────────
 
@@ -174,7 +184,7 @@ class JsonRenderer(CommandRenderer):
     @_requires_verbose
     def render_task_delete(self, args: argparse.Namespace, result: None) -> None:
         _ = result
-        self._emit(args, json.dumps({"deleted": args.path}, indent=2))
+        self._emit(args, json.dumps({"deleted": self._path_str(args)}, indent=2))
 
     # ── Search, log, status, config ───────────────────────────────────────────
 

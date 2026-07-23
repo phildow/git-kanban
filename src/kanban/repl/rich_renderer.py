@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 from functools import wraps
 import logging
 import shutil
@@ -47,6 +48,15 @@ class RichRenderer(CommandRenderer):
 
 	def __init__(self, render_helper: RenderHelper):
 		self.render_helper = render_helper
+
+	def _path_from_args(self, args: argparse.Namespace) -> Path:
+		"""Return args.path as a Path for display formatting."""
+		path = getattr(args, "path", None)
+		if isinstance(path, Path):
+			return path
+		if path is None:
+			return Path(".")
+		return Path(str(path))
 
 	def _emit(self, args: argparse.Namespace, value: Any) -> None:
 		if value is None:
@@ -232,9 +242,10 @@ class RichRenderer(CommandRenderer):
 		Render a message indicating that a column was renamed, including the old and new names,
 		and optionally the board if available.
 		"""
-		path = args.path or ""
-		old_name = path.split("/", 1)[1] if "/" in path else path
-		board_name = result.board or (path.split("/", 1)[0] if "/" in path else None)
+		path = self._path_from_args(args)
+		parts = path.parts
+		board_name = result.board or (parts[0] if len(parts) > 0 else None)
+		old_name = parts[1] if len(parts) > 1 else (parts[0] if len(parts) > 0 else "")
 		new_name = result.name or args.new_name
 		new_slug = result.slug or args.new_slug
 
@@ -415,7 +426,7 @@ class RichRenderer(CommandRenderer):
 		self._emit(args, msg)
 	
 	def render_task_rename(self, args: argparse.Namespace, result: Task) -> None:
-		old_slug = args.path or ""
+		old_slug = str(self._path_from_args(args))
 		new_slug = result.slug
 		self._emit(args, f"Task renamed: {result.title}: {old_slug} -> {new_slug}")
 

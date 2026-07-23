@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 from functools import wraps
 
 from ..models import Board, Column, Task
@@ -23,6 +24,15 @@ def _requires_verbose(method):
 
 
 class Renderer(CommandRenderer):
+	def _path_from_args(self, args: argparse.Namespace) -> Path:
+		"""Return args.path as a Path for display formatting."""
+		path = getattr(args, "path", None)
+		if isinstance(path, Path):
+			return path
+		if path is None:
+			return Path("/")
+		return Path(str(path))
+
 	def _emit(self, args: argparse.Namespace, value: object) -> None:
 		if value is None:
 			return
@@ -133,9 +143,10 @@ class Renderer(CommandRenderer):
 
 	@_requires_verbose
 	def render_column_rename(self, args: argparse.Namespace, result: Column) -> None:
-		path = args.path or ""
-		old_name = path.split("/", 1)[1] if "/" in path else path
-		board_name = result.board or (path.split("/", 1)[0] if "/" in path else None)
+		path = self._path_from_args(args)
+		parts = path.parts
+		board_name = result.board or (parts[1] if len(parts) > 1 else None)
+		old_name = parts[2] if len(parts) > 2 else (parts[1] if len(parts) > 1 else "")
 		new_name = result.name or args.new_name
 
 		if board_name:
@@ -145,9 +156,10 @@ class Renderer(CommandRenderer):
 
 	@_requires_verbose
 	def render_column_reorder(self, args: argparse.Namespace, result: list[Column]) -> None:
-		path = args.path or ""
-		column_name = path.split("/", 1)[1] if "/" in path else path
-		board_name = path.split("/", 1)[0] if "/" in path else None
+		path = self._path_from_args(args)
+		parts = path.parts
+		board_name = parts[1] if len(parts) > 1 else None
+		column_name = parts[2] if len(parts) > 2 else (parts[1] if len(parts) > 1 else "")
 		position = args.position
 		target = f"{board_name}/{column_name}" if board_name else column_name
 
@@ -159,9 +171,10 @@ class Renderer(CommandRenderer):
 	@_requires_verbose
 	def render_column_delete(self, args: argparse.Namespace, result: None) -> None:
 		_ = result
-		path = args.path or ""
-		column_name = path.split("/", 1)[1] if "/" in path else path
-		board_name = path.split("/", 1)[0] if "/" in path else None
+		path = self._path_from_args(args)
+		parts = path.parts
+		board_name = parts[1] if len(parts) > 1 else None
+		column_name = parts[2] if len(parts) > 2 else (parts[1] if len(parts) > 1 else "")
 		if board_name:
 			self._emit(args, f"Column deleted: {board_name}/{column_name}")
 		else:
@@ -214,7 +227,7 @@ class Renderer(CommandRenderer):
 
 	@_requires_verbose
 	def render_task_rename(self, args: argparse.Namespace, result: Task) -> None:
-		old_slug = args.path or ""
+		old_slug = str(self._path_from_args(args))
 		new_slug = result.slug
 		self._emit(args, f"Task renamed: {result.title}: {old_slug} -> {new_slug}")
 

@@ -455,7 +455,7 @@ Objects are identified by their absolute path consisting of `/board/column/task`
 
 ## The REPL
 
-The REPL is the Read-Evaulate-Print-Loop that runs the command line application in an interactive loop. By default the REPL uses a verb first command structure.
+The REPL is the Read-Evaulate-Print-Loop that runs the command line application in an interactive loop. The REPL uses a verb first command structure.
 
 The REPL sits at the same level in the architecture as the CLI and it consumes the same KanbanService. It has a dedicated renderer, and it adds a user context which keeps track of the active board, modeled as the current working directory. If a command takes a path argument and it does not begin with a forward slash, the command is executed within the context of the active board.
 

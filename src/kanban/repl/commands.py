@@ -34,8 +34,11 @@ def with_relative_path(method):
 	def _wrapped(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer):
 		path = args.path
 
-		if path is not None and isinstance(path, str):
-			args.path = args.path.lstrip("/")
+		if path is not None:
+			if isinstance(path, str):
+				args.path = Path(path.lstrip("/"))
+			elif isinstance(path, Path):
+				args.path = Path(str(path).lstrip("/"))
 		return method(args, svc, renderer)
 	return _wrapped
 
@@ -166,13 +169,13 @@ def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: C
 
 @with_relative_path
 def handle_task_show(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	result = svc.get_task(Path(args.path))
+	result = svc.get_task(args.path)
 	renderer.render_task_show(args, result)
 
 
 @with_relative_path
 def handle_task_edit(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	result = svc.edit_task(Path(args.path))
+	result = svc.edit_task(args.path)
 	renderer.render_task_edit(args, result)
 
 
@@ -187,7 +190,7 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: C
 		created_by=args.created_by,
 	)
 
-	result = svc.update_task(Path(args.path), updates=updates)
+	result = svc.update_task(args.path, updates=updates)
 
 	if args.column is not None:
 		result = svc.move_task(Path(result.path), Slug(args.column))
@@ -197,26 +200,26 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: C
 
 @with_relative_path
 def handle_task_rename(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	result = svc.rename_task(Path(args.path), args.new_name)
+	result = svc.rename_task(args.path, args.new_name)
 	renderer.render_task_rename(args, result)
 
 
 @with_relative_path
 def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	if args.column is not None:
-		result = svc.move_task(Path(args.path), Slug(args.column))
+		result = svc.move_task(args.path, Slug(args.column))
 		renderer.render_task_move(args, result)
 	else:
 		op = "top" if args.top else "bottom" if args.bottom else "up" if args.up else "down" if args.down else None
 		if op is None:
 			raise ValueError("Must specify one of --top, --bottom, --up, or --down")
-		result = svc.reorder_task(Path(args.path), op)
+		result = svc.reorder_task(args.path, op)
 		renderer.render_task_reorder(args, (result, op))
 
 
 @with_relative_path
 def handle_task_assign(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	result = svc.assign_task(Path(args.path), args.assigned_to)
+	result = svc.assign_task(args.path, args.assigned_to)
 	renderer.render_task_assign(args, result)
 
 # ---------------------------------------------------------------------------
@@ -230,7 +233,7 @@ def handle_search(args: argparse.Namespace, svc: KanbanService, renderer: Comman
 
 @with_relative_path
 def handle_log(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	path = Path(args.path) if args.path is not None else Path("/")
+	path = args.path if args.path is not None else Path("/")
 	result = svc.log(path=path, limit=args.limit)
 	renderer.render_log(args, result)
 
