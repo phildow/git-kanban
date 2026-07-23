@@ -368,6 +368,24 @@ class TestColumnCLI(_InitializedBase):
         data = self.run_json("column", "list", "proj", "--format", "json")
         self.assertIn("position", data[0])
 
+    def test_column_info_plain_includes_column_name(self) -> None:
+        """column info (plain) includes the column name."""
+        self.repo.create_column("proj", "todo", slug="todo")
+        out = self.run_cli("column", "info", "proj/todo")
+        self.assertIn("Name: todo", out)
+
+    def test_column_info_json_is_object(self) -> None:
+        """column info --format json emits a JSON object."""
+        self.repo.create_column("proj", "todo", slug="todo")
+        data = self.run_json("column", "info", "proj/todo", "--format", "json")
+        self.assertIsInstance(data, dict)
+
+    def test_column_info_json_name_field(self) -> None:
+        """column info --format json includes the column name."""
+        self.repo.create_column("proj", "todo", slug="todo")
+        data = self.run_json("column", "info", "proj/todo", "--format", "json")
+        self.assertEqual(data["name"], "todo")
+
     def test_column_rename_creates_new_directory(self) -> None:
         """column rename creates the destination directory."""
         self.repo.create_column("proj", "todo", slug="todo")

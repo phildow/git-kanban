@@ -181,6 +181,16 @@ class TestJsonRendererColumns(unittest.TestCase):
         out = _capture(lambda: self.r.render_column_list(_args(), []))
         self.assertEqual(json.loads(out), [])
 
+    def test_column_info_name_field(self) -> None:
+        """render_column_info emits a JSON object with the column name."""
+        out = _capture(lambda: self.r.render_column_info(_args(), _column("todo", "main", 0)))
+        self.assertEqual(json.loads(out)["name"], "todo")
+
+    def test_column_info_board_field(self) -> None:
+        """render_column_info emits the owning board."""
+        out = _capture(lambda: self.r.render_column_info(_args(), _column("todo", "main", 0)))
+        self.assertEqual(json.loads(out)["board"], "main")
+
     def test_column_create_silent_without_verbose(self) -> None:
         """render_column_create emits nothing when --verbose is not set."""
         out = _capture(lambda: self.r.render_column_create(_args(verbose=False), _column()))

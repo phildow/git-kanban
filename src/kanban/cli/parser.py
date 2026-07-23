@@ -15,6 +15,7 @@ from ..cli.commands import (
     handle_board_rename,
     handle_column_create,
     handle_column_delete,
+    handle_column_info,
     handle_column_list,
     handle_column_rename,
     handle_column_reorder,
@@ -162,6 +163,13 @@ def _add_column_parser(subparsers: argparse._SubParsersAction) -> None:
     _add_format_arg(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_column_create)
+
+    # column info
+    p = col_sub.add_parser("info", help="Show column details")
+    p.add_argument("path", metavar="BOARD/COLUMN", help="Fully qualified /board/column path")
+    _add_format_arg(p)
+    _add_global_flags(p)
+    p.set_defaults(func=handle_column_info)
 
     # column rename
     p = col_sub.add_parser("rename", help="Rename a column")

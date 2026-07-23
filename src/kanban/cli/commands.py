@@ -107,6 +107,12 @@ def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: C
 
 
 @with_absolute_path
+def handle_column_info(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
+	result = svc.get_column(args.path)
+	_pick(args, renderer, json_renderer).render_column_info(args, result)
+
+
+@with_absolute_path
 def handle_column_create(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
 	result = svc.create_column(args.path, args.title)
 	_pick(args, renderer, json_renderer).render_column_create(args, result)

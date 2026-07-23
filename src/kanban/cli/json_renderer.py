@@ -26,9 +26,10 @@ def _task_dict(task: Task) -> dict:
     return {
         "id": str(task.id),
         "title": task.title,
-        "slug": task.slug,
-        "board": task.board,
-        "column": task.column,
+        "path": str(task.path),
+        # "slug": task.slug,
+        # "board": task.board,
+        # "column": task.column,
         "assigned_to": task.assigned_to,
         "priority": task.priority,
         "due_date": task.due_date.isoformat() if task.due_date else None,
@@ -50,7 +51,8 @@ def _task_detail_dict(task: Task) -> dict:
 def _board_dict(board: Board) -> dict:
     return {
         "name": board.name,
-        "slug": board.slug,
+        # "slug": board.slug,
+        "path": str(board.path),
         "column_count": board.column_count,
         "task_count": board.task_count,
     }
@@ -59,8 +61,9 @@ def _board_dict(board: Board) -> dict:
 def _column_dict(column: Column) -> dict:
     return {
         "name": column.name,
-        "slug": column.slug,
-        "board": column.board,
+        "path": str(column.path),
+        # "slug": column.slug,
+        # "board": column.board,
         "position": column.position,
         "task_count": column.task_count,
     }
@@ -109,6 +112,9 @@ class JsonRenderer(CommandRenderer):
 
     def render_column_list(self, args: argparse.Namespace, result: list[Column]) -> None:
         self._emit(args, json.dumps([_column_dict(c) for c in result], indent=2))
+
+    def render_column_info(self, args: argparse.Namespace, result: Column) -> None:
+        self._emit(args, json.dumps(_column_dict(result), indent=2))
 
     @_requires_verbose
     def render_column_create(self, args: argparse.Namespace, result: Column) -> None:

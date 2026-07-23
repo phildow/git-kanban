@@ -169,6 +169,10 @@ class RichRenderer(CommandRenderer):
 		else:
 			self.render_column_list_rich(args, result)
 
+	def render_column_info(self, args: argparse.Namespace, result: Column) -> None:
+		"""Render detailed information for a single column."""
+		self.render_column_list_rich(args, [result])
+
 	def render_column_list_slug_only(self, args: argparse.Namespace, result: list[Column]) -> None:
 		"""
 		Render a simple list of column slugs, without additional details. 

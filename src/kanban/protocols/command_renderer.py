@@ -44,6 +44,10 @@ class CommandRenderer(ABC):
         ...
 
     @abstractmethod
+    def render_column_info(self, args: argparse.Namespace, result) -> None:
+        ...
+
+    @abstractmethod
     def render_column_create(self, args: argparse.Namespace, result) -> None:
         ...
 

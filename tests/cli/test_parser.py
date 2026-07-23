@@ -14,6 +14,7 @@ from kanban.cli.commands import (
     handle_board_info,
     handle_board_delete,
     handle_board_list,
+    handle_column_info,
     handle_column_create,
     handle_column_delete,
     handle_column_list,
@@ -70,7 +71,7 @@ class TestParserStructure(unittest.TestCase):
         self.assertEqual(set(board.keys()), {"list", "create", "info", "rename", "delete"})
 
         column = self._subparser_choices(top["column"], "column_command")
-        self.assertEqual(set(column.keys()), {"list", "create", "rename", "reorder", "delete"})
+        self.assertEqual(set(column.keys()), {"list", "create", "info", "rename", "reorder", "delete"})
 
         task = self._subparser_choices(top["task"], "task_command")
         self.assertEqual(set(task.keys()), {"list", "create", "info", "edit", "update", "move", "delete", "assign", "rename"})
@@ -122,6 +123,10 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         self.assertEqual(args.path, "/board-a")
         self.assertEqual(args.title, "todo")
         self.assertIs(args.func, handle_column_create)
+
+        args = cli_parser.parse_args(["column", "info", "board-a/todo"])
+        self.assertEqual(args.path, "board-a/todo")
+        self.assertIs(args.func, handle_column_info)
 
         args = cli_parser.parse_args(["column", "rename", "board-a/todo", "doing"])
         self.assertEqual(args.path, "board-a/todo")

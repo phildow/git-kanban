@@ -72,7 +72,8 @@ class Renderer(CommandRenderer):
 	def render_board_info(self, args: argparse.Namespace, result: Board) -> None:
 		lines = [
 			f"Name: {result.name}",
-			f"Slug: {result.slug}",
+			f"Path: {result.path}",
+			# f"Slug: {result.slug}",
 			f"Columns: {result.column_count}",
 			f"Tasks: {result.task_count}",
 		]
@@ -108,6 +109,17 @@ class Renderer(CommandRenderer):
 		lines = ["Columns", "-------"]
 		for column in result:
 			lines.append(f"{column.position + 1}. {column.name}")
+		self._emit(args, "\n".join(lines))
+
+	def render_column_info(self, args: argparse.Namespace, result: Column) -> None:
+		lines = [
+			f"Name: {result.name}",
+			f"Path: {result.path}",
+			# f"Slug: {result.slug}",
+			# f"Board: {result.board}",
+			f"Position: {result.position}",
+			f"Tasks: {result.task_count}",
+		]
 		self._emit(args, "\n".join(lines))
 
 	@_requires_verbose

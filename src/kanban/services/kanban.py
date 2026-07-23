@@ -461,8 +461,13 @@ class KanbanService(CompletionDataSource):
         
         return self.repository.get_columns(board)
 
-    def get_column(self, board: str, column: str) -> Column | None:
-        """Return the column with the given name in the given board, or None if not found."""
+    def get_column(self, path: str | None = None) -> Column:
+        """Return a single column resolved from a board/column path."""
+        board, column, task = self.path_components(path)
+
+        if board is None or column is None or task is not None:
+            raise ValueError(f"Invalid column path: {path}")
+
         return self.repository.get_column(board, column)
 
     def create_column(self, path: str, title: str) -> Column:

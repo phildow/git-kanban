@@ -387,6 +387,7 @@ kanban board delete <board>
 
 kanban column list <board>
 kanban column create <board> <column>
+kanban column info <board>/<column>
 kanban column rename <board>/<column> <new-name>
 kanban column reorder <board>/<column> <position>
 kanban column delete <board>/<column>
