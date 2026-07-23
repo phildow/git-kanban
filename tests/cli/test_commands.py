@@ -241,7 +241,7 @@ class TestCommandHandlers(unittest.TestCase):
         self.renderer.render_task_create.assert_called_once_with(args, result)
 
     def test_handle_task_show(self):
-        """`task show` fetches a task by path and forwards it to renderer."""
+        """`task info` fetches a task by path and forwards it to renderer."""
         args = self._args(path="board-a/todo/fix-parser")
         result = object()
         self.svc.get_task.return_value = result

@@ -72,7 +72,7 @@ class TestParserStructure(unittest.TestCase):
         self.assertEqual(set(column.keys()), {"list", "create", "rename", "reorder", "delete"})
 
         task = self._subparser_choices(top["task"], "task_command")
-        self.assertEqual(set(task.keys()), {"list", "create", "show", "edit", "update", "move", "delete", "assign", "rename"})
+        self.assertEqual(set(task.keys()), {"list", "create", "info", "edit", "update", "move", "delete", "assign", "rename"})
 
         config = self._subparser_choices(top["config"], "config_command")
         self.assertEqual(set(config.keys()), {"get", "set"})
@@ -191,7 +191,7 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         self.assertEqual(args.created_by, "philip")
         self.assertIs(args.func, handle_task_create)
 
-        args = cli_parser.parse_args(["task", "show", "board-a/todo/fix-parser", "--format", "json"])
+        args = cli_parser.parse_args(["task", "info", "board-a/todo/fix-parser", "--format", "json"])
         self.assertEqual(args.format, "json")
         self.assertIs(args.func, handle_task_show)
 

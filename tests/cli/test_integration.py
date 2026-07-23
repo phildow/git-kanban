@@ -587,43 +587,43 @@ class TestTaskCLI(_InitializedBase):
         self.assertIn("alpha-task", out)
         self.assertIn("beta-task", out)
 
-    # -- show -----------------------------------------------------------------
+    # -- info -----------------------------------------------------------------
 
-    def test_task_show_plain_prints_output(self) -> None:
-        """task show (plain) prints task details."""
+    def test_task_info_plain_prints_output(self) -> None:
+        """task info (plain) prints task details."""
         self.run_cli("task", "create", "/proj/todo", "fix-login")
-        out = self.run_cli("task", "show", "proj/todo/fix-login")
+        out = self.run_cli("task", "info", "proj/todo/fix-login")
         self.assertTrue(out.strip())
 
-    def test_task_show_plain_includes_slug(self) -> None:
-        """task show (plain) includes the task slug."""
+    def test_task_info_plain_includes_slug(self) -> None:
+        """task info (plain) includes the task slug."""
         self.run_cli("task", "create", "/proj/todo", "fix-login")
-        out = self.run_cli("task", "show", "proj/todo/fix-login")
+        out = self.run_cli("task", "info", "proj/todo/fix-login")
         self.assertIn("fix-login", out)
 
-    def test_task_show_json_is_object(self) -> None:
-        """task show --format json emits a JSON object."""
+    def test_task_info_json_is_object(self) -> None:
+        """task info --format json emits a JSON object."""
         self.run_cli("task", "create", "/proj/todo", "fix-login")
-        data = self.run_json("task", "show", "proj/todo/fix-login", "--format", "json")
+        data = self.run_json("task", "info", "proj/todo/fix-login", "--format", "json")
         self.assertIsInstance(data, dict)
 
-    def test_task_show_json_id_field(self) -> None:
-        """task show --format json includes the task UUID."""
+    def test_task_info_json_id_field(self) -> None:
+        """task info --format json includes the task UUID."""
         self.run_cli("task", "create", "/proj/todo", "fix-login")
-        data = self.run_json("task", "show", "proj/todo/fix-login", "--format", "json")
+        data = self.run_json("task", "info", "proj/todo/fix-login", "--format", "json")
         self.assertIn("id", data)
 
-    def test_task_show_json_includes_timestamps(self) -> None:
-        """task show --format json includes created_at and updated_at."""
+    def test_task_info_json_includes_timestamps(self) -> None:
+        """task info --format json includes created_at and updated_at."""
         self.run_cli("task", "create", "/proj/todo", "fix-login")
-        data = self.run_json("task", "show", "proj/todo/fix-login", "--format", "json")
+        data = self.run_json("task", "info", "proj/todo/fix-login", "--format", "json")
         self.assertIn("created_at", data)
         self.assertIn("updated_at", data)
 
-    def test_task_show_json_includes_body(self) -> None:
-        """task show --format json includes the body field."""
+    def test_task_info_json_includes_body(self) -> None:
+        """task info --format json includes the body field."""
         self.run_cli("task", "create", "/proj/todo", "fix-login")
-        data = self.run_json("task", "show", "proj/todo/fix-login", "--format", "json")
+        data = self.run_json("task", "info", "proj/todo/fix-login", "--format", "json")
         self.assertIn("body", data)
 
     # -- update ---------------------------------------------------------------

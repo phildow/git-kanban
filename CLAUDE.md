@@ -423,7 +423,7 @@ kanban task move <board>/<column>/<task>
     [--up]
     [--down]
 
-kanban task show <board>/<column>/<task>
+kanban task info <board>/<column>/<task>
 kanban task edit <board>/<column>/<task>
 kanban task delete <board>/<column>/<task>
 kanban task assign <board>/<column>/<task> <name>

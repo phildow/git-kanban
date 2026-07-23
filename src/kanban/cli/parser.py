@@ -208,8 +208,8 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     _add_global_flags(p)
     p.set_defaults(func=handle_task_create)
 
-    # task show
-    p = task_sub.add_parser("show", help="Show task details")
+    # task info
+    p = task_sub.add_parser("info", help="Show task details")
     p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified /board/column/task path")
     _add_format_arg(p)
     _add_global_flags(p)
