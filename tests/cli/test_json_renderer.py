@@ -546,7 +546,7 @@ class TestJsonRendererStatus(unittest.TestCase):
     def setUp(self) -> None:
         self.r = JsonRenderer()
         self.status = KanbanStatus(
-            user_context=UserContext(board="main", column="todo"),
+            user_context=UserContext(board="main"),
             board_count=2,
             column_count=8,
             task_count=15,
@@ -564,10 +564,10 @@ class TestJsonRendererStatus(unittest.TestCase):
         out = _capture(lambda: self.r.render_status(_args(), self.status))
         self.assertEqual(json.loads(out)["board"], "main")
 
-    def test_status_column_field(self) -> None:
-        """render_status includes the active column from user context."""
+    def test_status_excludes_column_field(self) -> None:
+        """render_status omits column because UserContext no longer stores it."""
         out = _capture(lambda: self.r.render_status(_args(), self.status))
-        self.assertEqual(json.loads(out)["column"], "todo")
+        self.assertNotIn("column", json.loads(out))
 
     def test_status_counts(self) -> None:
         """render_status includes board_count, column_count, and task_count."""

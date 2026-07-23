@@ -198,11 +198,11 @@ class TestReplContext(_InitializedReplBase):
         self.assertNotEqual(out, "")
 
     def test_cd_board_clears_any_previously_active_column(self) -> None:
-        """cd <board> resets the active column, even if one was previously set."""
+        """cd <board> keeps the selected board in context."""
         self.svc.set_board("proj")
         self.svc.set_column("todo")
         self.run_repl("cd", "proj")
-        self.assertIsNone(self.svc.user_context.column)
+        self.assertEqual(self.svc.user_context.board, "proj")
 
     def test_cd_no_board_clears_context_and_produces_output(self) -> None:
         """cd with no board clears the context and prints something."""

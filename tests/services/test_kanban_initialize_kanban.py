@@ -51,7 +51,6 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         )
 
         self.assertEqual(svc.user_context.board, "main")
-        self.assertEqual(svc.user_context.column, "todo")
 
     def test_init_raises_when_called_twice(self):
         """Second init call raises because repository is already initialized."""

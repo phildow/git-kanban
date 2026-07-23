@@ -137,9 +137,8 @@ def _print_welcome_message(svc: KanbanService) -> None:
 
     context = svc.user_context
     board = context.board
-    column = context.column
 
-    context_str = f"/{board}/{column}" if board and column else f"/{board}" if board else "/"
+    context_str = f"/{board}" if board else "/"
     print(f"Welcome to the kanban REPL. Current context: {context_str}\nType 'help (h)' for usage, 'quit (:q)' to exit")
 
 

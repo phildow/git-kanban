@@ -84,11 +84,7 @@ class RichRenderer(CommandRenderer):
 	def render_change_dir(self, args: argparse.Namespace, result: UserContext) -> None:
 		"""Render a message indicating the new current context path, or that the context was cleared."""
 		board = result.board
-		column = result.column
 		
-		if board and column:
-			self._emit(args, f"Current context: {board}/{column}")
-			return
 		if board:
 			self._emit(args, f"Current context: {board}")
 			return

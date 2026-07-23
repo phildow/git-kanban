@@ -94,7 +94,6 @@ class KanbanService(CompletionDataSource):
         if self.is_initialized:
             # Load user context from userdata if available, else use defaults.
             self._user_context.board = self.get_userdata("user-context.board")
-            self._user_context.column = self.get_userdata("user-context.column")
 
     @property
     def root(self) -> Path:
@@ -130,8 +129,7 @@ class KanbanService(CompletionDataSource):
 
         if config is not None:
             default_board = config.get("usercontext", {}).get("board")
-            default_column = config.get("usercontext", {}).get("column")
-            self.update_user_context(board=default_board, column=default_column)
+            self.update_user_context(board=default_board)
 
         return True
 
@@ -186,30 +184,18 @@ class KanbanService(CompletionDataSource):
     
     @working_board.setter
     def working_board(self, value: Slug | None) -> None:
-        """Set the current working board and clear the column context."""
-        self.update_user_context(board=value, column=None)
-
-    @property
-    def working_column(self) -> Slug | None:
-        """Return the current working column based on the user context."""
-        return self.user_context.column
-    
-    @working_column.setter
-    def working_column(self, value: Slug | None) -> None:
-        """Set the current working column in the user context."""
-        self.update_user_context(board=self.working_board, column=value)
+        """Set the current working board in the user context."""
+        self.update_user_context(board=value)
         
-    def update_user_context(self, board: Slug | None, column: Slug | None) -> UserContext:
-        """Set the board/column context"""
+    def update_user_context(self, board: Slug | None) -> UserContext:
+        """Set the board context."""
         self._user_context.board = board
-        self._user_context.column = column
         self.set_userdata("user-context.board", str(board) if board else None)
-        self.set_userdata("user-context.column", str(column) if column else None)
         return self.user_context
 
     def clear_user_context(self) -> UserContext:
         """Clear the user context with initial default values."""
-        self.update_user_context(board=None, column=None)
+        self.update_user_context(board=None)
         return self.user_context
 
     # ------------------------------------------------------------------
@@ -293,7 +279,7 @@ class KanbanService(CompletionDataSource):
         if column and not self._column_exists(board, column):
             raise ColumnNotFound(board, column)
         
-        return self.update_user_context(board=board, column=column)
+        return self.update_user_context(board=board)
 
     def set_board(self, board: str) -> UserContext:
         """Set the current context to the given board, validating that it exists."""
@@ -307,7 +293,7 @@ class KanbanService(CompletionDataSource):
         return self.user_context
 
     def set_column(self, column: str) -> UserContext:
-        """Set the current context to the given column, validating that it exists."""
+        """Validate that a column exists under the current board."""
         board = self.user_context.board
 
         if not board:
@@ -318,7 +304,6 @@ class KanbanService(CompletionDataSource):
         if not column:
             raise ColumnNotFound(board, column)
 
-        self.working_column = column.slug
         return self.user_context
 
     # ── All Items ─────────────────────────────────────────────────────────────
@@ -508,10 +493,6 @@ class KanbanService(CompletionDataSource):
         new_slug = slug_it(new_name)
         renamed_column = self.repository.rename_column(board, column, new_name, new_slug=new_slug)
 
-        # Update current context if it points at the renamed column.
-        if self.working_board == board and self.working_column == column:
-            self.working_column = renamed_column.slug
-
         # Update index entries for tasks in the renamed column.
         for task in self.get_tasks(Path(f"/{board}/{new_slug}")):
             self.index_service.upsert_task(task)
@@ -541,10 +522,6 @@ class KanbanService(CompletionDataSource):
         deleted_column = self.repository.get_column(board, column)
         tasks = self.get_tasks(path)
         self.repository.delete_column(board, column)
-
-        # If current context points at this column, clear column only.
-        if self.working_board == board and self.working_column == column:
-            self.working_column = None
 
         # Remove all index entries for tasks in the deleted column.
         for task in tasks:

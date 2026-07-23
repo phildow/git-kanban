@@ -32,7 +32,6 @@ class TestKanbanServiceChangeDir(unittest.TestCase):
     def test_change_dir_sets_existing_board_and_column(self):
         ctx = self.svc.change_dir(path="alpha/todo")
         self.assertEqual(ctx.board, "alpha")
-        self.assertEqual(ctx.column, "todo")
 
     def test_change_dir_raises_for_missing_board(self):
         with self.assertRaises(BoardNotFound):
@@ -46,7 +45,6 @@ class TestKanbanServiceChangeDir(unittest.TestCase):
         self.svc.change_dir(path="alpha")
         ctx = self.svc.change_dir(path="todo")
         self.assertEqual(ctx.board, "alpha")
-        self.assertEqual(ctx.column, "todo")
 
 
 class TestKanbanServiceResolvePath(unittest.TestCase):
@@ -61,32 +59,32 @@ class TestKanbanServiceResolvePath(unittest.TestCase):
         )
 
     def test_resolve_path_relative_with_board_and_column_context(self):
-        self.svc.update_user_context(board="alpha", column="todo")
+        self.svc.update_user_context(board="alpha")
         result = self.svc.resolve_path("task-one")
-        self.assertEqual(result, Path("/alpha/todo/task-one"))
+        self.assertEqual(result, Path("/alpha/task-one"))
 
     def test_resolve_path_absolute_with_board_and_column_context(self):
-        self.svc.update_user_context(board="alpha", column="todo")
+        self.svc.update_user_context(board="alpha")
         result = self.svc.resolve_path("/infra/backlog/task-two")
         self.assertEqual(result, Path("/infra/backlog/task-two"))
 
     def test_resolve_path_relative_with_board_only_context(self):
-        self.svc.update_user_context(board="alpha", column=None)
+        self.svc.update_user_context(board="alpha")
         result = self.svc.resolve_path("todo/task-one")
         self.assertEqual(result, Path("/alpha/todo/task-one"))
 
     def test_resolve_path_absolute_with_board_only_context(self):
-        self.svc.update_user_context(board="alpha", column=None)
+        self.svc.update_user_context(board="alpha")
         result = self.svc.resolve_path("/infra/backlog/task-two")
         self.assertEqual(result, Path("/infra/backlog/task-two"))
 
     def test_resolve_path_relative_with_empty_context(self):
-        self.svc.update_user_context(board=None, column=None)
+        self.svc.update_user_context(board=None)
         result = self.svc.resolve_path("alpha/todo/task-one")
         self.assertEqual(result, Path("/alpha/todo/task-one"))
 
     def test_resolve_path_absolute_with_empty_context(self):
-        self.svc.update_user_context(board=None, column=None)
+        self.svc.update_user_context(board=None)
         result = self.svc.resolve_path("/infra/backlog/task-two")
         self.assertEqual(result, Path("/infra/backlog/task-two"))
 
@@ -102,21 +100,19 @@ class TestKanbanServiceWorkingContextSetters(unittest.TestCase):
             git_service=GitService(),
         )
 
-    def test_working_board_setter_updates_board_and_clears_column(self) -> None:
-        self.svc.update_user_context(board="alpha", column="todo")
+    def test_working_board_setter_updates_board(self) -> None:
+        self.svc.update_user_context(board="alpha")
 
         self.svc.working_board = "beta"
 
         self.assertEqual(self.svc.working_board, "beta")
-        self.assertIsNone(self.svc.working_column)
 
     def test_working_board_setter_persists_userdata(self) -> None:
-        self.svc.update_user_context(board="alpha", column="todo")
+        self.svc.update_user_context(board="alpha")
 
         self.svc.working_board = "beta"
 
         self.assertEqual(self.svc.get_userdata("user-context.board"), "beta")
-        self.assertIsNone(self.svc.get_userdata("user-context.column"))
 
 
 if __name__ == "__main__":

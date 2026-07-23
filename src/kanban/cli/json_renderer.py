@@ -198,7 +198,6 @@ class JsonRenderer(CommandRenderer):
         context = result.user_context
         self._emit(args, json.dumps({
             "board": context.board,
-            "column": context.column,
             "board_count": result.board_count,
             "column_count": result.column_count,
             "task_count": result.task_count,
