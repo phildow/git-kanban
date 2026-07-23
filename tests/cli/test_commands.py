@@ -148,7 +148,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.delete_column.return_value = result
         commands.handle_column_delete(args, self.svc, self.renderer, self.json_renderer)
-        self.svc.delete_column.assert_called_once_with("/board-a/todo")
+        self.svc.delete_column.assert_called_once_with(Path("/board-a/todo"))
         self.renderer.render_column_delete.assert_called_once_with(args, result)
 
     def test_handle_task_list(self):

@@ -48,7 +48,7 @@ class TestKanbanServiceDeleteReturnsObject(unittest.TestCase):
 
     def test_delete_column_returns_deleted_column(self) -> None:
         """delete_column returns the Column that was removed, not None."""
-        deleted = self.svc.delete_column("my-project/done")
+        deleted = self.svc.delete_column(Path("my-project/done"))
 
         self.assertIsInstance(deleted, Column)
         self.assertEqual(deleted.slug, "done")
@@ -56,7 +56,7 @@ class TestKanbanServiceDeleteReturnsObject(unittest.TestCase):
 
     def test_delete_column_removes_it_from_repository(self) -> None:
         """The column is actually gone after delete_column returns it."""
-        self.svc.delete_column("my-project/done")
+        self.svc.delete_column(Path("my-project/done"))
 
         slugs = [c.slug for c in self.svc.get_columns("my-project")]
         self.assertNotIn("done", slugs)

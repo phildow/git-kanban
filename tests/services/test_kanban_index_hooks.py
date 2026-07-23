@@ -106,7 +106,7 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
         t2 = self.svc.create_task("alpha/todo", TaskCreateParams(title="t2"))
         self.index_service.reset_mock()
 
-        self.svc.delete_column("alpha/todo")
+        self.svc.delete_column(Path("alpha/todo"))
 
         self.assertEqual(self.index_service.remove_task.call_count, 2)
         deleted_ids = {c.args[0].id for c in self.index_service.remove_task.call_args_list}
@@ -114,7 +114,7 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
 
     def test_delete_column_with_no_tasks_calls_no_index_delete(self) -> None:
         """Deleting an empty column does not invoke index_service.remove_task."""
-        self.svc.delete_column("alpha/todo")
+        self.svc.delete_column(Path("alpha/todo"))
 
         self.index_service.remove_task.assert_not_called()
 

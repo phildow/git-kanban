@@ -524,7 +524,7 @@ class KanbanService(CompletionDataSource):
         board, column, _ = self.path_components(path)
         return self.repository.reorder_column(board, column, position)  
 
-    def delete_column(self, path: str) -> Column:
+    def delete_column(self, path: Path) -> Column:
         """
         Delete a column subdirectory and all tasks it contains.  Raises
         BoardNotFound or ColumnNotFound if either does not exist.  Removes

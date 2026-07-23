@@ -93,7 +93,7 @@ def handle_delete_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[
                 return Task, svc.delete_task(path=f"/{board}/{column}/{task}")
         elif board and column:
             if _confirm(f"Are you sure you want to delete the column '{column}'?"):
-                return Column, svc.delete_column(path=f"/{board}/{column}")
+                return Column, svc.delete_column(path=Path(f"/{board}/{column}"))
         else:
             raise ValueError("Delete expects either -b/--board or a COLUMN[/TASK] path")
     else:

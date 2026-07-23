@@ -135,7 +135,7 @@ def handle_column_reorder(args: argparse.Namespace, svc: KanbanService, renderer
 def handle_column_delete(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
 	if not args.force and not prompt_for_confirmation(f"Delete column '{args.path}'?"):
 		return
-	result = svc.delete_column(args.path)
+	result = svc.delete_column(Path(args.path))
 	_pick(args, renderer, json_renderer).render_column_delete(args, result)
 
 # ---------------------------------------------------------------------------
