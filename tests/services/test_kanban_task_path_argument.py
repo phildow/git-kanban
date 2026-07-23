@@ -49,6 +49,14 @@ class TestKanbanServiceTaskPathArgument(unittest.TestCase):
         self.assertEqual(via_str.id, created.id)
         self.assertEqual(via_path.id, created.id)
 
+    def test_get_columns_accepts_slug_and_path(self) -> None:
+        """get_columns resolves the same board whether board is slug or Path."""
+        via_slug = self.svc.get_columns("alpha")
+        via_path = self.svc.get_columns(Path("/alpha"))
+
+        self.assertEqual([c.slug for c in via_slug], ["todo", "done"])
+        self.assertEqual([c.slug for c in via_path], ["todo", "done"])
+
     def test_rename_task_accepts_str_and_path(self) -> None:
         """rename_task renames the correct task whether path is str or Path."""
         self.svc.create_task("alpha/todo", TaskCreateParams(title="fix-login"))

@@ -245,7 +245,7 @@ class KanbanService(CompletionDataSource):
         resolved_path = base.joinpath(*components).resolve(strict=False)
         return resolved_path
         
-    def path_components(self, path: str | Path | None = None) -> tuple[Slug | None, Slug | None, Slug | None]:
+    def path_components(self, path: str | Path | Slug | None = None) -> tuple[Slug | None, Slug | None, Slug | None]:
         """Resolve a [BOARD/][COLUMN/]TITLE path into its components."""
         # TODO: temporary until full path migration
         if isinstance(path, Path):
@@ -444,7 +444,7 @@ class KanbanService(CompletionDataSource):
 
     def get_columns(
         self,
-        board:   str | None = None,
+        board:   Path | Slug | None = None,
     ) -> list[Column]:
         """
         Return all columns for the given board, in the order recorded in the
@@ -455,12 +455,11 @@ class KanbanService(CompletionDataSource):
             board = self.working_board
         if board is None:
             raise ValueError("No board specified and no board in context")
+        
+        board, _, _ = self.path_components(board)
 
-        # Accept either board slug ("proj") or absolute board path ("/proj")
-        # TODO: move to method signature
-        board = board.strip("/")
-        if "/" in board:
-            board = board.split("/", 1)[0]
+        if board is None:
+            raise ValueError("No board specified and no board in context")        
         
         return self.repository.get_columns(board)
 
