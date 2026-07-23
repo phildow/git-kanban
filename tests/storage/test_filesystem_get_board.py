@@ -57,10 +57,29 @@ class TestFilesystemGetBoard(unittest.TestCase):
             self.repo.get_board("not-a-board")
 
     def test_returns_board_with_empty_columns(self) -> None:
-        """Returned Board has an empty columns list (columns loaded separately)."""
+        """Returned Board has zero counts when no columns/tasks exist."""
         self._make_board("alpha")
         board = self.repo.get_board("alpha")
         self.assertEqual(board.column_count, 0)
+        self.assertEqual(board.task_count, 0)
+
+    def test_returns_board_with_column_and_task_counts(self) -> None:
+        """Returned Board includes counts derived from the board directory."""
+        self._make_board("alpha")
+
+        todo = self.repo.boards_dir / "alpha" / "todo"
+        done = self.repo.boards_dir / "alpha" / "done"
+        todo.mkdir()
+        done.mkdir()
+
+        (todo / "first.md").touch()
+        (done / "second.md").touch()
+        (done / ".metadata").touch()
+
+        board = self.repo.get_board("alpha")
+
+        self.assertEqual(board.column_count, 2)
+        self.assertEqual(board.task_count, 2)
 
 
 if __name__ == "__main__":

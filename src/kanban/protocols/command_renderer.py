@@ -28,6 +28,10 @@ class CommandRenderer(ABC):
         ...
 
     @abstractmethod
+    def render_board_info(self, args: argparse.Namespace, result) -> None:
+        ...
+
+    @abstractmethod
     def render_board_rename(self, args: argparse.Namespace, result) -> None:
         ...
 

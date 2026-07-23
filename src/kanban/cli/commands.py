@@ -77,6 +77,13 @@ def handle_board_create(args: argparse.Namespace, svc: KanbanService, renderer: 
 
 
 @with_absolute_path
+def handle_board_info(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
+	board = args.path.strip("/")
+	result = svc.get_board(board)
+	_pick(args, renderer, json_renderer).render_board_info(args, result)
+
+
+@with_absolute_path
 def handle_board_rename(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
 	result = svc.rename_board(args.path, args.new_name)
 	_pick(args, renderer, json_renderer).render_board_rename(args, result)

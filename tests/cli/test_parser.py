@@ -11,6 +11,7 @@ import unittest
 from kanban.cli import parser as cli_parser
 from kanban.cli.commands import (
     handle_board_create,
+    handle_board_info,
     handle_board_delete,
     handle_board_list,
     handle_column_create,
@@ -66,7 +67,7 @@ class TestParserStructure(unittest.TestCase):
         top = self._subparser_choices(parser, "command")
 
         board = self._subparser_choices(top["board"], "board_command")
-        self.assertEqual(set(board.keys()), {"list", "create", "rename", "delete"})
+        self.assertEqual(set(board.keys()), {"list", "create", "info", "rename", "delete"})
 
         column = self._subparser_choices(top["column"], "column_command")
         self.assertEqual(set(column.keys()), {"list", "create", "rename", "reorder", "delete"})
@@ -99,6 +100,10 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         args = cli_parser.parse_args(["board", "create", "my-board"])
         self.assertEqual(args.board, "my-board")
         self.assertIs(args.func, handle_board_create)
+
+        args = cli_parser.parse_args(["board", "info", "my-board"])
+        self.assertEqual(args.path, "my-board")
+        self.assertIs(args.func, handle_board_info)
 
         args = cli_parser.parse_args(["board", "delete", "my-board"])
         self.assertEqual(args.path, "my-board")

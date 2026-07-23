@@ -119,6 +119,10 @@ class Renderer(CommandRenderer):
 		board_slug = result.slug or args.board
 		self._emit(args, f"Created board: {board_name} ({board_slug})")
 
+	def render_board_info(self, args: argparse.Namespace, result: Board) -> None:
+		"""Render detailed information for a single board."""
+		self.render_board_list_rich(args, [result])
+
 	def render_board_rename(self, args: argparse.Namespace, result: Board) -> None:
 		"""Render a message indicating that a board was renamed, including the old and new names."""
 		old_name = args.path

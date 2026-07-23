@@ -381,6 +381,7 @@ kanban repl [--no-rich]
 
 kanban board list
 kanban board create <board>
+kanban board info <board>
 kanban board rename <board> <new-name>
 kanban board delete <board>
 

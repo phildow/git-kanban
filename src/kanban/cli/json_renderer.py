@@ -94,6 +94,9 @@ class JsonRenderer(CommandRenderer):
     def render_board_create(self, args: argparse.Namespace, result: Board) -> None:
         self._emit(args, json.dumps(_board_dict(result), indent=2))
 
+    def render_board_info(self, args: argparse.Namespace, result: Board) -> None:
+        self._emit(args, json.dumps(_board_dict(result), indent=2))
+
     @_requires_verbose
     def render_board_rename(self, args: argparse.Namespace, result: Board) -> None:
         self._emit(args, json.dumps(_board_dict(result), indent=2))

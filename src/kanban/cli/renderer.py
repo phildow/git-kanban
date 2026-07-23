@@ -69,6 +69,15 @@ class Renderer(CommandRenderer):
 		board_name = result.name or args.board
 		self._emit(args, f"Board created: {board_name}")
 
+	def render_board_info(self, args: argparse.Namespace, result: Board) -> None:
+		lines = [
+			f"Name: {result.name}",
+			f"Slug: {result.slug}",
+			f"Columns: {result.column_count}",
+			f"Tasks: {result.task_count}",
+		]
+		self._emit(args, "\n".join(lines))
+
 	@_requires_verbose
 	def render_board_rename(self, args: argparse.Namespace, result: Board) -> None:
 		# TODO: get this from a result parameter as well

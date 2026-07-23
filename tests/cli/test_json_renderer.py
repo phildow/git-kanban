@@ -109,6 +109,16 @@ class TestJsonRendererBoards(unittest.TestCase):
         out = _capture(lambda: self.r.render_board_create(_args(verbose=True), _board( "My Project", "my-project")))
         self.assertEqual(json.loads(out)["slug"], "my-project")
 
+    def test_board_info_name_field(self) -> None:
+        """render_board_info emits a JSON object with the board name."""
+        out = _capture(lambda: self.r.render_board_info(_args(), _board("proj")))
+        self.assertEqual(json.loads(out)["name"], "proj")
+
+    def test_board_info_slug_field(self) -> None:
+        """render_board_info emits the board slug."""
+        out = _capture(lambda: self.r.render_board_info(_args(), _board("My Project", "my-project")))
+        self.assertEqual(json.loads(out)["slug"], "my-project")
+
     def test_board_rename_silent_without_verbose(self) -> None:
         """render_board_rename emits nothing when --verbose is not set."""
         out = _capture(lambda: self.r.render_board_rename(_args(verbose=False), _board( "new-name")))

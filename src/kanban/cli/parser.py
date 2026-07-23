@@ -9,6 +9,7 @@ import argparse
 from ..models import Priority
 from ..cli.commands import (
     handle_board_create,
+    handle_board_info,
     handle_board_delete,
     handle_board_list,
     handle_board_rename,
@@ -112,6 +113,13 @@ def _add_board_parser(subparsers: argparse._SubParsersAction) -> None:
     _add_format_arg(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_board_create)
+
+    # board info
+    p = board_sub.add_parser("info", help="Show board details")
+    p.add_argument("path", metavar="BOARD", help="Fully qualified /board path")
+    _add_format_arg(p)
+    _add_global_flags(p)
+    p.set_defaults(func=handle_board_info)
 
     # board rename
     p = board_sub.add_parser("rename", help="Rename a board")

@@ -73,6 +73,17 @@ class TestCommandHandlers(unittest.TestCase):
         self.svc.create_board.assert_called_once_with("my-board")
         self.renderer.render_board_create.assert_called_once_with(args, result)
 
+    def test_handle_board_info(self):
+        """`board info` fetches board details and renders result."""
+        args = self._args(path="my-board")
+        result = object()
+        self.svc.get_board.return_value = result
+
+        commands.handle_board_info(args, self.svc, self.renderer, self.json_renderer)
+
+        self.svc.get_board.assert_called_once_with("my-board")
+        self.renderer.render_board_info.assert_called_once_with(args, result)
+
     def test_handle_board_rename(self):
         """`board rename` forwards old/new board names and renders result."""
         args = self._args(path="old", new_name="new")

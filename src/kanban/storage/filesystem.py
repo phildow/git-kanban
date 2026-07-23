@@ -125,19 +125,30 @@ class FilesystemRepository(KanbanRepository):
         return boards
 
     # TODO: SYNC - metadata must match the name and slug of the board directory
-    # TODO: load the column count and task count
     def get_board(self, slug: Slug) -> Board:
         board_path = self.boards_dir / slug
 
         if not board_path.is_dir() or slug.startswith("."):
             raise BoardNotFound(slug)
+
+        column_count = sum(
+            1 for e in board_path.iterdir()
+            if e.is_dir() and not e.name.startswith(".")
+        )
+        task_count = sum(
+            1
+            for col in board_path.iterdir()
+            if col.is_dir() and not col.name.startswith(".")
+            for f in col.iterdir()
+            if f.is_file() and not f.name.startswith(".")
+        )
         
         name = self.get_board_metadata(slug, "fields.name")
         slug = self.get_board_metadata(slug, "fields.slug")
         uuid = self.get_board_metadata(slug, "fields.id")
         # TODO: raise error if fields missing or out of sync with directory name
 
-        return Board(id=UUID(uuid), name=name, slug=slug)
+        return Board(id=UUID(uuid), name=name, slug=slug, column_count=column_count, task_count=task_count)
 
     def create_board(self, name: str, slug: Slug) -> Board:
         uuid = str(uuid4())

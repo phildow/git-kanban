@@ -240,6 +240,24 @@ class TestBoardCLI(_InitializedBase):
         data = self.run_json("board", "list", "--format", "json")
         self.assertEqual(data, [])
 
+    def test_board_info_plain_includes_board_name(self) -> None:
+        """board info (plain) includes the board name."""
+        self.repo.create_board("proj", slug="proj")
+        out = self.run_cli("board", "info", "proj")
+        self.assertIn("Name: proj", out)
+
+    def test_board_info_json_is_object(self) -> None:
+        """board info --format json emits a JSON object."""
+        self.repo.create_board("proj", slug="proj")
+        data = self.run_json("board", "info", "proj", "--format", "json")
+        self.assertIsInstance(data, dict)
+
+    def test_board_info_json_name_field(self) -> None:
+        """board info --format json includes the board name."""
+        self.repo.create_board("proj", slug="proj")
+        data = self.run_json("board", "info", "proj", "--format", "json")
+        self.assertEqual(data["name"], "proj")
+
     def test_board_rename_creates_new_directory(self) -> None:
         """board rename creates the destination directory."""
         self.repo.create_board("proj", slug="proj")
