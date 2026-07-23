@@ -166,7 +166,7 @@ def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: C
 
 @with_relative_path
 def handle_task_show(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	result = svc.get_task(args.path)
+	result = svc.get_task(Path(args.path))
 	renderer.render_task_show(args, result)
 
 

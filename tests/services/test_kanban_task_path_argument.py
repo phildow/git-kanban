@@ -39,14 +39,12 @@ class TestKanbanServiceTaskPathArgument(unittest.TestCase):
         self.assertEqual(via_path.board, "alpha")
         self.assertEqual(via_path.column, "todo")
 
-    def test_get_task_accepts_str_and_path(self) -> None:
-        """get_task resolves the same task whether path is str or Path."""
+    def test_get_task_accepts_path(self) -> None:
+        """get_task resolves the same task when given a Path."""
         created = self.svc.create_task("alpha/todo", TaskCreateParams(title="fix-login"))
 
-        via_str = self.svc.get_task("alpha/todo/fix-login")
         via_path = self.svc.get_task(Path("alpha/todo/fix-login"))
 
-        self.assertEqual(via_str.id, created.id)
         self.assertEqual(via_path.id, created.id)
 
     def test_get_columns_accepts_slug_and_path(self) -> None:

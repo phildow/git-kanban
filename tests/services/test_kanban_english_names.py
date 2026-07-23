@@ -112,7 +112,7 @@ class TestKanbanServiceEnglishNames(unittest.TestCase):
         """A task created with a display name is retrievable via its slug path."""
         self.svc.create_board("My Project", columns=[("To Do", "todo")])
         self.svc.create_task("my-project/todo", TaskCreateParams(title="Fix Login Bug"))
-        task = self.svc.get_task("my-project/todo/fix-login-bug")
+        task = self.svc.get_task(Path("my-project/todo/fix-login-bug"))
         self.assertEqual(task.title, "Fix Login Bug")
 
     def test_update_task_title_preserves_new_display_name(self) -> None:

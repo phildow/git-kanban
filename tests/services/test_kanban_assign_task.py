@@ -42,7 +42,7 @@ class TestKanbanServiceAssignTask(unittest.TestCase):
 
     def test_returned_task_identity_matches_original(self) -> None:
         """assign_task returns the same task (by id) that was passed in."""
-        original = self.svc.get_task("alpha/todo/fix-login")
+        original = self.svc.get_task(Path("alpha/todo/fix-login"))
         result = self.svc.assign_task("alpha/todo/fix-login", "alice")
         self.assertEqual(result.id, original.id)
 

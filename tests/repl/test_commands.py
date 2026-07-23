@@ -288,7 +288,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_task_show(args, self.svc, self.renderer)
 
-        self.svc.get_task.assert_called_once_with("alpha/todo/fix-parser")
+        self.svc.get_task.assert_called_once_with(Path("alpha/todo/fix-parser"))
         self.renderer.render_task_show.assert_called_once_with(args, result)
 
     def test_handle_task_edit(self):

@@ -188,7 +188,7 @@ def handle_task_rename(args: argparse.Namespace, svc: KanbanService, renderer: C
 
 @with_absolute_path
 def handle_task_show(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
-	result = svc.get_task(args.path)
+	result = svc.get_task(Path(args.path))
 	_pick(args, renderer, json_renderer).render_task_show(args, result)
 
 @with_absolute_path

@@ -654,7 +654,7 @@ class KanbanService(CompletionDataSource):
 
     def get_task(
         self,
-        path: str | Path,
+        path: Path,
     ) -> Task:
         """
         Resolve and return a single task by title slug.  Delegates
@@ -662,9 +662,6 @@ class KanbanService(CompletionDataSource):
         explicit → context → index-search chain and raises TaskNotFound or
         if resolution fails.
         """
-        if isinstance(path, Path):
-            path = str(path)
-
         board, column, title = self.path_components(path)
 
         if board is None or column is None:
@@ -693,7 +690,7 @@ class KanbanService(CompletionDataSource):
         if board is None or column is None or title is None:
             raise ValueError(f"Unable to locate task at: {path}")
 
-        task = self.get_task(path)
+        task = self.get_task(Path(path))
         slug = task.slug
 
         new_slug = slug_it(new_title)
@@ -717,7 +714,7 @@ class KanbanService(CompletionDataSource):
         if isinstance(path, Path):
             path = str(path)
 
-        task = self.get_task(path)
+        task = self.get_task(Path(path))
         markdown = self._task_to_markdown(task)
 
         tmp_path: str | None = None
@@ -765,7 +762,7 @@ class KanbanService(CompletionDataSource):
         if isinstance(path, Path):
             path = str(path)
 
-        task = self.get_task(path)
+        task = self.get_task(Path(path))
 
         # TODO: how do we handle removing a field?
         # If the user wants to remove a due date, for example, they would have to pass in updates.due_date = None, but that is indistinguishable from "don't change the due date".
@@ -809,7 +806,7 @@ class KanbanService(CompletionDataSource):
         if isinstance(path, Path):
             path = str(path)
 
-        task = self.get_task(path)
+        task = self.get_task(Path(path))
         column = Slug(column)
         result = self.repository.move_task(task, column)
         self.index_service.upsert_task(result)
@@ -828,7 +825,7 @@ class KanbanService(CompletionDataSource):
         if isinstance(path, Path):
             path = str(path)
 
-        task = self.get_task(path)
+        task = self.get_task(Path(path))
         result = self.repository.reorder_task(task, op)
         self.index_service.upsert_task(result)
         return result
@@ -845,7 +842,7 @@ class KanbanService(CompletionDataSource):
         if isinstance(path, Path):
             path = str(path)
 
-        task = self.get_task(path)
+        task = self.get_task(Path(path))
         self.repository.delete_task(task)
         self.index_service.remove_task(task)
         return task
