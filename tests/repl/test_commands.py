@@ -392,7 +392,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_task_move(args, self.svc, self.renderer)
 
-        self.svc.reorder_task.assert_called_once_with("alpha/todo/fix-parser", "top")
+        self.svc.reorder_task.assert_called_once_with(Path("alpha/todo/fix-parser"), "top")
         self.renderer.render_task_reorder.assert_called_once_with(args, (result, "top"))
 
     def test_handle_task_move_bottom(self):
@@ -403,7 +403,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_task_move(args, self.svc, self.renderer)
 
-        self.svc.reorder_task.assert_called_once_with("alpha/todo/fix-parser", "bottom")
+        self.svc.reorder_task.assert_called_once_with(Path("alpha/todo/fix-parser"), "bottom")
         self.renderer.render_task_reorder.assert_called_once_with(args, (result, "bottom"))
 
     def test_handle_task_move_up(self):
@@ -414,7 +414,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_task_move(args, self.svc, self.renderer)
 
-        self.svc.reorder_task.assert_called_once_with("alpha/todo/fix-parser", "up")
+        self.svc.reorder_task.assert_called_once_with(Path("alpha/todo/fix-parser"), "up")
         self.renderer.render_task_reorder.assert_called_once_with(args, (result, "up"))
 
     def test_handle_task_move_down(self):
@@ -425,7 +425,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_task_move(args, self.svc, self.renderer)
 
-        self.svc.reorder_task.assert_called_once_with("alpha/todo/fix-parser", "down")
+        self.svc.reorder_task.assert_called_once_with(Path("alpha/todo/fix-parser"), "down")
         self.renderer.render_task_reorder.assert_called_once_with(args, (result, "down"))
 
     def test_handle_task_assign(self):

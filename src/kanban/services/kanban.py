@@ -799,7 +799,7 @@ class KanbanService(CompletionDataSource):
 
     def reorder_task(
         self,
-        path: str | Path,
+        path: Path,
         op:   str,
     ) -> Task:
         """
@@ -807,10 +807,7 @@ class KanbanService(CompletionDataSource):
         new priority is valid.  Raises TaskNotFound via path_components.
         Updates the index and commits.
         """
-        if isinstance(path, Path):
-            path = str(path)
-
-        task = self.get_task(Path(path))
+        task = self.get_task(path)
         result = self.repository.reorder_task(task, op)
         self.index_service.upsert_task(result)
         return result

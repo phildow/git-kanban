@@ -76,7 +76,7 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
         self.svc.create_task("alpha/todo", TaskCreateParams(title="t2"))
         self.index_service.reset_mock()
 
-        result = self.svc.reorder_task("alpha/todo/t2", "up")
+        result = self.svc.reorder_task(Path("alpha/todo/t2"), "up")
 
         self.index_service.upsert_task.assert_called_once()
         self.assertEqual(self.index_service.upsert_task.call_args.args[0].id, result.id)
@@ -87,7 +87,7 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
         self.index_service.reset_mock()
 
         with self.assertRaises(ValueError):
-            self.svc.reorder_task("alpha/todo/t1", "sideways")
+            self.svc.reorder_task(Path("alpha/todo/t1"), "sideways")
 
         self.index_service.upsert_task.assert_not_called()
 

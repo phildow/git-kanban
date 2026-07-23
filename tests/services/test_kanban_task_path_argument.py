@@ -89,12 +89,12 @@ class TestKanbanServiceTaskPathArgument(unittest.TestCase):
         self.assertEqual(via_path_1.column, "done")
         self.assertEqual(via_path.column, "done")
 
-    def test_reorder_task_accepts_str_and_path(self) -> None:
-        """reorder_task changes position for the correct task whether path is str or Path."""
+    def test_reorder_task_accepts_path(self) -> None:
+        """reorder_task changes position for the correct task when path is a Path."""
         self.svc.create_task("alpha/todo", TaskCreateParams(title="first"))
         self.svc.create_task("alpha/todo", TaskCreateParams(title="second"))
 
-        self.svc.reorder_task("alpha/todo/second", "up")
+        self.svc.reorder_task(Path("alpha/todo/second"), "up")
         self.assertEqual([t.slug for t in self.svc.get_tasks("alpha/todo")], ["second", "first"])
 
         self.svc.reorder_task(Path("alpha/todo/second"), "down")

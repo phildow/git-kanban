@@ -571,6 +571,7 @@ class FilesystemRepository(KanbanRepository):
         current_index = order.index(filename)
         new_index = current_index
 
+        # TODO: type the op parameter as an enum instead of a string to avoid this check
         if op == "up":
             new_index = max(0, current_index - 1)
         elif op == "down":
