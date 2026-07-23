@@ -479,7 +479,7 @@ class TestCommandHandlers(unittest.TestCase):
 
         commands.handle_log(args, self.svc, self.renderer, self.json_renderer)
 
-        self.svc.log.assert_called_once_with(path="/board-a/todo/task-1", limit=5)
+        self.svc.log.assert_called_once_with(path=Path("/board-a/todo/task-1"), limit=5)
         self.renderer.render_log.assert_called_once_with(args, result)
 
     def test_status_handler(self):

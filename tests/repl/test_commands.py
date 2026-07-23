@@ -456,7 +456,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_log(args, self.svc, self.renderer)
 
-        self.svc.log.assert_called_once_with(path="alpha/todo/fix-parser", limit=5)
+        self.svc.log.assert_called_once_with(path=Path("alpha/todo/fix-parser"), limit=5)
         self.renderer.render_log.assert_called_once_with(args, result)
 
     def test_handle_status(self):

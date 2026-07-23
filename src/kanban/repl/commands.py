@@ -230,7 +230,8 @@ def handle_search(args: argparse.Namespace, svc: KanbanService, renderer: Comman
 
 @with_relative_path
 def handle_log(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	result = svc.log(path=args.path, limit=args.limit)
+	path = Path(args.path) if args.path is not None else Path("/")
+	result = svc.log(path=path, limit=args.limit)
 	renderer.render_log(args, result)
 
 

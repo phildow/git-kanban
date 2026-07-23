@@ -899,7 +899,7 @@ class KanbanService(CompletionDataSource):
 
     def log(
         self,
-        path:   str | None = None,
+        path:   Path = Path("/"),
         limit:  int = 20,
     ) -> list[GitCommit]:
         """
