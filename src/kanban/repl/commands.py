@@ -42,6 +42,20 @@ def with_relative_path(method):
 		return method(args, svc, renderer)
 	return _wrapped
 
+def with_task_slug(method):
+	"""Decorator to type the path as a Slug, identifying a task by its bare slug.
+
+	Task-target commands (show, edit, update, move, assign) address a task by
+	its slug alone; the service resolves the containing column within the active
+	board. A slash-bearing token is still forwarded as a Slug so the service can
+	treat it as an explicit path override.
+	"""
+	def _wrapped(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer):
+		if args.path is not None:
+			args.path = Slug(args.path)
+		return method(args, svc, renderer)
+	return _wrapped
+
 # ---------------------------------------------------------------------------
 # Initialization commands
 # ---------------------------------------------------------------------------
@@ -167,19 +181,19 @@ def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: C
 	renderer.render_task_create(args, result)
 
 
-@with_relative_path
+@with_task_slug
 def handle_task_show(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.get_task(args.path)
 	renderer.render_task_show(args, result)
 
 
-@with_relative_path
+@with_task_slug
 def handle_task_edit(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.edit_task(args.path)
 	renderer.render_task_edit(args, result)
 
 
-@with_relative_path
+@with_task_slug
 def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	updates = TaskUpdateParams(
 		title=None,
@@ -204,7 +218,7 @@ def handle_task_rename(args: argparse.Namespace, svc: KanbanService, renderer: C
 	renderer.render_task_rename(args, result)
 
 
-@with_relative_path
+@with_task_slug
 def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	if args.column is not None:
 		result = svc.move_task(args.path, Slug(args.column))
@@ -217,7 +231,7 @@ def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: Com
 		renderer.render_task_reorder(args, (result, op))
 
 
-@with_relative_path
+@with_task_slug
 def handle_task_assign(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.assign_task(args.path, args.assigned_to)
 	renderer.render_task_assign(args, result)

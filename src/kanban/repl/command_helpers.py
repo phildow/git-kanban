@@ -128,7 +128,7 @@ def handle_rename_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[
     board, column, task = svc.path_components(args.path)
 
     if board and column and task:
-                return Task, svc.rename_task(path=Path(f"/{board}/{column}/{task}"), new_title=new_name)
+        return Task, svc.rename_task(path=Path(f"/{board}/{column}/{task}"), new_title=new_name)
     elif board and column:
         return Column, svc.rename_column(path=Path(f"/{board}/{column}"), new_name=new_name)
     else:

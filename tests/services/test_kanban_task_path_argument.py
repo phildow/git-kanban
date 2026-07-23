@@ -11,6 +11,7 @@ from uuid import uuid4
 from kanban.models import Slug
 from kanban.services.git import GitService
 from kanban.services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
+from kanban.storage.base import TaskAlreadyExists, TaskNotFound
 from kanban.storage.memory import InMemoryRepository
 
 
@@ -133,6 +134,89 @@ class TestKanbanServiceTaskPathArgument(unittest.TestCase):
 
         self.assertEqual(via_path_1.id, created_via_path_1.id)
         self.assertEqual(via_path.id, created_via_path.id)
+
+
+class TestKanbanServiceBareTaskSlug(unittest.TestCase):
+    """Task-scoped methods resolve a bare Slug against the active board.
+
+    The REPL addresses a task by its slug alone; the service locates the column
+    that contains it, so callers do not need to supply board/column segments.
+    """
+
+    def setUp(self) -> None:
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+        temp_dir.mkdir()
+        self.repo = InMemoryRepository(root=temp_dir)
+        self.svc = KanbanService(
+            repository=self.repo,
+            index_service=MagicMock(),
+            git_service=GitService(),
+        )
+        self.repo.create_board("alpha", slug="alpha")
+        self.repo.create_column("alpha", "todo", slug="todo")
+        self.repo.create_column("alpha", "done", slug="done")
+        # Make "alpha" the active board so bare slugs resolve against it.
+        self.svc.working_board = Slug("alpha")
+
+    def test_get_task_resolves_bare_slug_in_first_column(self) -> None:
+        """A bare slug is matched to its containing column, not assumed to be one."""
+        created = self.svc.create_task("/alpha/todo", TaskCreateParams(title="fix-login"))
+
+        resolved = self.svc.get_task(Slug("fix-login"))
+
+        self.assertEqual(resolved.id, created.id)
+        self.assertEqual(resolved.column, "todo")
+
+    def test_get_task_resolves_bare_slug_in_other_column(self) -> None:
+        """The column is discovered by search, so any column in the board is reachable."""
+        created = self.svc.create_task("/alpha/done", TaskCreateParams(title="ship-it"))
+
+        resolved = self.svc.get_task(Slug("ship-it"))
+
+        self.assertEqual(resolved.id, created.id)
+        self.assertEqual(resolved.column, "done")
+
+    def test_move_task_accepts_bare_slug(self) -> None:
+        """move_task locates the task's column first, then relocates it."""
+        self.svc.create_task("/alpha/todo", TaskCreateParams(title="fix-login"))
+
+        moved = self.svc.move_task(Slug("fix-login"), Slug("done"))
+
+        self.assertEqual(moved.column, "done")
+
+    def test_assign_task_accepts_bare_slug(self) -> None:
+        """assign_task resolves a bare slug and assigns the correct task."""
+        self.svc.create_task("/alpha/done", TaskCreateParams(title="ship-it"))
+
+        assigned = self.svc.assign_task(Slug("ship-it"), "alice")
+
+        self.assertEqual(assigned.assigned_to, "alice")
+
+    def test_delete_task_accepts_bare_slug(self) -> None:
+        """delete_task resolves a bare slug and removes the correct task."""
+        self.svc.create_task("/alpha/todo", TaskCreateParams(title="fix-login"))
+
+        self.svc.delete_task(Slug("fix-login"))
+
+        self.assertEqual(self.svc.get_tasks("/alpha/todo"), [])
+
+    def test_bare_slug_not_found_raises_task_not_found(self) -> None:
+        """A slug matching no task in the board raises TaskNotFound."""
+        with self.assertRaises(TaskNotFound):
+            self.svc.get_task(Slug("does-not-exist"))
+
+    def test_bare_slug_without_active_board_raises(self) -> None:
+        """With no active board there is nothing to search, so resolution fails."""
+        self.svc.working_board = None
+        with self.assertRaises(ValueError):
+            self.svc.get_task(Slug("fix-login"))
+
+    def test_create_task_rejects_duplicate_slug_in_other_column(self) -> None:
+        """Task slugs are unique board-wide, so a collision in any column is rejected."""
+        self.svc.create_task("/alpha/todo", TaskCreateParams(title="Fix login"))
+
+        with self.assertRaises(TaskAlreadyExists):
+            self.svc.create_task("/alpha/done", TaskCreateParams(title="Fix login"))
 
 
 if __name__ == "__main__":

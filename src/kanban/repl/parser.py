@@ -176,7 +176,7 @@ def _add_reorder_parser(subparsers: argparse._SubParsersAction) -> None:
 
 def _add_show_parser(subparsers: argparse._SubParsersAction) -> None:
     show_parser = subparsers.add_parser("show", aliases=["view", "v", "s"], help="Show task details")
-    show_parser.add_argument("path", metavar="COLUMN/TASK", help="The task to show")
+    show_parser.add_argument("path", metavar="TASK", help="The task to show")
     show_parser.add_argument("-p", "--plain", action="store_true", default=False, help="Render the task body as plain text instead of Markdown")
     show_parser.set_defaults(func=handle_task_show)
 
@@ -184,14 +184,14 @@ def _add_show_parser(subparsers: argparse._SubParsersAction) -> None:
 def _add_edit_parser(subparsers: argparse._SubParsersAction) -> None:
     edit_parser = subparsers.add_parser("edit", help="Edit a task in the default editor")
     _add_global_flags(edit_parser)
-    edit_parser.add_argument("path", metavar="COLUMN/TASK", help="The task to edit")
+    edit_parser.add_argument("path", metavar="TASK", help="The task to edit")
     edit_parser.set_defaults(func=handle_task_edit)
 
 
 def _add_update_parser(subparsers: argparse._SubParsersAction) -> None:
     update_parser = subparsers.add_parser("update", help="Update a task")
     _add_global_flags(update_parser)
-    update_parser.add_argument("path", metavar="COLUMN/TASK", help="The task to update")
+    update_parser.add_argument("path", metavar="TASK", help="The task to update")
     update_parser.add_argument("-c", "--column", dest="column", metavar="COLUMN", help="Move the task to this column")
     _add_task_create_args(update_parser)
     update_parser.set_defaults(func=handle_task_update)
@@ -199,9 +199,9 @@ def _add_update_parser(subparsers: argparse._SubParsersAction) -> None:
 
 def _add_move_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("move", aliases=["mv"], help="Move a task to another column")
-    p.add_argument("path", metavar="COLUMN/TASK", type=str, help="The task to move")
+    p.add_argument("path", metavar="TASK", type=str, help="The task to move")
     group = p.add_mutually_exclusive_group()
-    group.add_argument("column", type=str, nargs="?", help="The destination column")
+    group.add_argument("column", metavar="COLUMN", type=str, nargs="?", help="The destination column")
     group.add_argument("--top", action="store_true", default=False, help="The top of the current column")
     group.add_argument("--bottom", action="store_true", default=False, help="The bottom of the current column")
     group.add_argument("--up", action="store_true", default=False, help="Move the task up within the current column")
@@ -265,7 +265,7 @@ def _add_tasks_parser(subparsers: argparse._SubParsersAction) -> None:
 
 def _add_assign_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("assign", help="Assign a task to a user")
-    p.add_argument("path", metavar="COLUMN/TASK", help="The task to assign")
+    p.add_argument("path", metavar="TASK", help="The task to assign")
     p.add_argument("assigned_to", metavar="USER", help="User to assign the task to")
     _add_global_flags(p)
     p.set_defaults(func=handle_task_assign)

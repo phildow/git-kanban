@@ -206,6 +206,8 @@ class CompletionEngine:
 
         if action.choices:
             return self._matching([str(choice) for choice in action.choices], partial)
+        if action.dest in PATH_LIKE_DESTS and action.metavar == "TASK":
+            return self._complete_task_slug(partial)
         if action.dest in PATH_LIKE_DESTS:
             return self._complete_path(partial)
         if action.dest == "board":
@@ -252,6 +254,29 @@ class CompletionEngine:
         if not tokens:
             return [], text
         return tokens[:-1], tokens[-1]
+
+    def _complete_task_slug(self, token: str) -> list[str]:
+        """Complete a bare task slug against every task in the active board.
+
+        Commands whose target is a task (``show``, ``edit``, ``update``,
+        ``move``, ``assign``) address it by slug alone, so completion lists
+        task slugs across all columns of the active board rather than walking
+        board/column segments. A token containing ``/`` is treated as an
+        explicit path override and delegated to ``_complete_path`` so power
+        users can still type a full ``/board/column/task`` path.
+        """
+
+        if "/" in token:
+            return self._complete_path(token)
+
+        board = self._service.working_board
+        if board is None:
+            return []
+
+        # Task slugs are unique board-wide, but de-dupe defensively so a stale
+        # store never surfaces the same slug twice.
+        slugs = {t.slug for t in self._service.get_tasks(Path(f"/{board}"))}
+        return self._matching(list(slugs), token)
 
     def _complete_path(self, token: str) -> list[str]:
         """Complete a board/column/task path token.

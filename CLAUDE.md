@@ -499,10 +499,10 @@ delete <column[/task]> | --board
 
 reorder <column> <position>
 
-show <column/task> [-p|--plain]
-edit <column/task>
+show <task> [-p|--plain]
+edit <task>
 
-update <column/task>
+update <task>
     [--column <column>]
     [--assigned-to <name>]
     [--priority <low|medium|high>]
@@ -510,13 +510,13 @@ update <column/task>
     [--due-date <date>]
     [--created-by <name>]
 
-move <column/task> [<column>]
+move <task> [<column>]
     [--top]
     [--bottom]
     [--up]
     [--down]
 
-assign <column/task> <user>
+assign <task> <user>
 
 config
 config set <key> <value>    # key: name
@@ -550,6 +550,8 @@ The `[]` brackets indicate optional path components that are inferred from the u
 2. User context
 3. Index search (scoped to active board if set)
 4. Error on ambiguity
+
+Task-target commands (`show`, `edit`, `update`, `move`, `assign`) identify a task by its bare `<task>` slug: the service locates the column that contains it within the active board and constructs the full path. Because slugs are unique board-wide, the column need not be given. A slash-prefixed path (`/board/column/task`) still overrides the active context. The dual-purpose `rename` and `delete` commands keep the `<column[/task]>` form to disambiguate a column target from a task target.
 
 The following command aliases are registered by default:
 

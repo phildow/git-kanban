@@ -288,7 +288,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_task_show(args, self.svc, self.renderer)
 
-        self.svc.get_task.assert_called_once_with(Path("alpha/todo/fix-parser"))
+        self.svc.get_task.assert_called_once_with(Slug("alpha/todo/fix-parser"))
         self.renderer.render_task_show.assert_called_once_with(args, result)
 
     def test_handle_task_edit(self):
@@ -298,7 +298,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_task_edit(args, self.svc, self.renderer)
 
-        self.svc.edit_task.assert_called_once_with(Path("alpha/todo/fix-parser"))
+        self.svc.edit_task.assert_called_once_with(Slug("alpha/todo/fix-parser"))
         self.renderer.render_task_edit.assert_called_once_with(args, result)
 
     def test_handle_task_update_defaults(self):
@@ -309,7 +309,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         commands.handle_task_update(args, self.svc, self.renderer)
 
         self.svc.update_task.assert_called_once_with(
-            Path("alpha/todo/fix-parser"),
+            Slug("alpha/todo/fix-parser"),
             updates=TaskUpdateParams(
                 title=None,
                 assigned_to=None,
@@ -337,7 +337,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         commands.handle_task_update(args, self.svc, self.renderer)
 
         self.svc.update_task.assert_called_once_with(
-            Path("alpha/todo/fix-parser"),
+            Slug("alpha/todo/fix-parser"),
             updates=TaskUpdateParams(
                 assigned_to="philip",
                 priority="medium",
@@ -381,7 +381,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_task_move(args, self.svc, self.renderer)
 
-        self.svc.move_task.assert_called_once_with(Path("alpha/todo/fix-parser"), Slug("done"))
+        self.svc.move_task.assert_called_once_with(Slug("alpha/todo/fix-parser"), Slug("done"))
         self.renderer.render_task_move.assert_called_once_with(args, result)
 
     def test_handle_task_move_top(self):
@@ -392,7 +392,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_task_move(args, self.svc, self.renderer)
 
-        self.svc.reorder_task.assert_called_once_with(Path("alpha/todo/fix-parser"), "top")
+        self.svc.reorder_task.assert_called_once_with(Slug("alpha/todo/fix-parser"), "top")
         self.renderer.render_task_reorder.assert_called_once_with(args, (result, "top"))
 
     def test_handle_task_move_bottom(self):
@@ -403,7 +403,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_task_move(args, self.svc, self.renderer)
 
-        self.svc.reorder_task.assert_called_once_with(Path("alpha/todo/fix-parser"), "bottom")
+        self.svc.reorder_task.assert_called_once_with(Slug("alpha/todo/fix-parser"), "bottom")
         self.renderer.render_task_reorder.assert_called_once_with(args, (result, "bottom"))
 
     def test_handle_task_move_up(self):
@@ -414,7 +414,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_task_move(args, self.svc, self.renderer)
 
-        self.svc.reorder_task.assert_called_once_with(Path("alpha/todo/fix-parser"), "up")
+        self.svc.reorder_task.assert_called_once_with(Slug("alpha/todo/fix-parser"), "up")
         self.renderer.render_task_reorder.assert_called_once_with(args, (result, "up"))
 
     def test_handle_task_move_down(self):
@@ -425,7 +425,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_task_move(args, self.svc, self.renderer)
 
-        self.svc.reorder_task.assert_called_once_with(Path("alpha/todo/fix-parser"), "down")
+        self.svc.reorder_task.assert_called_once_with(Slug("alpha/todo/fix-parser"), "down")
         self.renderer.render_task_reorder.assert_called_once_with(args, (result, "down"))
 
     def test_handle_task_assign(self):
@@ -436,7 +436,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_task_assign(args, self.svc, self.renderer)
 
-        self.svc.assign_task.assert_called_once_with(Path("alpha/todo/fix-parser"), "alice")
+        self.svc.assign_task.assert_called_once_with(Slug("alpha/todo/fix-parser"), "alice")
         self.renderer.render_task_assign.assert_called_once_with(args, result)
 
     def test_handle_search(self):

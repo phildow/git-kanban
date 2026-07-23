@@ -12,7 +12,7 @@ from ..index.query import SearchQuery, SortField
 from ..models import Board, Column, Priority, Slug, Task, TaskFilter, UserContext
 from ..models.priority import PRIORITY_ORDER
 from ..protocols.completion_data_source import CompletionDataSource
-from ..storage.base import KanbanRepository, ColumnNotFound, BoardNotFound
+from ..storage.base import KanbanRepository, ColumnNotFound, BoardNotFound, TaskNotFound, TaskAlreadyExists
 from ..storage.seeds import BootstrapConfig, DEFAULT_COLUMNS
 from ..services.git import GitService
 from ..services.index import IndexService
@@ -532,8 +532,36 @@ class KanbanService(CompletionDataSource):
 
     # ── Tasks ─────────────────────────────────────────────────────────────────
 
-    # TODO: get_boards and get_columns take names not paths why is get_tasks different?  
-    # Should it take a path or a board/column pair?  If it takes a path, should it be able to take a task path and return just that task?
+    def _resolve_task_path(self, path: Path | Slug) -> Path:
+        """
+        Resolve a task target into a fully-qualified /board/column/task Path.
+
+        A Path (supplied by the CLI) is already fully qualified and is returned
+        unchanged. A bare Slug (supplied by the REPL) names a task by its slug
+        alone; the column that contains it is located first, within the active
+        board, and a full Path is constructed from board, column, and slug.
+
+        A slug that embeds a slash is treated as an explicit column/task (or
+        /board/column/task) path and resolved directly, so REPL users can still
+        override the active context with a fully-typed path.
+
+        Raises TaskNotFound if a bare slug matches no task in the active board.
+        """
+        if isinstance(path, Path):
+            return path
+
+        if "/" in path:
+            return Path(path)
+
+        board = self.working_board
+        if board is None:
+            raise ValueError(f"No active board; cannot resolve task '{path}' by slug alone")
+
+        for task in self.get_tasks(Path(f"/{board}")):
+            if task.slug == path:
+                return Path(f"/{board}/{task.column}/{task.slug}")
+
+        raise TaskNotFound(path)
 
     def get_tasks(
         self,
@@ -599,6 +627,12 @@ class KanbanService(CompletionDataSource):
         if board is None or column is None:
             raise ValueError(f"No working board/column and no explicit path provided: {path}")
 
+        # Task slugs are unique board-wide, not merely within a column, so the
+        # slug can address a task from any column of the board.
+        existing = next((t for t in self.get_tasks(Path(f"/{board}")) if t.slug == slug), None)
+        if existing is not None:
+            raise TaskAlreadyExists(board, existing.column, params.title)
+
         assigned_to: str | None
         priority: Priority | None
         title: str
@@ -636,15 +670,16 @@ class KanbanService(CompletionDataSource):
 
     def get_task(
         self,
-        path: Path,
+        path: Path | Slug,
     ) -> Task:
         """
-        Resolve and return a single task by title slug.  Delegates
-        location resolution to resolve_path, which applies the
-        explicit → context → index-search chain and raises TaskNotFound or
-        if resolution fails.
+        Resolve and return a single task.  Accepts a fully-qualified Path (from
+        the CLI) or a bare task Slug (from the REPL); the latter is resolved to
+        its column within the active board by _resolve_task_path.  Raises
+        TaskNotFound if resolution fails.
         """
-        board, column, title = self.path_components(path)
+        resolved_path = self._resolve_task_path(path)
+        board, column, title = self.path_components(resolved_path)
 
         if board is None or column is None:
             raise ValueError(f"No working board/column and no explicit path provided: {path}")
@@ -655,20 +690,22 @@ class KanbanService(CompletionDataSource):
 
     def rename_task(
         self,
-        path: Path,
+        path: Path | Slug,
         new_title: str,
     ) -> Task:
         """
-        Rename a task's .md file and update its frontmatter.  Raises
-        BoardNotFound, ColumnNotFound, or TaskNotFound if the task cannot be
-        resolved, and TaskAlreadyExists if the new title slug is already taken
+        Rename a task's .md file and update its frontmatter.  Accepts a
+        fully-qualified Path (from the CLI) or a bare task Slug (from the REPL).
+        Raises BoardNotFound, ColumnNotFound, or TaskNotFound if the task cannot
+        be resolved, and TaskAlreadyExists if the new title slug is already taken
         in that column.  Updates the index and commits.
         """
-        board, column, title = self.path_components(path)
+        resolved_path = self._resolve_task_path(path)
+        board, column, title = self.path_components(resolved_path)
         if board is None or column is None or title is None:
             raise ValueError(f"Unable to locate task at: {path}")
 
-        task = self.get_task(path)
+        task = self.get_task(resolved_path)
         slug = task.slug
 
         new_slug = slug_it(new_title)
@@ -681,11 +718,12 @@ class KanbanService(CompletionDataSource):
 
     def edit_task(
         self,
-        path: Path,
+        path: Path | Slug,
     ) -> Task:
-        """Open's the task's .md file in an editor, then reads the updated 
-        content and metadata and applies changes to the task.  Raises 
-        TaskNotFound if the task cannot be resolved.  
+        """Open's the task's .md file in an editor, then reads the updated
+        content and metadata and applies changes to the task.  Accepts a
+        fully-qualified Path (from the CLI) or a bare task Slug (from the REPL).
+        Raises TaskNotFound if the task cannot be resolved.
         Updates the index and commits.
         """
         task = self.get_task(path)
@@ -724,14 +762,16 @@ class KanbanService(CompletionDataSource):
 
     def update_task(
         self,
-        path:     Path,
+        path:     Path | Slug,
         updates:  TaskUpdateParams,
     ) -> Task:
         """
         Apply TaskUpdateParams to an existing task's frontmatter and body,
-        updating updated_at automatically.  If updates.title differs from the
-        current title, the file is renamed to match the new slug.  Raises
-        TaskNotFound via path_components. Updates the index entry and commits.
+        updating updated_at automatically.  Accepts a fully-qualified Path (from
+        the CLI) or a bare task Slug (from the REPL).  If updates.title differs
+        from the current title, the file is renamed to match the new slug.
+        Raises TaskNotFound if the task cannot be resolved. Updates the index
+        entry and commits.
         """
         task = self.get_task(path)
 
@@ -765,13 +805,14 @@ class KanbanService(CompletionDataSource):
 
     def move_task(
         self,
-        path:   Path,
+        path:   Path | Slug,
         column: Slug,
     ) -> Task:
         """
-        Move a task's .md file to a new column within the same board. 
+        Move a task's .md file to a new column within the same board.  Accepts a
+        fully-qualified Path (from the CLI) or a bare task Slug (from the REPL).
         Validates that the destination column exists before moving.
-        Raises TaskNotFound, BoardNotFound, or ColumnNotFound as appropriate.  
+        Raises TaskNotFound, BoardNotFound, or ColumnNotFound as appropriate.
         Updates the index and commits.
         """
         task = self.get_task(path)
@@ -781,13 +822,14 @@ class KanbanService(CompletionDataSource):
 
     def reorder_task(
         self,
-        path: Path,
+        path: Path | Slug,
         op:   str,
     ) -> Task:
         """
-        Bump a task's priority up/down or to top/bottom.  Validates that the 
-        new priority is valid.  Raises TaskNotFound via path_components.
-        Updates the index and commits.
+        Bump a task's priority up/down or to top/bottom.  Accepts a
+        fully-qualified Path (from the CLI) or a bare task Slug (from the REPL).
+        Validates that the new priority is valid.  Raises TaskNotFound if the
+        task cannot be resolved.  Updates the index and commits.
         """
         task = self.get_task(path)
         result = self.repository.reorder_task(task, op)
@@ -796,11 +838,12 @@ class KanbanService(CompletionDataSource):
 
     def delete_task(
         self,
-        path: Path,
+        path: Path | Slug,
     ) -> Task:
         """
-        Delete a task's .md file from disk.  Raises TaskNotFound or
-        via path_components.  Removes the task's index entry and commits.
+        Delete a task's .md file from disk.  Accepts a fully-qualified Path (from
+        the CLI) or a bare task Slug (from the REPL).  Raises TaskNotFound if the
+        task cannot be resolved.  Removes the task's index entry and commits.
         Returns the deleted Task.
         """
         task = self.get_task(path)
@@ -810,12 +853,13 @@ class KanbanService(CompletionDataSource):
 
     def assign_task(
         self,
-        path: Path,
+        path: Path | Slug,
         user: str,
     ) -> Task:
         """
-        Assign a task to a user.  Raises TaskNotFound via path_components.  
-        Updates the index and commits.
+        Assign a task to a user.  Accepts a fully-qualified Path (from the CLI)
+        or a bare task Slug (from the REPL).  Raises TaskNotFound if the task
+        cannot be resolved.  Updates the index and commits.
         """
         task = self.get_task(path)
         task.assigned_to = user

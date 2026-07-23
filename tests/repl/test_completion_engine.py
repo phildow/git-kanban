@@ -80,9 +80,14 @@ def _build_fixture_parser() -> argparse.ArgumentParser:
     p.add_argument("path", nargs="?")
     p.set_defaults(func=_NOOP)
 
-    # show: existing task path
+    # show: existing task path (segment-walked, no TASK metavar)
     p = subparsers.add_parser("show", aliases=["view", "s"])
     p.add_argument("path")
+    p.set_defaults(func=_NOOP)
+
+    # edit: task addressed by bare slug (metavar TASK triggers slug completion)
+    p = subparsers.add_parser("edit")
+    p.add_argument("path", metavar="TASK")
     p.set_defaults(func=_NOOP)
 
     # move: task path + ambiguous destination (path-like per dest=="column")
@@ -180,9 +185,16 @@ class FakeKanbanService:
 
     def get_tasks(self, path: Path | None = None) -> list[_Task]:
         board, column, _ = self.path_components(path)
-        if board is None or column is None:
+        if board is None:
             return []
-        return [_Task(slug) for slug in self._BOARDS.get(board, {}).get(column, [])]
+        columns = self._BOARDS.get(board, {})
+        if column is None:
+            # Board-wide: aggregate task slugs across every column, mirroring
+            # KanbanService.get_tasks when given a board-only path.
+            slugs = [slug for col_slugs in columns.values() for slug in col_slugs]
+        else:
+            slugs = columns.get(column, [])
+        return [_Task(slug) for slug in slugs]
 
     def get_tags(self, board: str | None = None) -> list[str]:
         if board is None:
@@ -280,6 +292,40 @@ class ContextAwarePathCompletionTests(EngineTestCase):
         context = _Context(board="my-project", column="todo")
         self.assertEqual(
             self.complete("show /ops/", context),
+            ["backlog/", "done/", "in-progress/", "todo/"],
+        )
+
+
+class TaskSlugCompletionTests(EngineTestCase):
+    """Path positionals with metavar TASK complete bare task slugs board-wide."""
+
+    def test_lists_all_task_slugs_in_active_board(self) -> None:
+        context = _Context(board="my-project")
+        self.assertEqual(
+            self.complete("edit ", context),
+            ["add-rate-limiting", "fix-login-bug", "write-api-docs"],
+        )
+
+    def test_filters_task_slugs_by_prefix(self) -> None:
+        context = _Context(board="my-project")
+        self.assertEqual(self.complete("edit fix", context), ["fix-login-bug"])
+
+    def test_aggregates_across_columns(self) -> None:
+        context = _Context(board="ops")
+        # deploy-staging appears in both todo and in-progress; slugs de-duped view
+        # is not required, but every column's tasks are reachable by slug.
+        self.assertEqual(
+            self.complete("edit rot", context),
+            ["rotate-keys"],
+        )
+
+    def test_no_active_board_completes_nothing(self) -> None:
+        self.assertEqual(self.complete("edit "), [])
+
+    def test_leading_slash_falls_back_to_path_walk(self) -> None:
+        context = _Context(board="my-project", column="todo")
+        self.assertEqual(
+            self.complete("edit /ops/", context),
             ["backlog/", "done/", "in-progress/", "todo/"],
         )
 
