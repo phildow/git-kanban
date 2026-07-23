@@ -457,7 +457,7 @@ class TestCommandHandlers(unittest.TestCase):
 
         commands.handle_task_delete(args, self.svc, self.renderer, self.json_renderer)
 
-        self.svc.delete_task.assert_called_once_with("/board-a/todo/fix-parser")
+        self.svc.delete_task.assert_called_once_with(Path("/board-a/todo/fix-parser"))
         self.renderer.render_task_delete.assert_called_once_with(args, result)
 
     def test_search_handler(self):

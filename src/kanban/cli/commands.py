@@ -233,7 +233,7 @@ def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: Com
 def handle_task_delete(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
 	if not args.force and not prompt_for_confirmation(f"Delete task '{args.path}'?"):
 		return
-	result = svc.delete_task(args.path)
+	result = svc.delete_task(Path(args.path))
 	_pick(args, renderer, json_renderer).render_task_delete(args, result)
 
 @with_absolute_path

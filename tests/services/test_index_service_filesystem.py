@@ -63,7 +63,7 @@ class TestIndexServiceDiffFilesystem(unittest.TestCase):
     def test_no_diff_after_service_deletes_a_task(self) -> None:
         """Deleting through the service removes the index entry too; diff() stays empty."""
         self.svc.create_task("main/todo", TaskCreateParams(title="Fix login bug"))
-        self.svc.delete_task("main/todo/fix-login-bug")
+        self.svc.delete_task(Path("main/todo/fix-login-bug"))
 
         result = self.index_service.diff()
 

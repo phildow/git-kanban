@@ -96,7 +96,7 @@ class TestKanbanServiceTaskIndexHooks(unittest.TestCase):
         created = self.svc.create_task("alpha/todo", TaskCreateParams(title="t1"))
         self.index_service.reset_mock()
 
-        self.svc.delete_task("alpha/todo/t1")
+        self.svc.delete_task(Path("alpha/todo/t1"))
 
         self.index_service.remove_task.assert_called_once()
         self.assertEqual(self.index_service.remove_task.call_args.args[0].id, created.id)

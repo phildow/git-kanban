@@ -814,17 +814,14 @@ class KanbanService(CompletionDataSource):
 
     def delete_task(
         self,
-        path: str | Path,
+        path: Path,
     ) -> Task:
         """
         Delete a task's .md file from disk.  Raises TaskNotFound or
         via path_components.  Removes the task's index entry and commits.
         Returns the deleted Task.
         """
-        if isinstance(path, Path):
-            path = str(path)
-
-        task = self.get_task(Path(path))
+        task = self.get_task(path)
         self.repository.delete_task(task)
         self.index_service.remove_task(task)
         return task

@@ -111,12 +111,12 @@ class TestKanbanServiceTaskPathArgument(unittest.TestCase):
         self.assertEqual(via_str.assigned_to, "alice")
         self.assertEqual(via_path.assigned_to, "bob")
 
-    def test_delete_task_accepts_str_and_path(self) -> None:
-        """delete_task removes the correct task whether path is str or Path."""
+    def test_delete_task_accepts_path(self) -> None:
+        """delete_task removes the correct task when path is a Path."""
         self.svc.create_task("alpha/todo", TaskCreateParams(title="fix-login"))
         self.svc.create_task("alpha/todo", TaskCreateParams(title="write-docs"))
 
-        self.svc.delete_task("alpha/todo/fix-login")
+        self.svc.delete_task(Path("alpha/todo/fix-login"))
         self.svc.delete_task(Path("alpha/todo/write-docs"))
 
         self.assertEqual(self.svc.get_tasks("alpha/todo"), [])
