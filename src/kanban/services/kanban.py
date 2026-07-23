@@ -40,7 +40,6 @@ class TaskUpdateParams:
     due_date:    datetime | None = None
 
 
-
 # ── Return types ──────────────────────────────────────────────────────────────
 
 @dataclass
@@ -225,8 +224,8 @@ class KanbanService(CompletionDataSource):
         """Return True if the given column exists in the repository, False if not."""
         return self.repository.column_exists(board, column)
 
+    # TODO: revisit: if we have an active board always preferece the path with it
     def resolve_path(self, path: str | None = None) -> Path:
-
         """
         Resolve a user-provided path into an absolute Path object.
 
@@ -354,6 +353,7 @@ class KanbanService(CompletionDataSource):
         """
         return self.repository.get_boards()
 
+    # UNUSED
     def get_board(self, board: str) -> Board | None:
         """Return the board with the given name, or None if not found."""
         return self.repository.get_board(board)
@@ -452,6 +452,12 @@ class KanbanService(CompletionDataSource):
             board = self.working_board
         if board is None:
             raise ValueError("No board specified and no board in context")
+
+        # Accept either board slug ("proj") or absolute board path ("/proj")
+        # TODO: move to method signature
+        board = board.strip("/")
+        if "/" in board:
+            board = board.split("/", 1)[0]
         
         return self.repository.get_columns(board)
 

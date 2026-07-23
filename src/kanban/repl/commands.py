@@ -110,12 +110,7 @@ def handle_board_list(args: argparse.Namespace, svc: KanbanService, renderer: Co
 def handle_board_create(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.create_board(args.board)
 	renderer.render_board_create(args, result)
-
-
-# TODO: REMOVE
-def handle_board_rename(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	result = svc.rename_board(args.board, args.new_name)
-	renderer.render_board_rename(args, result)
+	
 
 # ---------------------------------------------------------------------------
 # Column subcommands

@@ -81,7 +81,7 @@ class TestCommandHandlers(unittest.TestCase):
 
         commands.handle_board_rename(args, self.svc, self.renderer, self.json_renderer)
 
-        self.svc.rename_board.assert_called_once_with("old", "new")
+        self.svc.rename_board.assert_called_once_with("/old", "new")
         self.renderer.render_board_rename.assert_called_once_with(args, result)
 
     def test_handle_board_delete(self):
@@ -92,7 +92,7 @@ class TestCommandHandlers(unittest.TestCase):
 
         commands.handle_board_delete(args, self.svc, self.renderer, self.json_renderer)
 
-        self.svc.delete_board.assert_called_once_with("my-board")
+        self.svc.delete_board.assert_called_once_with("/my-board")
         self.renderer.render_board_delete.assert_called_once_with(args, result)
 
     def test_column_handlers(self):
@@ -101,7 +101,7 @@ class TestCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.get_columns.return_value = result
         commands.handle_column_list(args, self.svc, self.renderer, self.json_renderer)
-        self.svc.get_columns.assert_called_once_with("board-a")
+        self.svc.get_columns.assert_called_once_with("/board-a")
         self.renderer.render_column_list.assert_called_once_with(args, result)
 
         args = self._args(path="board-a", title="todo")

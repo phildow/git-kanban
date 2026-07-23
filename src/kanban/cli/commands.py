@@ -76,11 +76,13 @@ def handle_board_create(args: argparse.Namespace, svc: KanbanService, renderer: 
 	_pick(args, renderer, json_renderer).render_board_create(args, result)
 
 
+@with_absolute_path
 def handle_board_rename(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
 	result = svc.rename_board(args.path, args.new_name)
 	_pick(args, renderer, json_renderer).render_board_rename(args, result)
 
 
+@with_absolute_path
 def handle_board_delete(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
 	if not args.force and not prompt_for_confirmation(f"Delete board '{args.path}'?"):
 		return
@@ -91,6 +93,7 @@ def handle_board_delete(args: argparse.Namespace, svc: KanbanService, renderer: 
 # Column subcommands
 # ---------------------------------------------------------------------------
 
+@with_absolute_path
 def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
 	result = svc.get_columns(args.path)
 	_pick(args, renderer, json_renderer).render_column_list(args, result)

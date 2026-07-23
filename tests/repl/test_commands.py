@@ -90,11 +90,6 @@ class TestReplCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.rename_board.return_value = result
 
-        commands.handle_board_rename(args, self.svc, self.renderer)
-
-        self.svc.rename_board.assert_called_once_with("alpha", "beta")
-        self.renderer.render_board_rename.assert_called_once_with(args, result)
-
     def test_handle_rename_board(self) -> None:
         """`rename -b` calls rename_board for the active board and renders the result."""
         result = object()

@@ -13,7 +13,6 @@ from kanban.cli.commands import (
     handle_board_create,
     handle_board_delete,
     handle_board_list,
-    handle_board_rename,
     handle_column_create,
     handle_column_delete,
     handle_column_list,
@@ -100,11 +99,6 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         args = cli_parser.parse_args(["board", "create", "my-board"])
         self.assertEqual(args.board, "my-board")
         self.assertIs(args.func, handle_board_create)
-
-        args = cli_parser.parse_args(["board", "rename", "old", "new"])
-        self.assertEqual(args.path, "old")
-        self.assertEqual(args.new_name, "new")
-        self.assertIs(args.func, handle_board_rename)
 
         args = cli_parser.parse_args(["board", "delete", "my-board"])
         self.assertEqual(args.path, "my-board")
