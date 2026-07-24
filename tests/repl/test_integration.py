@@ -636,26 +636,27 @@ class TestReplShow(_InitializedReplBase):
         super().setUp()
         self.repo.create_board("proj", slug="proj")
         self.repo.create_column("proj", "todo", slug="todo")
-        self.svc.create_task("proj/todo", TaskCreateParams(title="fix-login"))
+        self.svc.set_board("proj")
+        self.svc.create_task("todo", TaskCreateParams(title="fix-login"))
 
     def test_show_produces_output(self) -> None:
         """show <task-path> prints task details."""
-        out = self.run_repl("show", "proj/todo/fix-login")
+        out = self.run_repl("show", "fix-login")
         self.assertTrue(out.strip())
 
     def test_view_alias_produces_output(self) -> None:
         """view (alias for show) prints task details."""
-        out = self.run_repl("view", "proj/todo/fix-login")
+        out = self.run_repl("view", "fix-login")
         self.assertTrue(out.strip())
 
     def test_v_alias_produces_output(self) -> None:
         """v (alias for show) prints task details."""
-        out = self.run_repl("v", "proj/todo/fix-login")
+        out = self.run_repl("v", "fix-login")
         self.assertTrue(out.strip())
 
     def test_s_alias_produces_output(self) -> None:
         """s (alias for show) prints task details."""
-        out = self.run_repl("s", "proj/todo/fix-login")
+        out = self.run_repl("s", "fix-login")
         self.assertTrue(out.strip())
 
 

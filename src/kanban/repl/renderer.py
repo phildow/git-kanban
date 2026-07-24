@@ -13,6 +13,8 @@ from ..protocols.command_renderer import CommandRenderer
 from ..repl.render_helper import RenderHelper
 from ..services.kanban import GitCommit, KanbanStatus
 
+# TODO: Let's just remove this and the no-rich option
+
 @deprecated("The RichRenderer is used by default. This class is deprecated and will be removed in a future version.")
 class Renderer(CommandRenderer):
 	def __init__(self, render_helper: RenderHelper):
@@ -320,10 +322,10 @@ class Renderer(CommandRenderer):
 
 		for task in result:	
 			tags = ", ".join(task.tags) if task.tags else None
-			column_name = self.render_helper.column_name_from_slug(task.board, task.column)
+			column = self.render_helper.column_for_slug(task.column)
 			elems = [
 				f"{self._clamped(task.title, 32-1):<32}", 
-				*(f"{self._clamped(column_name or "-", 16-1):<16}" if include_column else []), 
+				*(f"{self._clamped(column.name if column else "-", 16-1):<16}" if include_column else []), 
 				f"{self._clamped(task.assigned_to or "-", 16-1):<16}", 
 				f"{self._clamped(task.priority.capitalize() if task.priority else "-", 16-1):<16}", 
 				*(f"{self._clamped(tags or "-", 16-1):<16}" if include_tags else []),
@@ -350,6 +352,7 @@ class Renderer(CommandRenderer):
 		lines = [
 			"---------------------",
 			result.title,
+			str(result.path),
 			"---------------------",
 			"",
 			f"Slug: {result.slug}",
@@ -380,7 +383,7 @@ class Renderer(CommandRenderer):
 	def render_task_move(self, args: argparse.Namespace, result: Task) -> None:
 		# TODO: get column.name from slug
 		if result.column:
-			msg = f"{result.title} moved to: {result.column}"
+			msg = f"{result.title} → {result.column}"
 		else:
 			msg = f"Moved task: {result.title})"
 		self._emit(args, msg)

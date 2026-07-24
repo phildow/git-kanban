@@ -9,7 +9,7 @@ from contextlib import redirect_stdout
 from unittest.mock import MagicMock
 from uuid import uuid4
 
-from kanban.models import Task
+from kanban.models import Board, Column, Slug, Task
 from kanban.repl.rich_renderer import RichRenderer
 
 
@@ -24,7 +24,18 @@ class TestRichRendererTaskShowPlainFlag(unittest.TestCase):
     """render_task_show renders the body as Markdown by default, Text with --plain."""
 
     def setUp(self) -> None:
-        self.renderer = RichRenderer(render_helper=MagicMock())
+        self.board = Board(id=uuid4(), name="Alpha", slug=Slug("alpha"))
+        self.column = Column(
+            id=uuid4(),
+            name="To Do",
+            slug=Slug("todo"),
+            board=Slug("alpha"),
+            position=0,
+        )
+        render_helper = MagicMock()
+        render_helper.board_for_slug.return_value = self.board
+        render_helper.column_for_slug.return_value = self.column
+        self.renderer = RichRenderer(render_helper=render_helper)
         self.task = Task(
             id=uuid4(),
             title="Fix login bug",
