@@ -66,12 +66,13 @@ class Renderer(CommandRenderer):
 			return
 
 		if fmt == "plain":
-			self._emit(args, "\n".join(board.name for board in result))
+			self._emit(args, "\n".join(f"{board.name}: {board.path}" for board in result))
 			return
 
+		# TODO: generate a proper table for rich rendering
 		lines = ["Boards", "------"]
 		for board in result:
-			lines.append(f"{board.name} ({board.column_count} columns)")
+			lines.append(f"{board.name}: {board.path}")
 		self._emit(args, "\n".join(lines))
 
 	@_requires_verbose
@@ -113,12 +114,12 @@ class Renderer(CommandRenderer):
 			return
 
 		if fmt == "plain":
-			self._emit(args, "\n".join(column.name for column in result))
+			self._emit(args, "\n".join(f"{column.name}: {column.path}" for column in result))
 			return
 
 		lines = ["Columns", "-------"]
 		for column in result:
-			lines.append(f"{column.position + 1}. {column.name}")
+			lines.append(f"{column.name}: {column.path}")
 		self._emit(args, "\n".join(lines))
 
 	def render_column_info(self, args: argparse.Namespace, result: Column) -> None:

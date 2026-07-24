@@ -472,7 +472,6 @@ class RichRenderer(CommandRenderer):
 		table.add_row("Tags", ", ".join(task.tags) if task.tags else "-")
 		table.add_row("Created By", task.created_by or "-")
 
-		self._emit(args, "")
 		self._emit(args, table)
 
 	def board_for_slug(self, slug: Slug) -> Board:
