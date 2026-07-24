@@ -576,7 +576,9 @@ class KanbanService(CompletionDataSource):
         the current working board is used if available; otherwise all tasks are
         returned. Omitting a column returns tasks across all columns of the
         selected board. sort accepts "title", "priority", "due-date",
-        "created-at", "updated-at", or "created-by".
+        "created-at", "updated-at", or "created-by".  The default "column"
+        sort orders tasks by their column's position and then by each task's
+        position within its column.
         """
         if path is None and self.working_board is not None:
             path = Path(f"/{self.working_board}")
@@ -587,14 +589,13 @@ class KanbanService(CompletionDataSource):
         if filter:
             tasks = [t for t in tasks if _task_matches_filter(t, filter)]
 
-        if not sort:
-            return tasks
+        if sort is None or sort == "column":
+            positions = self._column_task_positions(tasks)
+            return sorted(tasks, key=lambda t: positions.get((t.board, t.column, t.slug), (2**31, 2**31)), reverse=reverse)
 
         def _value(task: Task):
             if sort == "title":
                 return task.title.lower()
-            if sort == "column":
-                return (task.column or "").lower()
             if sort == "priority":
                 return PRIORITY_ORDER.get(task.priority, -1)
             if sort == "due-date":
@@ -608,6 +609,27 @@ class KanbanService(CompletionDataSource):
             return task.title.lower()
 
         return sorted(tasks, key=lambda task: (_value(task) is None, _value(task)), reverse=reverse)
+
+    def _column_task_positions(
+        self,
+        tasks: list[Task],
+    ) -> dict[tuple[Slug, Slug, Slug], tuple[int, int]]:
+        """
+        Build a lookup of (board, column, task_slug) -> (column_position, task_position).
+
+        Column position is the column's ordering within the board (see
+        Column.position). Task position is the index of the task in its
+        column's stored task order, so tasks retain the order the user
+        arranged them in.
+        """
+        positions: dict[tuple[Slug, Slug, Slug], tuple[int, int]] = {}
+        boards = {t.board for t in tasks if t.board}
+        for board in boards:
+            for col in self.get_columns(board):
+                col_tasks = self.repository.get_tasks(board=board, column=col.slug)
+                for idx, task in enumerate(col_tasks):
+                    positions[(board, col.slug, task.slug)] = (col.position, idx)
+        return positions
 
     def create_task(
         self,
@@ -902,6 +924,8 @@ class KanbanService(CompletionDataSource):
         TaskFilter provided.  Scoped to a single board if board is given,
         otherwise searches the whole repository.  Rebuilds the index first
         to guarantee fresh results, then delegates to the index service.
+        When sort is omitted, results are ordered by column position then by
+        each task's position within its column.
         """
         self.index_service.rebuild()
 
@@ -919,7 +943,13 @@ class KanbanService(CompletionDataSource):
         )
 
         results = self.index_service.search(search_query)
-        return [result.task for result in results]
+        tasks = [result.task for result in results]
+
+        if sort is None:
+            positions = self._column_task_positions(tasks)
+            tasks = sorted(tasks, key=lambda t: positions.get((t.board, t.column, t.slug), (2**31, 2**31)), reverse=reverse)
+
+        return tasks
 
     # ── Git ───────────────────────────────────────────────────────────────────
 
