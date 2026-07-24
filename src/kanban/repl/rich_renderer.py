@@ -15,7 +15,7 @@ from rich.table import Table
 from rich.text import Text
 from rich import box, print
 
-from ..models import UserContext, Board, Column, Task
+from ..models import UserContext, Board, Column, Slug, Task
 from ..protocols.command_renderer import CommandRenderer
 from ..repl.render_helper import RenderHelper
 from ..services.kanban import GitCommit, KanbanStatus
@@ -339,7 +339,7 @@ class RichRenderer(CommandRenderer):
 
 		for task in result:
 			tags = ", ".join(task.tags) if task.tags else "-"
-			column = self.render_helper.column_for_slug(task.column)
+			column = self.column_for_slug(task.column)
 
 			elems = [
 				task.title,
@@ -398,7 +398,7 @@ class RichRenderer(CommandRenderer):
 
 	def render_task_move(self, args: argparse.Namespace, result: Task) -> None:
 		if result.column:
-			column = self.render_helper.column_for_slug(result.column)
+			column = self.column_for_slug(result.column)
 			column_name = column.name if column else result.column
 			msg = f"Moved: {result.title} → {column_name}"
 		else:
@@ -454,8 +454,8 @@ class RichRenderer(CommandRenderer):
 
 	def render_task_metadata(self, args: argparse.Namespace, task: Task) -> None:
 		"""Render the metadata of a task in a table format."""
-		board = self.render_helper.board_for_slug(task.board)
-		column = self.render_helper.column_for_slug(task.column)
+		board = self.board_for_slug(task.board)
+		column = self.column_for_slug(task.column)
 
 		table = Table(box=box.ASCII2, show_header=False, header_style="bold", title_justify="left")
 
@@ -474,3 +474,11 @@ class RichRenderer(CommandRenderer):
 
 		self._emit(args, "")
 		self._emit(args, table)
+
+	def board_for_slug(self, slug: Slug) -> Board:
+		"""Given a board slug, return the corresponding board."""
+		return self.render_helper.board_for_slug(slug)
+	
+	def column_for_slug(self, slug: Slug) -> Column:
+		"""Given a column slug, return the corresponding column."""
+		return self.render_helper.column_for_slug(slug)
