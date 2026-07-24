@@ -253,22 +253,26 @@ class NoContextPathCompletionTests(EngineTestCase):
         self.assertEqual(self.complete("show "), ["my-project/", "ops/"])
 
     def test_filters_boards_by_prefix(self) -> None:
-        self.assertEqual(self.complete("show /my-"), ["my-project/"])
+        self.assertEqual(self.complete("show my-"), ["my-project/"])
 
     def test_lists_columns_after_board(self) -> None:
         self.assertEqual(
-            self.complete("show /my-project/"),
+            self.complete("show my-project/"),
             ["done/", "in-progress/", "in-review/", "todo/"],
         )
 
     def test_lists_tasks_after_column(self) -> None:
         self.assertEqual(
-            self.complete("show /my-project/todo/"),
+            self.complete("show my-project/todo/"),
             ["add-rate-limiting", "fix-login-bug", "write-api-docs"],
         )
 
     def test_filters_tasks_by_prefix(self) -> None:
-        self.assertEqual(self.complete("show /my-project/todo/fix"), ["fix-login-bug"])
+        self.assertEqual(self.complete("show my-project/todo/fix"), ["fix-login-bug"])
+
+    def test_leading_slash_returns_no_candidates(self) -> None:
+        """Leading `/` is not a valid REPL path, so completion produces nothing."""
+        self.assertEqual(self.complete("show /my-"), [])
 
 
 class ContextAwarePathCompletionTests(EngineTestCase):
@@ -288,12 +292,10 @@ class ContextAwarePathCompletionTests(EngineTestCase):
             ["add-rate-limiting", "fix-login-bug", "write-api-docs"],
         )
 
-    def test_leading_slash_overrides_context(self) -> None:
+    def test_leading_slash_returns_no_candidates(self) -> None:
+        """Leading `/` is not a valid REPL path even with a context set."""
         context = _Context(board="my-project", column="todo")
-        self.assertEqual(
-            self.complete("show /ops/", context),
-            ["backlog/", "done/", "in-progress/", "todo/"],
-        )
+        self.assertEqual(self.complete("show /ops/", context), [])
 
 
 class TaskSlugCompletionTests(EngineTestCase):
@@ -322,12 +324,10 @@ class TaskSlugCompletionTests(EngineTestCase):
     def test_no_active_board_completes_nothing(self) -> None:
         self.assertEqual(self.complete("edit "), [])
 
-    def test_leading_slash_falls_back_to_path_walk(self) -> None:
+    def test_slash_in_token_returns_no_candidates(self) -> None:
+        """Task-slug completion expects a bare slug; a `/` disqualifies the token."""
         context = _Context(board="my-project", column="todo")
-        self.assertEqual(
-            self.complete("edit /ops/", context),
-            ["backlog/", "done/", "in-progress/", "todo/"],
-        )
+        self.assertEqual(self.complete("edit /ops/", context), [])
 
 
 class MoveDestCompletionTests(EngineTestCase):

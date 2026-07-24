@@ -261,13 +261,12 @@ class CompletionEngine:
         Commands whose target is a task (``show``, ``edit``, ``update``,
         ``move``, ``assign``) address it by slug alone, so completion lists
         task slugs across all columns of the active board rather than walking
-        board/column segments. A token containing ``/`` is treated as an
-        explicit path override and delegated to ``_complete_path`` so power
-        users can still type a full ``/board/column/task`` path.
+        board/column segments. Any ``/`` in the token means the input is no
+        longer a bare slug, so no candidates are returned.
         """
 
         if "/" in token:
-            return self._complete_path(token)
+            return []
 
         board = self._service.working_board
         if board is None:
@@ -281,10 +280,10 @@ class CompletionEngine:
     def _complete_path(self, token: str) -> list[str]:
         """Complete a board/column/task path token.
 
-        A leading ``/`` overrides the active context and resolves from
-        the store root; otherwise completion starts at whatever depth
+        Only relative paths are supported: completion starts at whatever depth
         the service's own ``UserContext`` already fixes, by way of the
-        service's ``path_components`` method.
+        service's ``path_components`` method. A leading ``/`` is not a valid
+        REPL path, so tokens beginning with ``/`` produce no candidates.
 
         Returns bare segment names (e.g. ``"in-progress/"``), not the
         full path. ``/`` is configured as a readline word-break
@@ -295,7 +294,8 @@ class CompletionEngine:
         resulting line still reads as a full path.
         """
 
-        # TODO: allow task completions for all commands that take a path
+        if token.startswith("/"):
+            return []
 
         slash_idx = token.rfind("/")
         if slash_idx == -1:
