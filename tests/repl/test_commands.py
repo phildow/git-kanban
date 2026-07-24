@@ -44,7 +44,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_set_board(args, self.svc, self.renderer)
 
-        self.svc.set_board.assert_called_once_with(board="alpha")
+        self.svc.set_board.assert_called_once_with(slug=Slug("alpha"))
         self.renderer.render_set_board.assert_called_once_with(args, result)
 
     def test_handle_delete_renders_board_delete(self):

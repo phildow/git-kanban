@@ -75,7 +75,7 @@ def handle_set_board(args: argparse.Namespace, svc: KanbanService, renderer: Com
 		renderer.render_set_board(args, result)
 		return
 
-	result = svc.set_board(board=args.board)
+	result = svc.set_board(slug=Slug(args.board))
 	renderer.render_set_board(args, result)
 
 

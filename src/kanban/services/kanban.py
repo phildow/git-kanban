@@ -93,7 +93,8 @@ class KanbanService(CompletionDataSource):
 
         if self.is_initialized:
             # Load user context from userdata if available, else use defaults.
-            self._user_context.board = self.get_userdata("user-context.board")
+            user_board = self.get_userdata("user-context.board")
+            self._user_context.board = Slug(user_board) if user_board else None
 
     @property
     def root(self) -> Path:
@@ -129,7 +130,7 @@ class KanbanService(CompletionDataSource):
 
         if config is not None:
             default_board = config.get("usercontext", {}).get("board")
-            self.update_user_context(board=default_board)
+            self.update_user_context(board=Slug(default_board) if default_board else None)
 
         return True
 
@@ -210,7 +211,7 @@ class KanbanService(CompletionDataSource):
         """Return True if the given column exists in the repository, False if not."""
         return self.repository.column_exists(board, column)
 
-    # TODO: revisit: if we have an active board always preferece the path with it
+    # TODO: revisit: if we have an active board always preface the path with it
     def resolve_path(self, path: str | None = None) -> Path:
         """
         Resolve a user-provided path into an absolute Path object.
@@ -239,9 +240,9 @@ class KanbanService(CompletionDataSource):
 
         path = self.resolve_path(path)
         parts = path.parts # ["/", board|None, column|None, title|None]
-        return parts[1] if len(parts) > 1 else None, \
-               parts[2] if len(parts) > 2 else None, \
-               parts[3] if len(parts) > 3 else None
+        return Slug(parts[1]) if len(parts) > 1 else None, \
+               Slug(parts[2]) if len(parts) > 2 else None, \
+               Slug(parts[3]) if len(parts) > 3 else None
 
     def change_dir(
         self,
@@ -272,38 +273,23 @@ class KanbanService(CompletionDataSource):
 
         board, column, task = self.path_components(path)
 
-        if task:
+        if task is not None:
             raise ValueError(f"Invalid path: {path} (cannot cd to a task)")
-        if board and not self._board_exists(board):
+        if board is not None and not self._board_exists(board):
             raise BoardNotFound(board)
-        if column and not self._column_exists(board, column):
+        if board is not None and column is not None and not self._column_exists(board, column):
             raise ColumnNotFound(board, column)
         
         return self.update_user_context(board=board)
 
-    def set_board(self, board: str) -> UserContext:
+    def set_board(self, slug: Slug) -> UserContext:
         """Set the current context to the given board, validating that it exists."""
-        board = board.strip("/")
-        board = self.repository.get_board(board)
+        board = self.repository.get_board(slug)
 
         if not board:
-            raise BoardNotFound(board)
+            raise BoardNotFound(slug)
 
         self.working_board = board.slug
-        return self.user_context
-
-    def set_column(self, column: str) -> UserContext:
-        """Validate that a column exists under the current board."""
-        board = self.user_context.board
-
-        if not board:
-            raise ValueError("Current board has not been set; cannot change column")
-        column = column.strip("/")
-        column = self.repository.get_column(board, column)
-
-        if not column:
-            raise ColumnNotFound(board, column)
-
         return self.user_context
 
     # ── All Items ─────────────────────────────────────────────────────────────
@@ -314,12 +300,16 @@ class KanbanService(CompletionDataSource):
             filter: TaskFilter = TaskFilter(), 
             sort: str | None = "column", 
             reverse: bool = False
-        ) -> tuple[type, list[Board | Column | Task]]:
+        ) -> tuple[type[Board], list[Board]] | tuple[type[Column], list[Column]] | tuple[type[Task], list[Task]]:
         """
         Return a list of boards, columns, or tasks based on the given path.
         If path is None, returns all boards.  If path is a board, returns all
         columns in that board.  If path is a board/column, returns all tasks in
         that column.  Applies filters and sort to tasks if applicable.
+
+        The returned tuple pairs a type marker with a list of that type: one of
+        (Board, list[Board]), (Column, list[Column]), or (Task, list[Task]).
+        Callers can dispatch on the marker to know which branch was taken.
         """
         board, column, task = self.path_components(path)
 
@@ -364,7 +354,9 @@ class KanbanService(CompletionDataSource):
         slug = slug_it(name)
         board = self.repository.create_board(name, slug)
     
-        columns = [self.repository.create_column(board.slug, col[0], col[1]) for col in columns]
+        for col in columns:
+            self.repository.create_column(board.slug, col[0], col[1])
+            
         board.column_count = len(columns)
 
         return board
@@ -469,16 +461,15 @@ class KanbanService(CompletionDataSource):
         the column name is already taken within that board.  Appends the new
         column to the board's .metadata file and commits.
         """
-        slug = slug_it(title)
-
         if path is None:
             board = self.working_board
         else:
             board, _, _ = self.path_components(path)
 
-        if not board:
+        if board is None:
             raise ValueError("No board specified and no board in context")
 
+        slug = slug_it(title)
         return self.repository.create_column(board, title, slug)
 
     def rename_column(self, path: Path, new_name: str) -> Column:
@@ -490,6 +481,10 @@ class KanbanService(CompletionDataSource):
         context if the renamed column was the current one.
         """
         board, column, _ = self.path_components(path)
+
+        if board is None or column is None:
+            raise ValueError(f"Invalid column path: {path}")
+
         new_slug = slug_it(new_name)
         renamed_column = self.repository.rename_column(board, column, new_name, new_slug=new_slug)
 
@@ -508,6 +503,10 @@ class KanbanService(CompletionDataSource):
         CLI can confirm the new order.
         """
         board, column, _ = self.path_components(path)
+
+        if board is None or column is None:
+            raise ValueError(f"Invalid column path: {path}")
+        
         return self.repository.reorder_column(board, column, position)  
 
     def delete_column(self, path: Path) -> Column:
@@ -519,6 +518,10 @@ class KanbanService(CompletionDataSource):
         Returns the deleted Column.
         """
         board, column, _ = self.path_components(path)
+
+        if board is None or column is None:
+            raise ValueError(f"Invalid column path: {path}")
+
         deleted_column = self.repository.get_column(board, column)
         tasks = self.get_tasks(path)
         self.repository.delete_column(board, column)
@@ -597,7 +600,7 @@ class KanbanService(CompletionDataSource):
             if sort == "title":
                 return task.title.lower()
             if sort == "priority":
-                return PRIORITY_ORDER.get(task.priority, -1)
+                return PRIORITY_ORDER.get(task.priority, -1) if task.priority is not None else -1
             if sort == "due-date":
                 return task.due_date
             if sort == "created-at":
@@ -893,7 +896,7 @@ class KanbanService(CompletionDataSource):
 
     def get_tags(
         self,
-        board:   str | None = None
+        board:   Slug | None = None
         ) -> list[str]:
         """
         Return a list of all unique tags across tasks in the repository, or
@@ -903,7 +906,7 @@ class KanbanService(CompletionDataSource):
 
     def get_assigned_tos(
         self,
-        board:   str | None = None
+        board:   Slug | None = None
         ) -> list[str]:
         """
         Return a list of all unique assigned_to values across tasks in the repository, or
@@ -915,7 +918,7 @@ class KanbanService(CompletionDataSource):
         self,
         query:   str,
         filter:  TaskFilter = TaskFilter(),
-        board:   str | None = None,
+        board:   Slug | None = None,
         sort:    str | None = None,
         reverse: bool = False,
     ) -> list[Task]:
@@ -966,7 +969,7 @@ class KanbanService(CompletionDataSource):
         """
         raise NotImplementedError()
 
-    def squash(self, board: str | None = None) -> GitCommit:
+    def squash(self, board: Slug | None = None) -> GitCommit:
         """
         Collapse all commits since the last squash (or since init) into one.
         Scoped to a single board if provided.  Returns the new squash commit.
@@ -1002,7 +1005,7 @@ class KanbanService(CompletionDataSource):
         """
         return self.repository.get_userdata(keypath)
 
-    def set_userdata(self, keypath: str, value: str) -> None:
+    def set_userdata(self, keypath: str, value: str | None) -> None:
         """
         Persist arbitrary user data to .kanban/userdata under the given key.
         This is separate from config in that it's not intended for structured

@@ -33,6 +33,7 @@ class InMemoryRepository(KanbanRepository):
         self._columns: dict[str, list[Column]] = {}
         self._tasks_by_id: dict[UUID, Task] = {}
         self._task_locations: dict[UUID, tuple[str, str]] = {}
+        # TODO: consider using a Slug type for the task filename mapping, but it may be
         self._task_filenames: dict[UUID, str] = {}
         self._task_order: dict[tuple[str, str], list[str]] = {}
         self._config: dict[str, str] = {}
@@ -285,9 +286,9 @@ class InMemoryRepository(KanbanRepository):
             columns = [column] if column is not None else [c.slug for c in self._columns.get(b, [])]
             for col in columns:
                 for slug in self._task_order.get((b, col), []):
-                    task = by_location.get((b, col, slug))
-                    if task is not None:
-                        tasks.append(task)
+                    t = by_location.get((b, col, slug))
+                    if t is not None:
+                        tasks.append(t)
 
         return tasks
 
@@ -358,8 +359,8 @@ class InMemoryRepository(KanbanRepository):
             if other_board == existing_board and other_column == existing_column and other_filename == new_filename:
                 raise TaskAlreadyExists(existing_board, existing_column, new_filename)
 
-        task.board = existing_board
-        task.column = existing_column
+        task.board = Slug(existing_board)
+        task.column = Slug(existing_column)
         task.created_at = existing.created_at
         task.updated_at = datetime.now(UTC)
 
@@ -367,7 +368,7 @@ class InMemoryRepository(KanbanRepository):
         self._tasks_by_id[task.id] = task
         self._task_locations[task.id] = (existing_board, existing_column)
         self._task_filenames[task.id] = task.slug
-        task.slug = self._task_filenames[task.id]
+        task.slug = Slug(self._task_filenames[task.id])
 
         if old_slug is not None and old_slug != task.slug:
             order = self._task_order.get((existing_board, existing_column), [])

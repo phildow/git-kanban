@@ -294,6 +294,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="kanban",
         description="Git Kanban: the backed-by-the-filesystem, tracked-by-git task manager",
+        # type: ignore
         color=False
     )
     _add_global_flags(parser)

@@ -5,6 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Protocol
 
+from kanban.models.slug import Slug
+
 from ..models import Board, Column, Task
 
 
@@ -14,21 +16,21 @@ class CompletionDataSource(Protocol):
     def get_boards(self) -> list[Board]:
         ...
 
-    def get_columns(self, board: str) -> list[Column]:
+    def get_columns(self, board: Path | Slug | None) -> list[Column]:
         ...
 
     def get_tasks(self, path: Path | None = None) -> list[Task]:
         ...
 
-    def path_components(self, path: str | None = None) -> tuple[str | None, str | None, str | None]:
+    def path_components(self, path: str | Path | Slug | None = None) -> tuple[Slug | None, Slug | None, Slug | None]:
         ...
 
-    def get_tags(self, board: str | None = None) -> list[str]:
+    def get_tags(self, board: Slug | None = None) -> list[str]:
         ...
 
-    def get_assigned_tos(self, board: str | None = None) -> list[str]:
+    def get_assigned_tos(self, board: Slug | None = None) -> list[str]:
         ...
 
     @property
-    def working_board(self) -> str | None:
+    def working_board(self) -> Slug | None:
         ...

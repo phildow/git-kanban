@@ -8,7 +8,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from uuid import uuid4
 
-from kanban.models import Task, TaskFilter, UserContext
+from kanban.models import Slug, Task, TaskFilter, UserContext
 from kanban.services.git import GitService
 from kanban.services.index import IndexService
 from kanban.index.memory import InMemoryIndex
@@ -87,7 +87,7 @@ class TestKanbanServiceGetTasksFilter(unittest.TestCase):
         self.svc.create_board("ops", columns=[("To Do", "todo")])
         other_task = self.repo.create_task(_task("Ops task", board="ops", column="todo"), "ops-task")
 
-        self.svc.set_board("main")
+        self.svc.set_board(Slug("main"))
         tasks = self.svc.get_tasks(path=None, filter=TaskFilter(), sort=None)
 
         self.assertEqual({t.id for t in tasks}, {self.t1.id, self.t2.id, self.t3.id})

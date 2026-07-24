@@ -32,6 +32,7 @@ import argparse
 from pathlib import Path
 import shlex
 
+from ..models import Slug
 from ..protocols.sluggable import Sluggable
 from ..protocols.completion_data_source import CompletionDataSource
 
@@ -306,17 +307,17 @@ class CompletionEngine:
         board, column, _ = self._service.path_components(prefix or None)
         return self._walk(board, column, partial)
 
-    def _walk(self, board: str | None, column: str | None, partial: str) -> list[str]:
+    def _walk(self, board: Slug | None, column: Slug | None, partial: str) -> list[str]:
         """Complete the level reached by ``(board, column)`` against ``partial``."""
 
         if board is None:
-            names = [b.slug for b in self._service.get_boards()]
+            names = [str(b.slug) for b in self._service.get_boards()]
             suffix = "/"
         elif column is None:
-            names = [c.slug for c in self._service.get_columns(board)]
+            names = [str(c.slug) for c in self._service.get_columns(board)]
             suffix = "/"
         else:
-            names = [t.slug for t in self._service.get_tasks(Path(f"/{board}/{column}"))]
+            names = [str(t.slug) for t in self._service.get_tasks(Path(f"/{board}/{column}"))]
             suffix = ""
 
         return [f"{name}{suffix}" for name in self._matching(names, partial)]

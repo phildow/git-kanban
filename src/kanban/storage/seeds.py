@@ -8,8 +8,8 @@ from ..models import Slug
 
 class BootstrapSeed(TypedDict, total=False):
     """A single task entry in a bootstrap column. title and slug are required."""
-    title:       str       # required
-    slug:        str        # required
+    title:       str     # required
+    slug:        Slug    # required
     priority:    str
     assigned_to: str
     body:        str
@@ -17,15 +17,15 @@ class BootstrapSeed(TypedDict, total=False):
 
 class BootstrapColumn(TypedDict, total=False):
     """A column entry in a bootstrap board. name and slug are required."""
-    name:   str        # required
-    slug:   str        # required
+    name:   str         # required
+    slug:   Slug        # required
     tasks:  list[BootstrapSeed]
 
 
 class BootstrapBoard(TypedDict, total=False):
     """A board entry in a bootstrap config. name and slug are required."""
     name:    str        # required
-    slug:    str        # required
+    slug:    Slug       # required
     columns: list[BootstrapColumn]
 
 
@@ -44,21 +44,20 @@ DEFAULT_COLUMNS: list[tuple[str, Slug]] = [
 
 BOOTSTRAP_CONFIG: BootstrapConfig = {
     "usercontext": {
-        "board": "main",
-        "column": "todo",
+        "board": Slug("main"),
     },
     "boards": [
         {
             "name": "Main",
-            "slug": "main",
+            "slug": Slug("main"),
             "columns": [
                 {
                     "name": "To Do",
-                    "slug": "todo",
+                    "slug": Slug("todo"),
                     "tasks": [
                         {
                             "title": "List your boards and tasks",
-                            "slug": "list-your-boards-and-tasks",
+                            "slug": Slug("list-your-boards-and-tasks"),
                             "body": (
                                 "Use `ls` to list tasks in the current context."
                                 " Navigate with `cd`:\n\n"
@@ -70,7 +69,7 @@ BOOTSTRAP_CONFIG: BootstrapConfig = {
                         },
                         {
                             "title": "Create a new task",
-                            "slug": "create-a-new-task",
+                            "slug": Slug("create-a-new-task"),
                             "body": (
                                 "Create a task in the current column with `new task`:\n\n"
                                 '    new task "Fix the login bug"\n'
@@ -79,7 +78,7 @@ BOOTSTRAP_CONFIG: BootstrapConfig = {
                         },
                         {
                             "title": "Move a task to another column",
-                            "slug": "move-a-task-to-another-column",
+                            "slug": Slug("move-a-task-to-another-column"),
                             "body": (
                                 "Move a task to another column with `mv`:\n\n"
                                 '    mv "fix the login bug" in-progress\n'
@@ -90,11 +89,11 @@ BOOTSTRAP_CONFIG: BootstrapConfig = {
                 },
                 {
                     "name": "In Progress",
-                    "slug": "in-progress",
+                    "slug": Slug("in-progress"),
                     "tasks": [
                         {
                             "title": "Update a task with details",
-                            "slug": "update-a-task-with-details",
+                            "slug": Slug("update-a-task-with-details"),
                             "priority": "high",
                             "assigned_to": "Alice",
                             "body": (
@@ -107,16 +106,16 @@ BOOTSTRAP_CONFIG: BootstrapConfig = {
                 },
                 {
                     "name": "In Review",
-                    "slug": "in-review",
+                    "slug": Slug("in-review"),
                     "tasks": [],
                 },
                 {
                     "name": "Done",
-                    "slug": "done",
+                    "slug": Slug("done"),
                     "tasks": [
                         {
                             "title": "Go for a bike ride",
-                            "slug": "go-for-a-bike-ride",
+                            "slug": Slug("go-for-a-bike-ride"),
                         },
                     ],
                 },

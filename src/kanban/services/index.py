@@ -13,7 +13,7 @@ from uuid import UUID
 
 from ..index.base import IndexBase
 from ..index.query import SearchQuery, SearchResult
-from ..models import Task
+from ..models import Slug, Task
 from ..storage.base import KanbanRepository
 
 
@@ -50,7 +50,7 @@ class IndexService:
         """Remove the indexed record for task_id. No-op if absent."""
         self.index_base.remove_task(task)
 
-    def clear(self, board: str | None = None) -> None:
+    def clear(self, board: Slug | None = None) -> None:
         """Drop indexed records."""
         self.index_base.clear(board)
 
@@ -61,17 +61,17 @@ class IndexService:
     def find_by_title(
         self,
         title_prefix: str,
-        board: str | None = None,
-        column: str | None = None,
+        board: Slug | None = None,
+        column: Slug | None = None,
     ) -> list[Task]:
         """Return tasks whose title starts with title_prefix."""
         return self.index_base.find_by_title(title_prefix, board, column)
 
-    def list_tags(self, board: str | None = None) -> list[str]:
+    def list_tags(self, board: Slug | None = None) -> list[str]:
         """Return distinct tags seen across indexed tasks, sorted."""
         return self.index_base.list_tags(board)
 
-    def list_assigned_to(self, board: str | None = None) -> list[str]:
+    def list_assigned_to(self, board: Slug | None = None) -> list[str]:
         """Return distinct assigned_to values seen across indexed tasks, sorted."""
         return self.index_base.list_assigned_to(board)
 
@@ -81,13 +81,13 @@ class IndexService:
 
     # Custom methods
 
-    def rebuild(self, board: str | None = None) -> None:
+    def rebuild(self, board: Slug | None = None) -> None:
         """Rebuild the index from scratch by scanning the repository."""
         self.index_base.clear(board)
         for task in self.repository.get_tasks(board=board):
             self.index_base.upsert_task(task)
 
-    def diff(self, board: str | None = None) -> IndexDiff:
+    def diff(self, board: Slug | None = None) -> IndexDiff:
         """Diff indexed paths against the repository's paths.
 
         Compares index_base.known_paths() against the paths of tasks
@@ -102,6 +102,6 @@ class IndexService:
         )
 
     # TODO: remove from service
-    def known_paths(self, board: str | None = None) -> set[Path]:
+    def known_paths(self, board: Slug | None = None) -> set[Path]:
         """Return the filesystem paths of all currently indexed tasks."""
         return self.index_base.known_paths(board)

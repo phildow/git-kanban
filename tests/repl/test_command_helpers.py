@@ -11,6 +11,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 from uuid import uuid4
 
+from kanban.models import Slug
 from kanban.repl.command_helpers import handle_task_list_helper
 from kanban.services.git import GitService
 from kanban.services.kanban import KanbanService, TaskCreateParams
@@ -63,14 +64,7 @@ class TestHandleTaskListHelper(unittest.TestCase):
 
     def test_no_column_falls_back_to_active_board_all_columns(self) -> None:
         """Omitting column returns every task in the active board, across all columns."""
-        self.svc.set_board("alpha")
-        result = handle_task_list_helper(self._args(), self.svc)
-        self.assertEqual({t.id for t in result}, {self.t1.id, self.t2.id})
-
-    def test_no_column_ignores_active_column_scope(self) -> None:
-        """Even with an active column set, omitting column still returns the whole board."""
-        self.svc.set_board("alpha")
-        self.svc.set_column("todo")
+        self.svc.set_board(Slug("alpha"))
         result = handle_task_list_helper(self._args(), self.svc)
         self.assertEqual({t.id for t in result}, {self.t1.id, self.t2.id})
 

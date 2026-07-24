@@ -282,6 +282,7 @@ def build_parser() -> argparse.ArgumentParser:
         prog="",
         formatter_class=CustomFormatter,
         description="Git Kanban: the backed-by-the-filesystem, tracked-by-git task manager",
+        # type: ignore
         color=False,
     )
     

@@ -115,13 +115,16 @@ class FilesystemRepository(KanbanRepository):
                 for f in col.iterdir()
                 if f.is_file() and not f.name.startswith(".")
             )
-            slug = Slug(entry.name)
-            name = self.get_board_metadata(slug, "fields.name")
-            slug = self.get_board_metadata(slug, "fields.slug")
-            uuid = self.get_board_metadata(slug, "fields.id")   
-            # TODO: raise error if fields missing or out of sync with directory name
+            board_slug = Slug(entry.name)
+            meta_name = self.get_board_metadata(board_slug, "fields.name")
+            meta_slug = self.get_board_metadata(board_slug, "fields.slug")
+            meta_uuid = self.get_board_metadata(board_slug, "fields.id")
 
-            boards.append(Board(id=UUID(uuid), name=name, slug=slug, column_count=column_count, task_count=task_count))
+            if meta_name is None or meta_slug is None or meta_uuid is None:
+                # TODO: handle contests between directory name and metadata fields, and raise error if missing
+                raise ValueError(f"Missing metadata for board {entry.name}: name={meta_name}, slug={meta_slug}, id={meta_uuid}")
+
+            boards.append(Board(id=UUID(meta_uuid), name=meta_name, slug=Slug(meta_slug), column_count=column_count, task_count=task_count))
         return boards
 
     # TODO: SYNC - metadata must match the name and slug of the board directory
@@ -143,12 +146,16 @@ class FilesystemRepository(KanbanRepository):
             if f.is_file() and not f.name.startswith(".")
         )
         
-        name = self.get_board_metadata(slug, "fields.name")
-        slug = self.get_board_metadata(slug, "fields.slug")
-        uuid = self.get_board_metadata(slug, "fields.id")
-        # TODO: raise error if fields missing or out of sync with directory name
+        # board_slug = Slug(board_path.name)
+        meta_name = self.get_board_metadata(slug, "fields.name")
+        meta_slug = self.get_board_metadata(slug, "fields.slug")
+        meta_uuid = self.get_board_metadata(slug, "fields.id")
+        
+        if meta_name is None or meta_slug is None or meta_uuid is None:
+            # TODO: handle contests between directory name and metadata fields, and raise error if missing
+            raise ValueError(f"Missing metadata for board {board_path.name}: name={meta_name}, slug={meta_slug}, id={meta_uuid}")
 
-        return Board(id=UUID(uuid), name=name, slug=slug, column_count=column_count, task_count=task_count)
+        return Board(id=UUID(meta_uuid), name=meta_name, slug=Slug(meta_slug), column_count=column_count, task_count=task_count)
 
     def create_board(self, name: str, slug: Slug) -> Board:
         uuid = str(uuid4())
@@ -167,7 +174,7 @@ class FilesystemRepository(KanbanRepository):
 
     def rename_board(self, slug: Slug, new_name: str, new_slug: Slug) -> Board:
         if not self.board_exists(slug):
-            raise BoardNotFound(name)
+            raise BoardNotFound(slug)
         if self.board_exists(new_slug):
             raise BoardAlreadyExists(new_name)
         
@@ -262,15 +269,19 @@ class FilesystemRepository(KanbanRepository):
         order = self._get_column_order(board)
          
         columns = []
-        for i, slug in enumerate(c for c in order if c in existing):
+        for i, s in enumerate(c for c in order if c in existing):
+            slug = Slug(s)
             task_count = self._column_task_count(board, slug)
 
-            name = self.get_column_metadata(board, slug, "fields.name") or slug
-            column_slug = self.get_column_metadata(board, slug, "fields.slug") or slug
+            name = self.get_column_metadata(board, slug, "fields.name")
+            column_slug = self.get_column_metadata(board, slug, "fields.slug")
             uuid = self.get_column_metadata(board, slug, "fields.id")
-            # TODO: error if fields missing
+           
+            if not name or not column_slug or not uuid:
+                # TODO: handle contests between directory name and metadata fields, and raise error if missing
+                raise ValueError(f"Missing metadata for column {slug} in board {board}: name={name}, slug={column_slug}, id={uuid}")
 
-            columns.append(Column(id=UUID(uuid), name=name, slug=column_slug, board=board, position=i, task_count=task_count))
+            columns.append(Column(id=UUID(uuid), name=name, slug=Slug(column_slug), board=board, position=i, task_count=task_count))
             
         return columns
 
@@ -292,7 +303,7 @@ class FilesystemRepository(KanbanRepository):
         uuid = self.get_column_metadata(board, slug, "fields.id")
         # TODO: error if missing fields
 
-        return Column(id=UUID(uuid), name=name, slug=column_slug, board=board, position=position, task_count=task_count)
+        return Column(id=UUID(uuid), name=name, slug=Slug(column_slug), board=board, position=position, task_count=task_count)
 
     def create_column(self, board: Slug, name: str, slug: Slug) -> Column:
         uuid = str(uuid4())
@@ -311,7 +322,7 @@ class FilesystemRepository(KanbanRepository):
         order.append(slug)
         
         self.set_column_metadata(board, slug, "fields.name", name)
-        self.set_column_metadata(board, slug, "fields.slug", slug)
+        self.set_column_metadata(board, slug, "fields.slug", str(slug))
         self.set_column_metadata(board, slug, "fields.id", uuid)
         self._set_column_order(board, order)
 
@@ -397,7 +408,7 @@ class FilesystemRepository(KanbanRepository):
             ]
             for col in columns:
                 col_dir = self.boards_dir / b / col
-                for filename in self._get_task_order(b, col):
+                for filename in self._get_task_order(Slug(b), Slug(col)):
                     entry = col_dir / filename
                     if entry.is_file():
                         tasks.append(self._parse_task_file(entry))
@@ -834,9 +845,9 @@ class FilesystemRepository(KanbanRepository):
         return Task(
             id=task_id,
             title=title,
-            slug=slug,
-            board=board,
-            column=column,
+            slug=Slug(slug),
+            board=Slug(board),
+            column=Slug(column),
             created_by=fm.get("created_by") or None,
             assigned_to=fm.get("assigned_to") or None,
             priority=Priority(p) if (p := fm.get("priority")) else None,

@@ -474,10 +474,10 @@ class RichRenderer(CommandRenderer):
 
 		self._emit(args, table)
 
-	def board_for_slug(self, slug: Slug) -> Board:
+	def board_for_slug(self, slug: Slug) -> Board | None:
 		"""Given a board slug, return the corresponding board."""
 		return self.render_helper.board_for_slug(slug)
 	
-	def column_for_slug(self, slug: Slug) -> Column:
+	def column_for_slug(self, slug: Slug) -> Column | None:
 		"""Given a column slug, return the corresponding column."""
 		return self.render_helper.column_for_slug(slug)
