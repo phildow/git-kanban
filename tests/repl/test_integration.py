@@ -45,7 +45,8 @@ from unittest.mock import MagicMock
 
 from kanban.repl.render_helper import RenderHelper
 from kanban.repl.parser import parse_args
-from kanban.repl.renderer import Renderer as REPLRenderer
+from kanban.repl.rich_renderer import RichRenderer as REPLRenderer
+from kanban.models import Slug
 from kanban.services.kanban import KanbanService, TaskCreateParams
 from kanban.storage.filesystem import FilesystemRepository
 from kanban.storage.seeds import BOOTSTRAP_CONFIG
@@ -411,38 +412,37 @@ class TestReplColumns(_InitializedReplBase):
 # ---------------------------------------------------------------------------
 
 class TestReplTasks(_InitializedReplBase):
-    """tasks command lists tasks, optionally scoped to a board or board/column."""
+    """tasks command lists tasks, optionally scoped to a column of the active board."""
 
     def setUp(self) -> None:
         super().setUp()
         self.repo.create_board("proj", slug="proj")
         self.repo.create_column("proj", "todo", slug="todo")
         self.repo.create_column("proj", "done", slug="done")
-        self.svc.create_task("proj/todo", TaskCreateParams(title="fix-login"))
-        self.svc.create_task("proj/done", TaskCreateParams(title="write-docs"))
+        self.svc.set_board("proj")
+        self.svc.create_task(Slug("todo"), TaskCreateParams(title="fix-login"))
+        self.svc.create_task(Slug("done"), TaskCreateParams(title="write-docs"))
 
-    def test_tasks_with_board_path_shows_all_columns(self) -> None:
-        """tasks <board> includes tasks from every column in that board."""
-        out = self.run_repl("tasks", "proj")
+    def test_tasks_scopes_to_todo_column(self) -> None:
+        """tasks <column> includes only that column's tasks."""
+        out = self.run_repl("tasks", "todo")
         self.assertIn("fix-login", out)
-        self.assertIn("write-docs", out)
+        self.assertNotIn("write-docs", out)
 
-    def test_tasks_with_board_column_path_scopes_to_column(self) -> None:
-        """tasks <board>/<column> includes only that column's tasks."""
-        out = self.run_repl("tasks", "proj/done")
+    def test_tasks_scopes_to_done_column(self) -> None:
+        """tasks <column> includes only that column's tasks."""
+        out = self.run_repl("tasks", "done")
         self.assertIn("write-docs", out)
         self.assertNotIn("fix-login", out)
 
     def test_tasks_with_no_path_uses_active_board_all_columns(self) -> None:
         """tasks with no path falls back to every task in the active board."""
-        self.svc.set_board("proj")
         out = self.run_repl("tasks")
         self.assertIn("fix-login", out)
         self.assertIn("write-docs", out)
 
     def test_tasks_with_no_path_ignores_active_column(self) -> None:
         """tasks with no path still shows the whole board even if a column is active."""
-        self.svc.set_board("proj")
         self.svc.set_column("todo")
         out = self.run_repl("tasks")
         self.assertIn("fix-login", out)
@@ -450,12 +450,13 @@ class TestReplTasks(_InitializedReplBase):
 
     def test_tasks_with_no_path_and_no_active_board_raises(self) -> None:
         """tasks with no path and no active board raises rather than listing nothing."""
+        self.svc.working_board = None
         with self.assertRaises(ValueError):
             self.run_repl("tasks")
 
     def test_tasks_slugs_flag_produces_output(self) -> None:
-        """tasks <board> --slugs produces the compact slug-only output."""
-        out = self.run_repl("tasks", "proj", "--slugs")
+        """tasks --slugs produces the compact slug-only output."""
+        out = self.run_repl("tasks", "--slugs")
         self.assertIn("fix-login", out)
         self.assertIn("write-docs", out)
 
@@ -672,23 +673,24 @@ class TestReplUpdate(_InitializedReplBase):
         self.repo.create_board("proj", slug="proj")
         self.repo.create_column("proj", "todo", slug="todo")
         self.svc.create_task("proj/todo", TaskCreateParams(title="fix-login"))
+        self.svc.set_board("proj")
 
     def test_update_task_writes_assigned_to_to_file(self) -> None:
         """update task --assigned-to persists the assigned_to to the markdown file."""
-        self.run_repl("update", "proj/todo/fix-login", "--assigned-to", "alice")
+        self.run_repl("update", "fix-login", "--assigned-to", "alice")
         fm = self._read_frontmatter("proj", "todo", "fix-login")
         self.assertEqual(fm.get("assigned_to"), "alice")
 
     def test_update_task_writes_priority_to_file(self) -> None:
         """update task --priority persists the priority to the markdown file."""
-        self.run_repl("update", "proj/todo/fix-login", "--priority", "high")
+        self.run_repl("update", "fix-login", "--priority", "high")
         fm = self._read_frontmatter("proj", "todo", "fix-login")
         self.assertEqual(fm.get("priority"), "high")
 
     def test_update_task_multiple_tags_all_written_to_frontmatter(self) -> None:
         """update task with multiple --tag flags writes all tags to the frontmatter."""
         self.run_repl(
-            "update", "proj/todo/fix-login",
+            "update", "fix-login",
             "--tag", "bug",
             "--tag", "auth",
             "--tag", "refactor",
@@ -701,14 +703,14 @@ class TestReplUpdate(_InitializedReplBase):
 
     def test_update_task_produces_output(self) -> None:
         """update task prints something."""
-        out = self.run_repl("update", "proj/todo/fix-login",
+        out = self.run_repl("update", "fix-login",
                             "--assigned-to", "alice")
-        self.assertEqual(out.strip(), "")
+        self.assertTrue(out.strip())
 
     def test_update_task_with_all_fields(self) -> None:
         """update task with every optional field persists all values."""
         self.run_repl(
-            "update", "proj/todo/fix-login",
+            "update", "fix-login",
             "--assigned-to", "bob",
             "--priority", "low",
             "--tag", "refactor",
@@ -736,29 +738,30 @@ class TestReplMove(_InitializedReplBase):
         self.repo.create_column("proj", "todo", slug="todo")
         self.repo.create_column("proj", "done", slug="done")
         self.svc.create_task("proj/todo", TaskCreateParams(title="fix-login"))
+        self.svc.set_board("proj")
 
     def test_move_creates_file_at_destination(self) -> None:
         """move places the task file in the destination column."""
-        self.run_repl("move", "proj/todo/fix-login", "done")
+        self.run_repl("move", "fix-login", "done")
         self.assertTrue(
             (self.boards_dir / "proj" / "done" / "fix-login.md").is_file()
         )
 
     def test_move_removes_file_from_source(self) -> None:
         """move removes the task file from the source column."""
-        self.run_repl("move", "proj/todo/fix-login", "done")
+        self.run_repl("move", "fix-login", "done")
         self.assertFalse(
             (self.boards_dir / "proj" / "todo" / "fix-login.md").exists()
         )
 
     def test_move_produces_output(self) -> None:
         """move prints something."""
-        out = self.run_repl("move", "proj/todo/fix-login", "done")
+        out = self.run_repl("move", "fix-login", "done")
         self.assertTrue(out.strip())
 
     def test_mv_alias_moves_file(self) -> None:
         """mv (alias for move) places the task file in the destination column."""
-        self.run_repl("mv", "proj/todo/fix-login", "done")
+        self.run_repl("mv", "fix-login", "done")
         self.assertTrue(
             (self.boards_dir / "proj" / "done" / "fix-login.md").is_file()
         )

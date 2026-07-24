@@ -277,17 +277,12 @@ def handle_get_config(args: argparse.Namespace, svc: KanbanService, renderer: Co
 
 
 def handle_repl(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
-	_ = renderer, json_renderer
+	_ = args, renderer, json_renderer
 	from ..repl.render_helper import RenderHelper
 	from ..repl import run_repl
+	from ..repl.rich_renderer import RichRenderer
 
 	render_helper = RenderHelper(service=svc)
-
-	if args.no_rich:
-		from ..repl.renderer import Renderer as REPLRenderer
-		repl_renderer: CommandRenderer = REPLRenderer(render_helper=render_helper)
-	else:
-		from ..repl.rich_renderer import RichRenderer
-		repl_renderer = RichRenderer(render_helper=render_helper)
+	repl_renderer = RichRenderer(render_helper=render_helper)
 
 	run_repl(svc=svc, renderer=repl_renderer)

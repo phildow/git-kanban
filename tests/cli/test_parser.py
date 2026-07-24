@@ -363,16 +363,10 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
             cli_parser.parse_args(["task", "move", "board-a/todo/fix-parser", "--up", "--down"])
 
     def test_repl_defaults(self):
-        """`repl` defaults --no-rich to False and binds handle_repl."""
+        """`repl` binds handle_repl."""
         args = cli_parser.parse_args(["repl"])
         self.assertEqual(args.command, "repl")
-        self.assertFalse(args.no_rich)
         self.assertIs(args.func, handle_repl)
-
-    def test_repl_no_rich_flag(self):
-        """`repl --no-rich` sets no_rich to True."""
-        args = cli_parser.parse_args(["repl", "--no-rich"])
-        self.assertTrue(args.no_rich)
 
     def test_required_subparsers_raise(self):
         """Missing required subcommands trigger parser exit errors."""

@@ -510,37 +510,18 @@ class TestCommandHandlers(unittest.TestCase):
         self.renderer.render_get_config.assert_called_once_with(args, result)
 
     @patch("kanban.repl.render_helper.RenderHelper")
-    @patch("kanban.repl.renderer.Renderer")
     @patch("kanban.repl.rich_renderer.RichRenderer")
     @patch("kanban.repl.run_repl")
-    def test_handle_repl_with_no_rich_uses_plain_renderer(
-        self, run_repl, rich_renderer_cls, renderer_cls, render_helper_cls
+    def test_handle_repl_uses_rich_renderer(
+        self, run_repl, rich_renderer_cls, render_helper_cls
     ):
-        """`repl --no-rich` starts the plain-text REPL renderer."""
-        args = self._args(no_rich=True)
-
-        commands.handle_repl(args, self.svc, self.renderer, self.json_renderer)
-
-        render_helper_cls.assert_called_once_with(service=self.svc)
-        renderer_cls.assert_called_once_with(render_helper=render_helper_cls.return_value)
-        rich_renderer_cls.assert_not_called()
-        run_repl.assert_called_once_with(svc=self.svc, renderer=renderer_cls.return_value)
-
-    @patch("kanban.repl.render_helper.RenderHelper")
-    @patch("kanban.repl.renderer.Renderer")
-    @patch("kanban.repl.rich_renderer.RichRenderer")
-    @patch("kanban.repl.run_repl")
-    def test_handle_repl_defaults_to_rich_renderer(
-        self, run_repl, rich_renderer_cls, renderer_cls, render_helper_cls
-    ):
-        """`repl` without --no-rich starts the REPL with the rich-text renderer by default."""
-        args = self._args(no_rich=False)
+        """`repl` starts the REPL with the rich-text renderer."""
+        args = self._args()
 
         commands.handle_repl(args, self.svc, self.renderer, self.json_renderer)
 
         render_helper_cls.assert_called_once_with(service=self.svc)
         rich_renderer_cls.assert_called_once_with(render_helper=render_helper_cls.return_value)
-        renderer_cls.assert_not_called()
         run_repl.assert_called_once_with(svc=self.svc, renderer=rich_renderer_cls.return_value)
 
 

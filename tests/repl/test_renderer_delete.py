@@ -10,7 +10,6 @@ from unittest.mock import MagicMock
 from uuid import uuid4
 
 from kanban.models import Board, Column, Task
-from kanban.repl.renderer import Renderer
 from kanban.repl.rich_renderer import RichRenderer
 
 
@@ -47,10 +46,6 @@ class _DeleteRenderingMixin:
         out = _capture(self.renderer.render_task_delete, self.args, task)
         self.assertIn("Fix login bug", out)
         self.assertIn("fix-login-bug", out)
-
-
-class TestRendererDelete(_DeleteRenderingMixin, unittest.TestCase):
-    renderer_cls = Renderer
 
 
 class TestRichRendererDelete(_DeleteRenderingMixin, unittest.TestCase):
