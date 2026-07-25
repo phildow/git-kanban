@@ -7,7 +7,7 @@ services are stubbed with MagicMock so tests are self-contained.
 Conventions
 -----------
 - Filesystem mutations are verified by checking Path.is_file / is_dir / exists.
-- Output checks use assertIn / assertTrue(out.strip()); for --verbose output the
+- Output checks use assertIn / assertTrue(out.strip()); for command output the
   only assertion is that *something* was printed, not what.
 - JSON output is parsed and key fields are asserted.
 - `log`, `search`, `status`, `config`, and `task edit` are excluded because
@@ -167,15 +167,15 @@ class TestInitCommand(_CLIBase):
         task_files = list(self.boards_dir.rglob("*.md"))
         self.assertGreater(len(task_files), 0)
 
-    def test_init_without_verbose_produces_no_output(self) -> None:
-        """init without --verbose produces no output."""
+    def test_init_emits_success_message(self) -> None:
+        """init emits a success message."""
         out = self.run_cli("init")
-        self.assertEqual(out, "")
+        self.assertIn("initialized", out)
 
-    def test_init_bootstrap_without_verbose_produces_no_output(self) -> None:
-        """init --bootstrap without --verbose produces no output."""
+    def test_init_bootstrap_emits_success_message(self) -> None:
+        """init --bootstrap emits a success message."""
         out = self.run_cli("init", "--bootstrap")
-        self.assertEqual(out, "")
+        self.assertIn("initialized", out)
 
 
 # ---------------------------------------------------------------------------
@@ -190,15 +190,10 @@ class TestBoardCLI(_InitializedBase):
         self.run_cli("board", "create", "proj")
         self.assertTrue((self.boards_dir / "proj").is_dir())
 
-    def test_board_create_verbose_prints_output(self) -> None:
-        """board create --verbose prints something."""
-        out = self.run_cli("board", "create", "proj", "--verbose")
-        self.assertTrue(out.strip())
-
-    def test_board_create_without_verbose_produces_no_output(self) -> None:
-        """board create without --verbose produces no output."""
+    def test_board_create_emits_path(self) -> None:
+        """board create emits the new board's path by default."""
         out = self.run_cli("board", "create", "proj")
-        self.assertEqual(out, "")
+        self.assertEqual(out.strip(), "/proj")
 
     def test_board_list_empty(self) -> None:
         """board list with no boards reports empty state."""
@@ -211,11 +206,11 @@ class TestBoardCLI(_InitializedBase):
         out = self.run_cli("board", "list")
         self.assertIn("proj", out)
 
-    def test_board_list_table_prints_output(self) -> None:
-        """board list --format table produces output."""
+    def test_board_list_rejects_table_format(self) -> None:
+        """board list --format table is no longer a valid choice."""
         self.repo.create_board("proj", slug="proj")
-        out = self.run_cli("board", "list", "--format", "table")
-        self.assertTrue(out.strip())
+        with self.assertRaises(SystemExit):
+            self.run_cli("board", "list", "--format", "table")
 
     def test_board_list_json_is_array(self) -> None:
         """board list --format json emits a JSON array."""
@@ -270,17 +265,11 @@ class TestBoardCLI(_InitializedBase):
         self.run_cli("board", "rename", "proj", "work")
         self.assertFalse((self.boards_dir / "proj").exists())
 
-    def test_board_rename_verbose_prints_output(self) -> None:
-        """board rename --verbose prints something."""
-        self.repo.create_board("proj", slug="proj")
-        out = self.run_cli("board", "rename", "proj", "work", "--verbose")
-        self.assertTrue(out.strip())
-
-    def test_board_rename_without_verbose_produces_no_output(self) -> None:
-        """board rename without --verbose produces no output."""
+    def test_board_rename_emits_path(self) -> None:
+        """board rename emits the renamed board's path by default."""
         self.repo.create_board("proj", slug="proj")
         out = self.run_cli("board", "rename", "proj", "work")
-        self.assertEqual(out, "")
+        self.assertEqual(out.strip(), "/work")
 
     def test_board_delete_removes_directory(self) -> None:
         """board delete removes the board directory."""
@@ -288,17 +277,11 @@ class TestBoardCLI(_InitializedBase):
         self.run_cli("board", "delete", "proj", "--force")
         self.assertFalse((self.boards_dir / "proj").exists())
 
-    def test_board_delete_verbose_prints_output(self) -> None:
-        """board delete --verbose prints something."""
-        self.repo.create_board("proj", slug="proj")
-        out = self.run_cli("board", "delete", "proj", "--force", "--verbose")
-        self.assertTrue(out.strip())
-
-    def test_board_delete_without_verbose_produces_no_output(self) -> None:
-        """board delete without --verbose produces no output."""
+    def test_board_delete_emits_path(self) -> None:
+        """board delete emits the deleted board's path by default."""
         self.repo.create_board("proj", slug="proj")
         out = self.run_cli("board", "delete", "proj", "--force")
-        self.assertEqual(out, "")
+        self.assertEqual(out.strip(), "/proj")
 
 
 # ---------------------------------------------------------------------------
@@ -317,15 +300,10 @@ class TestColumnCLI(_InitializedBase):
         self.run_cli("column", "create", "/proj", "todo")
         self.assertTrue((self.boards_dir / "proj" / "todo").is_dir())
 
-    def test_column_create_verbose_prints_output(self) -> None:
-        """column create --verbose prints something."""
-        out = self.run_cli("column", "create", "/proj", "todo", "--verbose")
-        self.assertTrue(out.strip())
-
-    def test_column_create_without_verbose_produces_no_output(self) -> None:
-        """column create without --verbose produces no output."""
+    def test_column_create_emits_path(self) -> None:
+        """column create emits the new column's path by default."""
         out = self.run_cli("column", "create", "/proj", "todo")
-        self.assertEqual(out, "")
+        self.assertEqual(out.strip(), "/proj/todo")
 
     def test_column_list_empty(self) -> None:
         """column list with no columns reports empty state."""
@@ -338,11 +316,11 @@ class TestColumnCLI(_InitializedBase):
         out = self.run_cli("column", "list", "proj")
         self.assertIn("todo", out)
 
-    def test_column_list_table_prints_output(self) -> None:
-        """column list --format table produces output."""
+    def test_column_list_rejects_table_format(self) -> None:
+        """column list --format table is no longer a valid choice."""
         self.repo.create_column("proj", "todo", slug="todo")
-        out = self.run_cli("column", "list", "proj", "--format", "table")
-        self.assertTrue(out.strip())
+        with self.assertRaises(SystemExit):
+            self.run_cli("column", "list", "proj", "--format", "table")
 
     def test_column_list_json_is_array(self) -> None:
         """column list --format json emits a JSON array."""
@@ -398,17 +376,11 @@ class TestColumnCLI(_InitializedBase):
         self.run_cli("column", "rename", "proj/todo", "doing")
         self.assertFalse((self.boards_dir / "proj" / "todo").exists())
 
-    def test_column_rename_verbose_prints_output(self) -> None:
-        """column rename --verbose prints something."""
-        self.repo.create_column("proj", "todo", slug="todo")
-        out = self.run_cli("column", "rename", "proj/todo", "doing", "--verbose")
-        self.assertTrue(out.strip())
-
-    def test_column_rename_without_verbose_produces_no_output(self) -> None:
-        """column rename without --verbose produces no output."""
+    def test_column_rename_emits_path(self) -> None:
+        """column rename emits the renamed column's path by default."""
         self.repo.create_column("proj", "todo", slug="todo")
         out = self.run_cli("column", "rename", "proj/todo", "doing")
-        self.assertEqual(out, "")
+        self.assertEqual(out.strip(), "/proj/doing")
 
     def test_column_reorder_column_still_exists(self) -> None:
         """column reorder does not remove the column."""
@@ -417,19 +389,12 @@ class TestColumnCLI(_InitializedBase):
         self.run_cli("column", "reorder", "proj/done", "0")
         self.assertTrue((self.boards_dir / "proj" / "done").is_dir())
 
-    def test_column_reorder_verbose_prints_output(self) -> None:
-        """column reorder --verbose prints something."""
-        self.repo.create_column("proj", "todo", slug="todo")
-        self.repo.create_column("proj", "done", slug="done")
-        out = self.run_cli("column", "reorder", "proj/done", "0", "--verbose")
-        self.assertTrue(out.strip())
-
-    def test_column_reorder_without_verbose_produces_no_output(self) -> None:
-        """column reorder without --verbose produces no output."""
+    def test_column_reorder_emits_paths(self) -> None:
+        """column reorder emits the reordered column paths by default."""
         self.repo.create_column("proj", "todo", slug="todo")
         self.repo.create_column("proj", "done", slug="done")
         out = self.run_cli("column", "reorder", "proj/done", "0")
-        self.assertEqual(out, "")
+        self.assertEqual(out.strip().splitlines(), ["/proj/done", "/proj/todo"])
 
     def test_column_delete_removes_directory(self) -> None:
         """column delete removes the column directory."""
@@ -437,17 +402,11 @@ class TestColumnCLI(_InitializedBase):
         self.run_cli("column", "delete", "proj/todo", "--force")
         self.assertFalse((self.boards_dir / "proj" / "todo").exists())
 
-    def test_column_delete_verbose_prints_output(self) -> None:
-        """column delete --verbose prints something."""
-        self.repo.create_column("proj", "todo", slug="todo")
-        out = self.run_cli("column", "delete", "proj/todo", "--force", "--verbose")
-        self.assertTrue(out.strip())
-
-    def test_column_delete_without_verbose_produces_no_output(self) -> None:
-        """column delete without --verbose produces no output."""
+    def test_column_delete_emits_path(self) -> None:
+        """column delete emits the deleted column's path by default."""
         self.repo.create_column("proj", "todo", slug="todo")
         out = self.run_cli("column", "delete", "proj/todo", "--force")
-        self.assertEqual(out, "")
+        self.assertEqual(out.strip(), "/proj/todo")
 
 
 # ---------------------------------------------------------------------------
@@ -513,15 +472,10 @@ class TestTaskCLI(_InitializedBase):
         self.assertIn("auth", tags)
         self.assertIn("refactor", tags)
 
-    def test_task_create_verbose_prints_output(self) -> None:
-        """task create --verbose prints something."""
-        out = self.run_cli("task", "create", "/proj/todo", "fix-login", "--verbose")
-        self.assertTrue(out.strip())
-
-    def test_task_create_without_verbose_produces_no_output(self) -> None:
-        """task create without --verbose produces no output."""
+    def test_task_create_emits_path(self) -> None:
+        """task create emits the new task's path by default."""
         out = self.run_cli("task", "create", "/proj/todo", "fix-login")
-        self.assertEqual(out, "")
+        self.assertEqual(out.strip(), "/proj/todo/fix-login")
 
     # -- list -----------------------------------------------------------------
 
@@ -536,11 +490,11 @@ class TestTaskCLI(_InitializedBase):
         out = self.run_cli("task", "list", "proj/todo")
         self.assertIn("fix-login", out)
 
-    def test_task_list_table_prints_output(self) -> None:
-        """task list --format table produces output."""
+    def test_task_list_rejects_table_format(self) -> None:
+        """task list --format table is no longer a valid choice."""
         self.run_cli("task", "create", "/proj/todo", "fix-login")
-        out = self.run_cli("task", "list", "proj/todo", "--format", "table")
-        self.assertTrue(out.strip())
+        with self.assertRaises(SystemExit):
+            self.run_cli("task", "list", "proj/todo", "--format", "table")
 
     def test_task_list_json_is_array(self) -> None:
         """task list --format json emits a JSON array."""
@@ -693,13 +647,6 @@ class TestTaskCLI(_InitializedBase):
         self.assertIn("auth", tags)
         self.assertIn("refactor", tags)
 
-    def test_task_update_verbose_prints_output(self) -> None:
-        """task update --verbose prints something."""
-        self.run_cli("task", "create", "/proj/todo", "fix-login")
-        out = self.run_cli("task", "update", "proj/todo/fix-login",
-                           "--assigned-to", "alice", "--verbose")
-        self.assertTrue(out.strip())
-
     def test_task_update_with_all_fields(self) -> None:
         """update task with every optional field persists all values."""
         self.run_cli("task", "create", "/proj/todo", "fix-login")
@@ -745,17 +692,11 @@ class TestTaskCLI(_InitializedBase):
         self.run_cli("task", "move", "proj/todo/fix-login", "done")
         self.assertFalse((self.boards_dir / "proj" / "todo" / "fix-login.md").exists())
 
-    def test_task_move_verbose_prints_output(self) -> None:
-        """task move --verbose prints something."""
-        self.run_cli("task", "create", "/proj/todo", "fix-login")
-        out = self.run_cli("task", "move", "proj/todo/fix-login", "done", "--verbose")
-        self.assertTrue(out.strip())
-
-    def test_task_move_without_verbose_produces_no_output(self) -> None:
-        """task move without --verbose produces no output."""
+    def test_task_move_emits_path(self) -> None:
+        """task move emits the moved task's path by default."""
         self.run_cli("task", "create", "/proj/todo", "fix-login")
         out = self.run_cli("task", "move", "proj/todo/fix-login", "done")
-        self.assertEqual(out, "")
+        self.assertEqual(out.strip(), "/proj/done/fix-login")
 
     # -- move reorder (within column) -----------------------------------------
 
@@ -791,34 +732,27 @@ class TestTaskCLI(_InitializedBase):
         self.run_cli("task", "move", "proj/todo/first", "--down")
         self.assertEqual(self._read_task_order("proj", "todo"), ["second", "first", "third"])
 
-    def test_task_move_reorder_verbose_prints_output(self) -> None:
-        """task move --up --verbose prints something."""
-        self.run_cli("task", "create", "/proj/todo", "first")
-        self.run_cli("task", "create", "/proj/todo", "second")
-        out = self.run_cli("task", "move", "proj/todo/second", "--up", "--verbose")
-        self.assertTrue(out.strip())
-
-    def test_task_move_reorder_without_verbose_produces_no_output(self) -> None:
-        """task move --up without --verbose produces no output."""
+    def test_task_move_reorder_emits_path(self) -> None:
+        """task move --up emits the reordered task's path by default."""
         self.run_cli("task", "create", "/proj/todo", "first")
         self.run_cli("task", "create", "/proj/todo", "second")
         out = self.run_cli("task", "move", "proj/todo/second", "--up")
-        self.assertEqual(out, "")
+        self.assertEqual(out.strip(), "/proj/todo/second")
 
-    def test_task_move_reorder_json_verbose_includes_slug(self) -> None:
-        """task move --up --verbose --format json includes the reordered task's slug."""
+    def test_task_move_reorder_json_includes_slug(self) -> None:
+        """task move --up --format json includes the reordered task's slug."""
         self.run_cli("task", "create", "/proj/todo", "first")
         self.run_cli("task", "create", "/proj/todo", "second")
         data = self.run_json("task", "move", "proj/todo/second", "--up",
-                             "--verbose", "--format", "json")
+                             "--format", "json")
         self.assertEqual(data["slug"], "second")
 
-    def test_task_move_reorder_json_verbose_column_unchanged(self) -> None:
-        """task move --up --verbose --format json reflects the task's column (unchanged)."""
+    def test_task_move_reorder_json_column_unchanged(self) -> None:
+        """task move --up --format json reflects the task's column (unchanged)."""
         self.run_cli("task", "create", "/proj/todo", "first")
         self.run_cli("task", "create", "/proj/todo", "second")
         data = self.run_json("task", "move", "proj/todo/second", "--up",
-                             "--verbose", "--format", "json")
+                             "--format", "json")
         self.assertEqual(data["column"], "todo")
 
     # -- assign ---------------------------------------------------------------
@@ -837,23 +771,17 @@ class TestTaskCLI(_InitializedBase):
         fm = self._read_frontmatter("proj", "todo", "fix-login")
         self.assertEqual(fm.get("assigned_to"), "bob")
 
-    def test_task_assign_verbose_prints_output(self) -> None:
-        """task assign --verbose prints something."""
-        self.run_cli("task", "create", "/proj/todo", "fix-login")
-        out = self.run_cli("task", "assign", "proj/todo/fix-login", "alice", "--verbose")
-        self.assertTrue(out.strip())
-
-    def test_task_assign_without_verbose_produces_no_output(self) -> None:
-        """task assign without --verbose produces no output."""
+    def test_task_assign_emits_path(self) -> None:
+        """task assign emits the assigned task's path by default."""
         self.run_cli("task", "create", "/proj/todo", "fix-login")
         out = self.run_cli("task", "assign", "proj/todo/fix-login", "alice")
-        self.assertEqual(out, "")
+        self.assertEqual(out.strip(), "/proj/todo/fix-login")
 
     def test_task_assign_json_includes_assigned_to(self) -> None:
-        """task assign --verbose --format json includes the assigned_to field."""
+        """task assign --format json includes the assigned_to field."""
         self.run_cli("task", "create", "/proj/todo", "fix-login")
         data = self.run_json("task", "assign", "proj/todo/fix-login", "alice",
-                             "--verbose", "--format", "json")
+                             "--format", "json")
         self.assertEqual(data["assigned_to"], "alice")
 
     # -- rename ---------------------------------------------------------------
@@ -884,30 +812,24 @@ class TestTaskCLI(_InitializedBase):
         fm = self._read_frontmatter("proj", "todo", "fix-login-bug")
         self.assertEqual(fm.get("slug"), "fix-login-bug")
 
-    def test_task_rename_verbose_prints_output(self) -> None:
-        """task rename --verbose prints something."""
-        self.run_cli("task", "create", "/proj/todo", "fix-login")
-        out = self.run_cli("task", "rename", "proj/todo/fix-login", "Fix Login Bug", "--verbose")
-        self.assertTrue(out.strip())
-
-    def test_task_rename_without_verbose_produces_no_output(self) -> None:
-        """task rename without --verbose produces no output."""
+    def test_task_rename_emits_path(self) -> None:
+        """task rename emits the renamed task's path by default."""
         self.run_cli("task", "create", "/proj/todo", "fix-login")
         out = self.run_cli("task", "rename", "proj/todo/fix-login", "Fix Login Bug")
-        self.assertEqual(out, "")
+        self.assertEqual(out.strip(), "/proj/todo/fix-login-bug")
 
-    def test_task_rename_json_verbose_includes_new_slug(self) -> None:
-        """task rename --verbose --format json includes the new slug."""
+    def test_task_rename_json_includes_new_slug(self) -> None:
+        """task rename --format json includes the new slug."""
         self.run_cli("task", "create", "/proj/todo", "fix-login")
         data = self.run_json("task", "rename", "proj/todo/fix-login", "Fix Login Bug",
-                             "--verbose", "--format", "json")
+                             "--format", "json")
         self.assertEqual(data["slug"], "fix-login-bug")
 
-    def test_task_rename_json_verbose_includes_new_title(self) -> None:
-        """task rename --verbose --format json includes the new title."""
+    def test_task_rename_json_includes_new_title(self) -> None:
+        """task rename --format json includes the new title."""
         self.run_cli("task", "create", "/proj/todo", "fix-login")
         data = self.run_json("task", "rename", "proj/todo/fix-login", "Fix Login Bug",
-                             "--verbose", "--format", "json")
+                             "--format", "json")
         self.assertEqual(data["title"], "Fix Login Bug")
 
     # -- delete ---------------------------------------------------------------
@@ -918,18 +840,11 @@ class TestTaskCLI(_InitializedBase):
         self.run_cli("task", "delete", "proj/todo/fix-login", "--force")
         self.assertFalse((self.boards_dir / "proj" / "todo" / "fix-login.md").exists())
 
-    def test_task_delete_verbose_prints_output(self) -> None:
-        """task delete --verbose prints something."""
-        self.run_cli("task", "create", "/proj/todo", "fix-login")
-        out = self.run_cli("task", "delete", "proj/todo/fix-login",
-                           "--force", "--verbose")
-        self.assertTrue(out.strip())
-
-    def test_task_delete_without_verbose_produces_no_output(self) -> None:
-        """task delete without --verbose produces no output."""
+    def test_task_delete_emits_path(self) -> None:
+        """task delete emits the deleted task's path by default."""
         self.run_cli("task", "create", "/proj/todo", "fix-login")
         out = self.run_cli("task", "delete", "proj/todo/fix-login", "--force")
-        self.assertEqual(out, "")
+        self.assertEqual(out.strip(), "/proj/todo/fix-login")
 
 
 # ---------------------------------------------------------------------------
@@ -945,13 +860,13 @@ class TestBoardCLIEnglishNames(_InitializedBase):
         self.assertTrue((self.boards_dir / "my-project").is_dir())
 
     def test_create_json_name(self) -> None:
-        """board create --format json --verbose emits the full display name."""
-        data = self.run_json("board", "create", "My Project", "--format", "json", "--verbose")
+        """board create --format json emits the full display name."""
+        data = self.run_json("board", "create", "My Project", "--format", "json")
         self.assertEqual(data["name"], "My Project")
 
     def test_create_json_slug(self) -> None:
-        """board create --format json --verbose emits the kebab-case slug."""
-        data = self.run_json("board", "create", "My Project", "--format", "json", "--verbose")
+        """board create --format json emits the kebab-case slug."""
+        data = self.run_json("board", "create", "My Project", "--format", "json")
         self.assertEqual(data["slug"], "my-project")
 
     def test_rename_uses_new_slug_for_directory(self) -> None:
@@ -967,17 +882,17 @@ class TestBoardCLIEnglishNames(_InitializedBase):
         self.assertFalse((self.boards_dir / "my-project").exists())
 
     def test_rename_json_name(self) -> None:
-        """board rename --format json --verbose emits the new full display name."""
+        """board rename --format json emits the new full display name."""
         self.run_cli("board", "create", "My Project")
         data = self.run_json("board", "rename", "my-project", "My Renamed Project",
-                             "--format", "json", "--verbose")
+                             "--format", "json")
         self.assertEqual(data["name"], "My Renamed Project")
 
     def test_rename_json_slug(self) -> None:
-        """board rename --format json --verbose emits the new kebab-case slug."""
+        """board rename --format json emits the new kebab-case slug."""
         self.run_cli("board", "create", "My Project")
         data = self.run_json("board", "rename", "my-project", "My Renamed Project",
-                             "--format", "json", "--verbose")
+                             "--format", "json")
         self.assertEqual(data["slug"], "my-renamed-project")
 
 
@@ -995,15 +910,15 @@ class TestColumnCLIEnglishNames(_InitializedBase):
         self.assertTrue((self.boards_dir / "my-project" / "on-hold").is_dir())
 
     def test_create_json_name(self) -> None:
-        """column create --format json --verbose emits the full display name."""
+        """column create --format json emits the full display name."""
         data = self.run_json("column", "create", "/my-project", "On Hold",
-                             "--format", "json", "--verbose")
+                             "--format", "json")
         self.assertEqual(data["name"], "On Hold")
 
     def test_create_json_slug(self) -> None:
-        """column create --format json --verbose emits the kebab-case slug."""
+        """column create --format json emits the kebab-case slug."""
         data = self.run_json("column", "create", "/my-project", "On Hold",
-                             "--format", "json", "--verbose")
+                             "--format", "json")
         self.assertEqual(data["slug"], "on-hold")
 
     def test_rename_uses_new_slug_for_directory(self) -> None:
@@ -1019,17 +934,17 @@ class TestColumnCLIEnglishNames(_InitializedBase):
         self.assertFalse((self.boards_dir / "my-project" / "backlog").exists())
 
     def test_rename_json_name(self) -> None:
-        """column rename --format json --verbose emits the new full display name."""
+        """column rename --format json emits the new full display name."""
         self.run_cli("column", "create", "/my-project", "backlog")
         data = self.run_json("column", "rename", "my-project/backlog", "Work Queue",
-                             "--format", "json", "--verbose")
+                             "--format", "json")
         self.assertEqual(data["name"], "Work Queue")
 
     def test_rename_json_slug(self) -> None:
-        """column rename --format json --verbose emits the new kebab-case slug."""
+        """column rename --format json emits the new kebab-case slug."""
         self.run_cli("column", "create", "/my-project", "backlog")
         data = self.run_json("column", "rename", "my-project/backlog", "Work Queue",
-                             "--format", "json", "--verbose")
+                             "--format", "json")
         self.assertEqual(data["slug"], "work-queue")
 
 
@@ -1049,15 +964,15 @@ class TestTaskCLIEnglishNames(_InitializedBase):
         )
 
     def test_create_json_title(self) -> None:
-        """task create --format json --verbose emits the full display title."""
+        """task create --format json emits the full display title."""
         data = self.run_json("task", "create", "/my-project/todo", "Fix Login Bug",
-                             "--format", "json", "--verbose")
+                             "--format", "json")
         self.assertEqual(data["title"], "Fix Login Bug")
 
     def test_create_json_slug(self) -> None:
-        """task create --format json --verbose emits the kebab-case slug."""
+        """task create --format json emits the kebab-case slug."""
         data = self.run_json("task", "create", "/my-project/todo", "Fix Login Bug",
-                             "--format", "json", "--verbose")
+                             "--format", "json")
         self.assertEqual(data["slug"], "fix-login-bug")
 
 

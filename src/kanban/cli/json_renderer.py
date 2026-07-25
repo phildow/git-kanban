@@ -5,21 +5,10 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-from functools import wraps
 
 from ..models import Board, Column, Task, UserContext
 from ..protocols.command_renderer import CommandRenderer
 from ..services.kanban import GitCommit, KanbanStatus
-
-
-def _requires_verbose(method):
-    @wraps(method)
-    def _wrapped(self, args: argparse.Namespace, result):
-        if not args.verbose:
-            return None
-        else:
-            return method(self, args, result)
-    return _wrapped
 
 
 def _task_dict(task: Task) -> dict:
@@ -89,12 +78,10 @@ class JsonRenderer(CommandRenderer):
 
     # ── Initialisation ────────────────────────────────────────────────────────
 
-    @_requires_verbose
     def render_init(self, args: argparse.Namespace, result: bool) -> None:
         _ = result
         self._emit(args, json.dumps({"initialized": result}, indent=2))
 
-    @_requires_verbose
     def render_set_board(self, args: argparse.Namespace, result: UserContext) -> None:
         raise NotImplementedError("Change directory is not supported by the CLI JSON renderer. Use the `cd` command in the REPL instead.")
 
@@ -103,18 +90,15 @@ class JsonRenderer(CommandRenderer):
     def render_board_list(self, args: argparse.Namespace, result: list[Board]) -> None:
         self._emit(args, json.dumps([_board_dict(b) for b in result], indent=2))
 
-    @_requires_verbose
     def render_board_create(self, args: argparse.Namespace, result: Board) -> None:
         self._emit(args, json.dumps(_board_dict(result), indent=2))
 
     def render_board_info(self, args: argparse.Namespace, result: Board) -> None:
         self._emit(args, json.dumps(_board_dict(result), indent=2))
 
-    @_requires_verbose
     def render_board_rename(self, args: argparse.Namespace, result: Board) -> None:
         self._emit(args, json.dumps(_board_dict(result), indent=2))
 
-    @_requires_verbose
     def render_board_delete(self, args: argparse.Namespace, result: Board) -> None:
         self._emit(args, json.dumps({"deleted": result.name}, indent=2))
 
@@ -126,19 +110,15 @@ class JsonRenderer(CommandRenderer):
     def render_column_info(self, args: argparse.Namespace, result: Column) -> None:
         self._emit(args, json.dumps(_column_dict(result), indent=2))
 
-    @_requires_verbose
     def render_column_create(self, args: argparse.Namespace, result: Column) -> None:
         self._emit(args, json.dumps(_column_dict(result), indent=2))
 
-    @_requires_verbose
     def render_column_rename(self, args: argparse.Namespace, result: Column) -> None:
         self._emit(args, json.dumps(_column_dict(result), indent=2))
 
-    @_requires_verbose
     def render_column_reorder(self, args: argparse.Namespace, result: list[Column]) -> None:
         self._emit(args, json.dumps([_column_dict(c) for c in result], indent=2))
 
-    @_requires_verbose
     def render_column_delete(self, args: argparse.Namespace, result: None) -> None:
         _ = result
         self._emit(args, json.dumps({"deleted": self._path_str(args)}, indent=2))
@@ -148,7 +128,6 @@ class JsonRenderer(CommandRenderer):
     def render_task_list(self, args: argparse.Namespace, result: list[Task]) -> None:
         self._emit(args, json.dumps([_task_dict(t) for t in result], indent=2))
 
-    @_requires_verbose
     def render_task_create(self, args: argparse.Namespace, result: Task) -> None:
         self._emit(args, json.dumps(_task_detail_dict(result), indent=2))
 
@@ -159,29 +138,23 @@ class JsonRenderer(CommandRenderer):
         self._emit(args, json.dumps(_task_detail_dict(result), indent=2))
 
     # TODO: ==== TEST ====
-    @_requires_verbose
     def render_task_rename(self, args: argparse.Namespace, result: Task) -> None:
         self._emit(args, json.dumps(_task_detail_dict(result), indent=2))
 
     # TODO: ==== TEST ====
-    @_requires_verbose
     def render_task_update(self, args: argparse.Namespace, result: Task) -> None:
         self._emit(args, json.dumps(_task_detail_dict(result), indent=2))
 
-    @_requires_verbose
     def render_task_move(self, args: argparse.Namespace, result: Task) -> None:
         self._emit(args, json.dumps(_task_detail_dict(result), indent=2))
 
-    @_requires_verbose
     def render_task_reorder(self, args: argparse.Namespace, task_op: tuple[Task, str]) -> None:
         result, _ = task_op
         self._emit(args, json.dumps(_task_detail_dict(result), indent=2))
 
-    @_requires_verbose
     def render_task_assign(self, args: argparse.Namespace, result: Task) -> None:
         self._emit(args, json.dumps(_task_detail_dict(result), indent=2))
 
-    @_requires_verbose
     def render_task_delete(self, args: argparse.Namespace, result: None) -> None:
         _ = result
         self._emit(args, json.dumps({"deleted": self._path_str(args)}, indent=2))
@@ -205,11 +178,9 @@ class JsonRenderer(CommandRenderer):
             "uncommitted_changes": result.uncommitted_changes,
         }, indent=2))
 
-    @_requires_verbose
     def render_set_config(self, args: argparse.Namespace, result: None) -> None:
         _ = result
         self._emit(args, json.dumps({"key": args.key, "value": args.value}))
 
-    @_requires_verbose
     def render_get_config(self, args: argparse.Namespace, result: str) -> None:
         self._emit(args, json.dumps({"key": args.key, "value": result}, indent=2))

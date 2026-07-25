@@ -87,7 +87,6 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         """`init` parses with expected defaults and dispatch handler."""
         args = cli_parser.parse_args(["init"])
         self.assertEqual(args.command, "init")
-        self.assertFalse(args.verbose)
         self.assertIs(args.func, handle_init)
 
     def test_board_commands(self):

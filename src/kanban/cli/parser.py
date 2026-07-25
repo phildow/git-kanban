@@ -38,32 +38,25 @@ from ..cli.commands import (
 )
 
 
-FORMAT_CHOICES = ["table", "plain", "json"]
-FORMAT_CHOICES_SIMPLE = ["plain", "json"]
+FORMAT_CHOICES = ["plain", "json"]
 SORT_TASK_CHOICES = ["title", "priority", "due-date", "created-at", "updated-at", "created-by", "column"]
 PRIORITY_CHOICES = [p.value for p in Priority]
 
 
 def _add_global_flags(parser: argparse.ArgumentParser) -> None:
     # parser.add_argument("--color", action="store_true", default=False, help="Enable colored output")
-    parser.add_argument("-v","--verbose", action="store_true", default=False, help="Enable verbose output")
+    pass
 
 
 def _add_format_arg(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--format", choices=FORMAT_CHOICES_SIMPLE, default="plain", metavar="FORMAT",
-                        help="Output format: plain or json")
-
-
-def _add_table_format_arg(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--format", choices=FORMAT_CHOICES, default="plain", metavar="FORMAT",
-                        help="Output format: plain, json, or table (default: plain)")
+                        help="Output format: plain or json (default: plain)")
 
 
 def _add_list_format_and_sort_args(parser: argparse.ArgumentParser, sort_choices: list[str]) -> None:
     parser.add_argument("-s", "--sort", choices=sort_choices, metavar="FIELD", help="Field to sort by")
     parser.add_argument("-r", "--reverse", action="store_true", default=False, help="Reverse the sort order")
-    parser.add_argument("--format", choices=FORMAT_CHOICES, default="plain", metavar="FORMAT",
-                        help="Output format: plain, json, or table (default: plain)")
+    _add_format_arg(parser)
 
 
 def _add_task_filter_args(parser: argparse.ArgumentParser) -> None:
@@ -104,7 +97,7 @@ def _add_board_parser(subparsers: argparse._SubParsersAction) -> None:
 
     # board list
     p = board_sub.add_parser("list", help="List all boards")
-    _add_table_format_arg(p)
+    _add_format_arg(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_board_list)
 
@@ -152,7 +145,7 @@ def _add_column_parser(subparsers: argparse._SubParsersAction) -> None:
     # column list
     p = col_sub.add_parser("list", help="List columns")
     p.add_argument("path", metavar="BOARD", help="Fully qualified /board path")
-    _add_table_format_arg(p)
+    _add_format_arg(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_column_list)
 

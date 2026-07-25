@@ -449,9 +449,30 @@ kanban config set <key> <value>    # key: name
 kanban config get <key>            # key: name
 ```
 
-The list commands, search, and status take a `--format` argument with options `<table|plain|json>`. Every other command takes a `--format` argument with options `plain|json`. All default to `plain`.
+Most commands take a `--format` argument with options `rich|json` to emit output with more detail or as json.
 
-Objects are identified by their absolute path consisting of `/board/column/task` components as available. When creating or updating an object its title or name is slugged to produce its path component. The full path is always printed to the console and is used to identify the object in future calls to the CLI. Absolute paths are implied by the CLI. When executing a command, the CLI adds a forward slash to any identifying path that does not begin with one.
+### Object Paths
+
+Objects are identified by their absolute path consisting of `/board/column/task` components as available.
+
+When creating or updating an object the CLI slugs its title to produce a path component. The full path is always printed to the console and is used to identify the object in future calls to the CLI.
+Absolute paths are implied by the CLI. When executing a command the CLI adds a forward slash to any identifying path that does not begin with one.
+
+For example:
+
+```
+$ kanban board list
+/main
+
+$ kanban colum list /main
+/todo
+/in-progress
+/in-review
+/done
+
+$ kanban task create /main/todo "Ensure the CLI outputs paths"
+/main/todo/ensure-the-cli-outputs-paths
+```
 
 ## The REPL
 

@@ -1,8 +1,7 @@
 """Tests confirming JSON output produced by JsonRenderer.
 
 Each test captures stdout, parses the JSON, and asserts the expected structure
-and field values. The `@_requires_verbose` contract (no output without --verbose)
-is also exercised.
+and field values.
 """
 
 from __future__ import annotations
@@ -26,7 +25,7 @@ _UPDATED_AT = datetime(2026, 1, 2, 9, 0, 0, tzinfo=timezone.utc)
 
 
 def _args(**kwargs) -> Namespace:
-    return Namespace(**{"verbose": False, **kwargs})
+    return Namespace(**kwargs)
 
 
 def _capture(fn) -> str:
@@ -99,19 +98,14 @@ class TestJsonRendererBoards(unittest.TestCase):
         out = _capture(lambda: self.r.render_board_list(_args(), []))
         self.assertEqual(json.loads(out), [])
 
-    def test_board_create_silent_without_verbose(self) -> None:
-        """render_board_create emits nothing when --verbose is not set."""
-        out = _capture(lambda: self.r.render_board_create(_args(verbose=False), _board()))
-        self.assertEqual(out, "")
-
     def test_board_create_name_field(self) -> None:
-        """render_board_create emits a JSON object with the board name when verbose."""
-        out = _capture(lambda: self.r.render_board_create(_args(verbose=True), _board("proj")))
+        """render_board_create emits a JSON object with the board name."""
+        out = _capture(lambda: self.r.render_board_create(_args(), _board("proj")))
         self.assertEqual(json.loads(out)["name"], "proj")
 
     def test_board_create_slug_field(self) -> None:
-        """render_board_create emits the board slug when verbose."""
-        out = _capture(lambda: self.r.render_board_create(_args(verbose=True), _board( "My Project", "my-project")))
+        """render_board_create emits the board slug."""
+        out = _capture(lambda: self.r.render_board_create(_args(), _board( "My Project", "my-project")))
         self.assertEqual(json.loads(out)["slug"], "my-project")
 
     def test_board_info_name_field(self) -> None:
@@ -129,29 +123,19 @@ class TestJsonRendererBoards(unittest.TestCase):
         out = _capture(lambda: self.r.render_board_info(_args(), _board("proj")))
         self.assertIn("path", json.loads(out))
 
-    def test_board_rename_silent_without_verbose(self) -> None:
-        """render_board_rename emits nothing when --verbose is not set."""
-        out = _capture(lambda: self.r.render_board_rename(_args(verbose=False), _board( "new-name")))
-        self.assertEqual(out, "")
-
     def test_board_rename_name_field(self) -> None:
-        """render_board_rename emits a JSON object with the new board name when verbose."""
-        out = _capture(lambda: self.r.render_board_rename(_args(verbose=True), _board("new-name")))
+        """render_board_rename emits a JSON object with the new board name."""
+        out = _capture(lambda: self.r.render_board_rename(_args(), _board("new-name")))
         self.assertEqual(json.loads(out)["name"], "new-name")
 
     def test_board_rename_slug_field(self) -> None:
-        """render_board_rename emits the new board slug when verbose."""
-        out = _capture(lambda: self.r.render_board_rename(_args(verbose=True), _board("New Name", "new-name")))
+        """render_board_rename emits the new board slug."""
+        out = _capture(lambda: self.r.render_board_rename(_args(), _board("New Name", "new-name")))
         self.assertEqual(json.loads(out)["slug"], "new-name")
 
-    def test_board_delete_silent_without_verbose(self) -> None:
-        """render_board_delete emits nothing when --verbose is not set."""
-        out = _capture(lambda: self.r.render_board_delete(_args(verbose=False, board="proj"), _board("proj")))
-        self.assertEqual(out, "")
-
     def test_board_delete_deleted_field(self) -> None:
-        """render_board_delete emits a JSON object with the deleted board name when verbose."""
-        out = _capture(lambda: self.r.render_board_delete(_args(verbose=True, board="proj"), _board("proj")))
+        """render_board_delete emits a JSON object with the deleted board name."""
+        out = _capture(lambda: self.r.render_board_delete(_args(board="proj"), _board("proj")))
         self.assertEqual(json.loads(out)["deleted"], "proj")
 
 
@@ -211,29 +195,19 @@ class TestJsonRendererColumns(unittest.TestCase):
         out = _capture(lambda: self.r.render_column_info(_args(), _column("todo", "main", 0)))
         self.assertIn("path", json.loads(out))
 
-    def test_column_create_silent_without_verbose(self) -> None:
-        """render_column_create emits nothing when --verbose is not set."""
-        out = _capture(lambda: self.r.render_column_create(_args(verbose=False), _column()))
-        self.assertEqual(out, "")
-
     def test_column_create_name_field(self) -> None:
-        """render_column_create emits a JSON object with the column name when verbose."""
-        out = _capture(lambda: self.r.render_column_create(_args(verbose=True), _column("review", "proj", 1)))
+        """render_column_create emits a JSON object with the column name."""
+        out = _capture(lambda: self.r.render_column_create(_args(), _column("review", "proj", 1)))
         self.assertEqual(json.loads(out)["name"], "review")
 
     def test_column_create_slug_field(self) -> None:
-        """render_column_create emits the slug when verbose."""
-        out = _capture(lambda: self.r.render_column_create(_args(verbose=True), _column("In Review", "proj", 1, "in-review")))
+        """render_column_create emits the slug."""
+        out = _capture(lambda: self.r.render_column_create(_args(), _column("In Review", "proj", 1, "in-review")))
         self.assertEqual(json.loads(out)["slug"], "in-review")
 
-    def test_column_delete_silent_without_verbose(self) -> None:
-        """render_column_delete emits nothing when --verbose is not set."""
-        out = _capture(lambda: self.r.render_column_delete(_args(verbose=False, path="main/todo"), None))
-        self.assertEqual(out, "")
-
     def test_column_delete_deleted_field(self) -> None:
-        """render_column_delete emits a JSON object with the deleted path when verbose."""
-        out = _capture(lambda: self.r.render_column_delete(_args(verbose=True, path="main/todo"), None))
+        """render_column_delete emits a JSON object with the deleted path."""
+        out = _capture(lambda: self.r.render_column_delete(_args(path="main/todo"), None))
         self.assertEqual(json.loads(out)["deleted"], "main/todo")
 
 
@@ -346,24 +320,19 @@ class TestJsonRendererTasks(unittest.TestCase):
         out = _capture(lambda: self.r.render_task_show(_args(), _task(body="Some notes.")))
         self.assertEqual(json.loads(out)["body"], "Some notes.")
 
-    def test_task_create_silent_without_verbose(self) -> None:
-        """render_task_create emits nothing when --verbose is not set."""
-        out = _capture(lambda: self.r.render_task_create(_args(verbose=False), _task()))
-        self.assertEqual(out, "")
-
     def test_task_create_id_field(self) -> None:
-        """render_task_create emits task UUID when verbose."""
-        out = _capture(lambda: self.r.render_task_create(_args(verbose=True), _task()))
+        """render_task_create emits task UUID."""
+        out = _capture(lambda: self.r.render_task_create(_args(), _task()))
         self.assertEqual(json.loads(out)["id"], str(_TASK_ID))
 
     def test_task_create_slug_field(self) -> None:
-        """render_task_create emits the task slug when verbose."""
-        out = _capture(lambda: self.r.render_task_create(_args(verbose=True), _task()))
+        """render_task_create emits the task slug."""
+        out = _capture(lambda: self.r.render_task_create(_args(), _task()))
         self.assertEqual(json.loads(out)["slug"], "fix-login-bug")
 
     def test_task_create_includes_timestamps(self) -> None:
-        """render_task_create includes timestamps in verbose output."""
-        out = _capture(lambda: self.r.render_task_create(_args(verbose=True), _task()))
+        """render_task_create includes timestamps in output."""
+        out = _capture(lambda: self.r.render_task_create(_args(), _task()))
         obj = json.loads(out)
         self.assertIn("created_at", obj)
         self.assertIn("updated_at", obj)
@@ -373,122 +342,97 @@ class TestJsonRendererTasks(unittest.TestCase):
         out = _capture(lambda: self.r.render_task_edit(_args(), _task()))
         self.assertEqual(json.loads(out)["slug"], "fix-login-bug")
 
-    def test_task_assign_silent_without_verbose(self) -> None:
-        """render_task_assign emits nothing when --verbose is not set."""
-        out = _capture(lambda: self.r.render_task_assign(_args(verbose=False), _task()))
-        self.assertEqual(out, "")
-
     def test_task_assign_assigned_to_field(self) -> None:
-        """render_task_assign emits the assigned_to value when verbose."""
-        out = _capture(lambda: self.r.render_task_assign(_args(verbose=True), _task(assigned_to="alice")))
+        """render_task_assign emits the assigned_to value."""
+        out = _capture(lambda: self.r.render_task_assign(_args(), _task(assigned_to="alice")))
         self.assertEqual(json.loads(out)["assigned_to"], "alice")
 
     def test_task_assign_slug_field(self) -> None:
-        """render_task_assign emits the task slug when verbose."""
-        out = _capture(lambda: self.r.render_task_assign(_args(verbose=True), _task()))
+        """render_task_assign emits the task slug."""
+        out = _capture(lambda: self.r.render_task_assign(_args(), _task()))
         self.assertEqual(json.loads(out)["slug"], "fix-login-bug")
 
     def test_task_assign_includes_timestamps(self) -> None:
-        """render_task_assign includes created_at and updated_at when verbose."""
-        out = _capture(lambda: self.r.render_task_assign(_args(verbose=True), _task()))
+        """render_task_assign includes created_at and updated_at."""
+        out = _capture(lambda: self.r.render_task_assign(_args(), _task()))
         obj = json.loads(out)
         self.assertIn("created_at", obj)
         self.assertIn("updated_at", obj)
 
-    def test_task_rename_silent_without_verbose(self) -> None:
-        """render_task_rename emits nothing when --verbose is not set."""
-        out = _capture(lambda: self.r.render_task_rename(_args(verbose=False), _task()))
-        self.assertEqual(out, "")
-
     def test_task_rename_is_object(self) -> None:
-        """render_task_rename emits a JSON object when verbose."""
-        out = _capture(lambda: self.r.render_task_rename(_args(verbose=True), _task()))
+        """render_task_rename emits a JSON object."""
+        out = _capture(lambda: self.r.render_task_rename(_args(), _task()))
         self.assertIsInstance(json.loads(out), dict)
 
     def test_task_rename_slug_field(self) -> None:
-        """render_task_rename emits the renamed task's new slug when verbose."""
-        out = _capture(lambda: self.r.render_task_rename(_args(verbose=True), _task(slug="fixed-parser")))
+        """render_task_rename emits the renamed task's new slug."""
+        out = _capture(lambda: self.r.render_task_rename(_args(), _task(slug="fixed-parser")))
         self.assertEqual(json.loads(out)["slug"], "fixed-parser")
 
     def test_task_rename_title_field(self) -> None:
-        """render_task_rename emits the renamed task's new title when verbose."""
-        out = _capture(lambda: self.r.render_task_rename(_args(verbose=True), _task(title="Fixed Parser")))
+        """render_task_rename emits the renamed task's new title."""
+        out = _capture(lambda: self.r.render_task_rename(_args(), _task(title="Fixed Parser")))
         self.assertEqual(json.loads(out)["title"], "Fixed Parser")
 
     def test_task_rename_includes_timestamps(self) -> None:
-        """render_task_rename includes created_at and updated_at when verbose."""
-        out = _capture(lambda: self.r.render_task_rename(_args(verbose=True), _task()))
+        """render_task_rename includes created_at and updated_at."""
+        out = _capture(lambda: self.r.render_task_rename(_args(), _task()))
         obj = json.loads(out)
         self.assertEqual(obj["created_at"], _CREATED_AT.isoformat())
         self.assertEqual(obj["updated_at"], _UPDATED_AT.isoformat())
 
     def test_task_rename_id_field(self) -> None:
-        """render_task_rename emits the task UUID when verbose."""
-        out = _capture(lambda: self.r.render_task_rename(_args(verbose=True), _task()))
+        """render_task_rename emits the task UUID."""
+        out = _capture(lambda: self.r.render_task_rename(_args(), _task()))
         self.assertEqual(json.loads(out)["id"], str(_TASK_ID))
 
-    def test_task_move_silent_without_verbose(self) -> None:
-        """render_task_move emits nothing when --verbose is not set."""
-        out = _capture(lambda: self.r.render_task_move(_args(verbose=False), _task()))
-        self.assertEqual(out, "")
-
     def test_task_move_slug_field(self) -> None:
-        """render_task_move emits the moved task's slug when verbose."""
-        out = _capture(lambda: self.r.render_task_move(_args(verbose=True), _task()))
+        """render_task_move emits the moved task's slug."""
+        out = _capture(lambda: self.r.render_task_move(_args(), _task()))
         self.assertEqual(json.loads(out)["slug"], "fix-login-bug")
 
     def test_task_move_column_field(self) -> None:
-        """render_task_move emits the task's new column when verbose."""
-        out = _capture(lambda: self.r.render_task_move(_args(verbose=True), _task(column="done")))
+        """render_task_move emits the task's new column."""
+        out = _capture(lambda: self.r.render_task_move(_args(), _task(column="done")))
         self.assertEqual(json.loads(out)["column"], "done")
 
     def test_task_move_includes_timestamps(self) -> None:
-        """render_task_move includes created_at and updated_at when verbose."""
-        out = _capture(lambda: self.r.render_task_move(_args(verbose=True), _task()))
+        """render_task_move includes created_at and updated_at."""
+        out = _capture(lambda: self.r.render_task_move(_args(), _task()))
         obj = json.loads(out)
         self.assertEqual(obj["created_at"], _CREATED_AT.isoformat())
         self.assertEqual(obj["updated_at"], _UPDATED_AT.isoformat())
 
-    def test_task_reorder_silent_without_verbose(self) -> None:
-        """render_task_reorder emits nothing when --verbose is not set."""
-        out = _capture(lambda: self.r.render_task_reorder(_args(verbose=False), (_task(), "up")))
-        self.assertEqual(out, "")
-
     def test_task_reorder_is_object(self) -> None:
-        """render_task_reorder emits a JSON object when verbose."""
-        out = _capture(lambda: self.r.render_task_reorder(_args(verbose=True), (_task(), "up")))
+        """render_task_reorder emits a JSON object."""
+        out = _capture(lambda: self.r.render_task_reorder(_args(), (_task(), "up")))
         self.assertIsInstance(json.loads(out), dict)
 
     def test_task_reorder_slug_field(self) -> None:
-        """render_task_reorder emits the task's slug when verbose."""
-        out = _capture(lambda: self.r.render_task_reorder(_args(verbose=True), (_task(), "top")))
+        """render_task_reorder emits the task's slug."""
+        out = _capture(lambda: self.r.render_task_reorder(_args(), (_task(), "top")))
         self.assertEqual(json.loads(out)["slug"], "fix-login-bug")
 
     def test_task_reorder_column_field(self) -> None:
-        """render_task_reorder emits the task's column (unchanged by reorder) when verbose."""
-        out = _capture(lambda: self.r.render_task_reorder(_args(verbose=True), (_task(column="todo"), "down")))
+        """render_task_reorder emits the task's column (unchanged by reorder)."""
+        out = _capture(lambda: self.r.render_task_reorder(_args(), (_task(column="todo"), "down")))
         self.assertEqual(json.loads(out)["column"], "todo")
 
     def test_task_reorder_includes_timestamps(self) -> None:
-        """render_task_reorder includes created_at and updated_at when verbose."""
-        out = _capture(lambda: self.r.render_task_reorder(_args(verbose=True), (_task(), "bottom")))
+        """render_task_reorder includes created_at and updated_at."""
+        out = _capture(lambda: self.r.render_task_reorder(_args(), (_task(), "bottom")))
         obj = json.loads(out)
         self.assertEqual(obj["created_at"], _CREATED_AT.isoformat())
         self.assertEqual(obj["updated_at"], _UPDATED_AT.isoformat())
 
     def test_task_reorder_id_field(self) -> None:
-        """render_task_reorder emits the task UUID when verbose."""
-        out = _capture(lambda: self.r.render_task_reorder(_args(verbose=True), (_task(), "up")))
+        """render_task_reorder emits the task UUID."""
+        out = _capture(lambda: self.r.render_task_reorder(_args(), (_task(), "up")))
         self.assertEqual(json.loads(out)["id"], str(_TASK_ID))
 
-    def test_task_delete_silent_without_verbose(self) -> None:
-        """render_task_delete emits nothing when --verbose is not set."""
-        out = _capture(lambda: self.r.render_task_delete(_args(verbose=False, path="main/todo/fix-login-bug"), None))
-        self.assertEqual(out, "")
-
     def test_task_delete_deleted_field(self) -> None:
-        """render_task_delete emits the path in the deleted field when verbose."""
-        out = _capture(lambda: self.r.render_task_delete(_args(verbose=True, path="main/todo/fix"), None))
+        """render_task_delete emits the path in the deleted field."""
+        out = _capture(lambda: self.r.render_task_delete(_args(path="main/todo/fix"), None))
         self.assertEqual(json.loads(out)["deleted"], "main/todo/fix")
 
 
@@ -591,34 +535,24 @@ class TestJsonRendererConfig(unittest.TestCase):
     def setUp(self) -> None:
         self.r = JsonRenderer()
 
-    def test_get_config_silent_without_verbose(self) -> None:
-        """render_get_config emits nothing when --verbose is not set."""
-        out = _capture(lambda: self.r.render_get_config(_args(verbose=False, key="name"), "alice"))
-        self.assertEqual(out, "")
-
     def test_get_config_key_field(self) -> None:
-        """render_get_config emits the key when verbose."""
-        out = _capture(lambda: self.r.render_get_config(_args(verbose=True, key="name"), "alice"))
+        """render_get_config emits the key."""
+        out = _capture(lambda: self.r.render_get_config(_args(key="name"), "alice"))
         self.assertEqual(json.loads(out)["key"], "name")
 
     def test_get_config_value_field(self) -> None:
-        """render_get_config emits the value when verbose."""
-        out = _capture(lambda: self.r.render_get_config(_args(verbose=True, key="name"), "alice"))
+        """render_get_config emits the value."""
+        out = _capture(lambda: self.r.render_get_config(_args(key="name"), "alice"))
         self.assertEqual(json.loads(out)["value"], "alice")
 
-    def test_set_config_silent_without_verbose(self) -> None:
-        """render_set_config emits nothing when --verbose is not set."""
-        out = _capture(lambda: self.r.render_set_config(_args(verbose=False, key="name", value="bob"), None))
-        self.assertEqual(out, "")
-
     def test_set_config_key_field(self) -> None:
-        """render_set_config emits the key when verbose."""
-        out = _capture(lambda: self.r.render_set_config(_args(verbose=True, key="name", value="bob"), None))
+        """render_set_config emits the key."""
+        out = _capture(lambda: self.r.render_set_config(_args(key="name", value="bob"), None))
         self.assertEqual(json.loads(out)["key"], "name")
 
     def test_set_config_value_field(self) -> None:
-        """render_set_config emits the value when verbose."""
-        out = _capture(lambda: self.r.render_set_config(_args(verbose=True, key="name", value="bob"), None))
+        """render_set_config emits the value."""
+        out = _capture(lambda: self.r.render_set_config(_args(key="name", value="bob"), None))
         self.assertEqual(json.loads(out)["value"], "bob")
 
 
