@@ -1,4 +1,6 @@
 
+from pathlib import Path
+
 from ..models import Board, Column, Slug
 from ..services.kanban import KanbanService
 
@@ -10,6 +12,10 @@ class RenderHelper:
         """Given a board slug, return the corresponding board or None if not found."""
         return self.svc.get_board(slug)
     
-    def column_for_slug(self, column_slug: Slug) -> Column | None:
+    def column_for_slug(self, slug: Slug) -> Column | None:
         """Given a column slug, return the corresponding column resolved against the working board, or None if not found."""
-        return self.svc.get_column(column_slug)
+        return self.svc.get_column(slug)
+
+    def column_for_path(self, path: Path) -> Column | None:
+        """Given a column path, return the corresponding column resolved against the working board, or None if not found."""
+        return self.svc.get_column(path)

@@ -17,7 +17,7 @@ from rich import box, print
 
 from ..models import UserContext, Board, Column, Slug, Task
 from ..protocols.command_renderer import CommandRenderer
-from ..repl.render_helper import RenderHelper
+from ..utils.render_helper import RenderHelper
 from ..services.kanban import GitCommit, KanbanStatus
 
 # Box style options:
@@ -159,7 +159,7 @@ class RichRenderer(CommandRenderer):
 		old_name = args.path
 		new_name = result.name or args.new_name
 		new_slug = result.slug or args.new_name
-		self._emit(args, f"Renamed board: {old_name} -> {new_name} ({new_slug})")
+		self._emit(args, f"Renamed board: {old_name} → {new_name} ({new_slug})")
 
 	def render_board_delete(self, args: argparse.Namespace, result: Board) -> None:
 		"""Render a message indicating that a board was deleted, including its name."""
@@ -246,7 +246,7 @@ class RichRenderer(CommandRenderer):
 		new_name = result.name or args.new_name
 		new_slug = result.slug or args.new_slug
 
-		self._emit(args, f"Column renamed: {old_name} -> {new_name} ({new_slug})")
+		self._emit(args, f"Column renamed: {old_name} → {new_name} ({new_slug})")
 
 	def render_column_reorder(self, args: argparse.Namespace, result: list[Column]) -> None:
 		"""
@@ -260,7 +260,7 @@ class RichRenderer(CommandRenderer):
 		target = f"{board_name}/{column_name}" if board_name else column_name
 
 		if isinstance(position, int):
-			self._emit(args, f"Column reordered: {target} -> position {position + 1}")
+			self._emit(args, f"Column reordered: {target} → position {position + 1}")
 		else:
 			self._emit(args, f"Column reordered: {target}")
 
@@ -367,8 +367,8 @@ class RichRenderer(CommandRenderer):
 	def render_task_show(self, args: argparse.Namespace, result: Task) -> None:
 		"""Render detailed information about a single task, including all metadata and the body/description."""
 		self._emit(args, "")
-		self._emit(args, Text(result.title, style="bold"))
-		self._emit(args, "")
+		# self._emit(args, Text(result.title, style="bold"))
+		# self._emit(args, "")
 		self.render_task_metadata(args, result)
 		self._emit(args, "")
 
@@ -392,7 +392,7 @@ class RichRenderer(CommandRenderer):
 	def render_task_update(self, args: argparse.Namespace, result: Task) -> None:
 		# """Render a message indicating that a task was updated, including its slug."""
 		self._emit(args, "")
-		self._emit(args, Text(result.title, style="bold"))
+		# self._emit(args, Text(result.title, style="bold"))
 		self.render_task_metadata(args, result)
 		self._emit(args, "")
 
@@ -462,7 +462,8 @@ class RichRenderer(CommandRenderer):
 		table.add_column("", width=12, justify="right", no_wrap=True)
 		table.add_column("", width=60, justify="left", no_wrap=False)
 
-		table.add_row("Path", str(task.path), end_section=True)
+		table.add_row("Title", Text(task.title, style="bold"))
+		table.add_row("Slug", str(task.slug), end_section=True)
 		
 		table.add_row("Board", board.name if board else "-")
 		table.add_row("Column", column.name if column else "-")
@@ -481,3 +482,4 @@ class RichRenderer(CommandRenderer):
 	def column_for_slug(self, slug: Slug) -> Column | None:
 		"""Given a column slug, return the corresponding column."""
 		return self.render_helper.column_for_slug(slug)
+	

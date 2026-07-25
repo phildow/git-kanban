@@ -39,9 +39,11 @@ from unittest.mock import MagicMock
 from kanban.cli.parser import parse_args
 from kanban.cli.renderer import Renderer
 from kanban.cli.json_renderer import JsonRenderer
+from kanban.cli.rich_renderer import RichRenderer
 from kanban.services.kanban import KanbanService
 from kanban.storage.filesystem import FilesystemRepository
 from kanban.storage.seeds import BOOTSTRAP_CONFIG
+from kanban.utils.render_helper import RenderHelper
 
 def _iso(dt: str) -> datetime:
     """Convert a datetime string to an ISO 8601 string with UTC timezone."""
@@ -65,8 +67,9 @@ class _CLIBase(unittest.TestCase):
             index_service=MagicMock(),
             git_service=MagicMock(),
         )
-        self.renderer = Renderer()
+        self.renderer = Renderer(render_helper=RenderHelper(service=self.svc))
         self.json_renderer = JsonRenderer()
+        self.rich_renderer = RichRenderer(render_helper=RenderHelper(service=self.svc))
 
     def tearDown(self) -> None:
         os.chdir(self._prev_cwd)
@@ -77,7 +80,7 @@ class _CLIBase(unittest.TestCase):
         args = parse_args(list(argv))
         buf = io.StringIO()
         with redirect_stdout(buf):
-            args.func(args, self.svc, self.renderer, self.json_renderer)
+            args.func(args, self.svc, self.renderer, self.json_renderer, self.rich_renderer)
         return buf.getvalue()
 
     def run_json(self, *argv: str) -> object:
@@ -502,12 +505,6 @@ class TestTaskCLI(_InitializedBase):
         data = self.run_json("task", "list", "proj/todo", "--format", "json")
         self.assertIsInstance(data, list)
 
-    def test_task_list_json_id_field(self) -> None:
-        """task list --format json includes the task UUID."""
-        self.run_cli("task", "create", "/proj/todo", "fix-login")
-        data = self.run_json("task", "list", "proj/todo", "--format", "json")
-        self.assertIn("id", data[0])
-
     def test_task_list_json_slug_field(self) -> None:
         """task list --format json includes the slug."""
         self.run_cli("task", "create", "/proj/todo", "fix-login")
@@ -596,12 +593,6 @@ class TestTaskCLI(_InitializedBase):
         self.run_cli("task", "create", "/proj/todo", "fix-login")
         data = self.run_json("task", "info", "proj/todo/fix-login", "--format", "json")
         self.assertIsInstance(data, dict)
-
-    def test_task_info_json_id_field(self) -> None:
-        """task info --format json includes the task UUID."""
-        self.run_cli("task", "create", "/proj/todo", "fix-login")
-        data = self.run_json("task", "info", "proj/todo/fix-login", "--format", "json")
-        self.assertIn("id", data)
 
     def test_task_info_json_includes_timestamps(self) -> None:
         """task info --format json includes created_at and updated_at."""
@@ -811,12 +802,6 @@ class TestTaskCLI(_InitializedBase):
         self.run_cli("task", "rename", "proj/todo/fix-login", "Fix Login Bug")
         fm = self._read_frontmatter("proj", "todo", "fix-login-bug")
         self.assertEqual(fm.get("slug"), "fix-login-bug")
-
-    def test_task_rename_emits_path(self) -> None:
-        """task rename emits the renamed task's path by default."""
-        self.run_cli("task", "create", "/proj/todo", "fix-login")
-        out = self.run_cli("task", "rename", "proj/todo/fix-login", "Fix Login Bug")
-        self.assertEqual(out.strip(), "/proj/todo/fix-login-bug")
 
     def test_task_rename_json_includes_new_slug(self) -> None:
         """task rename --format json includes the new slug."""

@@ -227,11 +227,6 @@ class TestJsonRendererTasks(unittest.TestCase):
         out = _capture(lambda: self.r.render_task_list(_args(), [_task(), _task(id=uuid4(), slug="t2", title="T2")]))
         self.assertEqual(len(json.loads(out)), 2)
 
-    def test_task_list_id_field(self) -> None:
-        """Each task entry contains the UUID as a string."""
-        out = _capture(lambda: self.r.render_task_list(_args(), [_task()]))
-        self.assertEqual(json.loads(out)[0]["id"], str(_TASK_ID))
-
     def test_task_list_title_field(self) -> None:
         """Each task entry contains the title."""
         out = _capture(lambda: self.r.render_task_list(_args(), [_task()]))
@@ -293,11 +288,6 @@ class TestJsonRendererTasks(unittest.TestCase):
         out = _capture(lambda: self.r.render_task_show(_args(), _task()))
         self.assertIsInstance(json.loads(out), dict)
 
-    def test_task_show_id_field(self) -> None:
-        """render_task_show emits the UUID as a string."""
-        out = _capture(lambda: self.r.render_task_show(_args(), _task()))
-        self.assertEqual(json.loads(out)["id"], str(_TASK_ID))
-
     def test_task_show_slug_field(self) -> None:
         """render_task_show emits the task slug."""
         out = _capture(lambda: self.r.render_task_show(_args(), _task()))
@@ -319,11 +309,6 @@ class TestJsonRendererTasks(unittest.TestCase):
         """render_task_show includes the task body."""
         out = _capture(lambda: self.r.render_task_show(_args(), _task(body="Some notes.")))
         self.assertEqual(json.loads(out)["body"], "Some notes.")
-
-    def test_task_create_id_field(self) -> None:
-        """render_task_create emits task UUID."""
-        out = _capture(lambda: self.r.render_task_create(_args(), _task()))
-        self.assertEqual(json.loads(out)["id"], str(_TASK_ID))
 
     def test_task_create_slug_field(self) -> None:
         """render_task_create emits the task slug."""
@@ -381,11 +366,6 @@ class TestJsonRendererTasks(unittest.TestCase):
         self.assertEqual(obj["created_at"], _CREATED_AT.isoformat())
         self.assertEqual(obj["updated_at"], _UPDATED_AT.isoformat())
 
-    def test_task_rename_id_field(self) -> None:
-        """render_task_rename emits the task UUID."""
-        out = _capture(lambda: self.r.render_task_rename(_args(), _task()))
-        self.assertEqual(json.loads(out)["id"], str(_TASK_ID))
-
     def test_task_move_slug_field(self) -> None:
         """render_task_move emits the moved task's slug."""
         out = _capture(lambda: self.r.render_task_move(_args(), _task()))
@@ -424,11 +404,6 @@ class TestJsonRendererTasks(unittest.TestCase):
         obj = json.loads(out)
         self.assertEqual(obj["created_at"], _CREATED_AT.isoformat())
         self.assertEqual(obj["updated_at"], _UPDATED_AT.isoformat())
-
-    def test_task_reorder_id_field(self) -> None:
-        """render_task_reorder emits the task UUID."""
-        out = _capture(lambda: self.r.render_task_reorder(_args(), (_task(), "up")))
-        self.assertEqual(json.loads(out)["id"], str(_TASK_ID))
 
     def test_task_delete_deleted_field(self) -> None:
         """render_task_delete emits the path in the deleted field."""

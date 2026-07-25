@@ -6,6 +6,7 @@ from pathlib import Path
 from .cli.parser import parse_args
 from .cli.renderer import Renderer
 from .cli.json_renderer import JsonRenderer
+from .cli.rich_renderer import RichRenderer
 
 from .services.git import GitService
 from .services.index import IndexService
@@ -15,6 +16,7 @@ from .storage.filesystem import FilesystemRepository
 from .storage.base import KanbanRepository, RepositoryAlreadyInitialized
 from .storage.memory import InMemoryRepository
 from .utils.debug import __DEBUG__, FILESYSTEM, MEMORY
+from .utils.render_helper import RenderHelper
 
 def main() -> None:
     """Main entry point for the kanban CLI."""
@@ -25,8 +27,10 @@ def main() -> None:
     index_service = IndexService(index_base=index_base, repository=repository)
     git_service = GitService()
     svc = KanbanService(repository=repository, index_service=index_service, git_service=git_service)
-    renderer = Renderer()
+    render_helper = RenderHelper(service=svc)
+    renderer = Renderer(render_helper=render_helper)
     json_renderer = JsonRenderer()
+    rich_renderer = RichRenderer(render_helper=render_helper)
 
     args = parse_args()
 
@@ -34,7 +38,7 @@ def main() -> None:
         raise SystemExit("No command handler registered")
 
     try:
-        args.func(args, svc, renderer, json_renderer)
+        args.func(args, svc, renderer, json_renderer, rich_renderer)
     except RepositoryAlreadyInitialized as e:
         logging.error("Error: %s", str(e))
         print(f"Error: Repository already initialized")

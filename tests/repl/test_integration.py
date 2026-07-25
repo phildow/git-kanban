@@ -43,7 +43,7 @@ from datetime import datetime
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from kanban.repl.render_helper import RenderHelper
+from kanban.utils.render_helper import RenderHelper
 from kanban.repl.parser import parse_args
 from kanban.repl.rich_renderer import RichRenderer as REPLRenderer
 from kanban.models import Slug

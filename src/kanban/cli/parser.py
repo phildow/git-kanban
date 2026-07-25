@@ -38,7 +38,7 @@ from ..cli.commands import (
 )
 
 
-FORMAT_CHOICES = ["plain", "json"]
+FORMAT_CHOICES = ["plain", "rich", "json"]
 SORT_TASK_CHOICES = ["title", "priority", "due-date", "created-at", "updated-at", "created-by", "column"]
 PRIORITY_CHOICES = [p.value for p in Priority]
 
@@ -50,12 +50,13 @@ def _add_global_flags(parser: argparse.ArgumentParser) -> None:
 
 def _add_format_arg(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--format", choices=FORMAT_CHOICES, default="plain", metavar="FORMAT",
-                        help="Output format: plain or json (default: plain)")
+                        help="Output format: plain, rich or json (default: plain)")
 
 
 def _add_list_format_and_sort_args(parser: argparse.ArgumentParser, sort_choices: list[str]) -> None:
     parser.add_argument("-s", "--sort", choices=sort_choices, metavar="FIELD", help="Field to sort by")
     parser.add_argument("-r", "--reverse", action="store_true", default=False, help="Reverse the sort order")
+    parser.add_argument("--cards", action="store_true", default=False, help="Render each task as a detailed card (rich format only)")
     _add_format_arg(parser)
 
 

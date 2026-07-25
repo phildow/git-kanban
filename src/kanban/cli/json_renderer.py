@@ -14,7 +14,6 @@ from ..services.kanban import GitCommit, KanbanStatus
 def _task_dict(task: Task) -> dict:
     """Minimal task representation used in list and search results."""
     return {
-        "id": str(task.id),
         "title": task.title,
         "path": str(task.path),
         "slug": task.slug,
