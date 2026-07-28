@@ -820,7 +820,7 @@ class KanbanService(CompletionDataSource):
         if updates.priority is not None:
             task.priority = updates.priority
         if updates.tags is not None:
-            task.tags = updates.tags
+            task.tags = list(set(task.tags) | set(updates.tags))
         if updates.due_date is not None:
             task.due_date = due_date
         if updates.created_by is not None:
