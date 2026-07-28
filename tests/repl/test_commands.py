@@ -100,7 +100,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_rename(args, self.svc, self.renderer)
 
-        self.svc.rename_board.assert_called_once_with(None, new_name="Work")
+        self.svc.rename_board.assert_called_once_with(path=None, new_name="Work")
         self.renderer.render_board_rename.assert_called_once_with(args, result)
 
     def test_handle_rename_column(self) -> None:
@@ -112,7 +112,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_rename(args, self.svc, self.renderer)
 
-        self.svc.rename_column.assert_called_once_with("todo", new_name="Doing")
+        self.svc.rename_column.assert_called_once_with(path=Slug("todo"), new_name="Doing")
         self.renderer.render_column_rename.assert_called_once_with(args, result)
 
     def test_handle_rename_task(self) -> None:
@@ -124,7 +124,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_rename(args, self.svc, self.renderer)
 
-        self.svc.rename_task.assert_called_once_with("fix-parser", new_title="Fixed Parser")
+        self.svc.rename_task.assert_called_once_with(path=Slug("fix-parser"), new_title="Fixed Parser")
         self.renderer.render_task_rename.assert_called_once_with(args, result)
 
     def test_column_handlers(self):

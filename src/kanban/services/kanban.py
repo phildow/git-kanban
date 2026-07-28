@@ -473,7 +473,7 @@ class KanbanService(CompletionDataSource):
         slug = slug_it(title)
         return self.repository.create_column(board, title, slug)
 
-    def rename_column(self, path: Path, new_name: str) -> Column:
+    def rename_column(self, path: Path | Slug, new_name: str) -> Column:
         """
         Rename a column subdirectory and update the board's .metadata file.
         Raises BoardNotFound, ColumnNotFound, or ColumnAlreadyExists as
@@ -495,7 +495,7 @@ class KanbanService(CompletionDataSource):
 
         return renamed_column
 
-    def reorder_column(self, path: Path, position: int) -> list[Column]:
+    def reorder_column(self, path: Path | Slug, position: int) -> list[Column]:
         """
         Move a column to the given 1-based position in the board's .metadata
         file.  Raises BoardNotFound or ColumnNotFound if either does not
@@ -524,7 +524,7 @@ class KanbanService(CompletionDataSource):
             raise ValueError(f"Invalid column path: {path}")
 
         deleted_column = self.repository.get_column(board, column)
-        tasks = self.get_tasks(path)
+        tasks = self.get_tasks(deleted_column.path)
         self.repository.delete_column(board, column)
 
         # Remove all index entries for tasks in the deleted column.

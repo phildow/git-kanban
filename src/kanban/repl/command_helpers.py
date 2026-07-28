@@ -91,11 +91,11 @@ def handle_delete_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[
     elif args.column:
         column = svc.get_column(args.column)
         if _confirm(f"Are you sure you want to delete the column '{column.name}'?"):
-            return Column, svc.delete_column(args.column)
+            return Column, svc.delete_column(path=Slug(args.column))
     elif args.path:
         task = svc.get_task(args.path)
         if _confirm(f"Are you sure you want to delete the task '{task.title}'?"):
-            return Task, svc.delete_task(task.path)
+            return Task, svc.delete_task(path=task.path)
     else:
         raise ValueError("Delete expects either --board, --column <column> or a <task> path")
 
@@ -121,10 +121,10 @@ def handle_rename_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[
         raise ValueError("No active board; set one with `board` before renaming a board, column, or task")
 
     if args.board:
-        return Board, svc.rename_board(None, new_name=new_name)
+        return Board, svc.rename_board(path=None, new_name=new_name)
     elif args.column:
-        return Column, svc.rename_column(args.column, new_name=new_name)
+        return Column, svc.rename_column(path=Slug(args.column), new_name=new_name)
     elif args.path:
-        return Task, svc.rename_task(args.path, new_title=new_name)
+        return Task, svc.rename_task(path=args.path, new_title=new_name)
     else:
         raise ValueError("Rename expects either --board, --column <column>, or a <task> path")
