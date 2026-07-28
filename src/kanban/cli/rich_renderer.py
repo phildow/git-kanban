@@ -6,8 +6,12 @@ of the affected object. Info/show/list methods and the additional rendering
 category (search, log, status, config) will grow richer formatting later.
 """
 
-# CURRENTLY UNUSED: The rich renderer is not currently used in the CLI, but is
+#
+# CURRENTLY UNUSED
+#
+# The rich renderer is not currently used in the CLI, but is
 # available for future use. The CLI currently uses the plain `Renderer` class.
+#
 
 from __future__ import annotations
 
