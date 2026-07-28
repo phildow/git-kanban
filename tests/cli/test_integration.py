@@ -39,7 +39,6 @@ from unittest.mock import MagicMock
 from kanban.cli.parser import parse_args
 from kanban.cli.renderer import Renderer
 from kanban.cli.json_renderer import JsonRenderer
-from kanban.cli.rich_renderer import RichRenderer
 from kanban.services.kanban import KanbanService
 from kanban.storage.filesystem import FilesystemRepository
 from kanban.storage.seeds import BOOTSTRAP_CONFIG
@@ -69,7 +68,6 @@ class _CLIBase(unittest.TestCase):
         )
         self.renderer = Renderer(render_service=RenderService(service=self.svc))
         self.json_renderer = JsonRenderer(render_service=RenderService(service=self.svc))
-        self.rich_renderer = RichRenderer(render_service=RenderService(service=self.svc))
 
     def tearDown(self) -> None:
         os.chdir(self._prev_cwd)
@@ -80,7 +78,7 @@ class _CLIBase(unittest.TestCase):
         args = parse_args(list(argv))
         buf = io.StringIO()
         with redirect_stdout(buf):
-            args.func(args, self.svc, self.renderer, self.json_renderer, self.rich_renderer)
+            args.func(args, self.svc, self.renderer, self.json_renderer)
         return buf.getvalue()
 
     def run_json(self, *argv: str) -> object:

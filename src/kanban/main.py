@@ -6,7 +6,6 @@ from pathlib import Path
 from .cli.parser import parse_args
 from .cli.renderer import Renderer
 from .cli.json_renderer import JsonRenderer
-from .cli.rich_renderer import RichRenderer
 
 from .services.git import GitService
 from .services.index import IndexService
@@ -30,7 +29,6 @@ def main() -> None:
     render_service = RenderService(service=svc)
     renderer = Renderer(render_service=render_service)
     json_renderer = JsonRenderer(render_service=render_service)
-    rich_renderer = RichRenderer(render_service=render_service)
 
     args = parse_args()
 
@@ -38,7 +36,7 @@ def main() -> None:
         raise SystemExit("No command handler registered")
 
     try:
-        args.func(args, svc, renderer, json_renderer, rich_renderer)
+        args.func(args, svc, renderer, json_renderer)
     except RepositoryAlreadyInitialized as e:
         logging.error("Error: %s", str(e))
         print(f"Error: Repository already initialized")
