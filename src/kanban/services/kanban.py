@@ -748,14 +748,14 @@ class KanbanService(CompletionDataSource):
         self,
         path: Path | Slug,
     ) -> Task:
-        """Open's the task's .md file in an editor, then reads the updated
-        content and metadata and applies changes to the task.  Accepts a
-        fully-qualified Path (from the CLI) or a bare task Slug (from the REPL).
-        Raises TaskNotFound if the task cannot be resolved.
-        Updates the index and commits.
+        """Open the task's body in an editor and apply the edited content back
+        to the task.  Frontmatter fields (id, title, slug, board, column,
+        assigned_to, priority, due_date, tags, created_by, created_at,
+        updated_at) are preserved unchanged.  Accepts a fully-qualified Path
+        (from the CLI) or a bare task Slug (from the REPL).  Raises TaskNotFound
+        if the task cannot be resolved.  Updates the index and commits.
         """
         task = self.get_task(path)
-        markdown = self._task_to_markdown(task)
 
         tmp_path: str | None = None
         try:
@@ -766,7 +766,7 @@ class KanbanService(CompletionDataSource):
                 prefix="kanban-task-",
                 delete=False,
             ) as tmp:
-                tmp.write(markdown)
+                tmp.write(task.body or "")
                 tmp.flush()
                 tmp_path = tmp.name
 
@@ -775,10 +775,9 @@ class KanbanService(CompletionDataSource):
             subprocess.run([*editor_cmd, tmp_path], check=True)
 
             with open(tmp_path, "r", encoding="utf-8") as f:
-                edited_text = f.read()
+                task.body = f.read()
 
-            edited_task = self._task_from_markdown(edited_text, original=task)
-            updated = self.repository.update_task(edited_task, slug=task.slug)
+            updated = self.repository.update_task(task, slug=task.slug)
             self.index_service.upsert_task(updated)
             return updated
         finally:
@@ -1033,83 +1032,6 @@ class KanbanService(CompletionDataSource):
         if path == "/":
             return path
         return path.rstrip("/")
-
-    def _task_to_markdown(self, task: Task) -> str:
-        """Serialize a task to editable markdown with YAML-like frontmatter."""
-        tags = ", ".join(task.tags or [])
-        due_date = task.due_date.isoformat() if task.due_date else ""
-        created_at = task.created_at.isoformat() if task.created_at else ""
-        updated_at = task.updated_at.isoformat() if task.updated_at else ""
-
-        lines = [
-            "---",
-            f"id: {task.id}",
-            f"title: {task.title}",
-            f"board: {task.board or ''}",
-            f"column: {task.column or ''}",
-            f"assigned_to: {task.assigned_to or ''}",
-            f"priority: {task.priority or ''}",
-            f"due_date: {due_date}",
-            f"tags: {tags}",
-            f"created_by: {task.created_by or ''}",
-            f"created_at: {created_at}",
-            f"updated_at: {updated_at}",
-            "---",
-            task.body or "",
-        ]
-        return "\n".join(lines)
-
-    def _task_from_markdown(self, content: str, *, original: Task) -> Task:
-        """Parse editable markdown frontmatter/body back into a Task."""
-        lines = content.splitlines()
-        if len(lines) < 3 or lines[0].strip() != "---":
-            raise ValueError("Edited task markdown must start with frontmatter delimiter '---'")
-
-        end_idx: int | None = None
-        for i in range(1, len(lines)):
-            if lines[i].strip() == "---":
-                end_idx = i
-                break
-        if end_idx is None:
-            raise ValueError("Edited task markdown frontmatter is missing closing delimiter '---'")
-
-        frontmatter: dict[str, str] = {}
-        for line in lines[1:end_idx]:
-            if not line.strip() or ":" not in line:
-                continue
-            key, value = line.split(":", 1)
-            frontmatter[key.strip()] = value.strip()
-
-        body = "\n".join(lines[end_idx + 1:]).strip("\n")
-
-        title = frontmatter.get("title", original.title).strip() or original.title
-        assigned_to = frontmatter.get("assigned_to", "") or None
-        priority = Priority(p) if (p := frontmatter.get("priority", "")) else None
-        created_by = frontmatter.get("created_by", "") or None
-
-        due_date_raw = frontmatter.get("due_date", "").strip()
-        due_date: datetime | None = None
-        if due_date_raw:
-            due_date = datetime.fromisoformat(due_date_raw)
-
-        tags_raw = frontmatter.get("tags", "")
-        tags = [tag.strip() for tag in tags_raw.split(",") if tag.strip()]
-
-        return Task(
-            id=original.id,
-            title=title,
-            slug=original.slug,
-            board=original.board,
-            column=original.column,
-            created_by=created_by,
-            assigned_to=assigned_to,
-            priority=priority,
-            due_date=due_date,
-            tags=tags,
-            created_at=original.created_at,
-            updated_at=original.updated_at,
-            body=body,
-        )
 
     def _commit(self, type: str, scope: str, description: str) -> None:
         """Compose a structured commit message and delegate to GitService."""

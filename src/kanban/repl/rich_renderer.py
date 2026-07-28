@@ -405,10 +405,11 @@ class RichRenderer(CommandRenderer):
 			msg = f"Moved task: {result.title})"
 		self._emit(args, msg)
 	
+	# TODO: change output
 	def render_task_rename(self, args: argparse.Namespace, result: Task) -> None:
 		old_slug = str(self._path_from_args(args))
 		new_slug = result.slug
-		self._emit(args, f"Task renamed: {result.title}: {old_slug} -> {new_slug}")
+		self._emit(args, f"Renamed: {result.title} ({old_slug} -> {new_slug})")
 
 	def render_task_reorder(self, args: argparse.Namespace, task_op: tuple[Task, str]) -> None:
 		result, op = task_op
