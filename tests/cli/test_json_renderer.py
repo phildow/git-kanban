@@ -294,13 +294,13 @@ class TestJsonRendererTasks(unittest.TestCase):
     def test_task_show_board_none_when_render_service_returns_none(self) -> None:
         """The board ref is null on detail output when the render service returns None."""
         r = JsonRenderer(render_service=_null_render_service())
-        out = _capture(lambda: r.render_task_show(_args(), _task()))
+        out = _capture(lambda: r.render_task_view(_args(), _task()))
         self.assertIsNone(json.loads(out)["board"])
 
     def test_task_show_column_none_when_render_service_returns_none(self) -> None:
         """The column ref is null on detail output when the render service returns None."""
         r = JsonRenderer(render_service=_null_render_service())
-        out = _capture(lambda: r.render_task_show(_args(), _task()))
+        out = _capture(lambda: r.render_task_view(_args(), _task()))
         self.assertIsNone(json.loads(out)["column"])
 
     def test_task_list_optional_fields_present(self) -> None:
@@ -335,30 +335,30 @@ class TestJsonRendererTasks(unittest.TestCase):
         self.assertEqual(json.loads(out), [])
 
     def test_task_show_is_object(self) -> None:
-        """render_task_show emits a JSON object."""
-        out = _capture(lambda: self.r.render_task_show(_args(), _task()))
+        """render_task_view emits a JSON object."""
+        out = _capture(lambda: self.r.render_task_view(_args(), _task()))
         self.assertIsInstance(json.loads(out), dict)
 
     def test_task_show_slug_field(self) -> None:
-        """render_task_show emits the task slug."""
-        out = _capture(lambda: self.r.render_task_show(_args(), _task()))
+        """render_task_view emits the task slug."""
+        out = _capture(lambda: self.r.render_task_view(_args(), _task()))
         self.assertEqual(json.loads(out)["slug"], "fix-login-bug")
 
     def test_task_show_path_field_present(self) -> None:
-        """render_task_show emits a path field."""
-        out = _capture(lambda: self.r.render_task_show(_args(), _task()))
+        """render_task_view emits a path field."""
+        out = _capture(lambda: self.r.render_task_view(_args(), _task()))
         self.assertIn("path", json.loads(out))
 
     def test_task_show_includes_timestamps(self) -> None:
-        """render_task_show includes created_at and updated_at."""
-        out = _capture(lambda: self.r.render_task_show(_args(), _task()))
+        """render_task_view includes created_at and updated_at."""
+        out = _capture(lambda: self.r.render_task_view(_args(), _task()))
         obj = json.loads(out)
         self.assertEqual(obj["created_at"], _CREATED_AT.isoformat())
         self.assertEqual(obj["updated_at"], _UPDATED_AT.isoformat())
 
     def test_task_show_includes_body(self) -> None:
-        """render_task_show includes the task body."""
-        out = _capture(lambda: self.r.render_task_show(_args(), _task(body="Some notes.")))
+        """render_task_view includes the task body."""
+        out = _capture(lambda: self.r.render_task_view(_args(), _task(body="Some notes.")))
         self.assertEqual(json.loads(out)["body"], "Some notes.")
 
     def test_task_create_slug_field(self) -> None:

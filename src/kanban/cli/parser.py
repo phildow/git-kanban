@@ -30,11 +30,12 @@ from ..cli.commands import (
     handle_task_create,
     handle_task_delete,
     handle_task_edit,
+    handle_task_info,
     handle_task_list,
     handle_task_move,
     handle_task_rename,
-    handle_task_show,
     handle_task_update,
+    handle_task_view,
 )
 
 
@@ -218,11 +219,19 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     p.set_defaults(func=handle_task_create)
 
     # task info
-    p = task_sub.add_parser("info", help="Show task details")
+    p = task_sub.add_parser("info", help="Show task metadata")
     p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified /board/column/task path")
     _add_format_arg(p)
     _add_global_flags(p)
-    p.set_defaults(func=handle_task_show)
+    p.set_defaults(func=handle_task_info)
+
+    # task view
+    p = task_sub.add_parser("view", help="Show task metadata and body")
+    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified /board/column/task path")
+    p.add_argument("-m", "--markdown", action="store_true", default=False, help="Render the task body as Markdown instead of plain text")
+    _add_format_arg(p)
+    _add_global_flags(p)
+    p.set_defaults(func=handle_task_view)
 
     # task edit
     p = task_sub.add_parser("edit", help="Open task in editor")

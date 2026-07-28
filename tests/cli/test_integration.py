@@ -34,7 +34,7 @@ import unittest
 from contextlib import redirect_stdout
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from kanban.cli.parser import parse_args
 from kanban.cli.renderer import Renderer
@@ -592,17 +592,53 @@ class TestTaskCLI(_InitializedBase):
         data = self.run_json("task", "info", "proj/todo/fix-login", "--format", "json")
         self.assertIsInstance(data, dict)
 
-    def test_task_info_json_includes_timestamps(self) -> None:
-        """task info --format json includes created_at and updated_at."""
+    def test_task_info_json_excludes_timestamps(self) -> None:
+        """task info --format json omits created_at and updated_at (metadata only)."""
         self.run_cli("task", "create", "/proj/todo", "fix-login")
         data = self.run_json("task", "info", "proj/todo/fix-login", "--format", "json")
-        self.assertIn("created_at", data)
-        self.assertIn("updated_at", data)
+        self.assertNotIn("created_at", data)
+        self.assertNotIn("updated_at", data)
 
-    def test_task_info_json_includes_body(self) -> None:
-        """task info --format json includes the body field."""
+    def test_task_info_json_excludes_body(self) -> None:
+        """task info --format json omits the body field (metadata only)."""
         self.run_cli("task", "create", "/proj/todo", "fix-login")
         data = self.run_json("task", "info", "proj/todo/fix-login", "--format", "json")
+        self.assertNotIn("body", data)
+
+    # -- view -----------------------------------------------------------------
+
+    def test_task_view_plain_prints_output(self) -> None:
+        """task view (plain) prints task details."""
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
+        out = self.run_cli("task", "view", "proj/todo/fix-login")
+        self.assertTrue(out.strip())
+
+    def test_task_view_plain_includes_metadata(self) -> None:
+        """task view (plain) includes the task's metadata (title/path)."""
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
+        out = self.run_cli("task", "view", "proj/todo/fix-login")
+        self.assertIn("fix-login", out)
+        self.assertIn("/proj/todo/fix-login", out)
+
+    def test_task_view_plain_includes_body(self) -> None:
+        """task view (plain) prints the task body after the metadata."""
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
+        # Populate the body via the edit command with a no-op editor that writes body text.
+        with patch("kanban.services.kanban.subprocess.run") as mock_run:
+            def _write(cmd, *args, **kwargs):
+                with open(cmd[-1], "w", encoding="utf-8") as f:
+                    f.write("Investigate the login flow.")
+                return None
+            mock_run.side_effect = _write
+            self.run_cli("task", "edit", "proj/todo/fix-login")
+
+        out = self.run_cli("task", "view", "proj/todo/fix-login")
+        self.assertIn("Investigate the login flow.", out)
+
+    def test_task_view_json_includes_body(self) -> None:
+        """task view --format json emits the body field."""
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
+        data = self.run_json("task", "view", "proj/todo/fix-login", "--format", "json")
         self.assertIn("body", data)
 
     # -- update ---------------------------------------------------------------

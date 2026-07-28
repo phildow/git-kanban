@@ -190,9 +190,14 @@ def handle_task_rename(args: argparse.Namespace, svc: KanbanService, renderer: C
 
 
 @with_absolute_path
-def handle_task_show(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
+def handle_task_view(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
 	result = svc.get_task(args.path)
-	_pick(args, renderer, json_renderer).render_task_show(args, result)
+	_pick(args, renderer, json_renderer).render_task_view(args, result)
+
+@with_absolute_path
+def handle_task_info(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
+	result = svc.get_task(args.path)
+	_pick(args, renderer, json_renderer).render_task_info(args, result)
 
 @with_absolute_path
 def handle_task_edit(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:

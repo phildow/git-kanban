@@ -174,8 +174,11 @@ class JsonRenderer(CommandRenderer):
     def render_task_create(self, args: argparse.Namespace, result: Task) -> None:
         self._emit(args, json.dumps(self._task_detail_dict(result), indent=2))
 
-    def render_task_show(self, args: argparse.Namespace, result: Task) -> None:
+    def render_task_view(self, args: argparse.Namespace, result: Task) -> None:
         self._emit(args, json.dumps(self._task_detail_dict(result), indent=2))
+
+    def render_task_info(self, args: argparse.Namespace, result: Task) -> None:
+        self._emit(args, json.dumps(self._task_dict(result), indent=2))
 
     def render_task_edit(self, args: argparse.Namespace, result: Task) -> None:
         self._emit(args, json.dumps(self._task_detail_dict(result), indent=2))

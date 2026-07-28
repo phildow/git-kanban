@@ -72,7 +72,11 @@ class CommandRenderer(ABC):
         ...
 
     @abstractmethod
-    def render_task_show(self, args: argparse.Namespace, result) -> None:
+    def render_task_view(self, args: argparse.Namespace, result) -> None:
+        ...
+
+    @abstractmethod
+    def render_task_info(self, args: argparse.Namespace, result) -> None:
         ...
 
     @abstractmethod

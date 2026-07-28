@@ -34,7 +34,8 @@ from kanban.cli.commands import (
     handle_task_assign,
     handle_task_move,
     handle_task_rename,
-    handle_task_show,
+    handle_task_view,
+    handle_task_info,
     handle_task_update
 )
 
@@ -74,7 +75,7 @@ class TestParserStructure(unittest.TestCase):
         self.assertEqual(set(column.keys()), {"list", "create", "info", "rename", "reorder", "delete"})
 
         task = self._subparser_choices(top["task"], "task_command")
-        self.assertEqual(set(task.keys()), {"list", "create", "info", "edit", "update", "move", "delete", "assign", "rename"})
+        self.assertEqual(set(task.keys()), {"list", "create", "info", "view", "edit", "update", "move", "delete", "assign", "rename"})
 
         config = self._subparser_choices(top["config"], "config_command")
         self.assertEqual(set(config.keys()), {"get", "set"})
@@ -202,7 +203,7 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
 
         args = cli_parser.parse_args(["task", "info", "board-a/todo/fix-parser", "--format", "json"])
         self.assertEqual(args.format, "json")
-        self.assertIs(args.func, handle_task_show)
+        self.assertIs(args.func, handle_task_info)
 
         args = cli_parser.parse_args(["task", "edit", "board-a/todo/fix-parser"])
         self.assertIs(args.func, handle_task_edit)

@@ -148,7 +148,7 @@ class RichRenderer(CommandRenderer):
 		"""Render a message indicating that a board was created, including its name."""
 		board_name = result.name or args.board
 		board_slug = result.slug or args.board
-		self._emit(args, f"Created board: {board_name} ({board_slug})")
+		self._emit(args, f"Created: {board_name} ({board_slug})")
 
 	def render_board_info(self, args: argparse.Namespace, result: Board) -> None:
 		"""Render detailed information for a single board."""
@@ -159,11 +159,11 @@ class RichRenderer(CommandRenderer):
 		old_name = args.path
 		new_name = result.name or args.new_name
 		new_slug = result.slug or args.new_name
-		self._emit(args, f"Renamed board: {old_name} → {new_name} ({new_slug})")
+		self._emit(args, f"Renamed: {old_name} → {new_name} ({new_slug})")
 
 	def render_board_delete(self, args: argparse.Namespace, result: Board) -> None:
 		"""Render a message indicating that a board was deleted, including its name."""
-		self._emit(args, f"Deleted board: {result.name} ({result.slug})")
+		self._emit(args, f"Deleted: {result.name} ({result.slug})")
 
 # ---------------------------------------------------------------------------
 # Column rendering
@@ -232,7 +232,7 @@ class RichRenderer(CommandRenderer):
 		column_name = result.name
 		column_slug = result.slug
 		
-		self._emit(args, f"Column created: {column_name} ({column_slug})")
+		self._emit(args, f"Created: {column_name} ({column_slug})")
 
 	def render_column_rename(self, args: argparse.Namespace, result: Column) -> None:
 		"""
@@ -246,7 +246,7 @@ class RichRenderer(CommandRenderer):
 		new_name = result.name or args.new_name
 		new_slug = result.slug or args.new_slug
 
-		self._emit(args, f"Column renamed: {old_name} → {new_name} ({new_slug})")
+		self._emit(args, f"Renamed: {old_name} → {new_name} ({new_slug})")
 
 	def render_column_reorder(self, args: argparse.Namespace, result: list[Column]) -> None:
 		"""
@@ -260,16 +260,16 @@ class RichRenderer(CommandRenderer):
 		target = f"{board_name}/{column_name}" if board_name else column_name
 
 		if isinstance(position, int):
-			self._emit(args, f"Column reordered: {target} → position {position + 1}")
+			self._emit(args, f"Reordered: {target} → position {position + 1}")
 		else:
-			self._emit(args, f"Column reordered: {target}")
+			self._emit(args, f"Reordered: {target}")
 
 	def render_column_delete(self, args: argparse.Namespace, result: Column) -> None:
 		"""
 		Render a message indicating that a column was deleted,
 		including its name and optionally its board if available.
 		"""
-		self._emit(args, f"Column deleted: {result.name} ({result.slug})")
+		self._emit(args, f"Deleted: {result.name} ({result.slug})")
 
 # ---------------------------------------------------------------------------
 # Task rendering
@@ -364,11 +364,9 @@ class RichRenderer(CommandRenderer):
 		self._emit(args, f"Created Task: {result.title}")
 		self._emit(args, f"Path: {result.path}")
 
-	def render_task_show(self, args: argparse.Namespace, result: Task) -> None:
+	def render_task_view(self, args: argparse.Namespace, result: Task) -> None:
 		"""Render detailed information about a single task, including all metadata and the body/description."""
 		self._emit(args, "")
-		# self._emit(args, Text(result.title, style="bold"))
-		# self._emit(args, "")
 		self.render_task_metadata(args, result)
 		self._emit(args, "")
 
@@ -384,32 +382,39 @@ class RichRenderer(CommandRenderer):
 		self._emit(args, body)
 		self._emit(args, "")
 
+	def render_task_info(self, args: argparse.Namespace, result: Task) -> None:
+		"""Render a task's metadata without its body."""
+		self._emit(args, "")
+		self.render_task_metadata(args, result)
+		self._emit(args, "")
+
 	def render_task_edit(self, args: argparse.Namespace, result: Task) -> None:
-		# """Render a message indicating that a task was opened in the editor."""
-		# self._emit(args, f"Task opened in editor: {result.title} ({result.slug})")
+		"""Render a message indicating that a task was opened in the editor."""
+		self._emit(args, f"Edited: {result.title} ({result.slug})")
 		return
 	
 	def render_task_update(self, args: argparse.Namespace, result: Task) -> None:
-		# """Render a message indicating that a task was updated, including its slug."""
+		"""Render a message indicating that a task was updated, including its slug."""
 		self._emit(args, "")
-		# self._emit(args, Text(result.title, style="bold"))
 		self.render_task_metadata(args, result)
 		self._emit(args, "")
 
 	def render_task_move(self, args: argparse.Namespace, result: Task) -> None:
+		"""Render a message indicating that a task was moved to a new column."""
 		if result.column:
 			column = self.column_for_slug(result.column)
 			column_name = column.name if column else result.column
 			msg = f"Moved: {result.title} → {column_name}"
 		else:
-			msg = f"Moved task: {result.title})"
+			msg = f"Moved: {result.title}"
 		self._emit(args, msg)
 	
 	# TODO: change output
 	def render_task_rename(self, args: argparse.Namespace, result: Task) -> None:
+		"""Render a message indicating that a task was renamed, including the old and new slugs."""
 		old_slug = str(self._path_from_args(args))
 		new_slug = result.slug
-		self._emit(args, f"Renamed: {result.title} ({old_slug} -> {new_slug})")
+		self._emit(args, f"Renamed: {result.title} ({old_slug} → {new_slug})")
 
 	def render_task_reorder(self, args: argparse.Namespace, task_op: tuple[Task, str]) -> None:
 		result, op = task_op
@@ -422,10 +427,11 @@ class RichRenderer(CommandRenderer):
 		self._emit(args, msg)
 
 	def render_task_delete(self, args: argparse.Namespace, result: Task) -> None:
-		self._emit(args, f"Deleted Task: {result.title}")
-		self._emit(args, f"Path: {result.path}")
+		"""Render a message indicating that a task was deleted, including its slug."""
+		self._emit(args, f"Deleted: {result.title} ({result.slug})")
 
 	def render_task_assign(self, args: argparse.Namespace, result: Task) -> None:
+		"""Render a message indicating that a task was assigned to a user."""
 		self._emit(args, f"Task assigned to: {result.assigned_to}")
 
 # ---------------------------------------------------------------------------

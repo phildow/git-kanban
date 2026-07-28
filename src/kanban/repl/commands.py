@@ -182,9 +182,15 @@ def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: C
 
 
 @with_task_slug
-def handle_task_show(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
+def handle_task_view(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.get_task(args.path)
-	renderer.render_task_show(args, result)
+	renderer.render_task_view(args, result)
+
+
+@with_task_slug
+def handle_task_info(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
+	result = svc.get_task(args.path)
+	renderer.render_task_info(args, result)
 
 
 @with_task_slug

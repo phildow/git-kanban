@@ -21,7 +21,8 @@ from kanban.repl.commands import (
     handle_task_create,
     handle_task_list,
     handle_task_move,
-    handle_task_show,
+    handle_task_view,
+    handle_task_info,
     handle_task_update,
 )
 
@@ -172,7 +173,13 @@ class TestParserAliases(unittest.TestCase):
         self.assertEqual(args.command, "show")
         self.assertEqual(args.path, "main/todo/fix-login")
         self.assertFalse(args.plain)
-        self.assertIs(args.func, handle_task_show)
+        self.assertIs(args.func, handle_task_view)
+
+    def test_info_maps_to_info_handler(self):
+        args = repl_parser.parse_args(["info", "main/todo/fix-login"])
+        self.assertEqual(args.command, "info")
+        self.assertEqual(args.path, "main/todo/fix-login")
+        self.assertIs(args.func, handle_task_info)
 
     def test_show_plain_flag(self):
         """`show ... -p`/`--plain` sets plain to True."""

@@ -1,4 +1,4 @@
-"""Tests that RichRenderer.render_task_show respects the --plain flag for the body."""
+"""Tests that RichRenderer.render_task_view respects the --plain flag for the body."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ def _capture(fn, *args) -> str:
 
 
 class TestRichRendererTaskShowPlainFlag(unittest.TestCase):
-    """render_task_show renders the body as Markdown by default, Text with --plain."""
+    """render_task_view renders the body as Markdown by default, Text with --plain."""
 
     def setUp(self) -> None:
         self.board = Board(id=uuid4(), name="Alpha", slug=Slug("alpha"))
@@ -48,7 +48,7 @@ class TestRichRendererTaskShowPlainFlag(unittest.TestCase):
     def test_default_renders_body_as_markdown(self) -> None:
         """Without --plain, markdown syntax is interpreted rather than shown literally."""
         args = Namespace(plain=False)
-        out = _capture(self.renderer.render_task_show, args, self.task)
+        out = _capture(self.renderer.render_task_view, args, self.task)
         self.assertNotIn("**bold**", out)
         self.assertNotIn("# Heading", out)
         self.assertIn("bold", out)
@@ -57,21 +57,21 @@ class TestRichRendererTaskShowPlainFlag(unittest.TestCase):
     def test_plain_flag_renders_body_as_literal_text(self) -> None:
         """With --plain, markdown syntax is shown literally, not interpreted."""
         args = Namespace(plain=True)
-        out = _capture(self.renderer.render_task_show, args, self.task)
+        out = _capture(self.renderer.render_task_view, args, self.task)
         self.assertIn("**bold**", out)
         self.assertIn("# Heading", out)
 
     def test_false_plain_attribute_defaults_to_markdown(self) -> None:
         """Namespaces without a plain attribute (e.g. other callers) default to Markdown."""
         args = Namespace(plain=False)
-        out = _capture(self.renderer.render_task_show, args, self.task)
+        out = _capture(self.renderer.render_task_view, args, self.task)
         self.assertNotIn("**bold**", out)
 
     def test_empty_body_renders_nothing_in_either_mode(self) -> None:
         """A task with no body produces no crash and no stray markdown/text artifacts."""
         empty_task = Task(id=uuid4(), title="No body", slug="no-body", board="alpha", column="todo")
-        out_markdown = _capture(self.renderer.render_task_show, Namespace(plain=False), empty_task)
-        out_plain = _capture(self.renderer.render_task_show, Namespace(plain=True), empty_task)
+        out_markdown = _capture(self.renderer.render_task_view, Namespace(plain=False), empty_task)
+        out_plain = _capture(self.renderer.render_task_view, Namespace(plain=True), empty_task)
         self.assertNotIn("None", out_markdown)
         self.assertNotIn("None", out_plain)
 

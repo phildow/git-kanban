@@ -29,10 +29,11 @@ from ..repl.commands import (
     handle_task_assign,
     handle_task_create,
     handle_task_edit,
+    handle_task_info,
     handle_task_list,
     handle_task_move,
-    handle_task_show,
     handle_task_update,
+    handle_task_view,
     handle_set_board,
 )
 
@@ -183,10 +184,16 @@ def _add_reorder_parser(subparsers: argparse._SubParsersAction) -> None:
 
 
 def _add_show_parser(subparsers: argparse._SubParsersAction) -> None:
-    show_parser = subparsers.add_parser("show", aliases=["view", "v", "s"], help="Show task details")
+    show_parser = subparsers.add_parser("view", aliases=["show", "v", "s"], help="View task details and body")
     show_parser.add_argument("path", metavar="TASK", help="The task to show")
     show_parser.add_argument("-p", "--plain", action="store_true", default=False, help="Render the task body as plain text instead of Markdown")
-    show_parser.set_defaults(func=handle_task_show)
+    show_parser.set_defaults(func=handle_task_view)
+
+
+def _add_info_parser(subparsers: argparse._SubParsersAction) -> None:
+    info_parser = subparsers.add_parser("info", aliases=["i"], help="Show task metadata")
+    info_parser.add_argument("path", metavar="TASK", help="The task to inspect")
+    info_parser.set_defaults(func=handle_task_info)
 
 
 def _add_edit_parser(subparsers: argparse._SubParsersAction) -> None:
@@ -315,6 +322,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_delete_parser(subparsers)
     _add_reorder_parser(subparsers)
     _add_show_parser(subparsers)
+    _add_info_parser(subparsers)
     _add_edit_parser(subparsers)
     _add_update_parser(subparsers)
     _add_move_parser(subparsers)

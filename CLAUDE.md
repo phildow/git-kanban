@@ -426,6 +426,9 @@ kanban task move <board>/<column>/<task>
     [--down]
 
 kanban task info <board>/<column>/<task>
+kanban task view <board>/<column>/<task>
+    [--markdown]
+
 kanban task edit <board>/<column>/<task>
 kanban task delete <board>/<column>/<task>
 kanban task assign <board>/<column>/<task> <name>
@@ -516,7 +519,8 @@ rename <task> | --column <column> | --board <new-name>
 delete <task> | --column <column> | --board
     [--force]
 
-show <task> [-p|--plain]
+view <task> [-p|--plain]
+info <task>
 edit <task>
 
 update <task>
@@ -581,9 +585,10 @@ cols = columns
   mv = move
  del = delete
   rm = delete
-view = show
+show = view
    v = show
    s = show
+   i = info
 quit = exit
   :q = exit
 ```

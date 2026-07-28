@@ -6,6 +6,7 @@ import argparse
 from pathlib import Path
 
 from rich.console import Console, ConsoleOptions, RenderResult
+from rich.markdown import Heading, Markdown
 from rich.text import Text
 
 from ..models import Board, Column, Slug, Task
@@ -13,6 +14,26 @@ from ..protocols.command_renderer import CommandRenderer
 from ..services.kanban import GitCommit, KanbanStatus
 from ..services.render_service import RenderService
 
+# Box style options:
+# https://rich.readthedocs.io/en/stable/appendix/box.html#appendix-box
+
+# Custom Rich Markdown renderer that left-justifies headings instead of centering them.
+
+class LeftJustifiedHeading(Heading):
+	def __rich_console__(
+		self,
+		console: Console,
+		options: ConsoleOptions,
+	) -> RenderResult:
+		"""Render the heading with left justification."""
+		yield from console.render(self.text, options=options.update(justify="left"))
+
+
+class KanbanMarkdown(Markdown):
+	elements = {
+		**Markdown.elements,
+		"heading_open": LeftJustifiedHeading,
+	}
 
 class Renderer(CommandRenderer):
 	def __init__(self, render_service: RenderService) -> None:
@@ -137,20 +158,20 @@ class Renderer(CommandRenderer):
 # Task rendering
 # ---------------------------------------------------------------------------
 
-	def render_task(self, args: argparse.Namespace, task: Task) -> None:
+	def render_task(self, args: argparse.Namespace, task: Task, spacing: int = 4) -> None:
 		column = self.column_for_path(task.path.parent)
 		board = self.board_for_slug(task.board)
 		self._emit(args, Text("Title: ") + Text(task.title, style="bold"))
 		lines = [
 			f"Path: {task.path}",
 			f"",
-			f"    Board: {board.name if board else '-'}",
-			f"    Column: {column.name if column else '-'}",
-			f"    Assigned To: {task.assigned_to or '-'}",
-			f"    Priority: {task.priority or '-'}",
-			f"    Due: {task.due_date.date().isoformat() if task.due_date else '-'}",
-			f"    Tags: {', '.join(task.tags) if task.tags else '-'}",
-			f"    Created by: {task.created_by or '-'}",
+			f"{' ' * spacing}Board: {board.name if board else '-'}",
+			f"{' ' * spacing}Column: {column.name if column else '-'}",
+			f"{' ' * spacing}Assigned To: {task.assigned_to or '-'}",
+			f"{' ' * spacing}Priority: {task.priority or '-'}",
+			f"{' ' * spacing}Due: {task.due_date.date().isoformat() if task.due_date else '-'}",
+			f"{' ' * spacing}Tags: {', '.join(task.tags) if task.tags else '-'}",
+			f"{' ' * spacing}Created by: {task.created_by or '-'}",
 		]
 		self._emit(args, "\n".join(lines))
 
@@ -170,7 +191,24 @@ class Renderer(CommandRenderer):
 	def render_task_create(self, args: argparse.Namespace, result: Task) -> None:
 		self.render_task(args, result)
 
-	def render_task_show(self, args: argparse.Namespace, result: Task) -> None:
+	def render_task_view(self, args: argparse.Namespace, result: Task) -> None:
+		"""Render a task's metadata followed by its body."""
+		self.render_task(args, result, spacing=0)
+
+		body: str | Text | KanbanMarkdown = ""
+
+		if not result.body:
+			body = ""
+		elif args.markdown:
+			body = KanbanMarkdown(result.body, justify="left")
+		else:
+			body = Text(result.body)
+			
+		self._emit(args, "")
+		self._emit(args, body)
+
+	def render_task_info(self, args: argparse.Namespace, result: Task) -> None:
+		"""Render a task's metadata without its body."""
 		self.render_task(args, result)
 	
 	def render_task_rename(self, args: argparse.Namespace, result: Task) -> None:

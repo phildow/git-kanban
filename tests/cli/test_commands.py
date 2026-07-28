@@ -260,16 +260,16 @@ class TestCommandHandlers(unittest.TestCase):
         )
         self.renderer.render_task_create.assert_called_once_with(args, result)
 
-    def test_handle_task_show(self):
+    def test_handle_task_view(self):
         """`task info` fetches a task by path and forwards it to renderer."""
         args = self._args(path="board-a/todo/fix-parser")
         result = object()
         self.svc.get_task.return_value = result
 
-        commands.handle_task_show(args, self.svc, self.renderer, self.json_renderer)
+        commands.handle_task_view(args, self.svc, self.renderer, self.json_renderer)
 
         self.svc.get_task.assert_called_once_with(Path("/board-a/todo/fix-parser"))
-        self.renderer.render_task_show.assert_called_once_with(args, result)
+        self.renderer.render_task_view.assert_called_once_with(args, result)
 
     def test_handle_task_update_with_default_optional_fields(self):
         """`task update` defaults unspecified update fields to `None`."""

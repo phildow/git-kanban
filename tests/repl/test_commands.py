@@ -281,15 +281,25 @@ class TestReplCommandHandlers(unittest.TestCase):
         with self.assertRaises(ValueError):
             commands.handle_task_create(args, self.svc, self.renderer)
 
-    def test_handle_task_show(self):
+    def test_handle_task_view(self):
         args = self._args(path="alpha/todo/fix-parser")
         result = object()
         self.svc.get_task.return_value = result
 
-        commands.handle_task_show(args, self.svc, self.renderer)
+        commands.handle_task_view(args, self.svc, self.renderer)
 
         self.svc.get_task.assert_called_once_with(Slug("alpha/todo/fix-parser"))
-        self.renderer.render_task_show.assert_called_once_with(args, result)
+        self.renderer.render_task_view.assert_called_once_with(args, result)
+
+    def test_handle_task_info(self):
+        args = self._args(path="alpha/todo/fix-parser")
+        result = object()
+        self.svc.get_task.return_value = result
+
+        commands.handle_task_info(args, self.svc, self.renderer)
+
+        self.svc.get_task.assert_called_once_with(Slug("alpha/todo/fix-parser"))
+        self.renderer.render_task_info.assert_called_once_with(args, result)
 
     def test_handle_task_edit(self):
         args = self._args(path="alpha/todo/fix-parser")
