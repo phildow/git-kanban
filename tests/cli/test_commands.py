@@ -510,19 +510,19 @@ class TestCommandHandlers(unittest.TestCase):
         self.svc.get_config.assert_called_once_with("name")
         self.renderer.render_get_config.assert_called_once_with(args, result)
 
-    @patch("kanban.utils.render_helper.RenderHelper")
+    @patch("kanban.services.render_service.RenderService")
     @patch("kanban.repl.rich_renderer.RichRenderer")
     @patch("kanban.repl.run_repl")
     def test_handle_repl_uses_rich_renderer(
-        self, run_repl, rich_renderer_cls, render_helper_cls
+        self, run_repl, rich_renderer_cls, render_service_cls
     ):
         """`repl` starts the REPL with the rich-text renderer."""
         args = self._args()
 
         commands.handle_repl(args, self.svc, self.renderer, self.json_renderer, self.rich_renderer)
 
-        render_helper_cls.assert_called_once_with(service=self.svc)
-        rich_renderer_cls.assert_called_once_with(render_helper=render_helper_cls.return_value)
+        render_service_cls.assert_called_once_with(service=self.svc)
+        rich_renderer_cls.assert_called_once_with(render_service=render_service_cls.return_value)
         run_repl.assert_called_once_with(svc=self.svc, renderer=rich_renderer_cls.return_value)
 
 

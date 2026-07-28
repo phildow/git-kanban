@@ -17,7 +17,7 @@ from rich import box, print
 
 from ..models import UserContext, Board, Column, Slug, Task
 from ..protocols.command_renderer import CommandRenderer
-from ..utils.render_helper import RenderHelper
+from ..services.render_service import RenderService
 from ..services.kanban import GitCommit, KanbanStatus
 
 # Box style options:
@@ -46,8 +46,8 @@ class KanbanMarkdown(Markdown):
 class RichRenderer(CommandRenderer):
 	console = Console(color_system="auto")
 
-	def __init__(self, render_helper: RenderHelper):
-		self.render_helper = render_helper
+	def __init__(self, render_service: RenderService):
+		self.render_service = render_service
 
 	def _path_from_args(self, args: argparse.Namespace) -> Path:
 		"""Return args.path as a Path for display formatting."""
@@ -477,9 +477,9 @@ class RichRenderer(CommandRenderer):
 
 	def board_for_slug(self, slug: Slug) -> Board | None:
 		"""Given a board slug, return the corresponding board."""
-		return self.render_helper.board_for_slug(slug)
+		return self.render_service.board_for_slug(slug)
 	
 	def column_for_slug(self, slug: Slug) -> Column | None:
 		"""Given a column slug, return the corresponding column."""
-		return self.render_helper.column_for_slug(slug)
+		return self.render_service.column_for_slug(slug)
 	

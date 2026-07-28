@@ -43,7 +43,7 @@ from datetime import datetime
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from kanban.utils.render_helper import RenderHelper
+from kanban.services.render_service import RenderService
 from kanban.repl.parser import parse_args
 from kanban.repl.rich_renderer import RichRenderer as REPLRenderer
 from kanban.models import Slug
@@ -73,7 +73,7 @@ class _ReplBase(unittest.TestCase):
             index_service=MagicMock(),
             git_service=MagicMock(),
         )
-        self.renderer = REPLRenderer(render_helper=RenderHelper(service=self.svc))
+        self.renderer = REPLRenderer(render_service=RenderService(service=self.svc))
 
     def tearDown(self) -> None:
         os.chdir(self._prev_cwd)

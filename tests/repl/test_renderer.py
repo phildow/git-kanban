@@ -13,7 +13,7 @@ class TestRichRendererSearchDelegatesToTaskList(unittest.TestCase):
     """RichRenderer.render_search renders results the same way render_task_list does."""
 
     def setUp(self) -> None:
-        self.renderer = RichRenderer(render_helper=MagicMock())
+        self.renderer = RichRenderer(render_service=MagicMock())
 
     def test_render_search_calls_render_task_list_with_same_args_and_result(self) -> None:
         args = Namespace(slugs=False)

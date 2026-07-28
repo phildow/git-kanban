@@ -43,7 +43,7 @@ from kanban.cli.rich_renderer import RichRenderer
 from kanban.services.kanban import KanbanService
 from kanban.storage.filesystem import FilesystemRepository
 from kanban.storage.seeds import BOOTSTRAP_CONFIG
-from kanban.utils.render_helper import RenderHelper
+from kanban.services.render_service import RenderService
 
 def _iso(dt: str) -> datetime:
     """Convert a datetime string to an ISO 8601 string with UTC timezone."""
@@ -67,9 +67,9 @@ class _CLIBase(unittest.TestCase):
             index_service=MagicMock(),
             git_service=MagicMock(),
         )
-        self.renderer = Renderer(render_helper=RenderHelper(service=self.svc))
-        self.json_renderer = JsonRenderer()
-        self.rich_renderer = RichRenderer(render_helper=RenderHelper(service=self.svc))
+        self.renderer = Renderer(render_service=RenderService(service=self.svc))
+        self.json_renderer = JsonRenderer(render_service=RenderService(service=self.svc))
+        self.rich_renderer = RichRenderer(render_service=RenderService(service=self.svc))
 
     def tearDown(self) -> None:
         os.chdir(self._prev_cwd)

@@ -26,7 +26,7 @@ class _DeleteRenderingMixin:
     renderer_cls = None
 
     def setUp(self) -> None:
-        self.renderer = self.renderer_cls(render_helper=MagicMock())
+        self.renderer = self.renderer_cls(render_service=MagicMock())
         self.args = Namespace()
 
     def test_render_board_delete_includes_name_and_slug(self) -> None:

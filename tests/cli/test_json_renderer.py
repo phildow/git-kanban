@@ -12,6 +12,7 @@ import unittest
 from argparse import Namespace
 from contextlib import redirect_stdout
 from datetime import datetime, timezone
+from unittest.mock import MagicMock
 from uuid import UUID, uuid4
 
 from kanban.models import Board, Column, Task, UserContext
@@ -61,7 +62,7 @@ class TestJsonRendererBoards(unittest.TestCase):
     """JSON output for board-related render methods."""
 
     def setUp(self) -> None:
-        self.r = JsonRenderer()
+        self.r = JsonRenderer(render_service=MagicMock())
 
     def test_board_list_is_array(self) -> None:
         """render_board_list emits a JSON array."""
@@ -143,7 +144,7 @@ class TestJsonRendererColumns(unittest.TestCase):
     """JSON output for column-related render methods."""
 
     def setUp(self) -> None:
-        self.r = JsonRenderer()
+        self.r = JsonRenderer(render_service=MagicMock())
 
     def test_column_list_is_array(self) -> None:
         """render_column_list emits a JSON array."""
@@ -215,7 +216,7 @@ class TestJsonRendererTasks(unittest.TestCase):
     """JSON output for task-related render methods."""
 
     def setUp(self) -> None:
-        self.r = JsonRenderer()
+        self.r = JsonRenderer(render_service=MagicMock())
 
     def test_task_list_is_array(self) -> None:
         """render_task_list emits a JSON array."""
@@ -415,7 +416,7 @@ class TestJsonRendererSearch(unittest.TestCase):
     """JSON output for the search render method."""
 
     def setUp(self) -> None:
-        self.r = JsonRenderer()
+        self.r = JsonRenderer(render_service=MagicMock())
 
     def test_search_is_array(self) -> None:
         """render_search emits a JSON array."""
@@ -439,7 +440,7 @@ class TestJsonRendererLog(unittest.TestCase):
     """JSON output for the log render method."""
 
     def setUp(self) -> None:
-        self.r = JsonRenderer()
+        self.r = JsonRenderer(render_service=MagicMock())
 
     def test_log_is_array(self) -> None:
         """render_log emits a JSON array."""
@@ -463,7 +464,7 @@ class TestJsonRendererStatus(unittest.TestCase):
     """JSON output for the status render method."""
 
     def setUp(self) -> None:
-        self.r = JsonRenderer()
+        self.r = JsonRenderer(render_service=MagicMock())
         self.status = KanbanStatus(
             user_context=UserContext(board="main"),
             board_count=2,
@@ -508,7 +509,7 @@ class TestJsonRendererConfig(unittest.TestCase):
     """JSON output for config render methods."""
 
     def setUp(self) -> None:
-        self.r = JsonRenderer()
+        self.r = JsonRenderer(render_service=MagicMock())
 
     def test_get_config_key_field(self) -> None:
         """render_get_config emits the key."""

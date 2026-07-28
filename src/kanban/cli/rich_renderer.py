@@ -28,7 +28,7 @@ from rich import box
 from ..models import Board, Column, Slug, Task
 from ..protocols.command_renderer import CommandRenderer
 from ..services.kanban import GitCommit, KanbanStatus
-from ..utils.render_helper import RenderHelper
+from ..services.render_service import RenderService
 
 # Box style options:
 # https://rich.readthedocs.io/en/stable/appendix/box.html#appendix-box
@@ -54,8 +54,8 @@ class KanbanMarkdown(Markdown):
 class RichRenderer(CommandRenderer):
 	"""CLI renderer that uses the `rich` library for output."""
 
-	def __init__(self, render_helper: RenderHelper) -> None:
-		self.render_helper = render_helper
+	def __init__(self, render_service: RenderService) -> None:
+		self.render_service = render_service
 		self.console = Console(color_system="auto")
 
 	def _path_from_args(self, args: argparse.Namespace) -> Path:
@@ -381,8 +381,8 @@ class RichRenderer(CommandRenderer):
 
 	def board_for_slug(self, slug: Slug) -> Board | None:
 		"""Given a board slug, return the corresponding board."""
-		return self.render_helper.board_for_slug(slug)
+		return self.render_service.board_for_slug(slug)
 	
 	def column_for_path(self, path: Path) -> Column | None:
 		"""Given a column path, return the corresponding column."""
-		return self.render_helper.column_for_path(path)
+		return self.render_service.column_for_path(path)

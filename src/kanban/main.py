@@ -16,7 +16,7 @@ from .storage.filesystem import FilesystemRepository
 from .storage.base import KanbanRepository, RepositoryAlreadyInitialized
 from .storage.memory import InMemoryRepository
 from .utils.debug import __DEBUG__, FILESYSTEM, MEMORY
-from .utils.render_helper import RenderHelper
+from .services.render_service import RenderService
 
 def main() -> None:
     """Main entry point for the kanban CLI."""
@@ -27,10 +27,10 @@ def main() -> None:
     index_service = IndexService(index_base=index_base, repository=repository)
     git_service = GitService()
     svc = KanbanService(repository=repository, index_service=index_service, git_service=git_service)
-    render_helper = RenderHelper(service=svc)
-    renderer = Renderer(render_helper=render_helper)
-    json_renderer = JsonRenderer()
-    rich_renderer = RichRenderer(render_helper=render_helper)
+    render_service = RenderService(service=svc)
+    renderer = Renderer(render_service=render_service)
+    json_renderer = JsonRenderer(render_service=render_service)
+    rich_renderer = RichRenderer(render_service=render_service)
 
     args = parse_args()
 

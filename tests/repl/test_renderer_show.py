@@ -32,10 +32,10 @@ class TestRichRendererTaskShowPlainFlag(unittest.TestCase):
             board=Slug("alpha"),
             position=0,
         )
-        render_helper = MagicMock()
-        render_helper.board_for_slug.return_value = self.board
-        render_helper.column_for_slug.return_value = self.column
-        self.renderer = RichRenderer(render_helper=render_helper)
+        render_service = MagicMock()
+        render_service.board_for_slug.return_value = self.board
+        render_service.column_for_slug.return_value = self.column
+        self.renderer = RichRenderer(render_service=render_service)
         self.task = Task(
             id=uuid4(),
             title="Fix login bug",

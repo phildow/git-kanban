@@ -9,6 +9,7 @@ from pathlib import Path
 from ..models import Board, Column, Task, UserContext
 from ..protocols.command_renderer import CommandRenderer
 from ..services.kanban import GitCommit, KanbanStatus
+from ..services.render_service import RenderService
 
 
 def _task_dict(task: Task) -> dict:
@@ -60,6 +61,9 @@ def _column_dict(column: Column) -> dict:
 
 class JsonRenderer(CommandRenderer):
     """Renders all CLI output as JSON."""
+
+    def __init__(self, render_service: RenderService) -> None:
+        self.render_service = render_service
 
     def _path_str(self, args: argparse.Namespace) -> str:
         """Return args.path serialized as a string path."""
