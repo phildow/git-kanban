@@ -338,10 +338,10 @@ class TestColumnCLI(_InitializedBase):
         self.assertEqual(data[0]["name"], "todo")
 
     def test_column_list_json_board_field(self) -> None:
-        """column list --format json includes the owning board."""
+        """column list --format json includes the owning board as a nested ref dict."""
         self.repo.create_column("proj", "todo", slug="todo")
         data = self.run_json("column", "list", "proj", "--format", "json")
-        self.assertEqual(data[0]["board"], "proj")
+        self.assertEqual(data[0]["board"]["slug"], "proj")
 
     def test_column_list_json_position_field(self) -> None:
         """column list --format json includes the position field."""
@@ -512,11 +512,11 @@ class TestTaskCLI(_InitializedBase):
         self.assertEqual(data[0]["slug"], "fix-login")
 
     def test_task_list_json_board_and_column_fields(self) -> None:
-        """task list --format json includes board and column fields."""
+        """task list --format json includes board and column as nested ref dicts."""
         self.run_cli("task", "create", "/proj/todo", "fix-login")
         data = self.run_json("task", "list", "proj/todo", "--format", "json")
-        self.assertEqual(data[0]["board"], "proj")
-        self.assertEqual(data[0]["column"], "todo")
+        self.assertEqual(data[0]["board"]["slug"], "proj")
+        self.assertEqual(data[0]["column"]["slug"], "todo")
 
     def test_task_list_board_scope_includes_all_columns(self) -> None:
         """task list scoped to a board includes tasks from all columns."""
@@ -744,7 +744,7 @@ class TestTaskCLI(_InitializedBase):
         self.run_cli("task", "create", "/proj/todo", "second")
         data = self.run_json("task", "move", "proj/todo/second", "--up",
                              "--format", "json")
-        self.assertEqual(data["column"], "todo")
+        self.assertEqual(data["column"]["slug"], "todo")
 
     # -- assign ---------------------------------------------------------------
 

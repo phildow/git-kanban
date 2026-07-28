@@ -333,6 +333,8 @@ class KanbanService(CompletionDataSource):
         """
         return self.repository.get_boards()
 
+    # TODO: Raise error if the board does not exist, rather than returning None.  
+    # This is a service layer, so it should raise exceptions for invalid slugs/paths rather than returning None.
     def get_board(self, path: Path | Slug) -> Board | None:
         """Return the board for the given board path or slug, or None if not found."""
         board: Slug

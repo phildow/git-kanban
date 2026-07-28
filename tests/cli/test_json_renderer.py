@@ -29,6 +29,26 @@ def _args(**kwargs) -> Namespace:
     return Namespace(**kwargs)
 
 
+def _mock_render_service() -> MagicMock:
+    """Return a `RenderService` mock that resolves slugs into `Board`/`Column`
+    instances derived from the requested slug/path.
+    """
+    mock = MagicMock()
+    mock.board_for_slug.side_effect = lambda slug: _board(name=slug, slug=slug)
+    mock.column_for_path.side_effect = lambda path: _column(
+        name=path.name, slug=path.name, board=path.parent.name.lstrip("/")
+    )
+    return mock
+
+
+def _null_render_service() -> MagicMock:
+    """Return a `RenderService` mock whose lookups always return None."""
+    mock = MagicMock()
+    mock.board_for_slug.return_value = None
+    mock.column_for_path.return_value = None
+    return mock
+
+
 def _capture(fn) -> str:
     buf = io.StringIO()
     with redirect_stdout(buf):
@@ -62,7 +82,7 @@ class TestJsonRendererBoards(unittest.TestCase):
     """JSON output for board-related render methods."""
 
     def setUp(self) -> None:
-        self.r = JsonRenderer(render_service=MagicMock())
+        self.r = JsonRenderer(render_service=_mock_render_service())
 
     def test_board_list_is_array(self) -> None:
         """render_board_list emits a JSON array."""
@@ -144,7 +164,7 @@ class TestJsonRendererColumns(unittest.TestCase):
     """JSON output for column-related render methods."""
 
     def setUp(self) -> None:
-        self.r = JsonRenderer(render_service=MagicMock())
+        self.r = JsonRenderer(render_service=_mock_render_service())
 
     def test_column_list_is_array(self) -> None:
         """render_column_list emits a JSON array."""
@@ -157,9 +177,9 @@ class TestJsonRendererColumns(unittest.TestCase):
         self.assertEqual(json.loads(out)[0]["name"], "todo")
 
     def test_column_list_board_field(self) -> None:
-        """Each column entry contains the owning board name."""
+        """Each column entry contains the owning board as a nested ref dict."""
         out = _capture(lambda: self.r.render_column_list(_args(), [_column("todo", "main", 0)]))
-        self.assertEqual(json.loads(out)[0]["board"], "main")
+        self.assertEqual(json.loads(out)[0]["board"]["slug"], "main")
 
     def test_column_list_position_field(self) -> None:
         """Each column entry contains the zero-based position."""
@@ -187,9 +207,15 @@ class TestJsonRendererColumns(unittest.TestCase):
         self.assertEqual(json.loads(out)["name"], "todo")
 
     def test_column_info_board_field(self) -> None:
-        """render_column_info emits the owning board."""
+        """render_column_info emits the owning board as a nested ref dict."""
         out = _capture(lambda: self.r.render_column_info(_args(), _column("todo", "main", 0)))
-        self.assertEqual(json.loads(out)["board"], "main")
+        self.assertEqual(json.loads(out)["board"]["slug"], "main")
+
+    def test_column_info_board_none_when_render_service_returns_none(self) -> None:
+        """The board ref is null when the render service cannot resolve the slug."""
+        r = JsonRenderer(render_service=_null_render_service())
+        out = _capture(lambda: r.render_column_info(_args(), _column("todo", "main", 0)))
+        self.assertIsNone(json.loads(out)["board"])
 
     def test_column_info_path_field_present(self) -> None:
         """render_column_info emits a path field."""
@@ -216,7 +242,7 @@ class TestJsonRendererTasks(unittest.TestCase):
     """JSON output for task-related render methods."""
 
     def setUp(self) -> None:
-        self.r = JsonRenderer(render_service=MagicMock())
+        self.r = JsonRenderer(render_service=_mock_render_service())
 
     def test_task_list_is_array(self) -> None:
         """render_task_list emits a JSON array."""
@@ -244,14 +270,38 @@ class TestJsonRendererTasks(unittest.TestCase):
         self.assertIn("path", json.loads(out)[0])
 
     def test_task_list_board_field(self) -> None:
-        """Each task entry contains the board name."""
+        """Each task entry contains the board as a nested ref dict."""
         out = _capture(lambda: self.r.render_task_list(_args(), [_task()]))
-        self.assertEqual(json.loads(out)[0]["board"], "main")
+        self.assertEqual(json.loads(out)[0]["board"]["slug"], "main")
 
     def test_task_list_column_field(self) -> None:
-        """Each task entry contains the column name."""
+        """Each task entry contains the column as a nested ref dict."""
         out = _capture(lambda: self.r.render_task_list(_args(), [_task()]))
-        self.assertEqual(json.loads(out)[0]["column"], "todo")
+        self.assertEqual(json.loads(out)[0]["column"]["slug"], "todo")
+
+    def test_task_list_board_none_when_render_service_returns_none(self) -> None:
+        """The board ref is null when the render service cannot resolve the slug."""
+        r = JsonRenderer(render_service=_null_render_service())
+        out = _capture(lambda: r.render_task_list(_args(), [_task()]))
+        self.assertIsNone(json.loads(out)[0]["board"])
+
+    def test_task_list_column_none_when_render_service_returns_none(self) -> None:
+        """The column ref is null when the render service cannot resolve the slug."""
+        r = JsonRenderer(render_service=_null_render_service())
+        out = _capture(lambda: r.render_task_list(_args(), [_task()]))
+        self.assertIsNone(json.loads(out)[0]["column"])
+
+    def test_task_show_board_none_when_render_service_returns_none(self) -> None:
+        """The board ref is null on detail output when the render service returns None."""
+        r = JsonRenderer(render_service=_null_render_service())
+        out = _capture(lambda: r.render_task_show(_args(), _task()))
+        self.assertIsNone(json.loads(out)["board"])
+
+    def test_task_show_column_none_when_render_service_returns_none(self) -> None:
+        """The column ref is null on detail output when the render service returns None."""
+        r = JsonRenderer(render_service=_null_render_service())
+        out = _capture(lambda: r.render_task_show(_args(), _task()))
+        self.assertIsNone(json.loads(out)["column"])
 
     def test_task_list_optional_fields_present(self) -> None:
         """Optional fields are present in each task entry (may be null)."""
@@ -373,9 +423,9 @@ class TestJsonRendererTasks(unittest.TestCase):
         self.assertEqual(json.loads(out)["slug"], "fix-login-bug")
 
     def test_task_move_column_field(self) -> None:
-        """render_task_move emits the task's new column."""
+        """render_task_move emits the task's new column as a nested ref dict."""
         out = _capture(lambda: self.r.render_task_move(_args(), _task(column="done")))
-        self.assertEqual(json.loads(out)["column"], "done")
+        self.assertEqual(json.loads(out)["column"]["slug"], "done")
 
     def test_task_move_includes_timestamps(self) -> None:
         """render_task_move includes created_at and updated_at."""
@@ -395,9 +445,9 @@ class TestJsonRendererTasks(unittest.TestCase):
         self.assertEqual(json.loads(out)["slug"], "fix-login-bug")
 
     def test_task_reorder_column_field(self) -> None:
-        """render_task_reorder emits the task's column (unchanged by reorder)."""
+        """render_task_reorder emits the task's column as a nested ref dict (unchanged by reorder)."""
         out = _capture(lambda: self.r.render_task_reorder(_args(), (_task(column="todo"), "down")))
-        self.assertEqual(json.loads(out)["column"], "todo")
+        self.assertEqual(json.loads(out)["column"]["slug"], "todo")
 
     def test_task_reorder_includes_timestamps(self) -> None:
         """render_task_reorder includes created_at and updated_at."""
@@ -416,7 +466,7 @@ class TestJsonRendererSearch(unittest.TestCase):
     """JSON output for the search render method."""
 
     def setUp(self) -> None:
-        self.r = JsonRenderer(render_service=MagicMock())
+        self.r = JsonRenderer(render_service=_mock_render_service())
 
     def test_search_is_array(self) -> None:
         """render_search emits a JSON array."""
@@ -440,7 +490,7 @@ class TestJsonRendererLog(unittest.TestCase):
     """JSON output for the log render method."""
 
     def setUp(self) -> None:
-        self.r = JsonRenderer(render_service=MagicMock())
+        self.r = JsonRenderer(render_service=_mock_render_service())
 
     def test_log_is_array(self) -> None:
         """render_log emits a JSON array."""
@@ -464,7 +514,7 @@ class TestJsonRendererStatus(unittest.TestCase):
     """JSON output for the status render method."""
 
     def setUp(self) -> None:
-        self.r = JsonRenderer(render_service=MagicMock())
+        self.r = JsonRenderer(render_service=_mock_render_service())
         self.status = KanbanStatus(
             user_context=UserContext(board="main"),
             board_count=2,
@@ -509,7 +559,7 @@ class TestJsonRendererConfig(unittest.TestCase):
     """JSON output for config render methods."""
 
     def setUp(self) -> None:
-        self.r = JsonRenderer(render_service=MagicMock())
+        self.r = JsonRenderer(render_service=_mock_render_service())
 
     def test_get_config_key_field(self) -> None:
         """render_get_config emits the key."""

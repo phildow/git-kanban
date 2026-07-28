@@ -3,6 +3,8 @@ from pathlib import Path
 from ..models import Board, Column, Slug
 from .kanban import KanbanService
 
+# TODO: error handling if slugs cannot be resolved, rather than just returning None. 
+# This is a service layer, so it should raise exceptions for invalid slugs/paths rather than returning None.
 
 class RenderService:
     """Resolves lightweight domain lookups for renderers.
