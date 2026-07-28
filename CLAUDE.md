@@ -449,7 +449,7 @@ kanban config set <key> <value>    # key: name
 kanban config get <key>            # key: name
 ```
 
-Most commands take a `--format` argument with options `rich|json` to emit output with more detail or as json.
+Most commands take a `--format` argument with options `plain|json` (default: `plain`).
 
 ### Object Paths
 
@@ -515,7 +515,7 @@ create task <column> <title>
 rename <column[/task]> <new-name>
 rename --board <new-name>
 
-delete <column[/task]> | --board
+delete <task> | --column <column> | --board
     [--force]
 
 reorder <column> <position>

@@ -179,6 +179,7 @@ class KanbanService(CompletionDataSource):
         return self.user_context.path
     
     @property
+    # TODO: should svc.working_board return the board object instead of just the slug?
     def working_board(self) -> Slug | None:
         """Return the current working board based on the user context."""
         return self.user_context.board
@@ -509,7 +510,7 @@ class KanbanService(CompletionDataSource):
         
         return self.repository.reorder_column(board, column, position)  
 
-    def delete_column(self, path: Path) -> Column:
+    def delete_column(self, path: Path | Slug) -> Column:
         """
         Delete a column subdirectory and all tasks it contains.  Raises
         BoardNotFound or ColumnNotFound if either does not exist.  Removes

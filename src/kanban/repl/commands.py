@@ -83,7 +83,7 @@ def handle_set_board(args: argparse.Namespace, svc: KanbanService, renderer: Com
 # Common commands
 # ---------------------------------------------------------------------------
 
-@with_relative_path
+@with_task_slug
 def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	typ, result = handle_delete_helper(args, svc)
 

@@ -11,7 +11,7 @@ import argparse
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ..models import Board, Column, Priority, Task, TaskFilter
+from ..models import Board, Column, Priority, Slug, Task, TaskFilter
 from ..services.kanban import KanbanService
 from ..utils.shell import prompt_for_confirmation
 
@@ -76,28 +76,28 @@ def handle_delete_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[
     or (None, None) if the user declines deletion.
     """
 
-    # args.path | args.board (flag to rename active board)
-
-    force = args.force
+    # args.path | args.board (flag to delete active board) | args.column (flag to delete a column)
 
     def _confirm(message: str) -> bool:
-        return force or prompt_for_confirmation(message)
+        return args.force or prompt_for_confirmation(message)
+
+    if svc.working_board is None:
+        raise ValueError("No active board; set one with `board` before deleting an board, column, or task")
 
     if args.board:
-        if _confirm(f"Are you sure you want to delete the board '{args.board}'?"):
+        board = svc.working_board
+        if _confirm(f"Are you sure you want to delete the active board ({board})?"):
             return Board, svc.delete_board(path=None)
-    elif args.path is not None:
-        board, column, task = svc.path_components(args.path)
-        if board and column and task:
-            if _confirm(f"Are you sure you want to delete the task '{task}'?"):
-                return Task, svc.delete_task(path=Path(f"/{board}/{column}/{task}"))
-        elif board and column:
-            if _confirm(f"Are you sure you want to delete the column '{column}'?"):
-                return Column, svc.delete_column(path=Path(f"/{board}/{column}"))
-        else:
-            raise ValueError("Delete expects either -b/--board or a COLUMN[/TASK] path")
+    elif args.column:
+        column = svc.get_column(args.column)
+        if _confirm(f"Are you sure you want to delete the column '{column.name}'?"):
+            return Column, svc.delete_column(args.column)
+    elif args.path:
+        task = svc.get_task(args.path)
+        if _confirm(f"Are you sure you want to delete the task '{task.title}'?"):
+            return Task, svc.delete_task(task.path)
     else:
-        raise ValueError("Delete expects either -b/--board or a COLUMN[/TASK] path")
+        raise ValueError("Delete expects either --board, --column <column> or a <task> path")
 
     # User declined deletion
     return None, None
@@ -109,7 +109,7 @@ def handle_rename_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[
     entry point for all rename commands in the REPL, which pass a user-provided
     """
 
-    # args.path | args.board (flag to rename active board)
+    # args.path | args.board (flag to delete active board) | args.column (flag to delete a column)
     # args.new_name
     
     new_name = args.new_name

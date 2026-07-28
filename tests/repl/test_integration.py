@@ -567,19 +567,21 @@ class TestReplDelete(_InitializedReplBase):
 
     def test_delete_column_removes_directory(self) -> None:
         """delete <board>/<column> removes the column directory."""
-        self.run_repl("delete", "proj/todo", "--force")
+        self.svc.set_board(Slug("proj"))
+        self.run_repl("delete", "-c", "todo", "--force")
         self.assertFalse((self.boards_dir / "proj" / "todo").exists())
 
     def test_delete_column_produces_output(self) -> None:
         """delete <board>/<column> prints something."""
-        out = self.run_repl("delete", "proj/todo", "--force")
+        self.svc.set_board(Slug("proj"))
+        out = self.run_repl("delete", "-c", "todo", "--force")
         self.assertTrue(out.strip())
 
     def test_delete_task_removes_file(self) -> None:
         """delete <board>/<column>/<task> removes the markdown file."""
         self.svc.set_board(Slug("proj"))
         self.svc.create_task(Slug("todo"), TaskCreateParams(title="fix-login"))
-        self.run_repl("delete", "todo/fix-login", "--force")
+        self.run_repl("delete", "fix-login", "--force")
         self.assertFalse(
             (self.boards_dir / "proj" / "todo" / "fix-login.md").exists()
         )
@@ -588,7 +590,7 @@ class TestReplDelete(_InitializedReplBase):
         """delete <board>/<column>/<task> prints something."""
         self.svc.set_board(Slug("proj"))
         self.svc.create_task(Slug("todo"), TaskCreateParams(title="fix-login"))
-        out = self.run_repl("delete", "todo/fix-login", "--force")
+        out = self.run_repl("delete", "fix-login", "--force")
         self.assertTrue(out.strip())
 
 
