@@ -100,7 +100,7 @@ def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: Comman
 		raise ValueError("Unexpected result type from handle_delete: {}".format(typ))
 
 
-@with_relative_path
+@with_task_slug
 def handle_rename(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	typ, result = handle_rename_helper(args, svc)
 

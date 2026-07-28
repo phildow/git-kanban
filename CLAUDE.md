@@ -512,13 +512,9 @@ create task <column> <title>
     [--due-date <date>]
     [--created-by <name>]
 
-rename <column[/task]> <new-name>
-rename --board <new-name>
-
+rename <task> | --column <column> | --board <new-name>
 delete <task> | --column <column> | --board
     [--force]
-
-reorder <column> <position>
 
 show <task> [-p|--plain]
 edit <task>
@@ -538,6 +534,8 @@ move <task> [<column>]
     [--down]
 
 assign <task> <user>
+
+reorder <column> <position>
 
 config
 config set <key> <value>    # key: name
@@ -572,7 +570,7 @@ The `[]` brackets indicate optional path components that are inferred from the u
 3. Index search (scoped to active board if set)
 4. Error on ambiguity
 
-Task-target commands (`show`, `edit`, `update`, `move`, `assign`) identify a task by its bare `<task>` slug: the service locates the column that contains it within the active board and constructs the full path. Because slugs are unique board-wide, the column need not be given. A slash-prefixed path (`/board/column/task`) still overrides the active context. The dual-purpose `rename` and `delete` commands keep the `<column[/task]>` form to disambiguate a column target from a task target.
+Task-target commands (`show`, `edit`, `update`, `move`, `assign`, `rename`, `delete`) identify a task by its bare `<task>` slug: the service locates the column that contains it within the active board and constructs the full path. Because slugs are unique board-wide, the column need not be given. A slash-prefixed path (`/board/column/task`) still overrides the active context. To target a column or the active board, `rename` and `delete` use the `-c/--column <column>` and `-b/--board` flags respectively.
 
 The following command aliases are registered by default:
 

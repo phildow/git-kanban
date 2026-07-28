@@ -253,36 +253,48 @@ class TestParserAliases(unittest.TestCase):
         args = repl_parser.parse_args(["rename", "-b", "Work"])
         self.assertTrue(args.board)
         self.assertIsNone(args.path)
+        self.assertIsNone(args.column)
         self.assertEqual(args.new_name, "Work")
         self.assertIs(args.func, handle_rename)
 
-    def test_rename_column_path_binds_handler(self) -> None:
-        """rename with a board/column path still binds handle_rename."""
-        args = repl_parser.parse_args(["rename", "proj/todo", "Doing"])
-        self.assertEqual(args.path, "proj/todo")
+    def test_rename_column_mode(self) -> None:
+        """rename -c COLUMN binds column mode with a column name and no path."""
+        args = repl_parser.parse_args(["rename", "-c", "todo", "Doing"])
+        self.assertEqual(args.column, "todo")
+        self.assertIsNone(args.path)
+        self.assertFalse(args.board)
         self.assertEqual(args.new_name, "Doing")
         self.assertIs(args.func, handle_rename)
 
-    def test_rename_task_path_binds_handler(self) -> None:
-        """rename with a board/column/task path still binds handle_rename."""
-        args = repl_parser.parse_args(["rename", "proj/todo/fix-parser", "Fixed Parser"])
-        self.assertEqual(args.path, "proj/todo/fix-parser")
+    def test_rename_task_slug_binds_handler(self) -> None:
+        """rename with a bare task slug binds handle_rename in path mode."""
+        args = repl_parser.parse_args(["rename", "fix-parser", "Fixed Parser"])
+        self.assertEqual(args.path, "fix-parser")
+        self.assertFalse(args.board)
+        self.assertIsNone(args.column)
         self.assertEqual(args.new_name, "Fixed Parser")
         self.assertIs(args.func, handle_rename)
 
     def test_rename_requires_mode_and_new_name(self) -> None:
-        """rename requires either path or -b, and always requires new_name."""
+        """rename requires either path, -b, or -c, and always requires new_name."""
         with self.assertRaises(SystemExit):
             repl_parser.parse_args(["rename"])
         with self.assertRaises(SystemExit):
-            repl_parser.parse_args(["rename", "proj/todo"])
+            repl_parser.parse_args(["rename", "fix-parser"])
         with self.assertRaises(SystemExit):
             repl_parser.parse_args(["rename", "-b"])
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["rename", "-c", "todo"])
 
     def test_rename_rejects_path_and_board_flag_together(self) -> None:
         """rename rejects combining a path with -b/--board."""
         with self.assertRaises(SystemExit):
-            repl_parser.parse_args(["rename", "proj/todo", "-b", "Doing"])
+            repl_parser.parse_args(["rename", "fix-parser", "-b", "Doing"])
+
+    def test_rename_rejects_board_and_column_flags_together(self) -> None:
+        """rename rejects combining -b/--board with -c/--column at the same time."""
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["rename", "-b", "-c", "todo", "Doing"])
 
     def test_delete_path_mode(self) -> None:
         """delete <task> binds path mode with board and column flags unset."""

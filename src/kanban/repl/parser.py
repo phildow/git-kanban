@@ -152,12 +152,19 @@ examples:
 
 
 def _add_rename_parser(subparsers: argparse._SubParsersAction) -> None:
-    rename_parser = subparsers.add_parser("rename", help="Rename a board, column, or task")
-    group = rename_parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("path", metavar="COLUMN[/TASK]", nargs="?", help="The column or task to rename")
-    group.add_argument("-b", "--board", action="store_true", default=False, help="Rename the active board")
-    rename_parser.add_argument("new_name", metavar="NEW-NAME", help="The new name for the board, column, or task")
+    examples = """
+examples:
+    rename fix-login "Fix the login page"
+    rename -c todo "In Progress"
+    rename -b "Main Project"
+    """
+    rename_parser = subparsers.add_parser("rename", help="Rename a board, column, or task", epilog=examples, formatter_class=argparse.RawDescriptionHelpFormatter)
     _add_global_flags(rename_parser)
+    group = rename_parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("path", metavar="TASK", nargs="?", help="The task to rename")
+    group.add_argument("-b", "--board", action="store_true", default=False, help="Rename the active board")
+    group.add_argument("-c", "--column", dest="column", metavar="COLUMN", help="Rename the named column")
+    rename_parser.add_argument("new_name", metavar="NEW-NAME", help="The new name for the board, column, or task")
     rename_parser.set_defaults(func=handle_rename)
 
 

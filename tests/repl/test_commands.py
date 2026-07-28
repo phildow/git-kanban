@@ -96,35 +96,35 @@ class TestReplCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.rename_board.return_value = result
         self.svc.working_board = "proj"
-        args = self._args(path=None, board=True, new_name="Work")
+        args = self._args(path=None, board=True, column=None, new_name="Work")
 
         commands.handle_rename(args, self.svc, self.renderer)
 
-        self.svc.rename_board.assert_called_once_with(path=None, new_name="Work")
+        self.svc.rename_board.assert_called_once_with(None, new_name="Work")
         self.renderer.render_board_rename.assert_called_once_with(args, result)
 
     def test_handle_rename_column(self) -> None:
-        """`rename` with a board/column path calls rename_column and renders the result."""
-        self.svc.path_components.return_value = ("proj", "todo", None)
+        """`rename -c COLUMN` calls rename_column and renders the result."""
         result = object()
         self.svc.rename_column.return_value = result
-        args = self._args(path="proj/todo", board=False, new_name="Doing")
+        self.svc.working_board = "proj"
+        args = self._args(path=None, board=False, column="todo", new_name="Doing")
 
         commands.handle_rename(args, self.svc, self.renderer)
 
-        self.svc.rename_column.assert_called_once_with(path=Path("/proj/todo"), new_name="Doing")
+        self.svc.rename_column.assert_called_once_with("todo", new_name="Doing")
         self.renderer.render_column_rename.assert_called_once_with(args, result)
 
     def test_handle_rename_task(self) -> None:
-        """`rename` with a board/column/task path calls rename_task and renders the result."""
-        self.svc.path_components.return_value = ("proj", "todo", "fix-parser")
+        """`rename <task-slug>` calls rename_task and renders the result."""
         result = object()
         self.svc.rename_task.return_value = result
-        args = self._args(path="proj/todo/fix-parser", board=False, new_name="Fixed Parser")
+        self.svc.working_board = "proj"
+        args = self._args(path="fix-parser", board=False, column=None, new_name="Fixed Parser")
 
         commands.handle_rename(args, self.svc, self.renderer)
 
-        self.svc.rename_task.assert_called_once_with(path=Path("/proj/todo/fix-parser"), new_title="Fixed Parser")
+        self.svc.rename_task.assert_called_once_with("fix-parser", new_title="Fixed Parser")
         self.renderer.render_task_rename.assert_called_once_with(args, result)
 
     def test_column_handlers(self):

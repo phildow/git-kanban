@@ -109,27 +109,22 @@ def handle_rename_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[
     entry point for all rename commands in the REPL, which pass a user-provided
     """
 
-    # args.path | args.board (flag to delete active board) | args.column (flag to delete a column)
+    # args.path | args.board (flag to rename active board) | args.column (flag to rename a column)
     # args.new_name
-    
+
     new_name = args.new_name
 
     if not new_name:
         raise ValueError("New name must be provided for rename operation")
-    
+
+    if svc.working_board is None:
+        raise ValueError("No active board; set one with `board` before renaming a board, column, or task")
+
     if args.board:
-        return Board, svc.rename_board(path=None, new_name=new_name)
-
-    if args.path is None:
-        raise ValueError("Rename expects either -b/--board or a COLUMN[/TASK] path")
-
-    # TODO: move to service method that can route a path preoperly
-
-    board, column, task = svc.path_components(args.path)
-
-    if board and column and task:
-        return Task, svc.rename_task(path=Path(f"/{board}/{column}/{task}"), new_title=new_name)
-    elif board and column:
-        return Column, svc.rename_column(path=Path(f"/{board}/{column}"), new_name=new_name)
+        return Board, svc.rename_board(None, new_name=new_name)
+    elif args.column:
+        return Column, svc.rename_column(args.column, new_name=new_name)
+    elif args.path:
+        return Task, svc.rename_task(args.path, new_title=new_name)
     else:
-        raise ValueError("Rename expects either -b/--board or a COLUMN[/TASK] path")
+        raise ValueError("Rename expects either --board, --column <column>, or a <task> path")

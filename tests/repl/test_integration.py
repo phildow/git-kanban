@@ -491,36 +491,36 @@ class TestReplRename(_InitializedReplBase):
         self.assertEqual(self.repo.get_userdata("user-context.board"), "work")
 
     def test_rename_column_creates_new_directory(self) -> None:
-        """rename column creates the destination directory."""
-        self.run_repl("rename", "todo", "doing")
+        """rename -c COLUMN creates the destination directory."""
+        self.run_repl("rename", "-c", "todo", "doing")
         self.assertTrue((self.boards_dir / "proj" / "doing").is_dir())
 
     def test_rename_column_removes_old_directory(self) -> None:
-        """rename column removes the source directory."""
-        self.run_repl("rename", "todo", "doing")
+        """rename -c COLUMN removes the source directory."""
+        self.run_repl("rename", "-c", "todo", "doing")
         self.assertFalse((self.boards_dir / "proj" / "todo").exists())
 
     def test_rename_column_produces_output(self) -> None:
-        """rename column prints something."""
-        out = self.run_repl("rename", "todo", "doing")
+        """rename -c COLUMN prints something."""
+        out = self.run_repl("rename", "-c", "todo", "doing")
         self.assertTrue(out.strip())
 
     def test_rename_task_creates_new_file(self) -> None:
-        """rename task creates a file with the new slug."""
+        """rename <task-slug> creates a file with the new slug."""
         self.svc.create_task(Slug("todo"), TaskCreateParams(title="alpha task"))
-        self.run_repl("rename", "todo/alpha-task", "Beta Task")
+        self.run_repl("rename", "alpha-task", "Beta Task")
         self.assertTrue((self.boards_dir / "proj" / "todo" / "beta-task.md").is_file())
 
     def test_rename_task_removes_old_file(self) -> None:
-        """rename task removes the file with the old slug."""
+        """rename <task-slug> removes the file with the old slug."""
         self.svc.create_task(Slug("todo"), TaskCreateParams(title="alpha task"))
-        self.run_repl("rename", "todo/alpha-task", "Beta Task")
+        self.run_repl("rename", "alpha-task", "Beta Task")
         self.assertFalse((self.boards_dir / "proj" / "todo" / "alpha-task.md").exists())
 
     def test_rename_task_produces_output(self) -> None:
-        """rename task prints something."""
+        """rename <task-slug> prints something."""
         self.svc.create_task(Slug("todo"), TaskCreateParams(title="alpha task"))
-        out = self.run_repl("rename", "todo/alpha-task", "Beta Task")
+        out = self.run_repl("rename", "alpha-task", "Beta Task")
         self.assertTrue(out.strip())
 
 
@@ -910,25 +910,25 @@ class TestReplColumnEnglishNames(_InitializedReplBase):
     def test_rename_uses_new_slug_for_directory(self) -> None:
         """rename column moves the directory to the slug derived from the new display name."""
         self.run_repl("create", "column", "backlog")
-        self.run_repl("rename", "backlog", "Work Queue")
+        self.run_repl("rename", "-c", "backlog", "Work Queue")
         self.assertTrue((self.boards_dir / "my-project" / "work-queue").is_dir())
 
     def test_rename_removes_old_slug_directory(self) -> None:
         """rename column removes the old slug directory."""
         self.run_repl("create", "column", "backlog")
-        self.run_repl("rename", "backlog", "Work Queue")
+        self.run_repl("rename", "-c", "backlog", "Work Queue")
         self.assertFalse((self.boards_dir / "my-project" / "backlog").exists())
 
     def test_rename_output_contains_new_name(self) -> None:
         """rename column prints the new display name."""
         self.run_repl("create", "column", "backlog")
-        out = self.run_repl("rename", "backlog", "Work Queue")
+        out = self.run_repl("rename", "-c", "backlog", "Work Queue")
         self.assertIn("Work Queue", out)
 
     def test_rename_output_contains_new_slug(self) -> None:
         """rename column prints the new derived slug."""
         self.run_repl("create", "column", "backlog")
-        out = self.run_repl("rename", "backlog", "Work Queue")
+        out = self.run_repl("rename", "-c", "backlog", "Work Queue")
         self.assertIn("work-queue", out)
 
 
