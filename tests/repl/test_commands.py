@@ -487,7 +487,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
     def test_handle_task_assign(self):
         """`assign` forwards path and user to assign_task and renders result."""
-        args = self._args(path="alpha/todo/fix-parser", assigned_to="alice", delete=False)
+        args = self._args(path="alpha/todo/fix-parser", assigned_to="alice", remove=False)
         result = object()
         self.svc.assign_task.return_value = result
 
@@ -497,9 +497,9 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.unset_task.assert_not_called()
         self.renderer.render_task_assign.assert_called_once_with(args, result)
 
-    def test_handle_task_assign_with_delete_flag(self):
-        """`assign --delete` clears the task's assigned_to via unset_task."""
-        args = self._args(path="alpha/todo/fix-parser", assigned_to=None, delete=True)
+    def test_handle_task_assign_with_remove_flag(self):
+        """`assign --remove` clears the task's assigned_to via unset_task."""
+        args = self._args(path="alpha/todo/fix-parser", assigned_to=None, remove=True)
         result = object()
         self.svc.unset_task.return_value = result
 
@@ -511,7 +511,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
     def test_handle_task_tag(self):
         """`tag` forwards path and tag to tag_task and renders result."""
-        args = self._args(path="alpha/todo/fix-parser", tags="auth", delete=False)
+        args = self._args(path="alpha/todo/fix-parser", tags="auth", remove=False)
         result = object()
         self.svc.tag_task.return_value = result
 
@@ -520,9 +520,9 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.tag_task.assert_called_once_with(Slug("alpha/todo/fix-parser"), "auth")
         self.renderer.render_task_tag.assert_called_once_with(args, result)
 
-    def test_handle_task_tag_with_delete_flag(self):
-        """`tag --delete` forwards path and tag to untag_task and renders result."""
-        args = self._args(path="alpha/todo/fix-parser", tags="auth", delete=True)
+    def test_handle_task_tag_with_remove_flag(self):
+        """`tag --remove` forwards path and tag to untag_task and renders result."""
+        args = self._args(path="alpha/todo/fix-parser", tags="auth", remove=True)
         result = object()
         self.svc.untag_task.return_value = result
 

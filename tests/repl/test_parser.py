@@ -244,22 +244,22 @@ class TestParserAliases(unittest.TestCase):
         self.assertEqual(args.command, "assign")
         self.assertEqual(args.path, "main/todo/fix-login")
         self.assertEqual(args.assigned_to, "alice")
-        self.assertFalse(args.delete)
+        self.assertFalse(args.remove)
         self.assertIs(args.func, handle_task_assign)
 
-    def test_assign_delete_flag(self):
-        """`assign TASK -d`/`--delete` sets args.delete to True and leaves assigned_to None."""
-        args = repl_parser.parse_args(["assign", "main/todo/fix-login", "-d"])
-        self.assertTrue(args.delete)
+    def test_assign_remove_flag(self):
+        """`assign TASK -r`/`--remove` sets args.remove to True and leaves assigned_to None."""
+        args = repl_parser.parse_args(["assign", "main/todo/fix-login", "-r"])
+        self.assertTrue(args.remove)
         self.assertIsNone(args.assigned_to)
 
-        args = repl_parser.parse_args(["assign", "main/todo/fix-login", "--delete"])
-        self.assertTrue(args.delete)
+        args = repl_parser.parse_args(["assign", "main/todo/fix-login", "--remove"])
+        self.assertTrue(args.remove)
 
-    def test_assign_rejects_user_and_delete_together(self):
-        """`assign TASK USER --delete` is rejected because they are mutually exclusive."""
+    def test_assign_rejects_user_and_remove_together(self):
+        """`assign TASK USER --remove` is rejected because they are mutually exclusive."""
         with self.assertRaises(SystemExit):
-            repl_parser.parse_args(["assign", "main/todo/fix-login", "alice", "--delete"])
+            repl_parser.parse_args(["assign", "main/todo/fix-login", "alice", "--remove"])
 
     def test_tag_requires_path_and_tag(self):
         with self.assertRaises(SystemExit):
@@ -273,16 +273,16 @@ class TestParserAliases(unittest.TestCase):
         self.assertEqual(args.command, "tag")
         self.assertEqual(args.path, "main/todo/fix-login")
         self.assertEqual(args.tags, "auth")
-        self.assertFalse(args.delete)
+        self.assertFalse(args.remove)
         self.assertIs(args.func, handle_task_tag)
 
-    def test_tag_delete_flag(self):
-        """`tag ... -d`/`--delete` sets args.delete to True."""
-        args = repl_parser.parse_args(["tag", "main/todo/fix-login", "auth", "-d"])
-        self.assertTrue(args.delete)
+    def test_tag_remove_flag(self):
+        """`tag ... -r`/`--remove` sets args.remove to True."""
+        args = repl_parser.parse_args(["tag", "main/todo/fix-login", "auth", "-r"])
+        self.assertTrue(args.remove)
 
-        args = repl_parser.parse_args(["tag", "main/todo/fix-login", "auth", "--delete"])
-        self.assertTrue(args.delete)
+        args = repl_parser.parse_args(["tag", "main/todo/fix-login", "auth", "--remove"])
+        self.assertTrue(args.remove)
 
     def test_comment_requires_path_and_comment(self):
         """`comment` requires a task path and either a comment or --edit."""

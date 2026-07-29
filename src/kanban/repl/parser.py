@@ -302,7 +302,7 @@ def _add_assign_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("path", metavar="TASK", help="The task to assign")
     group = p.add_mutually_exclusive_group(required=True)
     group.add_argument("assigned_to", metavar="USER", nargs="?", help="User to assign the task to")
-    group.add_argument("-d", "--delete", action="store_true", default=False, help="Clear the task's assigned user")
+    group.add_argument("-r", "--remove", action="store_true", default=False, help="Clear the task's assigned user")
     _add_global_flags(p)
     p.set_defaults(func=handle_task_assign)
 
@@ -311,7 +311,7 @@ def _add_tag_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("tag", help="Add or remove a tag on a task")
     p.add_argument("path", metavar="TASK", help="The task to tag")
     p.add_argument("tags", metavar="TAG", help="Tag to add to or remove from the task")
-    p.add_argument("-d", "--delete", action="store_true", default=False, help="Remove the tag instead of adding it")
+    p.add_argument("-r", "--remove", action="store_true", default=False, help="Remove the tag instead of adding it")
     _add_global_flags(p)
     p.set_defaults(func=handle_task_tag)
 

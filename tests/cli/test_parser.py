@@ -277,18 +277,18 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         self.assertEqual(args.path, "board-a/todo/fix-parser")
         self.assertEqual(args.assigned_to, "alice")
         self.assertEqual(args.format, "plain")
-        self.assertFalse(args.delete)
+        self.assertFalse(args.remove)
         self.assertIs(args.func, handle_task_assign)
 
-        args = cli_parser.parse_args(["task", "assign", "board-a/todo/fix-parser", "-d"])
-        self.assertTrue(args.delete)
+        args = cli_parser.parse_args(["task", "assign", "board-a/todo/fix-parser", "-r"])
+        self.assertTrue(args.remove)
         self.assertIsNone(args.assigned_to)
 
-        args = cli_parser.parse_args(["task", "assign", "board-a/todo/fix-parser", "--delete"])
-        self.assertTrue(args.delete)
+        args = cli_parser.parse_args(["task", "assign", "board-a/todo/fix-parser", "--remove"])
+        self.assertTrue(args.remove)
 
         with self.assertRaises(SystemExit):
-            cli_parser.parse_args(["task", "assign", "board-a/todo/fix-parser", "alice", "--delete"])
+            cli_parser.parse_args(["task", "assign", "board-a/todo/fix-parser", "alice", "--remove"])
 
         with self.assertRaises(SystemExit):
             cli_parser.parse_args(["task", "assign", "board-a/todo/fix-parser"])
@@ -297,14 +297,14 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         self.assertEqual(args.path, "board-a/todo/fix-parser")
         self.assertEqual(args.tags, "auth")
         self.assertEqual(args.format, "plain")
-        self.assertFalse(args.delete)
+        self.assertFalse(args.remove)
         self.assertIs(args.func, handle_task_tag)
 
-        args = cli_parser.parse_args(["task", "tag", "board-a/todo/fix-parser", "auth", "-d"])
-        self.assertTrue(args.delete)
+        args = cli_parser.parse_args(["task", "tag", "board-a/todo/fix-parser", "auth", "-r"])
+        self.assertTrue(args.remove)
 
-        args = cli_parser.parse_args(["task", "tag", "board-a/todo/fix-parser", "auth", "--delete"])
-        self.assertTrue(args.delete)
+        args = cli_parser.parse_args(["task", "tag", "board-a/todo/fix-parser", "auth", "--remove"])
+        self.assertTrue(args.remove)
 
         args = cli_parser.parse_args(["task", "comment", "board-a/todo/fix-parser", "Looks good"])
         self.assertEqual(args.path, "board-a/todo/fix-parser")
