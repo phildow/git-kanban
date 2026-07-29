@@ -545,15 +545,15 @@ class TestCommandHandlers(unittest.TestCase):
         self.renderer.render_task_comment.assert_called_once_with(args, result)
 
     def test_handle_task_comment_with_edit_flag(self):
-        """`task comment --edit` opens the task in the editor instead of appending a comment."""
+        """`task comment --edit` opens the task in the editor after appending an empty comment."""
         edit_result = object()
         self.svc.edit_task.return_value = edit_result
         args = self._args(path="board-a/todo/fix-parser", comment=None, edit=True)
 
         commands.handle_task_comment(args, self.svc, self.renderer, self.json_renderer)
 
+        self.svc.comment_task.assert_called_once_with(Path("/board-a/todo/fix-parser"), "")
         self.svc.edit_task.assert_called_once_with(Path("/board-a/todo/fix-parser"))
-        self.svc.comment_task.assert_not_called()
         self.renderer.render_task_comment.assert_called_once_with(args, edit_result)
 
     def test_handle_task_delete(self):

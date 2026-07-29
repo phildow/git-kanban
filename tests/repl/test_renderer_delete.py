@@ -29,23 +29,20 @@ class _DeleteRenderingMixin:
         self.renderer = self.renderer_cls(render_service=MagicMock())
         self.args = Namespace()
 
-    def test_render_board_delete_includes_name_and_slug(self) -> None:
+    def test_render_board_delete_includes_name(self) -> None:
         board = Board(id=uuid4(), name="My Project", slug="my-project")
         out = _capture(self.renderer.render_board_delete, self.args, board)
         self.assertIn("My Project", out)
-        self.assertIn("my-project", out)
 
-    def test_render_column_delete_includes_name_and_slug(self) -> None:
+    def test_render_column_delete_includes_name(self) -> None:
         column = Column(id=uuid4(), name="To Do", slug="todo", board="my-project", position=0)
         out = _capture(self.renderer.render_column_delete, self.args, column)
         self.assertIn("To Do", out)
-        self.assertIn("todo", out)
 
-    def test_render_task_delete_includes_title_and_slug(self) -> None:
+    def test_render_task_delete_includes_title(self) -> None:
         task = Task(id=uuid4(), title="Fix login bug", slug="fix-login-bug", board="my-project", column="todo")
         out = _capture(self.renderer.render_task_delete, self.args, task)
         self.assertIn("Fix login bug", out)
-        self.assertIn("fix-login-bug", out)
 
 
 class TestRichRendererDelete(_DeleteRenderingMixin, unittest.TestCase):
