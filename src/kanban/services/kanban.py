@@ -932,11 +932,7 @@ class KanbanService(CompletionDataSource):
         or a bare task Slug (from the REPL).  Raises TaskNotFound if the task
         cannot be resolved.  Updates the index and commits.
         """
-        task = self.get_task(path)
-        task.assigned_to = user
-        updated = self.repository.update_task(task, slug=task.slug)
-        self.index_service.upsert_task(updated)
-        return updated
+        return self.update_task(path, TaskUpdateParams(assigned_to=user))
 
     def tag_task(
         self,
@@ -949,11 +945,7 @@ class KanbanService(CompletionDataSource):
         will not be duplicated if the task already has it.  Raises TaskNotFound
         if the task cannot be resolved.  Updates the index and commits.
         """
-        task = self.get_task(path)
-        task.tags = list(set(task.tags) | {tag})
-        updated = self.repository.update_task(task, slug=task.slug)
-        self.index_service.upsert_task(updated)
-        return updated
+        return self.update_task(path, TaskUpdateParams(tags=[tag]))
 
     def untag_task(
         self,
@@ -967,11 +959,7 @@ class KanbanService(CompletionDataSource):
         TaskNotFound if the task cannot be resolved.  Updates the index and
         commits.
         """
-        task = self.get_task(path)
-        task.tags = list(set(task.tags) - {tag})
-        updated = self.repository.update_task(task, slug=task.slug)
-        self.index_service.upsert_task(updated)
-        return updated
+        return self.unset_task(path, TaskUnsetParams(tags=[tag]))
 
     # ── Search ────────────────────────────────────────────────────────────────
 
