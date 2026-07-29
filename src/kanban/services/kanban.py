@@ -30,6 +30,7 @@ class TaskCreateParams:
     tags:        list[str] = field(default_factory=list)
     due_date:    datetime | None = None
     created_by:  str | None = None
+    description: str | None = None
 
 @dataclass
 class TaskUpdateParams:
@@ -39,6 +40,7 @@ class TaskUpdateParams:
     tags:        list[str] | None = None
     created_by:  str | None = None
     due_date:    datetime | None = None
+    description: str | None = None
 
 @dataclass
 class TaskUnsetParams:
@@ -52,6 +54,7 @@ class TaskUnsetParams:
     tags:        list[str] = field(default_factory=list)
     due_date:    bool = False
     created_by:  bool = False
+    description: bool = False
 
 
 # ── Return types ──────────────────────────────────────────────────────────────
@@ -105,6 +108,40 @@ def _append_comment(body: str, comment: str) -> str:
     if body:
         return f"{body}\n\n# Comments\n\n{comment}"
     return f"# Comments\n\n{comment}"
+
+
+_DESCRIPTION_HEADING_RE = re.compile(r"^# Description\s*$", re.MULTILINE)
+def _set_description(body: str, description: str) -> str:
+    """
+    Return `body` with the Description section content replaced by `description`.
+
+    The description section is the portion of the markdown body between the
+    `# Description` heading and either the `# Comments` heading (if any) or the
+    end of the document. Any Comments section is preserved unchanged. If the
+    body does not already contain a `# Description` heading, one is inserted
+    ahead of the Comments section (or at the start if no Comments section
+    exists). An empty description leaves only the `# Description` heading.
+    """
+    body = body or ""
+    desc_match = _DESCRIPTION_HEADING_RE.search(body)
+    comments_match = _COMMENTS_HEADING_RE.search(body)
+
+    description = description.strip("\n")
+    if description:
+        description_block = f"# Description\n\n{description}\n"
+    else:
+        description_block = "# Description\n\n"
+
+    preamble = ""
+    if desc_match:
+        preamble_text = body[:desc_match.start()].rstrip()
+        if preamble_text:
+            preamble = f"{preamble_text}\n\n"
+
+    if comments_match:
+        comments_block = body[comments_match.start():].rstrip() + "\n"
+        return f"{preamble}{description_block}\n{comments_block}"
+    return f"{preamble}{description_block}"
 
 
 # ── KanbanService ─────────────────────────────────────────────────────────────
@@ -720,7 +757,7 @@ class KanbanService(CompletionDataSource):
             tags=tags,
             due_date=due_date,
             created_by=created_by,
-            body="# Description\n\n",
+            body=_set_description("", params.description or ""),
         )
         filename = task.slug
         created_task = self.repository.create_task(task, filename)
@@ -856,6 +893,8 @@ class KanbanService(CompletionDataSource):
             task.due_date = due_date
         if updates.created_by is not None:
             task.created_by = updates.created_by
+        if updates.description is not None:
+            task.body = _set_description(task.body, updates.description)
 
         updated = self.repository.update_task(task, slug=slug)
         self.index_service.upsert_task(updated)
@@ -885,6 +924,8 @@ class KanbanService(CompletionDataSource):
             task.due_date = None
         if unsets.created_by:
             task.created_by = None
+        if unsets.description:
+            task.body = _set_description(task.body, "")
         if unsets.tags:
             task.tags = list(set(task.tags) - set(unsets.tags))
 

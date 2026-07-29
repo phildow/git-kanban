@@ -189,7 +189,11 @@ class Renderer(CommandRenderer):
 				self._emit(args, "")
 
 	def render_task_create(self, args: argparse.Namespace, result: Task) -> None:
-		self.render_task(args, result)
+		if args.description:
+			setattr(args, "markdown", False)
+			self.render_task_view(args, result)
+		else:
+			self.render_task(args, result)
 
 	def render_task_view(self, args: argparse.Namespace, result: Task) -> None:
 		"""Render a task's metadata followed by its body."""

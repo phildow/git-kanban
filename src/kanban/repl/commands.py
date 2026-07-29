@@ -171,6 +171,7 @@ def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: C
 		tags=args.tags or [],
 		due_date=args.due_date,
 		created_by=args.created_by,
+		description=args.description,
 	)
 
 	result = svc.create_task(Slug(args.column), params)
@@ -208,6 +209,7 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: C
 		tags=args.tags,
 		due_date=args.due_date,
 		created_by=args.created_by,
+		description=args.description,
 	)
 
 	result = svc.update_task(args.path, updates=updates)
@@ -226,6 +228,7 @@ def handle_task_unset(args: argparse.Namespace, svc: KanbanService, renderer: Co
 		tags=args.tags or [],
 		due_date=args.due_date,
 		created_by=args.created_by,
+		description=args.description,
 	)
 
 	result = svc.unset_task(args.path, unsets=unsets)

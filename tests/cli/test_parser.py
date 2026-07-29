@@ -357,6 +357,26 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         self.assertEqual(args.new_name, "Fixed Parser")
         self.assertIs(args.func, handle_task_rename)
 
+    def test_task_create_description_flag(self) -> None:
+        """`task create --description TEXT` binds args.description."""
+        args = cli_parser.parse_args(["task", "create", "board-a/todo", "fix-parser", "--description", "Login is broken"])
+        self.assertEqual(args.description, "Login is broken")
+
+    def test_task_create_description_defaults_to_none(self) -> None:
+        """`task create` without --description leaves args.description as None."""
+        args = cli_parser.parse_args(["task", "create", "board-a/todo", "fix-parser"])
+        self.assertIsNone(args.description)
+
+    def test_task_update_description_flag(self) -> None:
+        """`task update --description TEXT` binds args.description."""
+        args = cli_parser.parse_args(["task", "update", "board-a/todo/fix-parser", "--description", "New content"])
+        self.assertEqual(args.description, "New content")
+
+    def test_task_update_description_defaults_to_none(self) -> None:
+        """`task update` without --description leaves args.description as None."""
+        args = cli_parser.parse_args(["task", "update", "board-a/todo/fix-parser"])
+        self.assertIsNone(args.description)
+
     def test_task_rename_format_default(self) -> None:
         """task rename defaults to plain format."""
         args = cli_parser.parse_args(["task", "rename", "board-a/todo/fix-parser", "Fixed Parser"])

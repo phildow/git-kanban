@@ -370,7 +370,11 @@ class RichRenderer(CommandRenderer):
 		"""Render a message indicating that a task was created"""
 		# self._emit(args, f"Created Task: {result.title}")
 		# self._emit(args, f"Slug: {result.slug}")
-		self.render_task(args, result)
+		if args.description:
+			setattr(args, "plain", False)
+			self.render_task_view(args, result)
+		else:
+			self.render_task(args, result)
 
 	def render_task_view(self, args: argparse.Namespace, result: Task) -> None:
 		"""Render detailed information about a single task, including all metadata and the body/description."""

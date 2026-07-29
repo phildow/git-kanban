@@ -78,6 +78,7 @@ def _add_task_create_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("-t", "--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
     parser.add_argument("-d", "--due-date", dest="due_date", metavar="DATE", help="Due date (YYYY-MM-DD)")
     parser.add_argument("-b","--created-by", dest="created_by", metavar="NAME", help="Creator name")
+    parser.add_argument("--description", dest="description", metavar="TEXT", help="Description text (replaces the Description section of the task body)")
 
 
 def _add_task_update_args(parser: argparse.ArgumentParser) -> None:
@@ -87,6 +88,7 @@ def _add_task_update_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("-c", "--column", dest="column", metavar="COLUMN", help="Move the task to this column")
     parser.add_argument("-d", "--due-date", dest="due_date", metavar="DATE", help="Due date (YYYY-MM-DD)")
     parser.add_argument("-b", "--created-by", dest="created_by", metavar="NAME", help="Creator name")
+    parser.add_argument("--description", dest="description", metavar="TEXT", help="Description text (replaces the Description section of the task body)")
 
 
 def _add_task_unset_args(parser: argparse.ArgumentParser) -> None:
@@ -95,6 +97,7 @@ def _add_task_unset_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("-t", "--tag", metavar="TAG", action="append", dest="tags", help="Remove a tag (repeatable)")
     parser.add_argument("-d", "--due-date", dest="due_date", action="store_true", default=False, help="Unset the due date")
     parser.add_argument("-b", "--created-by", dest="created_by", action="store_true", default=False, help="Unset the creator name")
+    parser.add_argument("--description", dest="description", action="store_true", default=False, help="Clear the description (preserves the heading and any Comments section)")
 
 
 # ---------------------------------------------------------------------------

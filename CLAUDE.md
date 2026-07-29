@@ -406,6 +406,7 @@ kanban task create <board>/<column> <title>
     [--tag <tag>]
     [--due-date <date>]
     [--created-by <name>]
+    [--description <text>]
 
 kanban task update <board>/<column>/<task>
     [--column <column>]
@@ -414,6 +415,7 @@ kanban task update <board>/<column>/<task>
     [--tag <tag>]
     [--due-date <date>]
     [--created-by <name>]
+    [--description <text>]
 
 kanban task unset <board>/<column>/<task>
     [--assigned-to]
@@ -421,6 +423,7 @@ kanban task unset <board>/<column>/<task>
     [--tag <tag>]
     [--due-date]
     [--created-by]
+    [--description]
 
 kanban task move <board>/<column>/<task>
     [<column>]
@@ -521,6 +524,7 @@ create task <column> <title>
     [--tag <tag>]
     [--due-date <date>]
     [--created-by <name>]
+    [--description <text>]
 
 rename <task> | --column <column> | --board <new-name>
 delete <task> | --column <column> | --board
@@ -537,6 +541,7 @@ update <task>
     [--tag <tag>]
     [--due-date <date>]
     [--created-by <name>]
+    [--description <text>]
 
 unset <task>
     [--assigned-to]
@@ -544,6 +549,7 @@ unset <task>
     [--tag <tag>]
     [--due-date]
     [--created-by]
+    [--description]
 
 move <task> [<column>]
     [--top]

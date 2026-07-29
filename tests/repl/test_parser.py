@@ -112,6 +112,26 @@ class TestParserAliases(unittest.TestCase):
         args = repl_parser.parse_args(["create", "task", "todo", "fix-parser", "--edit"])
         self.assertTrue(args.edit)
 
+    def test_create_task_description_flag(self):
+        """`create task ... --description TEXT` binds args.description."""
+        args = repl_parser.parse_args(["create", "task", "todo", "fix-parser", "--description", "Login is broken"])
+        self.assertEqual(args.description, "Login is broken")
+
+    def test_create_task_description_defaults_to_none(self):
+        """`create task ...` without --description leaves args.description as None."""
+        args = repl_parser.parse_args(["create", "task", "todo", "fix-parser"])
+        self.assertIsNone(args.description)
+
+    def test_update_task_description_flag(self):
+        """`update ... --description TEXT` binds args.description."""
+        args = repl_parser.parse_args(["update", "main/todo/fix-parser", "--description", "New content"])
+        self.assertEqual(args.description, "New content")
+
+    def test_update_task_description_defaults_to_none(self):
+        """`update ...` without --description leaves args.description as None."""
+        args = repl_parser.parse_args(["update", "main/todo/fix-parser"])
+        self.assertIsNone(args.description)
+
     def test_search_maps_to_search_handler(self):
         args = repl_parser.parse_args(["search", "fix"])
         self.assertEqual(args.command, "search")

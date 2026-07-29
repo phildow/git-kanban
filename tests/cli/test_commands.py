@@ -191,6 +191,7 @@ class TestCommandHandlers(unittest.TestCase):
             tags=["cli", "tests"],
             due_date="2026-06-15",
             created_by="philip",
+            description=None,
         )
         result = object()
         self.svc.create_task.return_value = result
@@ -212,7 +213,7 @@ class TestCommandHandlers(unittest.TestCase):
 
     def test_handle_task_create_with_default_optional_fields(self):
         """`task create` defaults missing optional fields and normalizes `tags` to empty list."""
-        args = self._args(path="board-a/todo", title="check-no-other-args", priority=None, tags=None, assigned_to=None, due_date=None, created_by=None)
+        args = self._args(path="board-a/todo", title="check-no-other-args", priority=None, tags=None, assigned_to=None, due_date=None, created_by=None, description=None)
         result = object()
         self.svc.create_task.return_value = result
 
@@ -241,6 +242,7 @@ class TestCommandHandlers(unittest.TestCase):
             tags=None,
             due_date=None,
             created_by="alex",
+            description=None,
         )
         result = object()
         self.svc.create_task.return_value = result
@@ -260,6 +262,37 @@ class TestCommandHandlers(unittest.TestCase):
         )
         self.renderer.render_task_create.assert_called_once_with(args, result)
 
+    def test_handle_task_create_forwards_description(self):
+        """`task create --description TEXT` forwards description into `TaskCreateParams`."""
+        args = self._args(
+            path="board-a/todo",
+            title="fix-parser",
+            assigned_to=None,
+            priority=None,
+            tags=None,
+            due_date=None,
+            created_by=None,
+            description="Login is broken",
+        )
+        result = object()
+        self.svc.create_task.return_value = result
+
+        commands.handle_task_create(args, self.svc, self.renderer, self.json_renderer)
+
+        self.svc.create_task.assert_called_once_with(
+            Path("/board-a/todo"),
+            TaskCreateParams(
+                title="fix-parser",
+                assigned_to=None,
+                priority=None,
+                tags=[],
+                due_date=None,
+                created_by=None,
+                description="Login is broken",
+            ),
+        )
+        self.renderer.render_task_create.assert_called_once_with(args, result)
+
     def test_handle_task_view(self):
         """`task info` fetches a task by path and forwards it to renderer."""
         args = self._args(path="board-a/todo/fix-parser")
@@ -273,7 +306,7 @@ class TestCommandHandlers(unittest.TestCase):
 
     def test_handle_task_update_with_default_optional_fields(self):
         """`task update` defaults unspecified update fields to `None`."""
-        args = self._args(path="/board-a/todo/fix-parser", priority=None, title=None, assigned_to=None, tags=None, due_date=None, created_by=None, column=None)
+        args = self._args(path="/board-a/todo/fix-parser", priority=None, title=None, assigned_to=None, tags=None, due_date=None, created_by=None, column=None, description=None)
         result = object()
         self.svc.update_task.return_value = result
 
@@ -302,6 +335,7 @@ class TestCommandHandlers(unittest.TestCase):
             due_date="2026-07-01",
             created_by="mark",
             column=None,
+            description=None,
         )
         result = object()
         self.svc.update_task.return_value = result
@@ -330,6 +364,7 @@ class TestCommandHandlers(unittest.TestCase):
             due_date="2026-07-01",
             created_by="mark",
             column="done",
+            description=None,
         )
         updated = SimpleNamespace(path="/board-a/todo/fix-parser")
         moved = object()
@@ -353,7 +388,7 @@ class TestCommandHandlers(unittest.TestCase):
 
     def test_handle_task_update_with_explicit_empty_tags(self):
         """`task edit` preserves an explicit empty tags list."""
-        args = self._args(path="board-a/todo/fix-parser", tags=[], priority=None, title=None, assigned_to=None, due_date=None, created_by=None, column=None)
+        args = self._args(path="board-a/todo/fix-parser", tags=[], priority=None, title=None, assigned_to=None, due_date=None, created_by=None, column=None, description=None)
         result = object()
         self.svc.update_task.return_value = result
 
@@ -372,9 +407,41 @@ class TestCommandHandlers(unittest.TestCase):
         )
         self.renderer.render_task_update.assert_called_once_with(args, result)
 
+    def test_handle_task_update_forwards_description(self):
+        """`task update --description TEXT` forwards description into `TaskUpdateParams`."""
+        args = self._args(
+            path="board-a/todo/fix-parser",
+            title=None,
+            assigned_to=None,
+            priority=None,
+            tags=None,
+            due_date=None,
+            created_by=None,
+            column=None,
+            description="New content",
+        )
+        result = object()
+        self.svc.update_task.return_value = result
+
+        commands.handle_task_update(args, self.svc, self.renderer, self.json_renderer)
+
+        self.svc.update_task.assert_called_once_with(
+            Path("/board-a/todo/fix-parser"),
+            updates=TaskUpdateParams(
+                title=None,
+                assigned_to=None,
+                priority=None,
+                tags=None,
+                due_date=None,
+                created_by=None,
+                description="New content",
+            ),
+        )
+        self.renderer.render_task_update.assert_called_once_with(args, result)
+
     def test_handle_task_unset_with_default_flags(self):
         """`task unset` with no flags forwards an empty TaskUnsetParams and renders via render_task_update."""
-        args = self._args(path="/board-a/todo/fix-parser", assigned_to=False, priority=False, tags=None, due_date=False, created_by=False)
+        args = self._args(path="/board-a/todo/fix-parser", assigned_to=False, priority=False, tags=None, due_date=False, created_by=False, description=False)
         result = object()
         self.svc.unset_task.return_value = result
 
@@ -401,6 +468,7 @@ class TestCommandHandlers(unittest.TestCase):
             tags=["chore"],
             due_date=True,
             created_by=True,
+            description=False,
         )
         result = object()
         self.svc.unset_task.return_value = result
@@ -415,6 +483,35 @@ class TestCommandHandlers(unittest.TestCase):
                 tags=["chore"],
                 due_date=True,
                 created_by=True,
+            ),
+        )
+        self.renderer.render_task_update.assert_called_once_with(args, result)
+
+    def test_handle_task_unset_with_description_flag(self):
+        """`task unset --description` forwards description=True in TaskUnsetParams."""
+        args = self._args(
+            path="board-a/todo/fix-parser",
+            assigned_to=False,
+            priority=False,
+            tags=None,
+            due_date=False,
+            created_by=False,
+            description=True,
+        )
+        result = object()
+        self.svc.unset_task.return_value = result
+
+        commands.handle_task_unset(args, self.svc, self.renderer, self.json_renderer)
+
+        self.svc.unset_task.assert_called_once_with(
+            Path("/board-a/todo/fix-parser"),
+            unsets=TaskUnsetParams(
+                assigned_to=False,
+                priority=False,
+                tags=[],
+                due_date=False,
+                created_by=False,
+                description=True,
             ),
         )
         self.renderer.render_task_update.assert_called_once_with(args, result)
