@@ -515,9 +515,7 @@ tasks [<column>]
     [--due-after <date>]
     [--created-by <name>]
 
-create board <board>
-create column <column>
-create task <column> <title>
+create <column> <title> | --column <name> | --board <name>
     [--edit]
     [--assigned-to <name>]
     [--priority <low|medium|high>]

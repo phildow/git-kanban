@@ -78,11 +78,11 @@ class TestReplCommandHandlers(unittest.TestCase):
                 commands.handle_delete(args, self.svc, self.renderer)
 
     def test_board_handlers(self):
-        args = self._args(board="alpha")
+        args = self._args(new_board="alpha", new_column=None, column=None)
         result = object()
         self.svc.create_board.return_value = result
 
-        commands.handle_board_create(args, self.svc, self.renderer)
+        commands.handle_create(args, self.svc, self.renderer)
 
         self.svc.create_board.assert_called_once_with("alpha")
         self.renderer.render_board_create.assert_called_once_with(args, result)
@@ -128,20 +128,20 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.renderer.render_task_rename.assert_called_once_with(args, result)
 
     def test_column_handlers(self):
-        args = self._args(column="todo")
+        args = self._args(new_board=None, new_column="todo", column=None)
         self.svc.working_board = "alpha"
         result = object()
         self.svc.create_column.return_value = result
-        commands.handle_column_create(args, self.svc, self.renderer)
+        commands.handle_create(args, self.svc, self.renderer)
         self.svc.create_column.assert_called_once_with(None, "todo")
         self.renderer.render_column_create.assert_called_once_with(args, result)
 
     def test_handle_column_create_raises_without_active_board(self):
         """create column with no active board raises rather than resolving nonsense."""
-        args = self._args(column="todo")
+        args = self._args(new_board=None, new_column="todo", column=None)
         self.svc.working_board = None
         with self.assertRaises(ValueError):
-            commands.handle_column_create(args, self.svc, self.renderer)
+            commands.handle_create(args, self.svc, self.renderer)
 
     def test_handle_board_list(self):
         """`boards` renders the board list."""
@@ -197,12 +197,12 @@ class TestReplCommandHandlers(unittest.TestCase):
             commands.handle_column_list(args, self.svc, self.renderer)
 
     def test_handle_task_create_defaults(self):
-        args = self._args(column="todo", title="fix-parser", edit=False, assigned_to=None, priority=None, tags=None, due_date=None, created_by=None, description=None)
+        args = self._args(new_board=None, new_column=None, column="todo", title="fix-parser", edit=False, assigned_to=None, priority=None, tags=None, due_date=None, created_by=None, description=None)
         self.svc.working_board = "alpha"
         result = object()
         self.svc.create_task.return_value = result
 
-        commands.handle_task_create(args, self.svc, self.renderer)
+        commands.handle_create(args, self.svc, self.renderer)
 
         self.svc.create_task.assert_called_once_with(
             "todo",
@@ -219,32 +219,34 @@ class TestReplCommandHandlers(unittest.TestCase):
 
     def test_handle_task_create_without_edit_flag_does_not_open_editor(self):
         """create task without --edit does not call svc.edit_task."""
-        args = self._args(column="todo", title="fix-parser", edit=False, assigned_to=None, priority=None, tags=None, due_date=None, created_by=None, description=None)
+        args = self._args(new_board=None, new_column=None, column="todo", title="fix-parser", edit=False, assigned_to=None, priority=None, tags=None, due_date=None, created_by=None, description=None)
         self.svc.working_board = "alpha"
         result = object()
         self.svc.create_task.return_value = result
 
-        commands.handle_task_create(args, self.svc, self.renderer)
+        commands.handle_create(args, self.svc, self.renderer)
 
         self.svc.edit_task.assert_not_called()
         self.renderer.render_task_create.assert_called_once_with(args, result)
 
     def test_handle_task_create_with_edit_flag_opens_editor(self):
         """create task --edit opens the newly created task in the editor."""
-        args = self._args(column="todo", title="fix-parser", edit=True, assigned_to=None, priority=None, tags=None, due_date=None, created_by=None, description=None)
+        args = self._args(new_board=None, new_column=None, column="todo", title="fix-parser", edit=True, assigned_to=None, priority=None, tags=None, due_date=None, created_by=None, description=None)
         self.svc.working_board = "alpha"
         created = Task(id=uuid4(), title="Fix parser", slug="fix-parser", board="alpha", column="todo")
         edited = Task(id=uuid4(), title="Fix parser", slug="fix-parser", board="alpha", column="todo")
         self.svc.create_task.return_value = created
         self.svc.edit_task.return_value = edited
 
-        commands.handle_task_create(args, self.svc, self.renderer)
+        commands.handle_create(args, self.svc, self.renderer)
 
         self.svc.edit_task.assert_called_once_with(created.path)
         self.renderer.render_task_create.assert_called_once_with(args, edited)
 
     def test_handle_task_create_with_optional_fields(self):
         args = self._args(
+            new_board=None,
+            new_column=None,
             column="todo",
             title="fix-parser",
             assigned_to="philip",
@@ -259,7 +261,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.create_task.return_value = result
 
-        commands.handle_task_create(args, self.svc, self.renderer)
+        commands.handle_create(args, self.svc, self.renderer)
 
         self.svc.create_task.assert_called_once_with(
             "todo",
@@ -276,15 +278,16 @@ class TestReplCommandHandlers(unittest.TestCase):
 
     def test_handle_task_create_raises_without_active_board(self):
         """create task with no active board raises rather than resolving nonsense."""
-        args = self._args(column="todo", title="fix-parser", edit=False, assigned_to=None, priority=None, tags=None, due_date=None, created_by=None, description=None)
+        args = self._args(new_board=None, new_column=None, column="todo", title="fix-parser", edit=False, assigned_to=None, priority=None, tags=None, due_date=None, created_by=None, description=None)
         self.svc.working_board = None
-        self.svc.create_task.side_effect = ValueError("No active board; set one with `board` before creating a task")
         with self.assertRaises(ValueError):
-            commands.handle_task_create(args, self.svc, self.renderer)
+            commands.handle_create(args, self.svc, self.renderer)
 
     def test_handle_task_create_forwards_description(self):
-        """`create task ... --description TEXT` forwards description into `TaskCreateParams`."""
+        """`create <column> <title> --description TEXT` forwards description into `TaskCreateParams`."""
         args = self._args(
+            new_board=None,
+            new_column=None,
             column="todo",
             title="fix-parser",
             edit=False,
@@ -299,7 +302,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         result = object()
         self.svc.create_task.return_value = result
 
-        commands.handle_task_create(args, self.svc, self.renderer)
+        commands.handle_create(args, self.svc, self.renderer)
 
         self.svc.create_task.assert_called_once_with(
             "todo",

@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from ..models import Board, Column, Priority, Slug, Task, TaskFilter
-from ..services.kanban import KanbanService
+from ..services.kanban import KanbanService, TaskCreateParams
 from ..utils.shell import prompt_for_confirmation
 
 
@@ -128,3 +128,46 @@ def handle_rename_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[
         return Task, svc.rename_task(path=args.path, new_title=new_name)
     else:
         raise ValueError("Rename expects either --board, --column <column>, or a <task> path")
+
+
+def handle_create_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[type, Board | Column | Task]:
+    """
+    Create a new board, column, or task. This is the main entry point for
+    all create/new/n commands in the REPL. The parser guarantees exactly one
+    of `args.new_board`, `args.new_column`, or `args.column` is set (mutex
+    group). Board creation does not require an active board; column creation
+    requires an active board; task creation requires either an active board
+    or a slash-prefixed column path.
+    """
+
+    # args.new_board  | args.new_column  | args.column (existing column for a new task)
+    # args.title      | args.edit        | task update args
+
+    if args.new_board:
+        return Board, svc.create_board(args.new_board)
+
+    if args.new_column:
+        if svc.working_board is None:
+            raise ValueError("No active board; set one with `board` before creating a column")
+        return Column, svc.create_column(None, args.new_column)
+
+    if args.column:
+        if not args.title:
+            raise ValueError("Task title is required")
+        if svc.working_board is None and not args.column.startswith("/"):
+            raise ValueError("No active board; set one with `board` before creating a task")
+        params = TaskCreateParams(
+            title=args.title,
+            assigned_to=args.assigned_to,
+            priority=parse_priority(args),
+            tags=args.tags or [],
+            due_date=args.due_date,
+            created_by=args.created_by,
+            description=args.description,
+        )
+        result = svc.create_task(Slug(args.column), params)
+        if args.edit:
+            result = svc.edit_task(Path(result.path))
+        return Task, result
+
+    raise ValueError("Create expects either --board NAME, --column NAME, or a <column> <title>")
