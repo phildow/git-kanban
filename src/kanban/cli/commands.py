@@ -260,7 +260,10 @@ def handle_task_delete(args: argparse.Namespace, svc: KanbanService, renderer: C
 
 @with_absolute_path
 def handle_task_assign(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
-	result = svc.assign_task(args.path, args.assigned_to)
+	if args.delete:
+		result = svc.unset_task(args.path, TaskUnsetParams(assigned_to=True))
+	else:
+		result = svc.assign_task(args.path, args.assigned_to)
 	_pick(args, renderer, json_renderer).render_task_assign(args, result)
 
 

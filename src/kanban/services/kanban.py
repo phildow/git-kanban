@@ -91,8 +91,6 @@ def _task_matches_filter(task: Task, filter: TaskFilter) -> bool:
 
 
 _COMMENTS_HEADING_RE = re.compile(r"^# Comments\s*$", re.MULTILINE)
-
-
 def _append_comment(body: str, comment: str) -> str:
     """
     Return `body` with `comment` appended under a `# Comments` heading.

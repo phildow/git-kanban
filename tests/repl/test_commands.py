@@ -487,13 +487,26 @@ class TestReplCommandHandlers(unittest.TestCase):
 
     def test_handle_task_assign(self):
         """`assign` forwards path and user to assign_task and renders result."""
-        args = self._args(path="alpha/todo/fix-parser", assigned_to="alice")
+        args = self._args(path="alpha/todo/fix-parser", assigned_to="alice", delete=False)
         result = object()
         self.svc.assign_task.return_value = result
 
         commands.handle_task_assign(args, self.svc, self.renderer)
 
         self.svc.assign_task.assert_called_once_with(Slug("alpha/todo/fix-parser"), "alice")
+        self.svc.unset_task.assert_not_called()
+        self.renderer.render_task_assign.assert_called_once_with(args, result)
+
+    def test_handle_task_assign_with_delete_flag(self):
+        """`assign --delete` clears the task's assigned_to via unset_task."""
+        args = self._args(path="alpha/todo/fix-parser", assigned_to=None, delete=True)
+        result = object()
+        self.svc.unset_task.return_value = result
+
+        commands.handle_task_assign(args, self.svc, self.renderer)
+
+        self.svc.unset_task.assert_called_once_with(Slug("alpha/todo/fix-parser"), TaskUnsetParams(assigned_to=True))
+        self.svc.assign_task.assert_not_called()
         self.renderer.render_task_assign.assert_called_once_with(args, result)
 
     def test_handle_task_tag(self):

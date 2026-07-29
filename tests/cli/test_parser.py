@@ -277,7 +277,21 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         self.assertEqual(args.path, "board-a/todo/fix-parser")
         self.assertEqual(args.assigned_to, "alice")
         self.assertEqual(args.format, "plain")
+        self.assertFalse(args.delete)
         self.assertIs(args.func, handle_task_assign)
+
+        args = cli_parser.parse_args(["task", "assign", "board-a/todo/fix-parser", "-d"])
+        self.assertTrue(args.delete)
+        self.assertIsNone(args.assigned_to)
+
+        args = cli_parser.parse_args(["task", "assign", "board-a/todo/fix-parser", "--delete"])
+        self.assertTrue(args.delete)
+
+        with self.assertRaises(SystemExit):
+            cli_parser.parse_args(["task", "assign", "board-a/todo/fix-parser", "alice", "--delete"])
+
+        with self.assertRaises(SystemExit):
+            cli_parser.parse_args(["task", "assign", "board-a/todo/fix-parser"])
 
         args = cli_parser.parse_args(["task", "tag", "board-a/todo/fix-parser", "auth"])
         self.assertEqual(args.path, "board-a/todo/fix-parser")

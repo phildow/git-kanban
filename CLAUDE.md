@@ -435,7 +435,7 @@ kanban task view <board>/<column>/<task>
 
 kanban task edit <board>/<column>/<task>
 kanban task delete <board>/<column>/<task>
-kanban task assign <board>/<column>/<task> <name>
+kanban task assign <board>/<column>/<task> (<name> | -d|--delete)
 kanban task tag <board>/<column>/<task> <tag>
     [-d|--delete]
 kanban task comment <board>/<column>/<task> (<comment> | --edit)
@@ -552,7 +552,7 @@ move <task> [<column>]
     [--down]
 
 comment <task> (<comment> | --edit)
-assign <task> <user>
+assign <task> (<user> | -d|--delete)
 tag <task> <tag>
     [-d|--delete]
 

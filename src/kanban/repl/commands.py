@@ -253,7 +253,10 @@ def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: Com
 
 @with_task_slug
 def handle_task_assign(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	result = svc.assign_task(args.path, args.assigned_to)
+	if args.delete:
+		result = svc.unset_task(args.path, TaskUnsetParams(assigned_to=True))
+	else:
+		result = svc.assign_task(args.path, args.assigned_to)
 	renderer.render_task_assign(args, result)
 
 

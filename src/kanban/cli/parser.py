@@ -297,9 +297,11 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     p.set_defaults(func=handle_task_move)
 
     # task assign
-    p = task_sub.add_parser("assign", help="Assign a task to a user")
+    p = task_sub.add_parser("assign", help="Assign a task to a user or clear its assignment")
     p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified /board/column/task path")
-    p.add_argument("assigned_to", metavar="USER", help="User to assign the task to")
+    group = p.add_mutually_exclusive_group(required=True)
+    group.add_argument("assigned_to", metavar="USER", nargs="?", help="User to assign the task to")
+    group.add_argument("-d", "--delete", action="store_true", default=False, help="Clear the task's assigned user")
     _add_format_arg(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_task_assign)

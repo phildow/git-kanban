@@ -238,6 +238,29 @@ class TestParserAliases(unittest.TestCase):
         with self.assertRaises(SystemExit):
             repl_parser.parse_args(["assign", "main/todo/fix-login"])
 
+    def test_assign_binds_path_user_and_handler(self):
+        """`assign TASK USER` binds path/assigned_to and leaves delete False."""
+        args = repl_parser.parse_args(["assign", "main/todo/fix-login", "alice"])
+        self.assertEqual(args.command, "assign")
+        self.assertEqual(args.path, "main/todo/fix-login")
+        self.assertEqual(args.assigned_to, "alice")
+        self.assertFalse(args.delete)
+        self.assertIs(args.func, handle_task_assign)
+
+    def test_assign_delete_flag(self):
+        """`assign TASK -d`/`--delete` sets args.delete to True and leaves assigned_to None."""
+        args = repl_parser.parse_args(["assign", "main/todo/fix-login", "-d"])
+        self.assertTrue(args.delete)
+        self.assertIsNone(args.assigned_to)
+
+        args = repl_parser.parse_args(["assign", "main/todo/fix-login", "--delete"])
+        self.assertTrue(args.delete)
+
+    def test_assign_rejects_user_and_delete_together(self):
+        """`assign TASK USER --delete` is rejected because they are mutually exclusive."""
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["assign", "main/todo/fix-login", "alice", "--delete"])
+
     def test_tag_requires_path_and_tag(self):
         with self.assertRaises(SystemExit):
             repl_parser.parse_args(["tag"])
