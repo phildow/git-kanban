@@ -15,7 +15,7 @@ from unittest.mock import MagicMock, patch
 from kanban.cli import commands
 from kanban.models import Slug
 from kanban.storage.seeds import BOOTSTRAP_CONFIG
-from kanban.services.kanban import TaskCreateParams, TaskUpdateParams
+from kanban.services.kanban import TaskCreateParams, TaskUnsetParams, TaskUpdateParams
 
 # Note that tests also check that board/column/[task] paths are re-written to /board/column/[task]
 
@@ -368,6 +368,53 @@ class TestCommandHandlers(unittest.TestCase):
                 tags=[],
                 due_date=None,
                 created_by=None,
+            ),
+        )
+        self.renderer.render_task_update.assert_called_once_with(args, result)
+
+    def test_handle_task_unset_with_default_flags(self):
+        """`task unset` with no flags forwards an empty TaskUnsetParams and renders via render_task_update."""
+        args = self._args(path="/board-a/todo/fix-parser", assigned_to=False, priority=False, tags=None, due_date=False, created_by=False)
+        result = object()
+        self.svc.unset_task.return_value = result
+
+        commands.handle_task_unset(args, self.svc, self.renderer, self.json_renderer)
+
+        self.svc.unset_task.assert_called_once_with(
+            Path("/board-a/todo/fix-parser"),
+            unsets=TaskUnsetParams(
+                assigned_to=False,
+                priority=False,
+                tags=[],
+                due_date=False,
+                created_by=False,
+            ),
+        )
+        self.renderer.render_task_update.assert_called_once_with(args, result)
+
+    def test_handle_task_unset_with_all_flags(self):
+        """`task unset` translates boolean flags and tag list into TaskUnsetParams."""
+        args = self._args(
+            path="board-a/todo/fix-parser",
+            assigned_to=True,
+            priority=True,
+            tags=["chore"],
+            due_date=True,
+            created_by=True,
+        )
+        result = object()
+        self.svc.unset_task.return_value = result
+
+        commands.handle_task_unset(args, self.svc, self.renderer, self.json_renderer)
+
+        self.svc.unset_task.assert_called_once_with(
+            Path("/board-a/todo/fix-parser"),
+            unsets=TaskUnsetParams(
+                assigned_to=True,
+                priority=True,
+                tags=["chore"],
+                due_date=True,
+                created_by=True,
             ),
         )
         self.renderer.render_task_update.assert_called_once_with(args, result)

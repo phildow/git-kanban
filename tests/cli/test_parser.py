@@ -36,6 +36,7 @@ from kanban.cli.commands import (
     handle_task_rename,
     handle_task_view,
     handle_task_info,
+    handle_task_unset,
     handle_task_update
 )
 
@@ -75,7 +76,7 @@ class TestParserStructure(unittest.TestCase):
         self.assertEqual(set(column.keys()), {"list", "create", "info", "rename", "reorder", "delete"})
 
         task = self._subparser_choices(top["task"], "task_command")
-        self.assertEqual(set(task.keys()), {"list", "create", "info", "view", "edit", "update", "move", "delete", "assign", "rename"})
+        self.assertEqual(set(task.keys()), {"list", "create", "info", "view", "edit", "update", "unset", "move", "delete", "assign", "rename"})
 
         config = self._subparser_choices(top["config"], "config_command")
         self.assertEqual(set(config.keys()), {"get", "set"})
@@ -237,6 +238,31 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         args = cli_parser.parse_args(["tasks", "update", "board-a/todo/fix-parser"])
         self.assertEqual(args.command, "tasks")
         self.assertIs(args.func, handle_task_update)
+
+        args = cli_parser.parse_args(["task", "unset", "board-a/todo/fix-parser"])
+        self.assertEqual(args.path, "board-a/todo/fix-parser")
+        self.assertFalse(args.assigned_to)
+        self.assertFalse(args.priority)
+        self.assertFalse(args.due_date)
+        self.assertFalse(args.created_by)
+        self.assertIsNone(args.tags)
+        self.assertIs(args.func, handle_task_unset)
+
+        args = cli_parser.parse_args([
+            "task", "unset", "board-a/todo/fix-parser",
+            "--assigned-to",
+            "--priority",
+            "--due-date",
+            "--created-by",
+            "--tag", "chore",
+            "--tag", "bug",
+        ])
+        self.assertTrue(args.assigned_to)
+        self.assertTrue(args.priority)
+        self.assertTrue(args.due_date)
+        self.assertTrue(args.created_by)
+        self.assertEqual(args.tags, ["chore", "bug"])
+        self.assertIs(args.func, handle_task_unset)
 
         args = cli_parser.parse_args(["task", "move", "board-a/todo/fix-parser", "done"])
         self.assertEqual(args.column, "done")

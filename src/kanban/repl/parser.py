@@ -32,6 +32,7 @@ from ..repl.commands import (
     handle_task_info,
     handle_task_list,
     handle_task_move,
+    handle_task_unset,
     handle_task_update,
     handle_task_view,
     handle_set_board,
@@ -97,6 +98,14 @@ def _add_task_update_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("-t", "--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
     parser.add_argument("-d", "--due-date", dest="due_date", metavar="DATE", help="Due date (YYYY-MM-DD)")
     parser.add_argument("-b", "--created-by", dest="created_by", metavar="NAME", help="Creator name")
+
+
+def _add_task_unset_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("-w", "--assigned-to", dest="assigned_to", action="store_true", default=False, help="Unset the assigned user")
+    parser.add_argument("-p", "--priority", dest="priority", action="store_true", default=False, help="Unset the priority")
+    parser.add_argument("-t", "--tag", metavar="TAG", action="append", dest="tags", help="Remove a tag (repeatable)")
+    parser.add_argument("-d", "--due-date", dest="due_date", action="store_true", default=False, help="Unset the due date")
+    parser.add_argument("-b", "--created-by", dest="created_by", action="store_true", default=False, help="Unset the creator name")
 
 
 def _add_list_args(parser: argparse.ArgumentParser, sort_choices: list[str]) -> None:
@@ -212,6 +221,14 @@ def _add_update_parser(subparsers: argparse._SubParsersAction) -> None:
     update_parser.set_defaults(func=handle_task_update)
 
 
+def _add_unset_parser(subparsers: argparse._SubParsersAction) -> None:
+    unset_parser = subparsers.add_parser("unset", help="Unset fields on a task")
+    _add_global_flags(unset_parser)
+    unset_parser.add_argument("path", metavar="TASK", help="The task to unset fields on")
+    _add_task_unset_args(unset_parser)
+    unset_parser.set_defaults(func=handle_task_unset)
+
+
 def _add_move_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("move", aliases=["mv"], help="Move a task to another column")
     p.add_argument("path", metavar="TASK", type=str, help="The task to move")
@@ -325,6 +342,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_info_parser(subparsers)
     _add_edit_parser(subparsers)
     _add_update_parser(subparsers)
+    _add_unset_parser(subparsers)
     _add_move_parser(subparsers)
     _add_config_parser(subparsers)
     _add_assign_parser(subparsers)

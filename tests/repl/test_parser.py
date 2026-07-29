@@ -21,6 +21,7 @@ from kanban.repl.commands import (
     handle_task_create,
     handle_task_list,
     handle_task_move,
+    handle_task_unset,
     handle_task_view,
     handle_task_info,
     handle_task_update,
@@ -167,6 +168,46 @@ class TestParserAliases(unittest.TestCase):
 
         short = repl_parser.parse_args(["update", "main/todo/fix-parser", "-c", "done"])
         self.assertEqual(short.column, "done")
+
+    def test_unset_task_defaults_all_false(self):
+        """`unset TASK` with no flags leaves all scalar dests False and tags None."""
+        args = repl_parser.parse_args(["unset", "main/todo/fix-parser"])
+
+        self.assertEqual(args.command, "unset")
+        self.assertEqual(args.path, "main/todo/fix-parser")
+        self.assertFalse(args.assigned_to)
+        self.assertFalse(args.priority)
+        self.assertFalse(args.due_date)
+        self.assertFalse(args.created_by)
+        self.assertIsNone(args.tags)
+        self.assertIs(args.func, handle_task_unset)
+
+    def test_unset_task_scalar_flags_set_true(self):
+        """Scalar unset flags act as store_true (no value required)."""
+        args = repl_parser.parse_args([
+            "unset",
+            "main/todo/fix-parser",
+            "--assigned-to",
+            "--priority",
+            "--due-date",
+            "--created-by",
+        ])
+
+        self.assertTrue(args.assigned_to)
+        self.assertTrue(args.priority)
+        self.assertTrue(args.due_date)
+        self.assertTrue(args.created_by)
+
+    def test_unset_task_tag_flag_takes_value_and_is_repeatable(self):
+        """`unset --tag TAG` takes a value and appends when repeated."""
+        args = repl_parser.parse_args([
+            "unset",
+            "main/todo/fix-parser",
+            "--tag", "chore",
+            "--tag", "bug",
+        ])
+
+        self.assertEqual(args.tags, ["chore", "bug"])
 
     def test_show_maps_to_show_handler_and_defaults_plain_to_false(self):
         args = repl_parser.parse_args(["show", "main/todo/fix-login"])

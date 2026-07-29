@@ -39,6 +39,19 @@ class TaskUpdateParams:
     created_by:  str | None = None
     due_date:    datetime | None = None
 
+@dataclass
+class TaskUnsetParams:
+    """
+    Flags indicating which fields to clear on a task. Scalar fields are unset
+    when their flag is True; tags listed in `tags` are removed from the task's
+    tag list.
+    """
+    assigned_to: bool = False
+    priority:    bool = False
+    tags:        list[str] = field(default_factory=list)
+    due_date:    bool = False
+    created_by:  bool = False
+
 
 # ── Return types ──────────────────────────────────────────────────────────────
 
@@ -825,6 +838,37 @@ class KanbanService(CompletionDataSource):
             task.due_date = due_date
         if updates.created_by is not None:
             task.created_by = updates.created_by
+
+        updated = self.repository.update_task(task, slug=slug)
+        self.index_service.upsert_task(updated)
+        return updated
+
+    def unset_task(
+        self,
+        path:   Path | Slug,
+        unsets: TaskUnsetParams,
+    ) -> Task:
+        """
+        Clear fields on an existing task. Scalar fields (assigned_to, priority,
+        due_date, created_by) are cleared when the corresponding flag is True.
+        Tags listed in `unsets.tags` are removed from the task's tag list.
+        Accepts a fully-qualified Path (from the CLI) or a bare task Slug (from
+        the REPL). Raises TaskNotFound if the task cannot be resolved. Updates
+        the index entry and commits.
+        """
+        task = self.get_task(path)
+        slug = task.slug
+
+        if unsets.assigned_to:
+            task.assigned_to = None
+        if unsets.priority:
+            task.priority = None
+        if unsets.due_date:
+            task.due_date = None
+        if unsets.created_by:
+            task.created_by = None
+        if unsets.tags:
+            task.tags = list(set(task.tags) - set(unsets.tags))
 
         updated = self.repository.update_task(task, slug=slug)
         self.index_service.upsert_task(updated)

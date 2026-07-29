@@ -22,7 +22,7 @@ from ..repl.command_helpers import (
     handle_delete_helper,
     handle_rename_helper
 )
-from ..services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
+from ..services.kanban import KanbanService, TaskCreateParams, TaskUnsetParams, TaskUpdateParams
 from ..storage.seeds import BOOTSTRAP_CONFIG
 
 # ---------------------------------------------------------------------------
@@ -215,6 +215,20 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: C
 	if args.column is not None:
 		result = svc.move_task(Path(result.path), Slug(args.column))
 
+	renderer.render_task_update(args, result)
+
+
+@with_task_slug
+def handle_task_unset(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
+	unsets = TaskUnsetParams(
+		assigned_to=args.assigned_to,
+		priority=args.priority,
+		tags=args.tags or [],
+		due_date=args.due_date,
+		created_by=args.created_by,
+	)
+
+	result = svc.unset_task(args.path, unsets=unsets)
 	renderer.render_task_update(args, result)
 
 

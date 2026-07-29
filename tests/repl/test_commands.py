@@ -14,7 +14,7 @@ from uuid import uuid4
 
 from kanban.models import Board, Column, Slug, Task
 from kanban.repl import commands
-from kanban.services.kanban import TaskCreateParams, TaskUpdateParams
+from kanban.services.kanban import TaskCreateParams, TaskUnsetParams, TaskUpdateParams
 
 
 class TestReplCommandHandlers(unittest.TestCase):
@@ -382,6 +382,53 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         self.svc.move_task.assert_called_once_with(Path("/alpha/todo/fix-parser"), Slug("done"))
         self.renderer.render_task_update.assert_called_once_with(args, moved)
+
+    def test_handle_task_unset_defaults(self):
+        """`unset` with no flags forwards an empty TaskUnsetParams and renders via render_task_update."""
+        args = self._args(path="alpha/todo/fix-parser", assigned_to=False, priority=False, tags=None, due_date=False, created_by=False)
+        result = object()
+        self.svc.unset_task.return_value = result
+
+        commands.handle_task_unset(args, self.svc, self.renderer)
+
+        self.svc.unset_task.assert_called_once_with(
+            Slug("alpha/todo/fix-parser"),
+            unsets=TaskUnsetParams(
+                assigned_to=False,
+                priority=False,
+                tags=[],
+                due_date=False,
+                created_by=False,
+            ),
+        )
+        self.renderer.render_task_update.assert_called_once_with(args, result)
+
+    def test_handle_task_unset_with_flags(self):
+        """`unset` translates boolean flags and tag list into TaskUnsetParams and calls unset_task."""
+        args = self._args(
+            path="alpha/todo/fix-parser",
+            assigned_to=True,
+            priority=False,
+            tags=["chore"],
+            due_date=True,
+            created_by=False,
+        )
+        result = object()
+        self.svc.unset_task.return_value = result
+
+        commands.handle_task_unset(args, self.svc, self.renderer)
+
+        self.svc.unset_task.assert_called_once_with(
+            Slug("alpha/todo/fix-parser"),
+            unsets=TaskUnsetParams(
+                assigned_to=True,
+                priority=False,
+                tags=["chore"],
+                due_date=True,
+                created_by=False,
+            ),
+        )
+        self.renderer.render_task_update.assert_called_once_with(args, result)
 
     def test_handle_task_move(self):
         """`move` with a column forwards path and column to move_task and renders via render_task_move."""

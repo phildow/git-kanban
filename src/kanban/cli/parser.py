@@ -34,6 +34,7 @@ from ..cli.commands import (
     handle_task_list,
     handle_task_move,
     handle_task_rename,
+    handle_task_unset,
     handle_task_update,
     handle_task_view,
 )
@@ -84,6 +85,14 @@ def _add_task_update_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("-c", "--column", dest="column", metavar="COLUMN", help="Move the task to this column")
     parser.add_argument("-d", "--due-date", dest="due_date", metavar="DATE", help="Due date (YYYY-MM-DD)")
     parser.add_argument("-b", "--created-by", dest="created_by", metavar="NAME", help="Creator name")
+
+
+def _add_task_unset_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("-w", "--assigned-to", dest="assigned_to", action="store_true", default=False, help="Unset the assigned user")
+    parser.add_argument("-p", "--priority", dest="priority", action="store_true", default=False, help="Unset the priority")
+    parser.add_argument("-t", "--tag", metavar="TAG", action="append", dest="tags", help="Remove a tag (repeatable)")
+    parser.add_argument("-d", "--due-date", dest="due_date", action="store_true", default=False, help="Unset the due date")
+    parser.add_argument("-b", "--created-by", dest="created_by", action="store_true", default=False, help="Unset the creator name")
 
 
 # ---------------------------------------------------------------------------
@@ -247,6 +256,14 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     _add_format_arg(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_task_update)
+
+    # task unset
+    p = task_sub.add_parser("unset", help="Unset fields on a task")
+    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified /board/column/task path")
+    _add_task_unset_args(p)
+    _add_format_arg(p)
+    _add_global_flags(p)
+    p.set_defaults(func=handle_task_unset)
 
     # task delete
     p = task_sub.add_parser("delete", help="Delete a task")

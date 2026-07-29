@@ -18,7 +18,7 @@ from functools import wraps
 from ..storage.seeds import BOOTSTRAP_CONFIG
 from ..models import Priority, Slug, TaskFilter
 from ..protocols.command_renderer import CommandRenderer
-from ..services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
+from ..services.kanban import KanbanService, TaskCreateParams, TaskUnsetParams, TaskUpdateParams
 from ..utils.shell import prompt_for_confirmation
 
 
@@ -221,6 +221,20 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: C
 	if args.column is not None:
 		result = svc.move_task(Path(result.path), Slug(args.column))
 
+	_pick(args, renderer, json_renderer).render_task_update(args, result)
+
+
+@with_absolute_path
+def handle_task_unset(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
+	unsets = TaskUnsetParams(
+		assigned_to=args.assigned_to,
+		priority=args.priority,
+		tags=args.tags or [],
+		due_date=args.due_date,
+		created_by=args.created_by,
+	)
+
+	result = svc.unset_task(args.path, unsets=unsets)
 	_pick(args, renderer, json_renderer).render_task_update(args, result)
 
 

@@ -418,6 +418,13 @@ kanban task update <board>/<column>/<task>
     [--due-date <date>]
     [--created-by <name>]
 
+kanban task unset <board>/<column>/<task>
+    [--assigned-to]
+    [--priority]
+    [--tag <tag>]
+    [--due-date]
+    [--created-by]
+
 kanban task move <board>/<column>/<task>
     [<column>]
     [--top]
@@ -530,6 +537,13 @@ update <task>
     [--tag <tag>]
     [--due-date <date>]
     [--created-by <name>]
+
+unset <task>
+    [--assigned-to]
+    [--priority]
+    [--tag <tag>]
+    [--due-date]
+    [--created-by]
 
 move <task> [<column>]
     [--top]
