@@ -337,8 +337,13 @@ def build_parser() -> argparse.ArgumentParser:
     """Return the fully configured top-level verb-first argument parser."""
     epilogue = """
 Examples:
-    ...
-    """
+    board main         Set the active board to 'main'
+    cols               List the columns in the active board
+    new task todo "Fix login" -p high -t bug
+                       Create a new task in the 'todo' column with title, priority, and tag
+    tasks todo         List all tasks in the 'todo' column of the active board
+    tasks -x done      List all tasks in the active board except those in the 'done' column
+    tasks -t bug       List all tasks in the active board with the 'bug' tag"""
     parser = argparse.ArgumentParser(
         add_help=False,
         prog="",
