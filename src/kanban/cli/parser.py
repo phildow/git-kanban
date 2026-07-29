@@ -331,12 +331,18 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     """Return the fully configured top-level argument parser."""
+    epilogue = """
+Try `kanban repl` to start an interactive shell with tab completion and command history.
+Try `kanban tui` to start a cards-based terminal user interface for kanban.
+Use the CLI directly with `kanban board list`, `kanban task create`, etc.
+    """
     parser = argparse.ArgumentParser(
         prog="kanban",
-        description="Git Kanban: backed by the filesystem, tracked by git",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="Kanban for engineers. Git-backed, Markdown-based kanban for your terminal.",
         # type: ignore
         color=False,
-        epilog="Use `kanban repl` to start an interactive shell with tab completion and command history."
+        epilog=epilogue
     )
     _add_global_flags(parser)
 

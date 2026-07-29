@@ -145,10 +145,9 @@ class RichRenderer(CommandRenderer):
 		self._emit(args, table)
 
 	def render_board_create(self, args: argparse.Namespace, result: Board) -> None:
-		"""Render a message indicating that a board was created, including its name."""
-		board_name = result.name or args.board
-		board_slug = result.slug or args.board
-		self._emit(args, f"Created: {board_name} ({board_slug})")
+		"""Render a message indicating that a board was created, including its name and slug."""
+		self._emit(args, f"Created: {result.name}")
+		self._emit(args, f"Slug: {result.slug}")
 
 	def render_board_info(self, args: argparse.Namespace, result: Board) -> None:
 		"""Render detailed information for a single board."""
@@ -156,14 +155,12 @@ class RichRenderer(CommandRenderer):
 
 	def render_board_rename(self, args: argparse.Namespace, result: Board) -> None:
 		"""Render a message indicating that a board was renamed, including the old and new names."""
-		old_name = args.path
-		new_name = result.name or args.new_name
-		new_slug = result.slug or args.new_name
-		self._emit(args, f"Renamed: {old_name} → {new_name} ({new_slug})")
+		self._emit(args, f"Renamed: {result.name}")
+		self._emit(args, f"Slug: {result.slug}")
 
 	def render_board_delete(self, args: argparse.Namespace, result: Board) -> None:
 		"""Render a message indicating that a board was deleted, including its name."""
-		self._emit(args, f"Deleted: {result.name} ({result.slug})")
+		self._emit(args, f"Deleted: {result.name}")
 
 # ---------------------------------------------------------------------------
 # Column rendering
@@ -224,29 +221,17 @@ class RichRenderer(CommandRenderer):
 		self._emit(args, table)
 
 	def render_column_create(self, args: argparse.Namespace, result: Column) -> None:
-		"""
-		Render a message indicating that a column was created, 
-		including its name and optionally its board if available.
-		"""
-		board_name = result.board
-		column_name = result.name
-		column_slug = result.slug
-		
-		self._emit(args, f"Created: {column_name} ({column_slug})")
+		"""Render a message indicating that a column was created, including its name and slug."""
+		self._emit(args, f"Created: {result.name}")
+		self._emit(args, f"Slug: {result.slug}")
 
 	def render_column_rename(self, args: argparse.Namespace, result: Column) -> None:
 		"""
 		Render a message indicating that a column was renamed, including the old and new names,
 		and optionally the board if available.
 		"""
-		path = self._path_from_args(args)
-		parts = path.parts
-		board_name = result.board or (parts[0] if len(parts) > 0 else None)
-		old_name = parts[1] if len(parts) > 1 else (parts[0] if len(parts) > 0 else "")
-		new_name = result.name or args.new_name
-		new_slug = result.slug or args.new_slug
-
-		self._emit(args, f"Renamed: {old_name} → {new_name} ({new_slug})")
+		self._emit(args, f"Renamed: {result.name}")
+		self._emit(args, f"Slug: {result.slug}")
 
 	def render_column_reorder(self, args: argparse.Namespace, result: list[Column]) -> None:
 		"""
@@ -265,15 +250,37 @@ class RichRenderer(CommandRenderer):
 			self._emit(args, f"Reordered: {target}")
 
 	def render_column_delete(self, args: argparse.Namespace, result: Column) -> None:
-		"""
-		Render a message indicating that a column was deleted,
-		including its name and optionally its board if available.
-		"""
-		self._emit(args, f"Deleted: {result.name} ({result.slug})")
+		"""Render a message indicating that a column was deleted, including its name."""
+		self._emit(args, f"Deleted: {result.name}")
 
 # ---------------------------------------------------------------------------
 # Task rendering
 # ---------------------------------------------------------------------------
+
+	def render_task(self, args: argparse.Namespace, task: Task) -> None:
+		"""Render the metadata of a task in a table format."""
+		board = self.board_for_slug(task.board)
+		column = self.column_for_slug(task.column)
+
+		table = Table(box=box.ASCII2, show_header=False, header_style="bold", title_justify="left")
+
+		table.add_column("", width=12, justify="right", no_wrap=True)
+		table.add_column("", width=60, justify="left", no_wrap=False)
+
+		table.add_row("Title", Text(task.title, style="bold"))
+		table.add_row("Slug", str(task.slug), end_section=True)
+		
+		table.add_row("Board", board.name if board else "-")
+		table.add_row("Column", column.name if column else "-")
+		table.add_row("Assigned To", task.assigned_to or "-")
+		table.add_row("Priority", task.priority or "-")
+		table.add_row("Due", str(task.due_date.date().isoformat()) if task.due_date else "-")
+		table.add_row("Tags", ", ".join(task.tags) if task.tags else "-")
+		table.add_row("Created By", task.created_by or "-")
+
+		self._emit(args, table)
+
+	# -----------------------------------------------------------------------
 
 	def render_task_list(self, args: argparse.Namespace, result: list[Task]) -> None:
 		"""Render a list of tasks, optionally with their slugs, titles, and locations."""
@@ -361,13 +368,14 @@ class RichRenderer(CommandRenderer):
 
 	def render_task_create(self, args: argparse.Namespace, result: Task) -> None:
 		"""Render a message indicating that a task was created"""
-		self._emit(args, f"Created Task: {result.title}")
-		self._emit(args, f"Path: {result.path}")
+		# self._emit(args, f"Created Task: {result.title}")
+		# self._emit(args, f"Slug: {result.slug}")
+		self.render_task(args, result)
 
 	def render_task_view(self, args: argparse.Namespace, result: Task) -> None:
 		"""Render detailed information about a single task, including all metadata and the body/description."""
 		self._emit(args, "")
-		self.render_task_metadata(args, result)
+		self.render_task(args, result)
 		self._emit(args, "")
 
 		body: str | Text | KanbanMarkdown = ""
@@ -385,7 +393,7 @@ class RichRenderer(CommandRenderer):
 	def render_task_info(self, args: argparse.Namespace, result: Task) -> None:
 		"""Render a task's metadata without its body."""
 		self._emit(args, "")
-		self.render_task_metadata(args, result)
+		self.render_task(args, result)
 		self._emit(args, "")
 
 	def render_task_edit(self, args: argparse.Namespace, result: Task) -> None:
@@ -396,7 +404,7 @@ class RichRenderer(CommandRenderer):
 	def render_task_update(self, args: argparse.Namespace, result: Task) -> None:
 		"""Render a message indicating that a task was updated, including its slug."""
 		self._emit(args, "")
-		self.render_task_metadata(args, result)
+		self.render_task(args, result)
 		self._emit(args, "")
 
 	def render_task_move(self, args: argparse.Namespace, result: Task) -> None:
@@ -409,12 +417,10 @@ class RichRenderer(CommandRenderer):
 			msg = f"Moved: {result.title}"
 		self._emit(args, msg)
 	
-	# TODO: change output
 	def render_task_rename(self, args: argparse.Namespace, result: Task) -> None:
 		"""Render a message indicating that a task was renamed, including the old and new slugs."""
-		old_slug = str(self._path_from_args(args))
-		new_slug = result.slug
-		self._emit(args, f"Renamed: {result.title} ({old_slug} → {new_slug})")
+		self._emit(args, f"Renamed: {result.title}")
+		self._emit(args, f"Slug: {result.slug}")
 
 	def render_task_reorder(self, args: argparse.Namespace, task_op: tuple[Task, str]) -> None:
 		result, op = task_op
@@ -427,8 +433,8 @@ class RichRenderer(CommandRenderer):
 		self._emit(args, msg)
 
 	def render_task_delete(self, args: argparse.Namespace, result: Task) -> None:
-		"""Render a message indicating that a task was deleted, including its slug."""
-		self._emit(args, f"Deleted: {result.title} ({result.slug})")
+		"""Render a message indicating that a task was deleted, including its name."""
+		self._emit(args, f"Deleted: {result.title}")
 
 	def render_task_assign(self, args: argparse.Namespace, result: Task) -> None:
 		"""Render a message indicating that a task was assigned to a user."""
@@ -467,29 +473,6 @@ class RichRenderer(CommandRenderer):
 # ---------------------------------------------------------------------------
 # Utilities and shared behavior for rendering commands
 # ---------------------------------------------------------------------------
-
-	def render_task_metadata(self, args: argparse.Namespace, task: Task) -> None:
-		"""Render the metadata of a task in a table format."""
-		board = self.board_for_slug(task.board)
-		column = self.column_for_slug(task.column)
-
-		table = Table(box=box.ASCII2, show_header=False, header_style="bold", title_justify="left")
-
-		table.add_column("", width=12, justify="right", no_wrap=True)
-		table.add_column("", width=60, justify="left", no_wrap=False)
-
-		table.add_row("Title", Text(task.title, style="bold"))
-		table.add_row("Slug", str(task.slug), end_section=True)
-		
-		table.add_row("Board", board.name if board else "-")
-		table.add_row("Column", column.name if column else "-")
-		table.add_row("Assigned To", task.assigned_to or "-")
-		table.add_row("Priority", task.priority or "-")
-		table.add_row("Due", str(task.due_date.date().isoformat()) if task.due_date else "-")
-		table.add_row("Tags", ", ".join(task.tags) if task.tags else "-")
-		table.add_row("Created By", task.created_by or "-")
-
-		self._emit(args, table)
 
 	def board_for_slug(self, slug: Slug) -> Board | None:
 		"""Given a board slug, return the corresponding board."""

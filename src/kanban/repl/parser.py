@@ -330,14 +330,19 @@ def _add_comment_parser(subparsers: argparse._SubParsersAction) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     """Return the fully configured top-level verb-first argument parser."""
+    epilogue = """
+Examples:
+    ...
+    """
     parser = argparse.ArgumentParser(
         add_help=False,
         prog="",
-        formatter_class=CustomFormatter,
-        description="Git Kanban: backed by the filesystem, tracked by git",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        # formatter_class=CustomFormatter,
+        description="Kanban for engineers. Git-backed, Markdown-based kanban for your terminal.",
         # type: ignore
         color=False,
-        epilog="Use `kanban repl` to start an interactive shell with tab completion and command history."
+        epilog=epilogue,
     )
     
     _add_global_flags(parser)
