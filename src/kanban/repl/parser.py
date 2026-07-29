@@ -14,11 +14,10 @@ import argparse
 from ..models import Priority
 from ..repl.commands import (
     handle_board_list,
-    handle_board_create,
     handle_column_list,
+    handle_create,
     handle_init,
     handle_delete,
-    handle_column_create,
     handle_column_reorder,
     handle_get_config,
     handle_set_config,
@@ -28,7 +27,6 @@ from ..repl.commands import (
     handle_status,
     handle_task_assign,
     handle_task_comment,
-    handle_task_create,
     handle_task_edit,
     handle_task_info,
     handle_task_list,
@@ -122,41 +120,32 @@ def _add_list_args(parser: argparse.ArgumentParser, sort_choices: list[str]) -> 
 # ---------------------------------------------------------------------------
 
 def _add_create_parser(subparsers: argparse._SubParsersAction) -> None:
-    create_parser = subparsers.add_parser("create", aliases=["new", "n"], help="Create a board, column, or task")
-    _add_global_flags(create_parser)
-    create_sub = create_parser.add_subparsers(dest="create_subject", metavar="SUBJECT")
-    create_sub.required = True
-
-    # create board
-    p = create_sub.add_parser("board", aliases=["b"], help="Create a new board")
-    p.add_argument("board", metavar="BOARD", help="Board name")
+    epilog = """
+Examples:
+    create todo "Fix login"
+    create --column "In Progress"
+    create --board "Main Project"
+    """
+    p = subparsers.add_parser("create", aliases=["new", "n"], help="Create a board, column, or task", epilog=epilog, formatter_class=argparse.RawDescriptionHelpFormatter)
     _add_global_flags(p)
-    p.set_defaults(func=handle_board_create)
-
-    # create column
-    p = create_sub.add_parser("column", aliases=["c"], help="Create a new column")
-    p.add_argument("column", metavar="COLUMN", help="Name of the new column, created in the active board")
-    _add_global_flags(p)
-    p.set_defaults(func=handle_column_create)
-
-    # create task
-    p = create_sub.add_parser("task", aliases=["t"], help="Create a new task")
-    p.add_argument("column", metavar="COLUMN", help="Column to create the task in, created in the active board")
-    p.add_argument("title", metavar="TITLE", help="Title of the new task")
+    group = p.add_mutually_exclusive_group(required=True)
+    group.add_argument("column", metavar="COLUMN", nargs="?", help="Existing column to create the new task in")
+    group.add_argument("--board", metavar="NAME", dest="new_board", help="Create a new board with the given name")
+    group.add_argument("-c", "--column", metavar="NAME", dest="new_column", help="Create a new column with the given name in the active board")
+    p.add_argument("title", metavar="TITLE", nargs="?", help="Title of the new task")
     p.add_argument("--edit", action="store_true", default=False, help="Open the new task in the editor after creating it")
     _add_task_update_args(p)
-    _add_global_flags(p)
-    p.set_defaults(func=handle_task_create)
+    p.set_defaults(func=handle_create)
 
 
 def _add_delete_parser(subparsers: argparse._SubParsersAction) -> None:
-    examples = """
-examples:
+    epilog = """
+Examples:
     delete fix-login
     delete -c todo
     delete -b
     """
-    p = subparsers.add_parser("delete", aliases=["del", "rm"], help="Delete a board, column, or task", epilog=examples, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p = subparsers.add_parser("delete", aliases=["del", "rm"], help="Delete a board, column, or task", epilog=epilog, formatter_class=argparse.RawDescriptionHelpFormatter)
     _add_global_flags(p)
     group = p.add_mutually_exclusive_group(required=True)
     group.add_argument("path", metavar="TASK", nargs="?", help="The task to delete")
@@ -167,13 +156,13 @@ examples:
 
 
 def _add_rename_parser(subparsers: argparse._SubParsersAction) -> None:
-    examples = """
-examples:
+    epilog = """
+Examples:
     rename fix-login "Fix the login page"
     rename -c todo "In Progress"
     rename -b "Main Project"
     """
-    rename_parser = subparsers.add_parser("rename", help="Rename a board, column, or task", epilog=examples, formatter_class=argparse.RawDescriptionHelpFormatter)
+    rename_parser = subparsers.add_parser("rename", help="Rename a board, column, or task", epilog=epilog, formatter_class=argparse.RawDescriptionHelpFormatter)
     _add_global_flags(rename_parser)
     group = rename_parser.add_mutually_exclusive_group(required=True)
     group.add_argument("path", metavar="TASK", nargs="?", help="The task to rename")
@@ -335,15 +324,30 @@ def _add_comment_parser(subparsers: argparse._SubParsersAction) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     """Return the fully configured top-level verb-first argument parser."""
-    epilogue = """
+    epilog = """
 Examples:
     board main         Set the active board to 'main'
     cols               List the columns in the active board
-    new task todo "Fix login" -p high -t bug
+    new todo "Fix login" -p high -t bug
                        Create a new task in the 'todo' column with title, priority, and tag
     tasks todo         List all tasks in the 'todo' column of the active board
     tasks -x done      List all tasks in the active board except those in the 'done' column
-    tasks -t bug       List all tasks in the active board with the 'bug' tag"""
+    tasks -t bug       List all tasks in the active board with the 'bug' tag
+    tag fix-login urgent
+                       Add the 'urgent' tag to the 'fix-login' task
+    move fix-login done
+                       Move the 'fix-login' task to the 'done' column
+    view fix-login     View the details and body of the 'fix-login' task
+    tasks --help       Show help for the 'tasks' command
+
+Slugs:
+    Identify tasks and other objects using their slugs. 
+    Whenever a board, column, or task is created, it is assigned a slug based on its title. 
+    Slugs are unique within their scope and can be used to refer to the object in commands.
+    
+    For example, a task with the title "Fix login" might have the slug "fix-login". 
+    Use the `--slugs` flag with the 'boards', 'columns', and 'tasks' commands to see the respective slugs."""
+    
     parser = argparse.ArgumentParser(
         add_help=False,
         prog="",
@@ -352,7 +356,7 @@ Examples:
         description="Kanban for engineers. Git-backed, Markdown-based kanban for your terminal.",
         # type: ignore
         color=False,
-        epilog=epilogue,
+        epilog=epilog,
     )
     
     _add_global_flags(parser)

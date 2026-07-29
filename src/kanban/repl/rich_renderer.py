@@ -109,9 +109,6 @@ class RichRenderer(CommandRenderer):
 			return
 
 		slugs = [board.slug for board in result]
-		
-		# TODO: From this point below shares logic with render_task_list_slug_only, 
-		# 		consider refactoring to a shared helper function
 
 		if any(len(slug) > 16 for slug in slugs):
 			self._emit(args, "\n".join(slugs))
@@ -186,9 +183,6 @@ class RichRenderer(CommandRenderer):
 		if not result:
 			return
 		slugs = [column.slug for column in result]
-
-		# TODO: From this point below shares logic with render_task_list_slug_only, 
-		# 		consider refactoring to a shared helper function
 
 		if any(len(slug) > 16 for slug in slugs):
 			self._emit(args, "\n".join(slugs))

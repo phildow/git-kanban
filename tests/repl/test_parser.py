@@ -10,16 +10,14 @@ import unittest
 
 from kanban.repl import parser as repl_parser
 from kanban.repl.commands import (
-    handle_board_create,
     handle_board_list,
-    handle_column_create,
     handle_column_list,
+    handle_create,
     handle_set_board,
     handle_rename,
     handle_search,
     handle_task_assign,
     handle_task_comment,
-    handle_task_create,
     handle_task_list,
     handle_task_move,
     handle_task_tag,
@@ -87,39 +85,46 @@ class TestParserAliases(unittest.TestCase):
         self.assertEqual(args.exclude_columns, ["done", "archive"])
 
     def test_create_aliases_map_to_create_handlers(self):
-        args = repl_parser.parse_args(["new", "board", "main"])
+        args = repl_parser.parse_args(["new", "--board", "main"])
         self.assertEqual(args.command, "new")
-        self.assertEqual(args.create_subject, "board")
-        self.assertEqual(args.board, "main")
-        self.assertIs(args.func, handle_board_create)
+        self.assertEqual(args.new_board, "main")
+        self.assertIsNone(args.new_column)
+        self.assertIsNone(args.column)
+        self.assertIs(args.func, handle_create)
 
-        args = repl_parser.parse_args(["new", "column", "todo"])
+        args = repl_parser.parse_args(["new", "-c", "todo"])
         self.assertEqual(args.command, "new")
-        self.assertEqual(args.create_subject, "column")
-        self.assertEqual(args.column, "todo")
-        self.assertIs(args.func, handle_column_create)
+        self.assertEqual(args.new_column, "todo")
+        self.assertIsNone(args.new_board)
+        self.assertIsNone(args.column)
+        self.assertIs(args.func, handle_create)
 
-        args = repl_parser.parse_args(["n", "task", "todo", "fix-parser"])
+        args = repl_parser.parse_args(["new", "--column", "todo"])
+        self.assertEqual(args.new_column, "todo")
+        self.assertIs(args.func, handle_create)
+
+        args = repl_parser.parse_args(["n", "todo", "fix-parser"])
         self.assertEqual(args.command, "n")
-        self.assertEqual(args.create_subject, "task")
         self.assertEqual(args.column, "todo")
         self.assertEqual(args.title, "fix-parser")
+        self.assertIsNone(args.new_board)
+        self.assertIsNone(args.new_column)
         self.assertFalse(args.edit)
-        self.assertIs(args.func, handle_task_create)
+        self.assertIs(args.func, handle_create)
 
     def test_create_task_edit_flag(self):
-        """`create task ... --edit` sets edit to True."""
-        args = repl_parser.parse_args(["create", "task", "todo", "fix-parser", "--edit"])
+        """`create <column> <title> --edit` sets edit to True."""
+        args = repl_parser.parse_args(["create", "todo", "fix-parser", "--edit"])
         self.assertTrue(args.edit)
 
     def test_create_task_description_flag(self):
-        """`create task ... --description TEXT` binds args.description."""
-        args = repl_parser.parse_args(["create", "task", "todo", "fix-parser", "--description", "Login is broken"])
+        """`create <column> <title> --description TEXT` binds args.description."""
+        args = repl_parser.parse_args(["create", "todo", "fix-parser", "--description", "Login is broken"])
         self.assertEqual(args.description, "Login is broken")
 
     def test_create_task_description_defaults_to_none(self):
-        """`create task ...` without --description leaves args.description as None."""
-        args = repl_parser.parse_args(["create", "task", "todo", "fix-parser"])
+        """`create <column> <title>` without --description leaves args.description as None."""
+        args = repl_parser.parse_args(["create", "todo", "fix-parser"])
         self.assertIsNone(args.description)
 
     def test_update_task_description_flag(self):

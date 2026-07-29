@@ -209,7 +209,7 @@ def _add_column_parser(subparsers: argparse._SubParsersAction) -> None:
 # ---------------------------------------------------------------------------
 
 def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
-    task_parser = subparsers.add_parser("task", aliases=["tasks"], help="Manage tasks")
+    task_parser = subparsers.add_parser("task", help="Manage tasks")
     _add_global_flags(task_parser)
     task_sub = task_parser.add_subparsers(dest="task_command", metavar="COMMAND")
     task_sub.required = True
@@ -336,18 +336,19 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     """Return the fully configured top-level argument parser."""
-    epilogue = """
+    epilog = """
+Start with `kanban init` to create a new kanban project in the current directory.
 Try `kanban repl` to start an interactive shell with tab completion and command history.
-Try `kanban tui` to start a cards-based terminal user interface for kanban.
 Use the CLI directly with `kanban board list`, `kanban task create`, etc.
     """
+    # Try `kanban tui` to start a cards-based terminal user interface for kanban.
     parser = argparse.ArgumentParser(
         prog="kanban",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="Kanban for engineers. Git-backed, Markdown-based kanban for your terminal.",
         # type: ignore
         color=False,
-        epilog=epilogue
+        epilog=epilog
     )
     _add_global_flags(parser)
 
@@ -355,7 +356,7 @@ Use the CLI directly with `kanban board list`, `kanban task create`, etc.
     subparsers.required = True
 
     # init
-    p = subparsers.add_parser("init", help="Initialise a new kanban repository in the current directory")
+    p = subparsers.add_parser("init", help="Create a new kanban project in the current directory")
     p.add_argument("-b", "--bootstrap", action="store_true", default=False,
                    help="Seed the repository with a default board and columns")
     _add_format_arg(p)

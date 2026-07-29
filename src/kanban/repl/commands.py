@@ -19,6 +19,7 @@ from ..protocols.command_renderer import CommandRenderer
 from ..repl.command_helpers import (
     parse_priority,
     handle_task_list_helper,
+    handle_create_helper,
     handle_delete_helper,
     handle_rename_helper
 )
@@ -100,6 +101,19 @@ def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: Comman
 		raise ValueError("Unexpected result type from handle_delete: {}".format(typ))
 
 
+def handle_create(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
+	typ, result = handle_create_helper(args, svc)
+
+	if typ is Board:
+		renderer.render_board_create(args, result)
+	elif typ is Column:
+		renderer.render_column_create(args, result)
+	elif typ is Task:
+		renderer.render_task_create(args, result)
+	else:
+		raise ValueError("Unexpected result type from handle_create: {}".format(typ))
+
+
 @with_task_slug
 def handle_rename(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	typ, result = handle_rename_helper(args, svc)
@@ -125,11 +139,6 @@ def handle_board_list(args: argparse.Namespace, svc: KanbanService, renderer: Co
 	renderer.render_board_list(args, result)
 
 
-def handle_board_create(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	result = svc.create_board(args.board)
-	renderer.render_board_create(args, result)
-	
-
 # ---------------------------------------------------------------------------
 # Column subcommands
 # ---------------------------------------------------------------------------
@@ -137,14 +146,6 @@ def handle_board_create(args: argparse.Namespace, svc: KanbanService, renderer: 
 def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.get_columns(board=args.board)
 	renderer.render_column_list(args, result)
-
-
-def handle_column_create(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	if svc.working_board is None:
-		raise ValueError("No active board; set one with `board` before creating a column")
-
-	result = svc.create_column(None, args.column)
-	renderer.render_column_create(args, result)
 
 
 def handle_column_reorder(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
@@ -158,28 +159,6 @@ def handle_column_reorder(args: argparse.Namespace, svc: KanbanService, renderer
 def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = handle_task_list_helper(args, svc)
 	renderer.render_task_list(args, result)
-	
-
-def handle_task_create(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	if svc.working_board is None and not args.column.startswith("/"):
-		raise ValueError("No active board; set one with `board` before creating a task")
-
-	params = TaskCreateParams(
-		title=args.title,
-		assigned_to=args.assigned_to,
-		priority=parse_priority(args),
-		tags=args.tags or [],
-		due_date=args.due_date,
-		created_by=args.created_by,
-		description=args.description,
-	)
-
-	result = svc.create_task(Slug(args.column), params)
-
-	if args.edit:
-		result = svc.edit_task(Path(result.path))
-
-	renderer.render_task_create(args, result)
 
 
 @with_task_slug
