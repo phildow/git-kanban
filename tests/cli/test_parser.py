@@ -57,7 +57,7 @@ class TestParserStructure(unittest.TestCase):
         top = self._subparser_choices(parser, "command")
         self.assertEqual(
             set(top.keys()),
-            {"init", "board", "column", "task", "tasks", "search", "log", "status", "config", "repl"},
+            {"init", "board", "column", "task", "search", "log", "status", "config", "repl"},
         )
 
     def test_top_level_subcommands_do_not_include_cd(self):
@@ -237,8 +237,8 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         self.assertEqual(args.created_by, "philip")
         self.assertIs(args.func, handle_task_update)
 
-        args = cli_parser.parse_args(["tasks", "update", "board-a/todo/fix-parser"])
-        self.assertEqual(args.command, "tasks")
+        args = cli_parser.parse_args(["task", "update", "board-a/todo/fix-parser"])
+        self.assertEqual(args.command, "task")
         self.assertIs(args.func, handle_task_update)
 
         args = cli_parser.parse_args(["task", "unset", "board-a/todo/fix-parser"])

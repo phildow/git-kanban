@@ -48,7 +48,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.renderer.render_set_board.assert_called_once_with(args, result)
 
     def test_handle_delete_renders_board_delete(self):
-        args = self._args(path="alpha")
+        args = self._args(path=None, board=True, column=None)
         deleted = object()
         with patch("kanban.repl.commands.handle_delete_helper", return_value=(Board, deleted)):
             commands.handle_delete(args, self.svc, self.renderer)
@@ -56,7 +56,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.renderer.render_board_delete.assert_called_once_with(args, deleted)
 
     def test_handle_delete_renders_column_delete(self):
-        args = self._args(path="alpha/todo")
+        args = self._args(path=None, board=False, column="todo")
         deleted = object()
         with patch("kanban.repl.commands.handle_delete_helper", return_value=(Column, deleted)):
             commands.handle_delete(args, self.svc, self.renderer)
@@ -64,7 +64,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.renderer.render_column_delete.assert_called_once_with(args, deleted)
 
     def test_handle_delete_renders_task_delete(self):
-        args = self._args(path="alpha/todo/fix-parser")
+        args = self._args(path="fix-parser", board=False, column=None)
         deleted = object()
         with patch("kanban.repl.commands.handle_delete_helper", return_value=(Task, deleted)):
             commands.handle_delete(args, self.svc, self.renderer)
@@ -72,7 +72,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.renderer.render_task_delete.assert_called_once_with(args, deleted)
 
     def test_handle_delete_raises_for_unexpected_type(self):
-        args = self._args(path="alpha")
+        args = self._args(path=None, board=True, column=None)
         with patch("kanban.repl.commands.handle_delete_helper", return_value=(str, object())):
             with self.assertRaises(ValueError):
                 commands.handle_delete(args, self.svc, self.renderer)
@@ -156,7 +156,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
     def test_handle_task_list(self):
         """`tasks` delegates to handle_task_list_helper and renders the result."""
-        args = self._args(path="alpha/todo")
+        args = self._args(column="todo")
         result = [object()]
         with patch("kanban.repl.commands.handle_task_list_helper", return_value=result) as mock_helper:
             commands.handle_task_list(args, self.svc, self.renderer)
@@ -165,21 +165,10 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.renderer.render_task_list.assert_called_once_with(args, result)
 
     def test_handle_column_list(self):
-        """`columns`/`cols` forwards board and renders the column list."""
-        args = self._args(board="alpha")
-        result = object()
-        self.svc.get_columns.return_value = result
-
-        commands.handle_column_list(args, self.svc, self.renderer)
-
-        self.svc.get_columns.assert_called_once_with(board="alpha")
-        self.renderer.render_column_list.assert_called_once_with(args, result)
-
-    def test_handle_column_list_defaults_to_active_board(self):
-        """`columns` with no board falls back to the active board context."""
-        args = self._args(board=None)
-        result = object()
+        """`columns`/`cols` uses the active board and renders the column list."""
         self.svc.working_board = "alpha"
+        args = self._args()
+        result = object()
         self.svc.get_columns.return_value = result
 
         commands.handle_column_list(args, self.svc, self.renderer)
@@ -188,8 +177,8 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.renderer.render_column_list.assert_called_once_with(args, result)
 
     def test_handle_column_list_raises_without_any_board(self):
-        """`columns` with no board argument and no active board raises."""
-        args = self._args(board=None)
+        """`columns` with no active board propagates the service error."""
+        args = self._args()
         self.svc.working_board = None
         self.svc.get_columns.side_effect = ValueError("No board specified and no board in context")
 
@@ -319,44 +308,44 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.renderer.render_task_create.assert_called_once_with(args, result)
 
     def test_handle_task_view(self):
-        args = self._args(path="alpha/todo/fix-parser")
+        args = self._args(path="fix-parser")
         result = object()
         self.svc.get_task.return_value = result
 
         commands.handle_task_view(args, self.svc, self.renderer)
 
-        self.svc.get_task.assert_called_once_with(Slug("alpha/todo/fix-parser"))
+        self.svc.get_task.assert_called_once_with(Slug("fix-parser"))
         self.renderer.render_task_view.assert_called_once_with(args, result)
 
     def test_handle_task_info(self):
-        args = self._args(path="alpha/todo/fix-parser")
+        args = self._args(path="fix-parser")
         result = object()
         self.svc.get_task.return_value = result
 
         commands.handle_task_info(args, self.svc, self.renderer)
 
-        self.svc.get_task.assert_called_once_with(Slug("alpha/todo/fix-parser"))
+        self.svc.get_task.assert_called_once_with(Slug("fix-parser"))
         self.renderer.render_task_info.assert_called_once_with(args, result)
 
     def test_handle_task_edit(self):
-        args = self._args(path="alpha/todo/fix-parser")
+        args = self._args(path="fix-parser")
         result = object()
         self.svc.edit_task.return_value = result
 
         commands.handle_task_edit(args, self.svc, self.renderer)
 
-        self.svc.edit_task.assert_called_once_with(Slug("alpha/todo/fix-parser"))
+        self.svc.edit_task.assert_called_once_with(Slug("fix-parser"))
         self.renderer.render_task_edit.assert_called_once_with(args, result)
 
     def test_handle_task_update_defaults(self):
-        args = self._args(path="alpha/todo/fix-parser", assigned_to=None, priority=None, tags=None, due_date=None, created_by=None, column=None, description=None)
+        args = self._args(path="fix-parser", assigned_to=None, priority=None, tags=None, due_date=None, created_by=None, column=None, description=None)
         result = object()
         self.svc.update_task.return_value = result
 
         commands.handle_task_update(args, self.svc, self.renderer)
 
         self.svc.update_task.assert_called_once_with(
-            Slug("alpha/todo/fix-parser"),
+            Slug("fix-parser"),
             updates=TaskUpdateParams(
                 title=None,
                 assigned_to=None,
@@ -370,7 +359,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
     def test_handle_task_update_with_fields(self):
         args = self._args(
-            path="alpha/todo/fix-parser",
+            path="fix-parser",
             assigned_to="philip",
             priority="medium",
             tags=["cli"],
@@ -385,7 +374,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         commands.handle_task_update(args, self.svc, self.renderer)
 
         self.svc.update_task.assert_called_once_with(
-            Slug("alpha/todo/fix-parser"),
+            Slug("fix-parser"),
             updates=TaskUpdateParams(
                 assigned_to="philip",
                 priority="medium",
@@ -398,7 +387,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
     def test_handle_task_update_without_column_does_not_move(self):
         """`update` without --column applies updates only and never calls move_task."""
-        args = self._args(path="alpha/todo/fix-parser", column=None, assigned_to=None, priority=None, tags=None, due_date=None, created_by=None, description=None)
+        args = self._args(path="fix-parser", column=None, assigned_to=None, priority=None, tags=None, due_date=None, created_by=None, description=None)
         result = object()
         self.svc.update_task.return_value = result
 
@@ -409,22 +398,22 @@ class TestReplCommandHandlers(unittest.TestCase):
 
     def test_handle_task_update_with_column_moves_task(self):
         """`update --column` moves the updated task to the given column and renders the moved result."""
-        args = self._args(path="alpha/todo/fix-parser", column="done", assigned_to=None, priority=None, tags=None, due_date=None, created_by=None, description=None)
+        args = self._args(path="fix-parser", column="done", assigned_to=None, priority=None, tags=None, due_date=None, created_by=None, description=None)
         updated = MagicMock()
-        updated.path = "/alpha/todo/fix-parser"
+        updated.path = "fix-parser"
         moved = object()
         self.svc.update_task.return_value = updated
         self.svc.move_task.return_value = moved
 
         commands.handle_task_update(args, self.svc, self.renderer)
 
-        self.svc.move_task.assert_called_once_with(Path("/alpha/todo/fix-parser"), Slug("done"))
+        self.svc.move_task.assert_called_once_with(Path("fix-parser"), Slug("done"))
         self.renderer.render_task_update.assert_called_once_with(args, moved)
 
     def test_handle_task_update_forwards_description(self):
         """`update --description TEXT` forwards description into `TaskUpdateParams`."""
         args = self._args(
-            path="alpha/todo/fix-parser",
+            path="fix-parser",
             assigned_to=None,
             priority=None,
             tags=None,
@@ -439,7 +428,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         commands.handle_task_update(args, self.svc, self.renderer)
 
         self.svc.update_task.assert_called_once_with(
-            Slug("alpha/todo/fix-parser"),
+            Slug("fix-parser"),
             updates=TaskUpdateParams(
                 title=None,
                 assigned_to=None,
@@ -454,14 +443,14 @@ class TestReplCommandHandlers(unittest.TestCase):
 
     def test_handle_task_unset_defaults(self):
         """`unset` with no flags forwards an empty TaskUnsetParams and renders via render_task_update."""
-        args = self._args(path="alpha/todo/fix-parser", assigned_to=False, priority=False, tags=None, due_date=False, created_by=False, description=False)
+        args = self._args(path="fix-parser", assigned_to=False, priority=False, tags=None, due_date=False, created_by=False, description=False)
         result = object()
         self.svc.unset_task.return_value = result
 
         commands.handle_task_unset(args, self.svc, self.renderer)
 
         self.svc.unset_task.assert_called_once_with(
-            Slug("alpha/todo/fix-parser"),
+            Slug("fix-parser"),
             unsets=TaskUnsetParams(
                 assigned_to=False,
                 priority=False,
@@ -475,7 +464,7 @@ class TestReplCommandHandlers(unittest.TestCase):
     def test_handle_task_unset_with_flags(self):
         """`unset` translates boolean flags and tag list into TaskUnsetParams and calls unset_task."""
         args = self._args(
-            path="alpha/todo/fix-parser",
+            path="fix-parser",
             assigned_to=True,
             priority=False,
             tags=["chore"],
@@ -489,7 +478,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         commands.handle_task_unset(args, self.svc, self.renderer)
 
         self.svc.unset_task.assert_called_once_with(
-            Slug("alpha/todo/fix-parser"),
+            Slug("fix-parser"),
             unsets=TaskUnsetParams(
                 assigned_to=True,
                 priority=False,
@@ -503,7 +492,7 @@ class TestReplCommandHandlers(unittest.TestCase):
     def test_handle_task_unset_with_description_flag(self):
         """`unset --description` forwards description=True in TaskUnsetParams."""
         args = self._args(
-            path="alpha/todo/fix-parser",
+            path="fix-parser",
             assigned_to=False,
             priority=False,
             tags=None,
@@ -517,7 +506,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         commands.handle_task_unset(args, self.svc, self.renderer)
 
         self.svc.unset_task.assert_called_once_with(
-            Slug("alpha/todo/fix-parser"),
+            Slug("fix-parser"),
             unsets=TaskUnsetParams(
                 assigned_to=False,
                 priority=False,
@@ -531,115 +520,115 @@ class TestReplCommandHandlers(unittest.TestCase):
 
     def test_handle_task_move(self):
         """`move` with a column forwards path and column to move_task and renders via render_task_move."""
-        args = self._args(path="alpha/todo/fix-parser", column="done")
+        args = self._args(path="fix-parser", column="done")
         result = object()
         self.svc.move_task.return_value = result
 
         commands.handle_task_move(args, self.svc, self.renderer)
 
-        self.svc.move_task.assert_called_once_with(Slug("alpha/todo/fix-parser"), Slug("done"))
+        self.svc.move_task.assert_called_once_with(Slug("fix-parser"), Slug("done"))
         self.renderer.render_task_move.assert_called_once_with(args, result)
 
     def test_handle_task_move_top(self):
         """`move --top` calls reorder_task with "top" and renders via render_task_reorder."""
-        args = self._args(path="alpha/todo/fix-parser", column=None, top=True, bottom=False, up=False, down=False)
+        args = self._args(path="fix-parser", column=None, top=True, bottom=False, up=False, down=False)
         result = object()
         self.svc.reorder_task.return_value = result
 
         commands.handle_task_move(args, self.svc, self.renderer)
 
-        self.svc.reorder_task.assert_called_once_with(Slug("alpha/todo/fix-parser"), "top")
+        self.svc.reorder_task.assert_called_once_with(Slug("fix-parser"), "top")
         self.renderer.render_task_reorder.assert_called_once_with(args, (result, "top"))
 
     def test_handle_task_move_bottom(self):
         """`move --bottom` calls reorder_task with "bottom" and renders via render_task_reorder."""
-        args = self._args(path="alpha/todo/fix-parser", column=None, top=False, bottom=True, up=False, down=False)
+        args = self._args(path="fix-parser", column=None, top=False, bottom=True, up=False, down=False)
         result = object()
         self.svc.reorder_task.return_value = result
 
         commands.handle_task_move(args, self.svc, self.renderer)
 
-        self.svc.reorder_task.assert_called_once_with(Slug("alpha/todo/fix-parser"), "bottom")
+        self.svc.reorder_task.assert_called_once_with(Slug("fix-parser"), "bottom")
         self.renderer.render_task_reorder.assert_called_once_with(args, (result, "bottom"))
 
     def test_handle_task_move_up(self):
         """`move --up` calls reorder_task with "up" and renders via render_task_reorder."""
-        args = self._args(path="alpha/todo/fix-parser", column=None, top=False, bottom=False, up=True, down=False)
+        args = self._args(path="fix-parser", column=None, top=False, bottom=False, up=True, down=False)
         result = object()
         self.svc.reorder_task.return_value = result
 
         commands.handle_task_move(args, self.svc, self.renderer)
 
-        self.svc.reorder_task.assert_called_once_with(Slug("alpha/todo/fix-parser"), "up")
+        self.svc.reorder_task.assert_called_once_with(Slug("fix-parser"), "up")
         self.renderer.render_task_reorder.assert_called_once_with(args, (result, "up"))
 
     def test_handle_task_move_down(self):
         """`move --down` calls reorder_task with "down" and renders via render_task_reorder."""
-        args = self._args(path="alpha/todo/fix-parser", column=None, top=False, bottom=False, up=False, down=True)
+        args = self._args(path="fix-parser", column=None, top=False, bottom=False, up=False, down=True)
         result = object()
         self.svc.reorder_task.return_value = result
 
         commands.handle_task_move(args, self.svc, self.renderer)
 
-        self.svc.reorder_task.assert_called_once_with(Slug("alpha/todo/fix-parser"), "down")
+        self.svc.reorder_task.assert_called_once_with(Slug("fix-parser"), "down")
         self.renderer.render_task_reorder.assert_called_once_with(args, (result, "down"))
 
     def test_handle_task_assign(self):
         """`assign` forwards path and user to assign_task and renders result."""
-        args = self._args(path="alpha/todo/fix-parser", assigned_to="alice", remove=False)
+        args = self._args(path="fix-parser", assigned_to="alice", remove=False)
         result = object()
         self.svc.assign_task.return_value = result
 
         commands.handle_task_assign(args, self.svc, self.renderer)
 
-        self.svc.assign_task.assert_called_once_with(Slug("alpha/todo/fix-parser"), "alice")
+        self.svc.assign_task.assert_called_once_with(Slug("fix-parser"), "alice")
         self.svc.unset_task.assert_not_called()
         self.renderer.render_task_assign.assert_called_once_with(args, result)
 
     def test_handle_task_assign_with_remove_flag(self):
         """`assign --remove` clears the task's assigned_to via unset_task."""
-        args = self._args(path="alpha/todo/fix-parser", assigned_to=None, remove=True)
+        args = self._args(path="fix-parser", assigned_to=None, remove=True)
         result = object()
         self.svc.unset_task.return_value = result
 
         commands.handle_task_assign(args, self.svc, self.renderer)
 
-        self.svc.unset_task.assert_called_once_with(Slug("alpha/todo/fix-parser"), TaskUnsetParams(assigned_to=True))
+        self.svc.unset_task.assert_called_once_with(Slug("fix-parser"), TaskUnsetParams(assigned_to=True))
         self.svc.assign_task.assert_not_called()
         self.renderer.render_task_assign.assert_called_once_with(args, result)
 
     def test_handle_task_tag(self):
         """`tag` forwards path and tag to tag_task and renders result."""
-        args = self._args(path="alpha/todo/fix-parser", tags="auth", remove=False)
+        args = self._args(path="fix-parser", tags="auth", remove=False)
         result = object()
         self.svc.tag_task.return_value = result
 
         commands.handle_task_tag(args, self.svc, self.renderer)
 
-        self.svc.tag_task.assert_called_once_with(Slug("alpha/todo/fix-parser"), "auth")
+        self.svc.tag_task.assert_called_once_with(Slug("fix-parser"), "auth")
         self.renderer.render_task_tag.assert_called_once_with(args, result)
 
     def test_handle_task_tag_with_remove_flag(self):
         """`tag --remove` forwards path and tag to untag_task and renders result."""
-        args = self._args(path="alpha/todo/fix-parser", tags="auth", remove=True)
+        args = self._args(path="fix-parser", tags="auth", remove=True)
         result = object()
         self.svc.untag_task.return_value = result
 
         commands.handle_task_tag(args, self.svc, self.renderer)
 
-        self.svc.untag_task.assert_called_once_with(Slug("alpha/todo/fix-parser"), "auth")
+        self.svc.untag_task.assert_called_once_with(Slug("fix-parser"), "auth")
         self.svc.tag_task.assert_not_called()
         self.renderer.render_task_tag.assert_called_once_with(args, result)
 
     def test_handle_task_comment(self):
         """`comment` forwards path and comment to comment_task and renders result."""
-        args = self._args(path="alpha/todo/fix-parser", comment="Looks good", edit=False)
+        args = self._args(path="fix-parser", comment="Looks good", edit=False)
         result = object()
         self.svc.comment_task.return_value = result
 
         commands.handle_task_comment(args, self.svc, self.renderer)
 
-        self.svc.comment_task.assert_called_once_with(Slug("alpha/todo/fix-parser"), "Looks good")
+        self.svc.comment_task.assert_called_once_with(Slug("fix-parser"), "Looks good")
         self.svc.edit_task.assert_not_called()
         self.renderer.render_task_comment.assert_called_once_with(args, result)
 
@@ -647,12 +636,12 @@ class TestReplCommandHandlers(unittest.TestCase):
         """`comment --edit` opens the task in the editor after appending an empty comment."""
         edit_result = object()
         self.svc.edit_task.return_value = edit_result
-        args = self._args(path="alpha/todo/fix-parser", comment=None, edit=True)
+        args = self._args(path="fix-parser", comment=None, edit=True)
 
         commands.handle_task_comment(args, self.svc, self.renderer)
 
-        self.svc.comment_task.assert_called_once_with(Slug("alpha/todo/fix-parser"), "")
-        self.svc.edit_task.assert_called_once_with(Slug("alpha/todo/fix-parser"))
+        self.svc.comment_task.assert_called_once_with(Slug("fix-parser"), "")
+        self.svc.edit_task.assert_called_once_with(Slug("fix-parser"))
         self.renderer.render_task_comment.assert_called_once_with(args, edit_result)
 
     def test_handle_search(self):
@@ -666,13 +655,13 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.renderer.render_search.assert_called_once_with(args, result)
 
     def test_handle_log(self):
-        args = self._args(path="alpha/todo/fix-parser", limit=5)
+        args = self._args(path="fix-parser", limit=5)
         result = object()
         self.svc.log.return_value = result
 
         commands.handle_log(args, self.svc, self.renderer)
 
-        self.svc.log.assert_called_once_with(path=Path("alpha/todo/fix-parser"), limit=5)
+        self.svc.log.assert_called_once_with(path=Path("fix-parser"), limit=5)
         self.renderer.render_log.assert_called_once_with(args, result)
 
     def test_handle_status(self):

@@ -144,7 +144,7 @@ def handle_board_list(args: argparse.Namespace, svc: KanbanService, renderer: Co
 # ---------------------------------------------------------------------------
 
 def handle_column_list(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	result = svc.get_columns(board=args.board)
+	result = svc.get_columns(board=None)
 	renderer.render_column_list(args, result)
 
 

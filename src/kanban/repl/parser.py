@@ -271,8 +271,6 @@ def _add_boards_parser(subparsers: argparse._SubParsersAction) -> None:
 
 def _add_columns_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("columns", aliases=["cols"], help="List the columns in the active board")
-    # TODO: remove board argument and use current context instead
-    p.add_argument("board", metavar="BOARD", nargs="?", help="Board to list columns for (optional, falls back to current context)")
     p.add_argument("--slugs", action="store_true", default=False, help="Render a compact list of slugs only, like filenames")
     _add_global_flags(p)
     p.set_defaults(func=handle_column_list)

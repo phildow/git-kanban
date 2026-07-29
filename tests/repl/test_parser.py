@@ -44,18 +44,16 @@ class TestParserAliases(unittest.TestCase):
     def test_columns_and_cols_alias_map_to_column_list_handler(self):
         args = repl_parser.parse_args(["columns"])
         self.assertEqual(args.command, "columns")
-        self.assertIsNone(args.board)
         self.assertFalse(args.slugs)
         self.assertIs(args.func, handle_column_list)
 
-        args = repl_parser.parse_args(["cols", "alpha"])
+        args = repl_parser.parse_args(["cols"])
         self.assertEqual(args.command, "cols")
-        self.assertEqual(args.board, "alpha")
         self.assertIs(args.func, handle_column_list)
 
     def test_columns_slugs_flag(self):
-        """`columns ... --slugs` sets slugs to True."""
-        args = repl_parser.parse_args(["columns", "alpha", "--slugs"])
+        """`columns --slugs` sets slugs to True."""
+        args = repl_parser.parse_args(["columns", "--slugs"])
         self.assertTrue(args.slugs)
 
     def test_tasks_maps_to_task_list_handler(self):
@@ -68,20 +66,20 @@ class TestParserAliases(unittest.TestCase):
         self.assertIsNone(args.exclude_columns)
         self.assertIs(args.func, handle_task_list)
 
-        args = repl_parser.parse_args(["tasks", "alpha/todo"])
-        self.assertEqual(args.column, "alpha/todo")
+        args = repl_parser.parse_args(["tasks", "todo"])
+        self.assertEqual(args.column, "todo")
         self.assertIs(args.func, handle_task_list)
 
     def test_tasks_sort_reverse_and_slugs_flags(self):
         """`tasks ... --sort <field> --reverse --slugs` sets all three."""
-        args = repl_parser.parse_args(["tasks", "alpha", "--sort", "title", "--reverse", "--slugs"])
+        args = repl_parser.parse_args(["tasks", "todo", "--sort", "title", "--reverse", "--slugs"])
         self.assertEqual(args.sort, "title")
         self.assertTrue(args.reverse)
         self.assertTrue(args.slugs)
 
     def test_tasks_exclude_flag_is_repeatable(self):
         """`tasks ... -x <column> --exclude <column>` accumulates into a list."""
-        args = repl_parser.parse_args(["tasks", "alpha", "-x", "done", "--exclude", "archive"])
+        args = repl_parser.parse_args(["tasks", "-x", "done", "--exclude", "archive"])
         self.assertEqual(args.exclude_columns, ["done", "archive"])
 
     def test_create_aliases_map_to_create_handlers(self):
@@ -129,12 +127,12 @@ class TestParserAliases(unittest.TestCase):
 
     def test_update_task_description_flag(self):
         """`update ... --description TEXT` binds args.description."""
-        args = repl_parser.parse_args(["update", "main/todo/fix-parser", "--description", "New content"])
+        args = repl_parser.parse_args(["update", "fix-parser", "--description", "New content"])
         self.assertEqual(args.description, "New content")
 
     def test_update_task_description_defaults_to_none(self):
         """`update ...` without --description leaves args.description as None."""
-        args = repl_parser.parse_args(["update", "main/todo/fix-parser"])
+        args = repl_parser.parse_args(["update", "fix-parser"])
         self.assertIsNone(args.description)
 
     def test_search_maps_to_search_handler(self):
@@ -165,7 +163,7 @@ class TestParserAliases(unittest.TestCase):
     def test_update_task_maps_to_update_handler(self):
         args = repl_parser.parse_args([
             "update",
-            "main/todo/fix-parser",
+            "fix-parser",
             "--assigned-to",
             "philip",
             "--priority",
@@ -179,7 +177,7 @@ class TestParserAliases(unittest.TestCase):
         ])
 
         self.assertEqual(args.command, "update")
-        self.assertEqual(args.path, "main/todo/fix-parser")
+        self.assertEqual(args.path, "fix-parser")
         self.assertEqual(args.assigned_to, "philip")
         self.assertEqual(args.priority, "medium")
         self.assertEqual(args.tags, ["cli"])
@@ -190,18 +188,18 @@ class TestParserAliases(unittest.TestCase):
 
     def test_update_task_column_flag_sets_column(self):
         """`update --column` (and its -c alias) populate dest="column"."""
-        long = repl_parser.parse_args(["update", "main/todo/fix-parser", "--column", "done"])
+        long = repl_parser.parse_args(["update", "fix-parser", "--column", "done"])
         self.assertEqual(long.column, "done")
 
-        short = repl_parser.parse_args(["update", "main/todo/fix-parser", "-c", "done"])
+        short = repl_parser.parse_args(["update", "fix-parser", "-c", "done"])
         self.assertEqual(short.column, "done")
 
     def test_unset_task_defaults_all_false(self):
         """`unset TASK` with no flags leaves all scalar dests False and tags None."""
-        args = repl_parser.parse_args(["unset", "main/todo/fix-parser"])
+        args = repl_parser.parse_args(["unset", "fix-parser"])
 
         self.assertEqual(args.command, "unset")
-        self.assertEqual(args.path, "main/todo/fix-parser")
+        self.assertEqual(args.path, "fix-parser")
         self.assertFalse(args.assigned_to)
         self.assertFalse(args.priority)
         self.assertFalse(args.due_date)
@@ -213,7 +211,7 @@ class TestParserAliases(unittest.TestCase):
         """Scalar unset flags act as store_true (no value required)."""
         args = repl_parser.parse_args([
             "unset",
-            "main/todo/fix-parser",
+            "fix-parser",
             "--assigned-to",
             "--priority",
             "--due-date",
@@ -229,7 +227,7 @@ class TestParserAliases(unittest.TestCase):
         """`unset --tag TAG` takes a value and appends when repeated."""
         args = repl_parser.parse_args([
             "unset",
-            "main/todo/fix-parser",
+            "fix-parser",
             "--tag", "chore",
             "--tag", "bug",
         ])
@@ -237,76 +235,76 @@ class TestParserAliases(unittest.TestCase):
         self.assertEqual(args.tags, ["chore", "bug"])
 
     def test_show_maps_to_show_handler_and_defaults_plain_to_false(self):
-        args = repl_parser.parse_args(["show", "main/todo/fix-login"])
+        args = repl_parser.parse_args(["show", "fix-login"])
         self.assertEqual(args.command, "show")
-        self.assertEqual(args.path, "main/todo/fix-login")
+        self.assertEqual(args.path, "fix-login")
         self.assertFalse(args.plain)
         self.assertIs(args.func, handle_task_view)
 
     def test_info_maps_to_info_handler(self):
-        args = repl_parser.parse_args(["info", "main/todo/fix-login"])
+        args = repl_parser.parse_args(["info", "fix-login"])
         self.assertEqual(args.command, "info")
-        self.assertEqual(args.path, "main/todo/fix-login")
+        self.assertEqual(args.path, "fix-login")
         self.assertIs(args.func, handle_task_info)
 
     def test_show_plain_flag(self):
         """`show ... -p`/`--plain` sets plain to True."""
-        args = repl_parser.parse_args(["show", "main/todo/fix-login", "-p"])
+        args = repl_parser.parse_args(["show", "fix-login", "-p"])
         self.assertTrue(args.plain)
 
-        args = repl_parser.parse_args(["show", "main/todo/fix-login", "--plain"])
+        args = repl_parser.parse_args(["show", "fix-login", "--plain"])
         self.assertTrue(args.plain)
 
     def test_assign_requires_path_and_user(self):
         with self.assertRaises(SystemExit):
             repl_parser.parse_args(["assign"])
         with self.assertRaises(SystemExit):
-            repl_parser.parse_args(["assign", "main/todo/fix-login"])
+            repl_parser.parse_args(["assign", "fix-login"])
 
     def test_assign_binds_path_user_and_handler(self):
         """`assign TASK USER` binds path/assigned_to and leaves delete False."""
-        args = repl_parser.parse_args(["assign", "main/todo/fix-login", "alice"])
+        args = repl_parser.parse_args(["assign", "fix-login", "alice"])
         self.assertEqual(args.command, "assign")
-        self.assertEqual(args.path, "main/todo/fix-login")
+        self.assertEqual(args.path, "fix-login")
         self.assertEqual(args.assigned_to, "alice")
         self.assertFalse(args.remove)
         self.assertIs(args.func, handle_task_assign)
 
     def test_assign_remove_flag(self):
         """`assign TASK -r`/`--remove` sets args.remove to True and leaves assigned_to None."""
-        args = repl_parser.parse_args(["assign", "main/todo/fix-login", "-r"])
+        args = repl_parser.parse_args(["assign", "fix-login", "-r"])
         self.assertTrue(args.remove)
         self.assertIsNone(args.assigned_to)
 
-        args = repl_parser.parse_args(["assign", "main/todo/fix-login", "--remove"])
+        args = repl_parser.parse_args(["assign", "fix-login", "--remove"])
         self.assertTrue(args.remove)
 
     def test_assign_rejects_user_and_remove_together(self):
         """`assign TASK USER --remove` is rejected because they are mutually exclusive."""
         with self.assertRaises(SystemExit):
-            repl_parser.parse_args(["assign", "main/todo/fix-login", "alice", "--remove"])
+            repl_parser.parse_args(["assign", "fix-login", "alice", "--remove"])
 
     def test_tag_requires_path_and_tag(self):
         with self.assertRaises(SystemExit):
             repl_parser.parse_args(["tag"])
         with self.assertRaises(SystemExit):
-            repl_parser.parse_args(["tag", "main/todo/fix-login"])
+            repl_parser.parse_args(["tag", "fix-login"])
 
     def test_tag_binds_path_tag_and_handler(self):
         """`tag TASK TAG` sets path/tag positional args and maps to handle_task_tag."""
-        args = repl_parser.parse_args(["tag", "main/todo/fix-login", "auth"])
+        args = repl_parser.parse_args(["tag", "fix-login", "auth"])
         self.assertEqual(args.command, "tag")
-        self.assertEqual(args.path, "main/todo/fix-login")
+        self.assertEqual(args.path, "fix-login")
         self.assertEqual(args.tags, "auth")
         self.assertFalse(args.remove)
         self.assertIs(args.func, handle_task_tag)
 
     def test_tag_remove_flag(self):
         """`tag ... -r`/`--remove` sets args.remove to True."""
-        args = repl_parser.parse_args(["tag", "main/todo/fix-login", "auth", "-r"])
+        args = repl_parser.parse_args(["tag", "fix-login", "auth", "-r"])
         self.assertTrue(args.remove)
 
-        args = repl_parser.parse_args(["tag", "main/todo/fix-login", "auth", "--remove"])
+        args = repl_parser.parse_args(["tag", "fix-login", "auth", "--remove"])
         self.assertTrue(args.remove)
 
     def test_comment_requires_path_and_comment(self):
@@ -314,25 +312,25 @@ class TestParserAliases(unittest.TestCase):
         with self.assertRaises(SystemExit):
             repl_parser.parse_args(["comment"])
         with self.assertRaises(SystemExit):
-            repl_parser.parse_args(["comment", "main/todo/fix-login"])
+            repl_parser.parse_args(["comment", "fix-login"])
 
     def test_comment_rejects_comment_and_edit_together(self):
         """`comment TASK COMMENT --edit` is rejected because they are mutually exclusive."""
         with self.assertRaises(SystemExit):
-            repl_parser.parse_args(["comment", "main/todo/fix-login", "Looks good", "--edit"])
+            repl_parser.parse_args(["comment", "fix-login", "Looks good", "--edit"])
 
     def test_comment_binds_path_comment_and_handler(self):
         """`comment TASK COMMENT` binds path/comment and maps to handle_task_comment."""
-        args = repl_parser.parse_args(["comment", "main/todo/fix-login", "Looks good"])
+        args = repl_parser.parse_args(["comment", "fix-login", "Looks good"])
         self.assertEqual(args.command, "comment")
-        self.assertEqual(args.path, "main/todo/fix-login")
+        self.assertEqual(args.path, "fix-login")
         self.assertEqual(args.comment, "Looks good")
         self.assertFalse(args.edit)
         self.assertIs(args.func, handle_task_comment)
 
     def test_comment_edit_flag(self):
         """`comment TASK --edit` sets edit=True and leaves comment None."""
-        args = repl_parser.parse_args(["comment", "main/todo/fix-login", "--edit"])
+        args = repl_parser.parse_args(["comment", "fix-login", "--edit"])
         self.assertTrue(args.edit)
         self.assertIsNone(args.comment)
 

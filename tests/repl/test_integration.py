@@ -382,11 +382,6 @@ class TestReplColumns(_InitializedReplBase):
         self.repo.create_column("proj", "todo", slug="todo")
         self.repo.create_column("proj", "done", slug="done")
 
-    def test_columns_with_explicit_board_produces_output(self) -> None:
-        """columns <board> produces output."""
-        out = self.run_repl("columns", "proj")
-        self.assertTrue(out.strip())
-
     def test_columns_uses_current_context_board(self) -> None:
         """columns with no board argument falls back to the active board context."""
         self.svc.set_board(Slug("proj"))
@@ -395,12 +390,14 @@ class TestReplColumns(_InitializedReplBase):
 
     def test_cols_alias_produces_output(self) -> None:
         """cols (alias for columns) produces output."""
-        out = self.run_repl("cols", "proj")
+        self.svc.set_board(Slug("proj"))
+        out = self.run_repl("cols")
         self.assertTrue(out.strip())
 
     def test_columns_slugs_flag_produces_output(self) -> None:
         """columns <board> --slugs produces the compact slug-only output."""
-        out = self.run_repl("columns", "proj", "--slugs")
+        self.svc.set_board(Slug("proj"))
+        out = self.run_repl("columns", "--slugs")
         self.assertTrue(out.strip())
         self.assertIn("todo", out)
         self.assertIn("done", out)
@@ -606,15 +603,16 @@ class TestReplReorder(_InitializedReplBase):
         self.repo.create_board("proj", slug="proj")
         self.repo.create_column("proj", "todo", slug="todo")
         self.repo.create_column("proj", "done", slug="done")
+        self.run_repl("board", "proj")
 
     def test_reorder_column_preserves_directory(self) -> None:
         """reorder column does not remove the column directory."""
-        self.run_repl("reorder", "column", "proj/done", "0")
+        self.run_repl("reorder", "column", "done", "0")
         self.assertTrue((self.boards_dir / "proj" / "done").is_dir())
 
     def test_reorder_column_produces_output(self) -> None:
         """reorder column prints something."""
-        out = self.run_repl("reorder", "column", "proj/done", "0")
+        out = self.run_repl("reorder", "column", "done", "0")
         self.assertTrue(out.strip())
 
 
