@@ -519,6 +519,30 @@ class TestCommandHandlers(unittest.TestCase):
         self.svc.tag_task.assert_not_called()
         self.renderer.render_task_tag.assert_called_once_with(args, result)
 
+    def test_handle_task_comment(self):
+        """`task comment` forwards path and comment to comment_task and renders result."""
+        args = self._args(path="board-a/todo/fix-parser", comment="Looks good", edit=False)
+        result = object()
+        self.svc.comment_task.return_value = result
+
+        commands.handle_task_comment(args, self.svc, self.renderer, self.json_renderer)
+
+        self.svc.comment_task.assert_called_once_with(Path("/board-a/todo/fix-parser"), "Looks good")
+        self.svc.edit_task.assert_not_called()
+        self.renderer.render_task_comment.assert_called_once_with(args, result)
+
+    def test_handle_task_comment_with_edit_flag(self):
+        """`task comment --edit` opens the task in the editor instead of appending a comment."""
+        edit_result = object()
+        self.svc.edit_task.return_value = edit_result
+        args = self._args(path="board-a/todo/fix-parser", comment=None, edit=True)
+
+        commands.handle_task_comment(args, self.svc, self.renderer, self.json_renderer)
+
+        self.svc.edit_task.assert_called_once_with(Path("/board-a/todo/fix-parser"))
+        self.svc.comment_task.assert_not_called()
+        self.renderer.render_task_comment.assert_called_once_with(args, edit_result)
+
     def test_handle_task_delete(self):
         """`task delete` forwards task path and renders deletion result."""
         args = self._args(path="board-a/todo/fix-parser", force=True)

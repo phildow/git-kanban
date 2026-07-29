@@ -288,16 +288,13 @@ tags: [bug, auth]
 created_at: 2026-06-12T10:00:00Z
 updated_at: 2026-06-12T10:00:00Z
 ---  
-  
-# Descrtion  
-  
+# Description  
 ...
-
 # Comments
-
 ...
-
 ```
+
+TODO: add note on description and comments
 
 ### The Data Model
 
@@ -441,6 +438,7 @@ kanban task delete <board>/<column>/<task>
 kanban task assign <board>/<column>/<task> <name>
 kanban task tag <board>/<column>/<task> <tag>
     [-d|--delete]
+kanban task comment <board>/<column>/<task> (<comment> | --edit)
 kanban task rename <board><column>/task <new-name>
 
 kanban search <query>
@@ -553,6 +551,7 @@ move <task> [<column>]
     [--up]
     [--down]
 
+comment <task> (<comment> | --edit)
 assign <task> <user>
 tag <task> <tag>
     [-d|--delete]

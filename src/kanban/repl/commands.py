@@ -265,6 +265,15 @@ def handle_task_tag(args: argparse.Namespace, svc: KanbanService, renderer: Comm
 		result = svc.tag_task(args.path, args.tags)
 	renderer.render_task_tag(args, result)
 
+
+@with_task_slug
+def handle_task_comment(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
+	if args.edit:
+		result = svc.edit_task(args.path)
+	else:
+		result = svc.comment_task(args.path, args.comment)
+	renderer.render_task_comment(args, result)
+
 # ---------------------------------------------------------------------------
 # Additional commands (search, log, status, config)
 # ---------------------------------------------------------------------------

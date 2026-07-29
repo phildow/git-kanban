@@ -439,6 +439,10 @@ class RichRenderer(CommandRenderer):
 		tags = ", ".join(result.tags) if result.tags else "(none)"
 		self._emit(args, f"Task tags: {tags}")
 
+	def render_task_comment(self, args: argparse.Namespace, result: Task) -> None:
+		"""Render a message indicating that a comment was appended to a task."""
+		self._emit(args, f"Comment added to: {result.slug}")
+
 # ---------------------------------------------------------------------------
 # Additional rendering (search, log, status, config)
 # ---------------------------------------------------------------------------

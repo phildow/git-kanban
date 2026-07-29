@@ -238,6 +238,9 @@ class Renderer(CommandRenderer):
 	def render_task_tag(self, args: argparse.Namespace, result: Task) -> None:
 		self.render_task(args, result)
 
+	def render_task_comment(self, args: argparse.Namespace, result: Task) -> None:
+		self.render_task(args, result)
+
 # ---------------------------------------------------------------------------
 # Additional rendering (search, log, status, config)
 # ---------------------------------------------------------------------------

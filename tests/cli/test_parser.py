@@ -32,6 +32,7 @@ from kanban.cli.commands import (
     handle_task_edit,
     handle_task_list,
     handle_task_assign,
+    handle_task_comment,
     handle_task_move,
     handle_task_rename,
     handle_task_tag,
@@ -77,7 +78,7 @@ class TestParserStructure(unittest.TestCase):
         self.assertEqual(set(column.keys()), {"list", "create", "info", "rename", "reorder", "delete"})
 
         task = self._subparser_choices(top["task"], "task_command")
-        self.assertEqual(set(task.keys()), {"list", "create", "info", "view", "edit", "update", "unset", "move", "delete", "assign", "tag", "rename"})
+        self.assertEqual(set(task.keys()), {"list", "create", "info", "view", "edit", "update", "unset", "move", "delete", "assign", "tag", "comment", "rename"})
 
         config = self._subparser_choices(top["config"], "config_command")
         self.assertEqual(set(config.keys()), {"get", "set"})
@@ -290,6 +291,23 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
 
         args = cli_parser.parse_args(["task", "tag", "board-a/todo/fix-parser", "auth", "--delete"])
         self.assertTrue(args.delete)
+
+        args = cli_parser.parse_args(["task", "comment", "board-a/todo/fix-parser", "Looks good"])
+        self.assertEqual(args.path, "board-a/todo/fix-parser")
+        self.assertEqual(args.comment, "Looks good")
+        self.assertEqual(args.format, "plain")
+        self.assertFalse(args.edit)
+        self.assertIs(args.func, handle_task_comment)
+
+        args = cli_parser.parse_args(["task", "comment", "board-a/todo/fix-parser", "--edit"])
+        self.assertTrue(args.edit)
+        self.assertIsNone(args.comment)
+
+        with self.assertRaises(SystemExit):
+            cli_parser.parse_args(["task", "comment", "board-a/todo/fix-parser", "Looks good", "--edit"])
+
+        with self.assertRaises(SystemExit):
+            cli_parser.parse_args(["task", "comment", "board-a/todo/fix-parser"])
 
     def test_search_log_status_and_config(self):
         """Other top-level commands parse correctly and set proper handlers."""

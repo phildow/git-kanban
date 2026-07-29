@@ -18,6 +18,7 @@ from kanban.repl.commands import (
     handle_rename,
     handle_search,
     handle_task_assign,
+    handle_task_comment,
     handle_task_create,
     handle_task_list,
     handle_task_move,
@@ -259,6 +260,33 @@ class TestParserAliases(unittest.TestCase):
 
         args = repl_parser.parse_args(["tag", "main/todo/fix-login", "auth", "--delete"])
         self.assertTrue(args.delete)
+
+    def test_comment_requires_path_and_comment(self):
+        """`comment` requires a task path and either a comment or --edit."""
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["comment"])
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["comment", "main/todo/fix-login"])
+
+    def test_comment_rejects_comment_and_edit_together(self):
+        """`comment TASK COMMENT --edit` is rejected because they are mutually exclusive."""
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["comment", "main/todo/fix-login", "Looks good", "--edit"])
+
+    def test_comment_binds_path_comment_and_handler(self):
+        """`comment TASK COMMENT` binds path/comment and maps to handle_task_comment."""
+        args = repl_parser.parse_args(["comment", "main/todo/fix-login", "Looks good"])
+        self.assertEqual(args.command, "comment")
+        self.assertEqual(args.path, "main/todo/fix-login")
+        self.assertEqual(args.comment, "Looks good")
+        self.assertFalse(args.edit)
+        self.assertIs(args.func, handle_task_comment)
+
+    def test_comment_edit_flag(self):
+        """`comment TASK --edit` sets edit=True and leaves comment None."""
+        args = repl_parser.parse_args(["comment", "main/todo/fix-login", "--edit"])
+        self.assertTrue(args.edit)
+        self.assertIsNone(args.comment)
 
     def test_move_path_and_handler(self) -> None:
         """move binds the path argument and the handle_task_move handler."""

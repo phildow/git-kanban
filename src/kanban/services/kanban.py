@@ -3,6 +3,7 @@ from pathlib import Path
 from datetime import datetime, timezone
 import logging
 import os
+import re
 import shlex
 import subprocess
 import tempfile
@@ -68,7 +69,7 @@ class KanbanStatus:
     index_fresh: bool
     uncommitted_changes: bool
 
-# ── Filtering ─────────────────────────────────────────────────────────────────
+# ── Private Utilities ─────────────────────────────────────────────────────────
 
 def _task_matches_filter(task: Task, filter: TaskFilter) -> bool:
     """Return True if task satisfies all non-None criteria in filter."""
@@ -87,6 +88,25 @@ def _task_matches_filter(task: Task, filter: TaskFilter) -> bool:
     if filter.exclude_columns and task.column in filter.exclude_columns:
         return False
     return True
+
+
+_COMMENTS_HEADING_RE = re.compile(r"^# Comments\s*$", re.MULTILINE)
+
+
+def _append_comment(body: str, comment: str) -> str:
+    """
+    Return `body` with `comment` appended under a `# Comments` heading.
+
+    Trailing whitespace is stripped from the body before appending. If the body
+    does not already contain a `# Comments` heading, one is inserted before the
+    comment. An empty body results in a body that starts with the heading.
+    """
+    body = (body or "").rstrip()
+    if _COMMENTS_HEADING_RE.search(body):
+        return f"{body}\n\n{comment}" if body else comment
+    if body:
+        return f"{body}\n\n# Comments\n\n{comment}"
+    return f"# Comments\n\n{comment}"
 
 
 # ── KanbanService ─────────────────────────────────────────────────────────────
@@ -960,6 +980,24 @@ class KanbanService(CompletionDataSource):
         commits.
         """
         return self.unset_task(path, TaskUnsetParams(tags=[tag]))
+
+    def comment_task(
+        self,
+        path:    Path | Slug,
+        comment: str,
+    ) -> Task:
+        """
+        Append a comment to a task's body under a `# Comments` heading. If the
+        task body does not already contain a `# Comments` heading, one is
+        added before the comment. Accepts a fully-qualified Path (from the CLI)
+        or a bare task Slug (from the REPL). Raises TaskNotFound if the task
+        cannot be resolved. Updates the index and commits.
+        """
+        task = self.get_task(path)
+        task.body = _append_comment(task.body, comment)
+        updated = self.repository.update_task(task, slug=task.slug)
+        self.index_service.upsert_task(updated)
+        return updated
 
     # ── Search ────────────────────────────────────────────────────────────────
 

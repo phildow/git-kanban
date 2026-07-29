@@ -27,6 +27,7 @@ from ..cli.commands import (
     handle_search,
     handle_status,
     handle_task_assign,
+    handle_task_comment,
     handle_task_create,
     handle_task_delete,
     handle_task_edit,
@@ -311,6 +312,16 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     _add_format_arg(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_task_tag)
+
+    # task comment
+    p = task_sub.add_parser("comment", help="Append a comment to a task under a `# Comments` heading")
+    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified /board/column/task path")
+    group = p.add_mutually_exclusive_group(required=True)
+    group.add_argument("comment", metavar="COMMENT", nargs="?", help="The comment text to append")
+    group.add_argument("--edit", action="store_true", default=False, help="Open the task body in the editor instead of appending a comment")
+    _add_format_arg(p)
+    _add_global_flags(p)
+    p.set_defaults(func=handle_task_comment)
 
 
 # ---------------------------------------------------------------------------
