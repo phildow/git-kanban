@@ -278,10 +278,9 @@ def handle_task_tag(args: argparse.Namespace, svc: KanbanService, renderer: Comm
 
 @with_absolute_path
 def handle_task_comment(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
+	result = svc.comment_task(args.path, args.comment or "")
 	if args.edit:
 		result = svc.edit_task(args.path)
-	else:
-		result = svc.comment_task(args.path, args.comment)
 	_pick(args, renderer, json_renderer).render_task_comment(args, result)
 
 
