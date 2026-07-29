@@ -312,9 +312,10 @@ def build_parser() -> argparse.ArgumentParser:
     """Return the fully configured top-level argument parser."""
     parser = argparse.ArgumentParser(
         prog="kanban",
-        description="Git Kanban: the backed-by-the-filesystem, tracked-by-git task manager",
+        description="Git Kanban: backed by the filesystem, tracked by git",
         # type: ignore
-        color=False
+        color=False,
+        epilog="Use `kanban repl` to start an interactive shell with tab completion and command history."
     )
     _add_global_flags(parser)
 

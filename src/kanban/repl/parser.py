@@ -179,7 +179,7 @@ examples:
 
 
 def _add_reorder_parser(subparsers: argparse._SubParsersAction) -> None:
-    reorder_parser = subparsers.add_parser("reorder", help="Reorder columns or tasks")
+    reorder_parser = subparsers.add_parser("reorder", help="Reorder columns in a board")
     _add_global_flags(reorder_parser)
     reorder_sub = reorder_parser.add_subparsers(dest="reorder_subject", metavar="SUBJECT")
     reorder_sub.required = True
@@ -200,7 +200,7 @@ def _add_show_parser(subparsers: argparse._SubParsersAction) -> None:
 
 
 def _add_info_parser(subparsers: argparse._SubParsersAction) -> None:
-    info_parser = subparsers.add_parser("info", aliases=["i"], help="Show task metadata")
+    info_parser = subparsers.add_parser("info", aliases=["i"], help="View task details only")
     info_parser.add_argument("path", metavar="TASK", help="The task to inspect")
     info_parser.set_defaults(func=handle_task_info)
 
@@ -230,7 +230,7 @@ def _add_unset_parser(subparsers: argparse._SubParsersAction) -> None:
 
 
 def _add_move_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser("move", aliases=["mv"], help="Move a task to another column")
+    p = subparsers.add_parser("move", aliases=["mv"], help="Move a task to another column or within its column")
     p.add_argument("path", metavar="TASK", type=str, help="The task to move")
     group = p.add_mutually_exclusive_group()
     group.add_argument("column", metavar="COLUMN", type=str, nargs="?", help="The destination column")
@@ -269,14 +269,14 @@ def _add_board_parser(subparsers: argparse._SubParsersAction) -> None:
 
 
 def _add_boards_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser("boards", help="List all boards")
+    p = subparsers.add_parser("boards", help="List all boards in the kanban repository")
     p.add_argument("--slugs", action="store_true", default=False, help="Render a compact list of slugs only, like filenames")
     _add_global_flags(p)
     p.set_defaults(func=handle_board_list)
 
 
 def _add_columns_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser("columns", aliases=["cols"], help="List columns for a board")
+    p = subparsers.add_parser("columns", aliases=["cols"], help="List the columns in the active board")
     # TODO: remove board argument and use current context instead
     p.add_argument("board", metavar="BOARD", nargs="?", help="Board to list columns for (optional, falls back to current context)")
     p.add_argument("--slugs", action="store_true", default=False, help="Render a compact list of slugs only, like filenames")
@@ -285,7 +285,7 @@ def _add_columns_parser(subparsers: argparse._SubParsersAction) -> None:
 
 
 def _add_tasks_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser("tasks", help="List tasks, optionally scoped to a column")
+    p = subparsers.add_parser("tasks", help="List tasks, optionally filtered and scoped to a column")
     p.add_argument("column", metavar="COLUMN", nargs="?", help="The column to list tasks for or none to list all tasks in the active board")
     p.add_argument("--slugs", action="store_true", default=False, help="Render a compact list of slugs only, like filenames")
     p.add_argument("-x", "--exclude", metavar="COLUMN", action="append", dest="exclude_columns", help="Exclude tasks in this column (repeatable)")
@@ -313,9 +313,10 @@ def build_parser() -> argparse.ArgumentParser:
         add_help=False,
         prog="",
         formatter_class=CustomFormatter,
-        description="Git Kanban: the backed-by-the-filesystem, tracked-by-git task manager",
+        description="Git Kanban: backed by the filesystem, tracked by git",
         # type: ignore
         color=False,
+        epilog="Use `kanban repl` to start an interactive shell with tab completion and command history."
     )
     
     _add_global_flags(parser)
