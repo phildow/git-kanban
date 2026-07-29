@@ -367,14 +367,16 @@ class RichRenderer(CommandRenderer):
 		self._emit(args, table)
 
 	def render_task_create(self, args: argparse.Namespace, result: Task) -> None:
-		"""Render a message indicating that a task was created"""
+		"""Render a message indicating that a task was created, alternatively render the task"""
 		# self._emit(args, f"Created Task: {result.title}")
 		# self._emit(args, f"Slug: {result.slug}")
 		if args.description:
-			setattr(args, "plain", False)
+			args.plain = False
 			self.render_task_view(args, result)
 		else:
+			self._emit(args, "")
 			self.render_task(args, result)
+			self._emit(args, "")
 
 	def render_task_view(self, args: argparse.Namespace, result: Task) -> None:
 		"""Render detailed information about a single task, including all metadata and the body/description."""
@@ -406,10 +408,14 @@ class RichRenderer(CommandRenderer):
 		return
 	
 	def render_task_update(self, args: argparse.Namespace, result: Task) -> None:
-		"""Render a message indicating that a task was updated, including its slug."""
-		self._emit(args, "")
-		self.render_task(args, result)
-		self._emit(args, "")
+		"""Render a message indicating that a task was updated, alternatively render the task"""
+		if args.description:
+			args.plain = False
+			self.render_task_view(args, result)
+		else:
+			self._emit(args, "")
+			self.render_task(args, result)
+			self._emit(args, "")
 
 	def render_task_move(self, args: argparse.Namespace, result: Task) -> None:
 		"""Render a message indicating that a task was moved to a new column."""
@@ -450,8 +456,10 @@ class RichRenderer(CommandRenderer):
 		self._emit(args, f"Task tags: {tags}")
 
 	def render_task_comment(self, args: argparse.Namespace, result: Task) -> None:
-		"""Render a message indicating that a comment was appended to a task."""
-		self._emit(args, f"Comment added to: {result.slug}")
+		"""Render a message indicating that a comment was appended to a task, alternatively render the task"""
+		# self._emit(args, f"Comment added to: {result.slug}")
+		args.plain = False
+		self.render_task_view(args, result)
 
 # ---------------------------------------------------------------------------
 # Additional rendering (search, log, status, config)
