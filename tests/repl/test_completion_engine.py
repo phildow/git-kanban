@@ -96,6 +96,18 @@ def _build_fixture_parser() -> argparse.ArgumentParser:
     p.add_argument("column")
     p.set_defaults(func=_NOOP)
 
+    # tag: positional whose dest is "tags" and metavar is "TAG"
+    p = subparsers.add_parser("tag")
+    p.add_argument("path")
+    p.add_argument("tags", metavar="TAG")
+    p.set_defaults(func=_NOOP)
+
+    # untag: positional whose dest is "tag" (not "tags") but metavar is "TAG"
+    p = subparsers.add_parser("untag")
+    p.add_argument("path")
+    p.add_argument("tag", metavar="TAG")
+    p.set_defaults(func=_NOOP)
+
     # search: free-text query + flags, including a board-name flag
     p = subparsers.add_parser("search")
     p.add_argument("query")
@@ -436,6 +448,18 @@ class TagCompletionTests(EngineTestCase):
     def test_repeated_tag_flag_still_completes(self) -> None:
         context = _Context(board="my-project")
         line = "create task /my-project/todo/new-task --tag bug --tag "
+        self.assertEqual(self.complete(line, context), ["bug", "docs", "urgent"])
+
+    def test_positional_tag_completes_when_dest_is_tags(self) -> None:
+        """A positional argument whose dest is "tags" (metavar TAG) offers tag completions."""
+        context = _Context(board="my-project")
+        line = "tag /my-project/todo/fix-parser "
+        self.assertEqual(self.complete(line, context), ["bug", "docs", "urgent"])
+
+    def test_positional_tag_completes_when_only_metavar_is_TAG(self) -> None:
+        """A positional argument whose dest is "tag" (not "tags") but metavar is "TAG" still offers tag completions."""
+        context = _Context(board="my-project")
+        line = "untag /my-project/todo/fix-parser "
         self.assertEqual(self.complete(line, context), ["bug", "docs", "urgent"])
 
 

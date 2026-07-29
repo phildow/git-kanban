@@ -938,6 +938,41 @@ class KanbanService(CompletionDataSource):
         self.index_service.upsert_task(updated)
         return updated
 
+    def tag_task(
+        self,
+        path: Path | Slug,
+        tag:  str,
+    ) -> Task:
+        """
+        Add a tag to a task.  Accepts a fully-qualified Path (from the CLI) or a
+        bare task Slug (from the REPL).  The tag is added via set union so it
+        will not be duplicated if the task already has it.  Raises TaskNotFound
+        if the task cannot be resolved.  Updates the index and commits.
+        """
+        task = self.get_task(path)
+        task.tags = list(set(task.tags) | {tag})
+        updated = self.repository.update_task(task, slug=task.slug)
+        self.index_service.upsert_task(updated)
+        return updated
+
+    def untag_task(
+        self,
+        path: Path | Slug,
+        tag:  str,
+    ) -> Task:
+        """
+        Remove a tag from a task.  Accepts a fully-qualified Path (from the
+        CLI) or a bare task Slug (from the REPL).  The tag is removed via set
+        difference; removing a tag that is not present is a no-op.  Raises
+        TaskNotFound if the task cannot be resolved.  Updates the index and
+        commits.
+        """
+        task = self.get_task(path)
+        task.tags = list(set(task.tags) - {tag})
+        updated = self.repository.update_task(task, slug=task.slug)
+        self.index_service.upsert_task(updated)
+        return updated
+
     # ── Search ────────────────────────────────────────────────────────────────
 
     def get_tags(

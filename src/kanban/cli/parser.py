@@ -34,6 +34,7 @@ from ..cli.commands import (
     handle_task_list,
     handle_task_move,
     handle_task_rename,
+    handle_task_tag,
     handle_task_unset,
     handle_task_update,
     handle_task_view,
@@ -301,6 +302,15 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     _add_format_arg(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_task_assign)
+
+    # task tag
+    p = task_sub.add_parser("tag", help="Add or remove a tag on a task")
+    p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified /board/column/task path")
+    p.add_argument("tags", metavar="TAG", help="Tag to add to or remove from the task")
+    p.add_argument("-d", "--delete", action="store_true", default=False, help="Remove the tag instead of adding it")
+    _add_format_arg(p)
+    _add_global_flags(p)
+    p.set_defaults(func=handle_task_tag)
 
 
 # ---------------------------------------------------------------------------

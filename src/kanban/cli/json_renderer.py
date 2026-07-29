@@ -199,6 +199,9 @@ class JsonRenderer(CommandRenderer):
     def render_task_assign(self, args: argparse.Namespace, result: Task) -> None:
         self._emit(args, json.dumps(self._task_detail_dict(result), indent=2))
 
+    def render_task_tag(self, args: argparse.Namespace, result: Task) -> None:
+        self._emit(args, json.dumps(self._task_detail_dict(result), indent=2))
+
     def render_task_delete(self, args: argparse.Namespace, result: None) -> None:
         _ = result
         self._emit(args, json.dumps({"deleted": self._path_str(args)}, indent=2))

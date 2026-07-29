@@ -21,6 +21,7 @@ from kanban.repl.commands import (
     handle_task_create,
     handle_task_list,
     handle_task_move,
+    handle_task_tag,
     handle_task_unset,
     handle_task_view,
     handle_task_info,
@@ -235,6 +236,29 @@ class TestParserAliases(unittest.TestCase):
             repl_parser.parse_args(["assign"])
         with self.assertRaises(SystemExit):
             repl_parser.parse_args(["assign", "main/todo/fix-login"])
+
+    def test_tag_requires_path_and_tag(self):
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["tag"])
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["tag", "main/todo/fix-login"])
+
+    def test_tag_binds_path_tag_and_handler(self):
+        """`tag TASK TAG` sets path/tag positional args and maps to handle_task_tag."""
+        args = repl_parser.parse_args(["tag", "main/todo/fix-login", "auth"])
+        self.assertEqual(args.command, "tag")
+        self.assertEqual(args.path, "main/todo/fix-login")
+        self.assertEqual(args.tags, "auth")
+        self.assertFalse(args.delete)
+        self.assertIs(args.func, handle_task_tag)
+
+    def test_tag_delete_flag(self):
+        """`tag ... -d`/`--delete` sets args.delete to True."""
+        args = repl_parser.parse_args(["tag", "main/todo/fix-login", "auth", "-d"])
+        self.assertTrue(args.delete)
+
+        args = repl_parser.parse_args(["tag", "main/todo/fix-login", "auth", "--delete"])
+        self.assertTrue(args.delete)
 
     def test_move_path_and_handler(self) -> None:
         """move binds the path argument and the handle_task_move handler."""

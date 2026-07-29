@@ -108,6 +108,10 @@ class CommandRenderer(ABC):
         ...
 
     @abstractmethod
+    def render_task_tag(self, args: argparse.Namespace, result) -> None:
+        ...
+
+    @abstractmethod
     def render_search(self, args: argparse.Namespace, result) -> None:
         ...
 

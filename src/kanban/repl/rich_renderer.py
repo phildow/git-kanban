@@ -434,6 +434,11 @@ class RichRenderer(CommandRenderer):
 		"""Render a message indicating that a task was assigned to a user."""
 		self._emit(args, f"Task assigned to: {result.assigned_to}")
 
+	def render_task_tag(self, args: argparse.Namespace, result: Task) -> None:
+		"""Render a message indicating that a task was tagged, showing its current tags."""
+		tags = ", ".join(result.tags) if result.tags else "(none)"
+		self._emit(args, f"Task tags: {tags}")
+
 # ---------------------------------------------------------------------------
 # Additional rendering (search, log, status, config)
 # ---------------------------------------------------------------------------

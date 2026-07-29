@@ -256,6 +256,15 @@ def handle_task_assign(args: argparse.Namespace, svc: KanbanService, renderer: C
 	result = svc.assign_task(args.path, args.assigned_to)
 	renderer.render_task_assign(args, result)
 
+
+@with_task_slug
+def handle_task_tag(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
+	if args.delete:
+		result = svc.untag_task(args.path, args.tags)
+	else:
+		result = svc.tag_task(args.path, args.tags)
+	renderer.render_task_tag(args, result)
+
 # ---------------------------------------------------------------------------
 # Additional commands (search, log, status, config)
 # ---------------------------------------------------------------------------

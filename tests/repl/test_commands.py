@@ -496,6 +496,29 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.assign_task.assert_called_once_with(Slug("alpha/todo/fix-parser"), "alice")
         self.renderer.render_task_assign.assert_called_once_with(args, result)
 
+    def test_handle_task_tag(self):
+        """`tag` forwards path and tag to tag_task and renders result."""
+        args = self._args(path="alpha/todo/fix-parser", tags="auth", delete=False)
+        result = object()
+        self.svc.tag_task.return_value = result
+
+        commands.handle_task_tag(args, self.svc, self.renderer)
+
+        self.svc.tag_task.assert_called_once_with(Slug("alpha/todo/fix-parser"), "auth")
+        self.renderer.render_task_tag.assert_called_once_with(args, result)
+
+    def test_handle_task_tag_with_delete_flag(self):
+        """`tag --delete` forwards path and tag to untag_task and renders result."""
+        args = self._args(path="alpha/todo/fix-parser", tags="auth", delete=True)
+        result = object()
+        self.svc.untag_task.return_value = result
+
+        commands.handle_task_tag(args, self.svc, self.renderer)
+
+        self.svc.untag_task.assert_called_once_with(Slug("alpha/todo/fix-parser"), "auth")
+        self.svc.tag_task.assert_not_called()
+        self.renderer.render_task_tag.assert_called_once_with(args, result)
+
     def test_handle_search(self):
         args = self._args(query="fix", board="alpha", sort="title", reverse=True)
         result = object()

@@ -439,6 +439,8 @@ kanban task view <board>/<column>/<task>
 kanban task edit <board>/<column>/<task>
 kanban task delete <board>/<column>/<task>
 kanban task assign <board>/<column>/<task> <name>
+kanban task tag <board>/<column>/<task> <tag>
+    [-d|--delete]
 kanban task rename <board><column>/task <new-name>
 
 kanban search <query>
@@ -552,6 +554,8 @@ move <task> [<column>]
     [--down]
 
 assign <task> <user>
+tag <task> <tag>
+    [-d|--delete]
 
 reorder <column> <position>
 

@@ -219,7 +219,7 @@ class CompletionEngine:
             return self._matching(
                 [c.slug for c in self._service.get_columns(self._service.working_board)], partial
             )
-        if action.dest == "tags":
+        if action.dest == "tags" or action.metavar == "TAG":
             return self._matching(self._service.get_tags(self._service.working_board), partial)
         if action.dest == "assigned_to":
             return self._matching(

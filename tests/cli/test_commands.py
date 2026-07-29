@@ -496,6 +496,29 @@ class TestCommandHandlers(unittest.TestCase):
         self.svc.assign_task.assert_called_once_with(Path("/board-a/todo/fix-parser"), "alice")
         self.renderer.render_task_assign.assert_called_once_with(args, result)
 
+    def test_handle_task_tag(self):
+        """`task tag` forwards path and tag to tag_task and renders result."""
+        args = self._args(path="board-a/todo/fix-parser", tags="auth", delete=False)
+        result = object()
+        self.svc.tag_task.return_value = result
+
+        commands.handle_task_tag(args, self.svc, self.renderer, self.json_renderer)
+
+        self.svc.tag_task.assert_called_once_with(Path("/board-a/todo/fix-parser"), "auth")
+        self.renderer.render_task_tag.assert_called_once_with(args, result)
+
+    def test_handle_task_tag_with_delete_flag(self):
+        """`task tag --delete` forwards path and tag to untag_task and renders result."""
+        args = self._args(path="board-a/todo/fix-parser", tags="auth", delete=True)
+        result = object()
+        self.svc.untag_task.return_value = result
+
+        commands.handle_task_tag(args, self.svc, self.renderer, self.json_renderer)
+
+        self.svc.untag_task.assert_called_once_with(Path("/board-a/todo/fix-parser"), "auth")
+        self.svc.tag_task.assert_not_called()
+        self.renderer.render_task_tag.assert_called_once_with(args, result)
+
     def test_handle_task_delete(self):
         """`task delete` forwards task path and renders deletion result."""
         args = self._args(path="board-a/todo/fix-parser", force=True)

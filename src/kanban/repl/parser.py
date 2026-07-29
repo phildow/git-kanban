@@ -32,6 +32,7 @@ from ..repl.commands import (
     handle_task_info,
     handle_task_list,
     handle_task_move,
+    handle_task_tag,
     handle_task_unset,
     handle_task_update,
     handle_task_view,
@@ -302,6 +303,15 @@ def _add_assign_parser(subparsers: argparse._SubParsersAction) -> None:
     _add_global_flags(p)
     p.set_defaults(func=handle_task_assign)
 
+
+def _add_tag_parser(subparsers: argparse._SubParsersAction) -> None:
+    p = subparsers.add_parser("tag", help="Add or remove a tag on a task")
+    p.add_argument("path", metavar="TASK", help="The task to tag")
+    p.add_argument("tags", metavar="TAG", help="Tag to add to or remove from the task")
+    p.add_argument("-d", "--delete", action="store_true", default=False, help="Remove the tag instead of adding it")
+    _add_global_flags(p)
+    p.set_defaults(func=handle_task_tag)
+
 # ---------------------------------------------------------------------------
 # Top-level parser
 # ---------------------------------------------------------------------------
@@ -347,6 +357,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_move_parser(subparsers)
     _add_config_parser(subparsers)
     _add_assign_parser(subparsers)
+    _add_tag_parser(subparsers)
 
     # search
     p = subparsers.add_parser("search", help="Full-text search across tasks")

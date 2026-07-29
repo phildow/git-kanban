@@ -34,6 +34,7 @@ from kanban.cli.commands import (
     handle_task_assign,
     handle_task_move,
     handle_task_rename,
+    handle_task_tag,
     handle_task_view,
     handle_task_info,
     handle_task_unset,
@@ -76,7 +77,7 @@ class TestParserStructure(unittest.TestCase):
         self.assertEqual(set(column.keys()), {"list", "create", "info", "rename", "reorder", "delete"})
 
         task = self._subparser_choices(top["task"], "task_command")
-        self.assertEqual(set(task.keys()), {"list", "create", "info", "view", "edit", "update", "unset", "move", "delete", "assign", "rename"})
+        self.assertEqual(set(task.keys()), {"list", "create", "info", "view", "edit", "update", "unset", "move", "delete", "assign", "tag", "rename"})
 
         config = self._subparser_choices(top["config"], "config_command")
         self.assertEqual(set(config.keys()), {"get", "set"})
@@ -276,6 +277,19 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         self.assertEqual(args.assigned_to, "alice")
         self.assertEqual(args.format, "plain")
         self.assertIs(args.func, handle_task_assign)
+
+        args = cli_parser.parse_args(["task", "tag", "board-a/todo/fix-parser", "auth"])
+        self.assertEqual(args.path, "board-a/todo/fix-parser")
+        self.assertEqual(args.tags, "auth")
+        self.assertEqual(args.format, "plain")
+        self.assertFalse(args.delete)
+        self.assertIs(args.func, handle_task_tag)
+
+        args = cli_parser.parse_args(["task", "tag", "board-a/todo/fix-parser", "auth", "-d"])
+        self.assertTrue(args.delete)
+
+        args = cli_parser.parse_args(["task", "tag", "board-a/todo/fix-parser", "auth", "--delete"])
+        self.assertTrue(args.delete)
 
     def test_search_log_status_and_config(self):
         """Other top-level commands parse correctly and set proper handlers."""
