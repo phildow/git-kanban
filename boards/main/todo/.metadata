@@ -23,4 +23,5 @@
 		default-board-for-new-task-when-none-provided.md
 		implement-status.md
 		should-the-description-support-newlines.md
+		consider-pycases-for-kebab-conversion.md
 
