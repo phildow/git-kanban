@@ -1,15 +1,26 @@
 
 # Git Kanban
 
+Kanban for engineers. Git-backed, Markdown-based kanban for your terminal.
+
 The repository uses pyenv and virtualenv. Run `.venv/bin/activate` to activate the virtual environment.
 
 ## Version Map
 
-- 0.6 - Error handling and complete memory store
+- 0.6 - CLI and REPL stable
 - 0.7 - Implement indexing and search
 - 0.8 - Implement git tracking
 - 0.9 - Implement the TUI
 - 1.0 - Release
+
+## Claude Dekstop Conversations
+
+I engange in archiceture and design discussions about the project in the Claude Desktop app. I've included those conversations here for reference. 
+
+Before writing any code I had a number of discussions with Claude about the pros and cons of my initial design choices. The conversations led to architecture decisions, design patterns, and UI choices.
+Much of the CLAUDE.md file is composed of Claude responses during these conversations and later iterated on. I repeatedly return to and develop the conversations as I work on the project.
+
+I've included these conversations to provide some insight into the upfront work invovled in this project along with insights into my decision making process and how I interact with Claude outside of actual coding.
 
 ## Lessons
 
@@ -20,7 +31,6 @@ The repository uses pyenv and virtualenv. Run `.venv/bin/activate` to activate t
 - I talk architecture and design with Claude before writing code
 - My loop is Design with Claude -> Claude Code | CoPilot -> Refactor -> Repeat
 - Review the diffs and tests, write your own commits
-
 
 ## Installation
 
