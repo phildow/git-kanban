@@ -222,6 +222,94 @@ The worktree and branch are stored in the .kanban/config file:
   branch = "kanban"
 ```
 
+### The Data Model
+
+There are three core types: the board, column, and task. A board contains columns, and a column contains tasks. A task belongs to a single column; a column belongs to a single board.
+
+#### Identity
+
+There are three ways of identifying a board, column, or task: by id, path, or slug.
+
+The `id` is the unique identifier. It is the only identifier that is immutable. The id is created when the object is created. It is used when checking for changes made directly to the filesystem outside of the kanban application.
+
+The `slug` is derived from the object's name. The name is is the display name given to the object by the user. The name maybe changed, in which case the slug also changes.
+
+The slug identifies the associated file or folder on disk and is used to construct filepaths. It is unique in its context. Slugging is owned by the service layer, and a slug is only created or updated when the object is created or updated. No other layer creates slugs, but consumers of the kanban service may provide a custom slug when creating or updating an object. Repository methods take slugs as parameters but do not create slugs themselves.
+
+The REPL and TUI use the slug to identify an object when making calls to the service layer. Because of its importance the slug is typed:
+
+```
+Slug = NewType('Slug', str)
+```
+
+The `path` is an object's fully qualified path and is globally unique. It is composed of slugs and changes when an object's slug changes.
+
+```
+/board/column/task
+```
+
+For example:
+
+`/main` identifies the Main board
+
+`/main/todo` identifies the To Do column in the Main board
+
+`/main/todo/fix-bug` identifies the "Fix Bug" task in the To Do column of the Main board
+
+Paths correspond directly to files and folders when using the filesystem repository. Other repositories use the path as a unique identifer in whatever way appropriate.
+
+The CLI uses the path to identify an object when making calls to the service layer. Because of this most `KanbanService` methods take identifying arguents that are typed `Path | Slug`.
+
+The data model follows. Note the lightweight relationships between the types.
+
+#### The Board
+
+```python
+@dataclass
+class Board:
+    id:   UUID
+    name: str
+    slug: Slug
+
+    column_count: int = 0
+    task_count: int = 0
+```
+
+#### The Column
+
+```python
+@dataclass
+class Column:
+    id:         UUID
+    name:       str
+    slug:       Slug
+    board:      Slug
+    position:   int
+
+    task_count: int = 0
+```
+
+#### The Task
+
+```python
+@dataclass
+class Task:
+    id:             UUID
+    title:          str
+    slug:           Slug
+    board:          Slug
+    column:         Slug
+
+    created_by:     str | None = None
+    assigned_to:    str | None = None
+    priority:       str | None = None
+    due_date:       datetime | None = None
+    tags:           list[str] = field(default_factory=list)
+    created_at:     datetime | None = None
+    updated_at:     datetime | None = None
+    body:           str = ""
+```
+
 ### Metadata
 
 #### The Store
@@ -231,7 +319,6 @@ The kanban store includes a `userdata` INI file. It contains preferences specifi
 ```
 [user-context]
     board = main
-    column = todo
 ```
 
 #### Boards
@@ -294,79 +381,7 @@ updated_at: 2026-06-12T10:00:00Z
 ...
 ```
 
-TODO: add note on description and comments
-
-### The Data Model
-
-There are three core types: the board, column, and task. A board contains columns, and a column contains tasks. A task belongs to a single column. A column belongs to a single board.
-
-#### Identity
-
-There are three ways of identifying a board, column, or task: by id, name, or slug.
-
-The `id` is the unique identifier. It is created once with the object, and it remains the same for the lifetime of the object. It is used when checking for changes made directly to the filesystem outside of the kanban application.
-
-The `name` is the display name given to the object by the user. It appears in the TUI and when using the `-a` flag in the REPL. The name maybe changed.
-
-The `slug` is derived from the name. It identifies the file or folder on disk and is used to construct filepaths. It is unique in its context. Slugging is owned by the service layer, and a slug is only created or updated when the object is created or updated. No other layer creates slugs, but consumers of the kanban service may provide a custom slug when creating or updating an object. Repository methods take slugs as parameters but do not create slugs themselves.
-
-In practice the slug functions as the identifer for an object in memory. Once created in the service layer, an object always includes its slug. The interface layer (CLI/REPL/TUI) uses the slug to identify an object when making additional calls to the service layer.
-
-Because of its importance the slug is typed:
-
-```
-Slug = NewType('Slug', str)
-```
-
-The data model follows. Note the lightweight relationships between the types:
-
-#### The Board
-
-```python
-@dataclass
-class Board:
-    id:   UUID
-    name: str
-    slug: Slug
-
-    column_count: int = 0
-    task_count: int = 0
-```
-
-#### The Column
-
-```python
-@dataclass
-class Column:
-    id:         UUID
-    name:       str
-    slug:       Slug
-    board:      str
-    position:   int
-
-    task_count: int = 0
-```
-
-#### The Task
-
-```python
-@dataclass
-class Task:
-    id:             UUID
-    title:          str
-    slug:           str
-    board:          Slug
-    column:         Slug
-
-    created_by:     str | None = None
-    assigned_to:    str | None = None
-    priority:       str | None = None
-    due_date:       datetime | None = None
-    tags:           list[str] = field(default_factory=list)
-    created_at:     datetime | None = None
-    updated_at:     datetime | None = None
-    body:           str = ""
-```
+Following the frontmatter are two sections delineated by markdown headers: the task's Description and Comments that have been added to the task. The `# Description` header is added to the task's markdown when it is created. The `# Comments` header is added only when a comment has been made on the task.
 
 ### The CLI
 
