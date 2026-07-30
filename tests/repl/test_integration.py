@@ -9,8 +9,8 @@ Conventions
 - Filesystem mutations are verified with Path.is_file / is_dir / exists.
 - Output checks use assertTrue(out.strip()) — only that *something* printed.
 - Frontmatter changes are verified via _read_frontmatter.
-- `search`, `log`, `status`, `config`, and `edit task` are excluded because
-  those service methods are not yet fully implemented.
+- `search`, `log`, `status`, and `config` are excluded because those service
+  methods are not yet fully implemented.
 
 Layout
 ------
@@ -27,7 +27,12 @@ TestReplRename          `rename` for boards, columns, and tasks
 TestReplDelete          `delete`/`del`/`rm` for boards, columns, and tasks
 TestReplReorder         `reorder column`
 TestReplShow            `show`/`view`/`v`/`s` aliases
+TestReplInfo            `info`/`i` aliases
+TestReplEdit            `edit` (with mocked $EDITOR)
 TestReplUpdate          `update task` with optional fields
+TestReplUnset           `unset` for individual fields and tags
+TestReplTag             `tag` add and `--remove`
+TestReplComment         `comment` append
 TestReplMove            `move`/`mv` tasks between columns
 """
 
@@ -41,7 +46,7 @@ import unittest
 from contextlib import redirect_stdout
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from kanban.services.render_service import RenderService
 from kanban.repl.parser import parse_args
@@ -342,6 +347,31 @@ class TestReplCreate(_InitializedReplBase):
         self.svc.set_board(Slug("proj"))
         self.run_repl("n", "todo", "fix-login")
         self.assertTrue((self.boards_dir / "proj" / "todo" / "fix-login.md").is_file())
+
+    def test_create_task_description_writes_to_body(self) -> None:
+        """create task --description writes the description text into the task body."""
+        self.repo.create_board("proj", slug="proj")
+        self.repo.create_column("proj", "todo", slug="todo")
+        self.svc.set_board(Slug("proj"))
+        self.run_repl("create", "todo", "fix-login",
+                      "--description", "Investigate the login flow.")
+        out = self.run_repl("view", "fix-login")
+        self.assertIn("Investigate the login flow.", out)
+
+    def test_create_task_edit_opens_editor(self) -> None:
+        """create task --edit invokes the editor after creation."""
+        self.repo.create_board("proj", slug="proj")
+        self.repo.create_column("proj", "todo", slug="todo")
+        self.svc.set_board(Slug("proj"))
+        with patch("kanban.services.kanban.subprocess.run") as mock_run:
+            def _write(cmd, *args, **kwargs):
+                with open(cmd[-1], "w", encoding="utf-8") as f:
+                    f.write("Edited via mock editor.")
+                return None
+            mock_run.side_effect = _write
+            self.run_repl("create", "todo", "fix-login", "--edit")
+        out = self.run_repl("view", "fix-login")
+        self.assertIn("Edited via mock editor.", out)
 
 
 # ---------------------------------------------------------------------------
@@ -714,6 +744,33 @@ class TestReplUpdate(_InitializedReplBase):
         self.assertEqual(fm.get("due_date"), _iso("2025-01-01"))
         self.assertEqual(fm.get("created_by"), "mark")
 
+    def test_update_task_column_moves_task_to_destination_column(self) -> None:
+        """update task --column updates then moves the task to the destination column."""
+        self.repo.create_column("proj", "done", slug="done")
+        self.run_repl("update", "fix-login",
+                      "--assigned-to", "alice",
+                      "--column", "done")
+        self.assertTrue((self.boards_dir / "proj" / "done" / "fix-login.md").is_file())
+        self.assertFalse((self.boards_dir / "proj" / "todo" / "fix-login.md").exists())
+        fm = self._read_frontmatter("proj", "done", "fix-login")
+        self.assertEqual(fm.get("assigned_to"), "alice")
+
+    def test_update_task_description_writes_to_body(self) -> None:
+        """update task --description writes the text into the task body."""
+        self.run_repl("update", "fix-login",
+                      "--description", "Reproduce and fix the login bug.")
+        out = self.run_repl("view", "fix-login")
+        self.assertIn("Reproduce and fix the login bug.", out)
+
+    def test_update_task_tag_merges_with_existing_tags(self) -> None:
+        """update task --tag merges the new tag with any existing tags."""
+        self.run_repl("update", "fix-login", "--tag", "bug")
+        self.run_repl("update", "fix-login", "--tag", "auth")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        tags = fm.get("tags", "")
+        self.assertIn("bug", tags)
+        self.assertIn("auth", tags)
+
 
 # ---------------------------------------------------------------------------
 # move (and alias mv)
@@ -828,6 +885,191 @@ class TestReplAssign(_InitializedReplBase):
         out = self.run_repl("assign", "fix-login", "alice")
         self.assertTrue(out.strip())
         self.assertIn("alice", out)
+
+    def test_assign_remove_clears_assigned_to_in_frontmatter(self) -> None:
+        """assign --remove clears assigned_to in the frontmatter."""
+        self.run_repl("assign", "fix-login", "alice")
+        self.run_repl("assign", "fix-login", "--remove")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        self.assertNotIn("assigned_to", fm)
+
+
+# ---------------------------------------------------------------------------
+# info (and alias i)
+# ---------------------------------------------------------------------------
+
+class TestReplInfo(_InitializedReplBase):
+    """info/i commands for displaying task metadata without the body."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.repo.create_board("proj", slug="proj")
+        self.repo.create_column("proj", "todo", slug="todo")
+        self.svc.set_board(Slug("proj"))
+        self.svc.create_task(Slug("todo"), TaskCreateParams(title="fix-login"))
+
+    def test_info_produces_output(self) -> None:
+        """info <task-slug> prints task metadata."""
+        out = self.run_repl("info", "fix-login")
+        self.assertTrue(out.strip())
+        self.assertIn("fix-login", out)
+
+    def test_i_alias_produces_output(self) -> None:
+        """i (alias for info) prints task metadata."""
+        out = self.run_repl("i", "fix-login")
+        self.assertTrue(out.strip())
+        self.assertIn("fix-login", out)
+
+
+# ---------------------------------------------------------------------------
+# edit
+# ---------------------------------------------------------------------------
+
+class TestReplEdit(_InitializedReplBase):
+    """edit command opens the task body in the configured editor."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.repo.create_board("proj", slug="proj")
+        self.repo.create_column("proj", "todo", slug="todo")
+        self.svc.set_board(Slug("proj"))
+        self.svc.create_task(Slug("todo"), TaskCreateParams(title="fix-login"))
+
+    def test_edit_writes_body_via_editor(self) -> None:
+        """edit <task-slug> persists whatever the editor writes to the task body."""
+        with patch("kanban.services.kanban.subprocess.run") as mock_run:
+            def _write(cmd, *args, **kwargs):
+                with open(cmd[-1], "w", encoding="utf-8") as f:
+                    f.write("Investigate the login flow.")
+                return None
+            mock_run.side_effect = _write
+            self.run_repl("edit", "fix-login")
+        out = self.run_repl("view", "fix-login")
+        self.assertIn("Investigate the login flow.", out)
+
+
+# ---------------------------------------------------------------------------
+# unset
+# ---------------------------------------------------------------------------
+
+class TestReplUnset(_InitializedReplBase):
+    """unset subcommand for clearing individual task fields."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.repo.create_board("proj", slug="proj")
+        self.repo.create_column("proj", "todo", slug="todo")
+        self.svc.set_board(Slug("proj"))
+
+    def test_unset_assigned_to_removes_field_from_frontmatter(self) -> None:
+        """unset --assigned-to removes assigned_to from the frontmatter."""
+        self.run_repl("create", "todo", "fix-login", "--assigned-to", "alice")
+        self.run_repl("unset", "fix-login", "--assigned-to")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        self.assertNotIn("assigned_to", fm)
+
+    def test_unset_priority_removes_field_from_frontmatter(self) -> None:
+        """unset --priority removes priority from the frontmatter."""
+        self.run_repl("create", "todo", "fix-login", "--priority", "high")
+        self.run_repl("unset", "fix-login", "--priority")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        self.assertNotIn("priority", fm)
+
+    def test_unset_due_date_removes_field_from_frontmatter(self) -> None:
+        """unset --due-date removes due_date from the frontmatter."""
+        self.run_repl("create", "todo", "fix-login", "--due-date", "2026-12-31")
+        self.run_repl("unset", "fix-login", "--due-date")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        self.assertNotIn("due_date", fm)
+
+    def test_unset_created_by_removes_field_from_frontmatter(self) -> None:
+        """unset --created-by removes created_by from the frontmatter."""
+        self.run_repl("create", "todo", "fix-login", "--created-by", "mark")
+        self.run_repl("unset", "fix-login", "--created-by")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        self.assertNotIn("created_by", fm)
+
+    def test_unset_tag_removes_tag_from_frontmatter(self) -> None:
+        """unset --tag removes the given tag from the frontmatter."""
+        self.run_repl("create", "todo", "fix-login", "--tag", "bug", "--tag", "auth")
+        self.run_repl("unset", "fix-login", "--tag", "bug")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        tags = fm.get("tags", "")
+        self.assertNotIn("bug", tags)
+        self.assertIn("auth", tags)
+
+    def test_unset_description_removes_description_body(self) -> None:
+        """unset --description clears the Description section of the body."""
+        self.run_repl("create", "todo", "fix-login",
+                      "--description", "Investigate the login flow.")
+        self.run_repl("unset", "fix-login", "--description")
+        out = self.run_repl("view", "fix-login")
+        self.assertNotIn("Investigate the login flow.", out)
+
+
+# ---------------------------------------------------------------------------
+# tag
+# ---------------------------------------------------------------------------
+
+class TestReplTag(_InitializedReplBase):
+    """tag subcommand for adding and removing tags on a task."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.repo.create_board("proj", slug="proj")
+        self.repo.create_column("proj", "todo", slug="todo")
+        self.svc.set_board(Slug("proj"))
+        self.svc.create_task(Slug("todo"), TaskCreateParams(title="fix-login"))
+
+    def test_tag_adds_tag_to_frontmatter(self) -> None:
+        """tag <task> <tag> adds the tag to the frontmatter."""
+        self.run_repl("tag", "fix-login", "bug")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        self.assertIn("bug", fm.get("tags", ""))
+
+    def test_tag_does_not_duplicate_existing_tag(self) -> None:
+        """tag on a tag that already exists is a no-op (no duplicate)."""
+        self.run_repl("tag", "fix-login", "bug")
+        self.run_repl("tag", "fix-login", "bug")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        self.assertEqual(fm.get("tags"), "[bug]")
+
+    def test_tag_remove_removes_tag_from_frontmatter(self) -> None:
+        """tag --remove removes the given tag from the frontmatter."""
+        self.run_repl("tag", "fix-login", "bug")
+        self.run_repl("tag", "fix-login", "auth")
+        self.run_repl("tag", "fix-login", "bug", "--remove")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        tags = fm.get("tags", "")
+        self.assertNotIn("bug", tags)
+        self.assertIn("auth", tags)
+
+
+# ---------------------------------------------------------------------------
+# comment
+# ---------------------------------------------------------------------------
+
+class TestReplComment(_InitializedReplBase):
+    """comment subcommand for appending comments to a task body."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.repo.create_board("proj", slug="proj")
+        self.repo.create_column("proj", "todo", slug="todo")
+        self.svc.set_board(Slug("proj"))
+        self.svc.create_task(Slug("todo"), TaskCreateParams(title="fix-login"))
+
+    def test_comment_appends_comment_to_body(self) -> None:
+        """comment appends the given text to the task body."""
+        self.run_repl("comment", "fix-login", "Looks like a session bug.")
+        out = self.run_repl("view", "fix-login")
+        self.assertIn("Looks like a session bug.", out)
+
+    def test_comment_creates_comments_heading(self) -> None:
+        """comment inserts a `# Comments` heading before the first comment."""
+        self.run_repl("comment", "fix-login", "First comment.")
+        out = self.run_repl("view", "fix-login")
+        self.assertIn("Comments", out)
 
 
 # ---------------------------------------------------------------------------
