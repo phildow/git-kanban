@@ -7,4 +7,38 @@
 	order = 
 		git-worktree-for-kanban-dont-lose-this-data.md
 		import-module-from-tests.md
+		add-model-tests.md
+		rename-kanban-storage-file-base.md
+		enum-for-priority.md
+		remove-dest-option-from-completion-engine.md
+		add-tests-for-tags-completion.md
+		add-tab-completion-for-assignee.md
+		yyyy-mm-dd-when-showing-dates.md
+		all-paths-are-absolute-in-cli.md
+		improve-list-layout.md
+		error-if-move-takes-no-second-argument-or-flag.md
+		error-with-cd-slash.md
+		remove-cd-from-repl-and-use-boards-set.md
+		remove-working-column-from-user-context.md
+		add-column-field-to-cli-task-update.md
+		update-cli-task-update-to-support-changing-column.md
+		address-tasks-by-slug-only-in-repl.md
+		task-paths-do-not-need-the-column.md
+		ensure-repl-path-completion-ignores-forward-slashes.md
+		add-type-checking-with-mypy.md
+		rename-and-delete-completion-broken.md
+		delete-should-not-require-the-column-for-a-task.md
+		sort-by-column-should-sort-by-index-not-name.md
+		add-rich-option-to-the-repl.md
+		all-json-cli-output-should-include-path.md
+		editing-should-not-include-the-frontmatter.md
+		ability-to-remove-a-tag.md
+		updating-a-task-with-a-tag-should-not-add-not-replace.md
+		cli-task-view-command.md
+		command-to-add-comments-to-a-task.md
+		description-flag-to-the-update-command.md
+		more-repl-output-improvements.md
+		new-creates-a-task-by-default.md
+		add-missing-kanban-service-and-integration-tests.md
+		add-claude-conversations-to-repo.md
 

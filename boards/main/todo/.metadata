@@ -5,30 +5,22 @@
 
 [tasks]
 	order = 
+		scaffold-tui.md
 		slug-to-do-todo.md
-		improve-list-layout.md
 		remove-default-columns-from-service-layer.md
 		migrate-to-python-frontmatter.md
 		ensure-memory-store-supports-same-features-as-filesystem.md
-		exlude-flag-with-list-all-to-exclude-columns-multiple.md
 		use-slugs-in-memory-repository-for-private-indexing.md
 		add-utility-to-filter-for-invisible-files.md
 		csv-export.md
-		add-edit-flag-to-new-to-immediately-edit.md
-		command-to-add-comments-to-a-task.md
 		add-closed-at-metadata-to-a-task.md
 		config-default-boards-that-auto-set-the-closed-at-date.md
 		option-to-bootstrap-from-the-repl.md
-		autocomplete-tabs-via-index.md
 		user-sort-order-for-columns.md
 		user-sort-order-for-boards.md
-		scaffold-tui.md
-		ability-to-remove-a-tag.md
-		path-names-in-quotes-mishandled.md
-		fileystemmove-task-returning-board-and-column-name.md
-		editing-should-not-include-the-frontmatter.md
-		add-claude-conversations-to-repo.md
 		add-board-short-id-like-main-for-main-or-infra-for-infrastructure.md
 		default-sort-order-when-listing-tags-in-table.md
-		add-type-checking-with-mypy.md
+		default-board-for-new-task-when-none-provided.md
+		implement-status.md
+		should-the-description-support-newlines.md
 
