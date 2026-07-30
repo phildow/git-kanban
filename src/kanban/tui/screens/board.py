@@ -378,7 +378,7 @@ class BoardScreen(Screen[None]):
 
         target = column.column
         self.app.push_screen(
-            TaskFormScreen(column=target),
+            TaskFormScreen(column=target, assignees=self._assignees()),
             lambda result: self._create_task(target, result),
         )
 
@@ -390,9 +390,16 @@ class BoardScreen(Screen[None]):
             return
 
         self.app.push_screen(
-            TaskFormScreen(task=task),
+            TaskFormScreen(task=task, assignees=self._assignees()),
             lambda result: self._update_task(task, result),
         )
+
+    def _assignees(self) -> list[str]:
+        """Return the names already in use on the active board, for the form's dropdown."""
+        assignees: list[str] = []
+        with self._service_errors("assignees"):
+            assignees = self.svc.get_assigned_tos(self.svc.working_board)
+        return assignees
 
     def action_delete_task(self) -> None:
         """Ask for confirmation, then delete the focused card."""

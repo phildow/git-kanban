@@ -12,6 +12,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, Select, Static
 
 from ...models import Column, Priority, Task
+from ..widgets import AutoCompleteInput
 
 
 @dataclass
@@ -45,8 +46,20 @@ class TaskFormScreen(ModalScreen[TaskFormResult | None]):
         Binding("ctrl+s", "save", "Save", show=True),
     ]
 
-    def __init__(self, *, task: Task | None = None, column: Column | None = None) -> None:
-        """Create the form in edit mode when `task` is given, otherwise create mode."""
+    def __init__(
+        self,
+        *,
+        task: Task | None = None,
+        column: Column | None = None,
+        assignees: list[str] | None = None,
+    ) -> None:
+        """
+        Create the form in edit mode when `task` is given, otherwise create mode.
+
+        `assignees` are the names offered by the Assigned to field's dropdown.
+        They are passed in rather than looked up so the screen keeps its
+        distance from the kanban service.
+        """
         super().__init__()
         if task is None and column is None:
             raise ValueError("TaskFormScreen requires either a task or a column")
@@ -54,6 +67,7 @@ class TaskFormScreen(ModalScreen[TaskFormResult | None]):
         # Named `form_task` because Textual's MessagePump owns `task`.
         self.form_task = task
         self.column = column
+        self.assignees = assignees or []
 
     @property
     def is_edit(self) -> bool:
@@ -78,7 +92,8 @@ class TaskFormScreen(ModalScreen[TaskFormResult | None]):
                     id="field-title",
                 )
                 yield Label("Assigned to")
-                yield Input(
+                yield AutoCompleteInput(
+                    self.assignees,
                     value=(task.assigned_to or "") if task else "",
                     placeholder="name",
                     id="field-assigned-to",
@@ -145,7 +160,9 @@ class TaskFormScreen(ModalScreen[TaskFormResult | None]):
         raw_tags = self.query_one("#field-tags", Input).value
         tags = [tag.strip() for tag in raw_tags.split(",") if tag.strip()]
 
-        assigned_to = self.query_one("#field-assigned-to", Input).value.strip() or None
+        assigned_to = (
+            self.query_one("#field-assigned-to", AutoCompleteInput).value.strip() or None
+        )
 
         self.dismiss(
             TaskFormResult(

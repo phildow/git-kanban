@@ -177,6 +177,32 @@ ModalScreen {
     color: $text-muted;
 }
 
+/* The Assigned to field and its suggestion dropdown. */
+
+AutoCompleteInput {
+    width: 1fr;
+    height: auto;
+}
+
+AutoCompleteInput > OptionList.-suggestions {
+    width: 1fr;
+    height: auto;
+    max-height: 8;
+    margin: 0 2 0 2;
+    padding: 0;
+    background: $panel;
+    border: none;
+    border-left: outer $accent;
+}
+
+/* Keyboard focus stays in the text field while the dropdown is open, so the
+   highlight has to be drawn as though the list itself were focused. */
+AutoCompleteInput > OptionList.-suggestions > .option-list--option-highlighted {
+    color: $block-cursor-foreground;
+    background: $block-cursor-background;
+    text-style: $block-cursor-text-style;
+}
+
 #form-error {
     height: auto;
     margin: 1 0 0 0;

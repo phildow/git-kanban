@@ -1,11 +1,13 @@
 """Widgets used by the TUI's board screen."""
 
+from .autocomplete import AutoCompleteInput, SuggestionInput
 from .bars import CommandBar, FilterBar, ModeBar
 from .card import CardWidget
 from .column import ColumnView, item_task
 from .sidebar import LogView, SidebarPanel, StatusView
 
 __all__ = [
+    "AutoCompleteInput",
     "CardWidget",
     "ColumnView",
     "CommandBar",
@@ -14,5 +16,6 @@ __all__ = [
     "ModeBar",
     "SidebarPanel",
     "StatusView",
+    "SuggestionInput",
     "item_task",
 ]
