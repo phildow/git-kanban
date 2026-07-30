@@ -143,8 +143,7 @@ def _full_card_text(task: Task) -> Text:
 def detail_text(task: Task) -> Text:
     """Return the metadata block shown at the top of the task detail screen."""
     text = Text()
-    text.append(task.title, style="bold")
-    # text.append(f"  {short_id(task)}\n", style="dim")
+    text.append(f"{task.title}\n", style="bold")
     text.append(f"{task.path}\n\n", style="dim")
 
     rows: list[tuple[str, str, str]] = [

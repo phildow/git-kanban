@@ -13,10 +13,10 @@ from .helpers import make_board, make_column, make_task
 class TestCardText(unittest.TestCase):
     """card_text lays a task out over as many lines as it has metadata."""
 
-    def test_includes_id_and_title(self) -> None:
-        """The first line carries the id sigil and the title."""
+    def test_leads_with_the_title(self) -> None:
+        """The first line is the task title."""
         lines = card_text(make_task()).plain.splitlines()
-        self.assertEqual(lines[0], "#a3f9c2d1 Fix login bug")
+        self.assertEqual(lines[0], "Fix login bug")
 
     def test_includes_priority_and_assignee(self) -> None:
         """Priority and assignee share the second line."""
@@ -36,7 +36,7 @@ class TestCardText(unittest.TestCase):
     def test_omits_unset_metadata(self) -> None:
         """A task with no metadata renders as a single title line."""
         task = make_task(priority=None, assigned_to=None, due_date=None, tags=[])
-        self.assertEqual(card_text(task).plain, "#a3f9c2d1 Fix login bug")
+        self.assertEqual(card_text(task).plain, "Fix login bug")
 
 
 class TestDenseCardText(unittest.TestCase):
@@ -50,7 +50,7 @@ class TestDenseCardText(unittest.TestCase):
     def test_keeps_priority_and_assignee(self) -> None:
         """The dense summary still carries the priority and assignee sigils."""
         text = card_text(make_task(), dense=True).plain
-        self.assertEqual(text, "#a3f9c2d1 Fix login bug !HIGH @alice")
+        self.assertEqual(text, "Fix login bug !HIGH @alice")
 
     def test_drops_due_date_and_tags(self) -> None:
         """The dense summary omits the due date and tags."""
@@ -87,6 +87,12 @@ class TestDetailText(unittest.TestCase):
     def test_includes_the_task_path(self) -> None:
         """The path identifies the task the same way the CLI does."""
         self.assertIn("/main/todo/fix-login-bug", detail_text(make_task()).plain)
+
+    def test_title_and_path_are_on_separate_lines(self) -> None:
+        """The title heads the block and the path sits on its own line below it."""
+        lines = detail_text(make_task()).plain.splitlines()
+        self.assertEqual(lines[0], "Fix login bug")
+        self.assertEqual(lines[1], "/main/todo/fix-login-bug")
 
     def test_labels_every_field(self) -> None:
         """Each metadata field is labelled, including the ones that are unset."""
