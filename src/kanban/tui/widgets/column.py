@@ -30,7 +30,15 @@ class ColumnView(ListView):
     """
 
     locked: reactive[bool] = reactive(False)
-    """Release cursor and select bindings to the board screen when True."""
+    """
+    Release cursor and select bindings to the board screen when True.
+
+    Every column is locked during a move, so this says nothing about where the
+    card would land — see `staging` for that.
+    """
+
+    staging: reactive[bool] = reactive(False)
+    """True when this is the column the card being moved would land in."""
 
     def __init__(self, column: Column, *, id: str | None = None) -> None:
         """Create an empty view for `column`; call `set_tasks` to populate it."""
@@ -103,9 +111,9 @@ class ColumnView(ListView):
             return False
         return True
 
-    def watch_locked(self, locked: bool) -> None:
-        """Reflect the locked state in CSS so move mode is visible on the column."""
-        self.set_class(locked, "-locked")
+    def watch_staging(self, staging: bool) -> None:
+        """Mark the column as the staged destination so it stands out during a move."""
+        self.set_class(staging, "-staging")
 
 
 def item_task(item: ListItem | Any) -> Task | None:

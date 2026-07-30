@@ -34,13 +34,19 @@ ColumnView {
     border-title-style: bold;
 }
 
+/* Focus is blue and a move is amber.  They have to be different hues: the
+   theme resolves $accent and $warning to the same colour, and the staged
+   column is always the focused one. */
 ColumnView:focus {
-    border: round $accent;
-    border-title-color: $accent;
+    border: round $primary;
+    border-title-color: $primary;
 }
 
-ColumnView.-locked {
-    border: round $warning;
+/* During a move only the column the card would land in is marked, so the eye
+   follows the card across the board.  Written to beat the :focus rule above. */
+ColumnView.-staging,
+ColumnView:focus.-staging {
+    border: dashed $warning;
     border-title-color: $warning;
 }
 
@@ -65,12 +71,12 @@ CardWidget {
 }
 
 ColumnView > ListItem.-highlight CardWidget {
-    border: round $accent-darken-2;
+    border: round $primary-darken-2;
 }
 
 ColumnView:focus > ListItem.-highlight CardWidget {
     background: $boost;
-    border: round $accent;
+    border: round $primary;
 }
 
 CardWidget.-moving,

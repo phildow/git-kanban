@@ -582,6 +582,10 @@ class BoardScreen(Screen[None]):
         target.index = min(move.position, max(len(target.tasks) - 1, 0))
         target.focus()
 
+        # Only the destination is marked, so the highlight travels with the card.
+        for view in views:
+            view.staging = view is target
+
         card = target.card_for(move.task.slug)
         if card is not None:
             card.set_moving(True)
@@ -650,6 +654,8 @@ class BoardScreen(Screen[None]):
         """Lock the columns and swap the footer for the move-mode hints."""
         for view in self.column_views:
             view.locked = move_mode
+            if not move_mode:
+                view.staging = False
 
         if move_mode:
             self._show_hints(MOVE_HINTS)
