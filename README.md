@@ -13,13 +13,15 @@ The repository uses pyenv and virtualenv. Run `.venv/bin/activate` to activate t
 - 0.9 - Implement the TUI
 - 1.0 - Release
 
-## Dogfooding
-
-With v0.5 I started dogfooding the project, which is to say I moved most of the TODOs out of the README where I was tracking them and into a kanban board saved in this repository. That work is on the `kanban` branch, which per dicussions with Claude is set up as a git worktree. See CLAUDE.md for more information about git worktrees and how this project uses them.
-
 ## Motivation
 
-After some initial success with LLMs at work I wanted to see how far I could get building an application from scratch with the help of a coding agent. I settled on a kanban applicaton for the terminal involving a CLI, REPL, and TUI. I thought it was both small enough in scope to be approachable and large enough in scope to be a challenge.
+After some initial success with LLMs at work I wanted to see how far I could get building an application from scratch with the help of a coding agent. I settled on a kanban applicaton for the terminal involving a CLI, REPL, and TUI. I thought it was both small enough in scope to be approachable and large enough in scope to be a challenge. I liked the idea of building a terminal application, being a tool I use daily in my work, and I love the idea of replacing Jira boards.
+
+Some 80% or more of the actual coding is done by an agent. I sometimess hand code features or make changes across components to make sure that I understand the system.
+
+## Dogfooding
+
+With v0.5 I started dogfooding the project. I moved most of the TODOs out of the README where I was tracking them and into a kanban board saved in this repository. That work is on the `kanban` branch, which per dicussions with Claude is set up as a git worktree. See CLAUDE.md for more information about git worktrees and how this project uses them.
 
 ## Claude Dekstop Conversations
 
@@ -30,6 +32,8 @@ I've included these conversations to provide some insight into the upfront work 
 
 ## Lessons
 
+I firmly believe that we should build tools that augment human intellgence rather than replace it. I want agents to write code for humans, not other agents, and I want to remain in the loop, making architectural decisions and also checking that I understand what is being produced.
+
 I've learned a number of lessons from this project:
 
 - Architecture and specification are more important with agentic coding, not less
@@ -39,6 +43,8 @@ I've learned a number of lessons from this project:
 - I talk architecture and design with Claude before writing code, and I do this in the desktop app
 - My loop is Design with Claude -> Claude Code | CoPilot -> Refactor & Test -> Repeat
 - Review the diffs and tests, write your own commits
+- Refactor often, the battle against entropy is real
+- Garbage in, garbage out
 
 ## Installation
 
