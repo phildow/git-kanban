@@ -236,10 +236,19 @@ class AutoCompleteInput(Vertical):
         Close the dropdown when focus leaves the field.
 
         Tabbing on to the next field should not leave suggestions hanging over
-        it, and the keys the dropdown claims must go back to the form.
+        it, and the keys the dropdown claims must go back to the form.  The
+        check is deferred because clicking a suggestion also blurs the field:
+        that click still has to reach the dropdown, and focus comes straight
+        back afterwards.
         """
         _ = event
-        self._close()
+        self.call_after_refresh(self._close_unless_focused)
+
+    def _close_unless_focused(self) -> None:
+        """Close the dropdown if the field has not regained focus in the meantime."""
+        field = next(iter(self.query(SuggestionInput)), None)
+        if field is not None and not field.has_focus:
+            self._close()
 
     def _show_matches(self, text: str) -> None:
         """Open the dropdown on the candidates matching what is being typed, or close it."""
@@ -262,12 +271,22 @@ class AutoCompleteInput(Vertical):
         self._field.suggesting = True
 
     def _close(self) -> None:
-        """Hide the dropdown and hand the keys back to the field and the form."""
+        """
+        Hide the dropdown and hand the keys back to the field and the form.
+
+        Tolerates a torn-down widget: closing is deferred off a blur, which is
+        also what a dismissed form produces.
+        """
         self._matches = []
-        options = self._options
-        options.clear_options()
-        options.display = False
-        self._field.suggesting = False
+
+        options = next(iter(self.query(OptionList)), None)
+        if options is not None:
+            options.clear_options()
+            options.display = False
+
+        field = next(iter(self.query(SuggestionInput)), None)
+        if field is not None:
+            field.suggesting = False
 
     def _accept(self, index: int | None) -> None:
         """Accept the highlighted suggestion, or close the dropdown if there is none."""
