@@ -52,13 +52,14 @@ class TaskFormScreen(ModalScreen[TaskFormResult | None]):
         task: Task | None = None,
         column: Column | None = None,
         assignees: list[str] | None = None,
+        tags: list[str] | None = None,
     ) -> None:
         """
         Create the form in edit mode when `task` is given, otherwise create mode.
 
-        `assignees` are the names offered by the Assigned to field's dropdown.
-        They are passed in rather than looked up so the screen keeps its
-        distance from the kanban service.
+        `assignees` and `tags` are the values offered by those fields'
+        dropdowns.  They are passed in rather than looked up so the screen keeps
+        its distance from the kanban service.
         """
         super().__init__()
         if task is None and column is None:
@@ -68,6 +69,7 @@ class TaskFormScreen(ModalScreen[TaskFormResult | None]):
         self.form_task = task
         self.column = column
         self.assignees = assignees or []
+        self.tags = tags or []
 
     @property
     def is_edit(self) -> bool:
@@ -112,9 +114,11 @@ class TaskFormScreen(ModalScreen[TaskFormResult | None]):
                     id="field-due-date",
                 )
                 yield Label("Tags")
-                yield Input(
+                yield AutoCompleteInput(
+                    self.tags,
                     value=", ".join(task.tags) if task else "",
                     placeholder="comma separated",
+                    delimiter=",",
                     id="field-tags",
                 )
                 yield Static("", id="form-error")
@@ -157,7 +161,7 @@ class TaskFormScreen(ModalScreen[TaskFormResult | None]):
         priority_value = self.query_one("#field-priority", Select).value
         priority = priority_value if isinstance(priority_value, Priority) else None
 
-        raw_tags = self.query_one("#field-tags", Input).value
+        raw_tags = self.query_one("#field-tags", AutoCompleteInput).value
         tags = [tag.strip() for tag in raw_tags.split(",") if tag.strip()]
 
         assigned_to = (

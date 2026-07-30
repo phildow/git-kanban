@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import Iterable
+
+from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical
@@ -20,21 +24,76 @@ _DROPDOWN_ACTIONS = {
 }
 
 
+@dataclass(frozen=True)
+class Segment:
+    """
+    The part of a field's value that is being completed.
+
+    `start` is the offset in the full value where `text` begins, so an accepted
+    suggestion can replace exactly that much of the field.
+    """
+
+    text:  str
+    start: int
+
+
+def active_segment(value: str, delimiter: str | None = None) -> Segment:
+    """
+    Return the portion of `value` the user is currently typing.
+
+    Without a delimiter the whole value is being completed.  With one, only the
+    text after the final delimiter counts, minus the whitespace that usually
+    follows it.  Whitespace *inside* the segment is kept, because values such
+    as tags may legitimately contain spaces.
+    """
+    if delimiter is None:
+        return Segment(value, 0)
+
+    start = value.rfind(delimiter) + 1
+    while start < len(value) and value[start] == " ":
+        start += 1
+
+    return Segment(value[start:], start)
+
+
+def entered_values(value: str, delimiter: str | None = None) -> list[str]:
+    """
+    Return the completed entries of a delimited value, ignoring the last one.
+
+    These are the values the user has already committed to, so they should not
+    be offered again.  A value with no delimiter has no completed entries.
+    """
+    if delimiter is None:
+        return []
+
+    parts = value.split(delimiter)[:-1]
+    return [part.strip() for part in parts if part.strip()]
+
+
 def matching_candidates(
-    candidates: list[str], text: str, limit: int = MAX_SUGGESTIONS
+    candidates: list[str],
+    text: str,
+    limit: int = MAX_SUGGESTIONS,
+    *,
+    exclude: Iterable[str] = (),
 ) -> list[str]:
     """
     Return the candidates prefixed by `text`, at most `limit` of them.
 
     Matching ignores case, and a candidate identical to what has already been
     typed is left out so accepting a suggestion does not immediately offer it
-    again.  An empty `text` matches everything.
+    again.  Anything in `exclude` is left out too.  An empty `text` matches
+    everything.
     """
     needle = text.lower()
+    excluded = set(exclude)
+
     return [
         candidate
         for candidate in candidates
-        if candidate.lower().startswith(needle) and candidate != text
+        if candidate.lower().startswith(needle)
+        and candidate != text
+        and candidate not in excluded
     ][:limit]
 
 
@@ -66,6 +125,10 @@ class AutoCompleteInput(Vertical):
     value.  With the dropdown closed the field behaves like a plain `Input`, so
     Enter still submits the form and Escape still cancels it.
 
+    Given a `delimiter` the field holds a list rather than a single value: only
+    the entry after the final delimiter is completed, and entries already in
+    the field are not offered again.
+
     The widget is handed its candidates and never queries the kanban service.
     """
 
@@ -82,11 +145,18 @@ class AutoCompleteInput(Vertical):
         *,
         value: str = "",
         placeholder: str = "",
+        delimiter: str | None = None,
         id: str | None = None,
     ) -> None:
-        """Create a field offering `candidates`, pre-filled with `value`."""
+        """
+        Create a field offering `candidates`, pre-filled with `value`.
+
+        Pass a `delimiter` for fields that hold several values, such as the
+        comma-separated tags field.
+        """
         super().__init__(id=id)
         self.candidates = sorted({candidate for candidate in candidates if candidate})
+        self.delimiter = delimiter
 
         self._initial = value
         self._placeholder = placeholder
@@ -151,13 +221,34 @@ class AutoCompleteInput(Vertical):
         self._show_matches(event.value)
 
     def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
-        """Accept a suggestion that was clicked."""
+        """
+        Accept a suggestion that was clicked.
+
+        The value comes from the event rather than from the cached matches,
+        because clicking moves focus off the field and the resulting blur has
+        already closed the dropdown by the time this arrives.
+        """
         event.stop()
-        self._accept(event.option_index)
+        self._accept_value(str(event.option.prompt))
+
+    def on_descendant_blur(self, event: events.DescendantBlur) -> None:
+        """
+        Close the dropdown when focus leaves the field.
+
+        Tabbing on to the next field should not leave suggestions hanging over
+        it, and the keys the dropdown claims must go back to the form.
+        """
+        _ = event
+        self._close()
 
     def _show_matches(self, text: str) -> None:
-        """Open the dropdown on the candidates prefixed by `text`, or close it."""
-        matches = matching_candidates(self.candidates, text)
+        """Open the dropdown on the candidates matching what is being typed, or close it."""
+        segment = active_segment(text, self.delimiter)
+        matches = matching_candidates(
+            self.candidates,
+            segment.text,
+            exclude=entered_values(text, self.delimiter),
+        )
 
         if not matches:
             self._close()
@@ -179,18 +270,32 @@ class AutoCompleteInput(Vertical):
         self._field.suggesting = False
 
     def _accept(self, index: int | None) -> None:
-        """Put the suggestion at `index` into the field and close the dropdown."""
+        """Accept the highlighted suggestion, or close the dropdown if there is none."""
         if index is None or not (0 <= index < len(self._matches)):
             self._close()
             return
 
-        value = self._matches[index]
+        self._accept_value(self._matches[index])
+
+    def _accept_value(self, suggestion: str) -> None:
+        """
+        Put `suggestion` into the field and close the dropdown.
+
+        Only the entry being typed is replaced, so accepting a tag leaves the
+        tags already in the field alone.  Focus returns to the field, which a
+        click on the dropdown will have taken away.
+        """
         self._close()
 
-        self._accepting = True
         field = self._field
-        field.value = value
-        field.action_end()
+        segment = active_segment(field.value, self.delimiter)
+
+        self._accepting = True
+        field.value = f"{field.value[:segment.start]}{suggestion}"
+        field.focus()
+
+        # Deferred so it lands after the focus event, which selects the field.
+        self.call_after_refresh(field.action_end)
 
     # ── Actions ───────────────────────────────────────────────────────────────
 
