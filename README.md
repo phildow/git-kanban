@@ -13,23 +13,27 @@ The repository uses pyenv and virtualenv. Run `.venv/bin/activate` to activate t
 - 0.9 - Implement the TUI
 - 1.0 - Release
 
+## Motivation
+
+After some initial success with LLMs at work I wanted to see how far I could get building an application from scratch with the help of a coding agent. I settled on a kanban applicaton for the terminal involving a CLI, REPL, and TUI. I thought it was both small enough in scope to be approachable and large enough in scope to be a challenge.
+
 ## Claude Dekstop Conversations
 
-I engange in archiceture and design discussions about the project in the Claude Desktop app. I've included those conversations here for reference. 
-
 Before writing any code I had a number of discussions with Claude about the pros and cons of my initial design choices. The conversations led to architecture decisions, design patterns, and UI choices.
-Much of the CLAUDE.md file is composed of Claude responses during these conversations and later iterated on. I repeatedly return to and develop the conversations as I work on the project.
+Much of the CLAUDE.md file is composed of Claude responses during these conversations and later iterated on. I return to and develop the conversations as I work on the project.
 
-I've included these conversations to provide some insight into the upfront work invovled in this project along with insights into my decision making process and how I interact with Claude outside of actual coding.
+I've included these conversations to provide some insight into the upfront work invovled in this project along with insights into my decision making process and into how I interact with Claude outside of actual coding.
 
 ## Lessons
 
-- Architecture and specification are more important not less
-- It is addictive with slot machine like mechanics: sometimes excellent, sometimes a giant mess
+I've learned a number of lessons from this project:
+
+- Architecture and specification are more important with agentic coding, not less
+- Agentic coding is addictive with slot machine like mechanics: sometimes excellent, sometimes a giant mess
 - You'll know when you've underspecified, the quality is worse. Pause and return to design
 - Take it one piece at a time
-- I talk architecture and design with Claude before writing code
-- My loop is Design with Claude -> Claude Code | CoPilot -> Refactor -> Repeat
+- I talk architecture and design with Claude before writing code, and I do this in the desktop app
+- My loop is Design with Claude -> Claude Code | CoPilot -> Refactor & Test -> Repeat
 - Review the diffs and tests, write your own commits
 
 ## Installation
