@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 
-from textual import events
 from textual.app import App
 from textual.binding import Binding
 
@@ -49,18 +48,9 @@ class KanbanApp(App[None]):
         if not isinstance(self.screen, HelpScreen):
             self.push_screen(HelpScreen())
 
-    def on_app_focus(self, event: events.AppFocus) -> None:
-        """
-        Re-sync from the filesystem when the terminal regains focus.
-
-        This catches the common case of switching away to run `git pull` or to
-        edit a task file, then switching back.  Terminals that do not report
-        focus fall back to the manual refresh key.
-        """
-        _ = event
-        screen = self.screen
-        if isinstance(screen, BoardScreen):
-            self.run_worker(screen.reload(), exclusive=False)
+    # The app deliberately does not re-sync on `events.AppFocus`.  Returning to
+    # the terminal leaves the board as the user left it; changes made outside
+    # the app are picked up by the manual refresh key (`r`) instead.
 
 
 def run_tui(*, svc: KanbanService) -> None:

@@ -3,8 +3,8 @@ The board screen: the TUI's default screen.
 
 The screen owns all interaction with the kanban service.  Widgets render what
 they are handed and never query the service themselves.  The filesystem stays
-the source of truth: the screen re-fetches after every mutation of its own,
-when the terminal regains focus, and on demand with `r`.
+the source of truth: the screen re-fetches after every mutation of its own, and
+on demand with `r`.
 """
 
 from __future__ import annotations

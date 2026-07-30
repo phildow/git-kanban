@@ -854,12 +854,12 @@ Esc            cancel — discard, no calls made
 
 ### Refresh Strategy
 
-The filesystem remains the source of truth for the TUI, and the TUI consumes the kanban service exclusively, which itself queries the filesystem, no different from the CLI or REPL, but because the TUI maintains a visual state in a running application while the filesystem might change, it becomes necessary to develop a data refresh strategy. Our approach is threefold:
+The filesystem remains the source of truth for the TUI, and the TUI consumes the kanban service exclusively, which itself queries the filesystem, no different from the CLI or REPL, but because the TUI maintains a visual state in a running application while the filesystem might change, it becomes necessary to develop a data refresh strategy. Our approach is twofold:
 
 1) **After own mutations** — every create/edit/move/delete re-fetches from KanbanService immediately, so the TUI never shows stale data caused by its own actions.
 
-2) **On terminal focus return** — when the app detects the terminal window regained focus (via terminal focus-reporting escape sequences, exposed through Textual's app-level focus/blur events), it re-syncs from the filesystem. This catches the common case of switching away to run git pull or edit a file, then switching back.
+2) **Manual refresh key** (`r` or `:refresh`) — the user asks for a re-sync when they know something has changed outside the app.
 
-3) **Manual refresh key** (`r` or `:refresh`) — explicit fallback for when focus-tracking isn't supported (notably gaps in tmux/screen pass-through) or when something changes while the terminal stays focused the whole time.
+The TUI does **not** refresh when the terminal regains focus. Textual exposes app-level focus/blur events, but re-syncing on them redraws the board whenever the user tabs back from another window, which is disruptive more often than it is useful.
 
 In addition the TUI will refresh whenever a git sync is executed from within the app, akin to refreshing after a mutation.
