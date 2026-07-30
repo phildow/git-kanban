@@ -15,7 +15,7 @@ from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterator, cast
+from typing import TYPE_CHECKING, Iterable, Iterator, cast
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -184,9 +184,46 @@ class BoardScreen(Screen[None]):
         self._fetch()
         await self._render_board(select=select, focus_column=focus_column)
 
+        self._sync_subtitle()
+        self._reload_sidebar()
+
+    async def refresh_columns(
+        self, columns: Iterable[Slug], select: Slug | None = None
+    ) -> None:
+        """
+        Re-query only `columns` and redraw them, leaving the rest of the board alone.
+
+        Used after an operation whose effects are confined to columns the screen
+        already knows, such as a committed move.  Falls back to a full reload
+        when the board or a named column is not on screen, since then the
+        assumption that nothing else changed no longer holds.
+        """
+        board = self._board
+        views = {view.column.slug: view for view in self.column_views}
+        targets = list(dict.fromkeys(columns))
+
+        if board is None or not targets or any(slug not in views for slug in targets):
+            await self.reload(select)
+            return
+
+        with self._service_errors("load"):
+            for slug in targets:
+                self._tasks[slug] = self.svc.get_tasks(Path(f"/{board.slug}/{slug}"))
+
+        for slug in targets:
+            await views[slug].set_tasks(self._visible(slug), dense=self.dense)
+
+        self._select_task(select)
+        self._sync_subtitle()
+        self._reload_sidebar()
+
+    def _sync_subtitle(self) -> None:
+        """Update the header to match the tasks currently held."""
         task_count = sum(len(tasks) for tasks in self._tasks.values())
         self.sub_title = board_subtitle(self._board, len(self._columns), task_count)
 
+    def _reload_sidebar(self) -> None:
+        """Re-query the sidebar, if it has mounted."""
         sidebar = self.sidebar
         if sidebar is not None:
             sidebar.reload()
@@ -255,16 +292,24 @@ class BoardScreen(Screen[None]):
         focus_column: Slug | None,
     ) -> None:
         """Focus the column that held focus and re-highlight the selected task."""
-        if select is not None:
-            for view in views:
-                if view.select_task(select):
-                    view.focus()
-                    return
+        if self._select_task(select):
+            return
 
         target = next(
             (view for view in views if view.column.slug == focus_column), views[0]
         )
         target.focus()
+
+    def _select_task(self, slug: Slug | None) -> bool:
+        """Highlight and focus the task with `slug`.  Returns False when it is not shown."""
+        if slug is None:
+            return False
+
+        for view in self.column_views:
+            if view.select_task(slug):
+                view.focus()
+                return True
+        return False
 
     async def _render_current(self, select: Slug | None = None) -> None:
         """Repopulate the columns from data already fetched, without touching the service."""
@@ -287,6 +332,12 @@ class BoardScreen(Screen[None]):
     def _render_soon(self, select: Slug | None = None) -> None:
         """Schedule a re-render from a synchronous context."""
         self.run_worker(self._render_current(select), exclusive=False)
+
+    def _refresh_columns_soon(
+        self, columns: Iterable[Slug], select: Slug | None = None
+    ) -> None:
+        """Schedule a targeted column refresh from a synchronous context."""
+        self.run_worker(self.refresh_columns(columns, select), exclusive=False)
 
     # ── Navigation ────────────────────────────────────────────────────────────
 
@@ -601,6 +652,7 @@ class BoardScreen(Screen[None]):
             return
 
         task = move.task
+        source = task.column
         target = self._columns[move.column_index]
         moved: Task | None = None
 
@@ -615,9 +667,11 @@ class BoardScreen(Screen[None]):
 
         if moved is not None:
             self.notify(f"Moved to /{moved.board}/{target.slug}")
-            self._reload_soon(moved.slug)
-        else:
-            self._reload_soon()
+
+        # A move only disturbs the column it left and the one it landed in.
+        self._refresh_columns_soon(
+            [source, target.slug], moved.slug if moved is not None else None
+        )
 
     def _reorder_to(self, task: Task, position: int) -> None:
         """
