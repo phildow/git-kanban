@@ -8,6 +8,7 @@ import shlex
 import subprocess
 import tempfile
 from uuid import uuid4
+from warnings import deprecated
 
 from ..index.query import SearchQuery, SortField
 from ..models import Board, Column, Priority, Slug, Task, TaskFilter, UserContext
@@ -363,6 +364,7 @@ class KanbanService(CompletionDataSource):
 
     # ── All Items ─────────────────────────────────────────────────────────────
 
+    @deprecated("REPL list command has been removed")
     def get_list(
             self, 
             path: str | None = None, 
@@ -394,15 +396,17 @@ class KanbanService(CompletionDataSource):
 
     # ── Boards ────────────────────────────────────────────────────────────────
 
+    # TODO: References to .metadata leak implementation details from the filesystem storage layer.
+
     def get_boards(self) -> list[Board]:
         """
         Return all boards in the repository, in the order recorded in
-        .kanban-store/boards/.metadata.
+        .kanban-store/boards/.metadata.)
         """
         return self.repository.get_boards()
 
-    # TODO: Raise error if the board does not exist, rather than returning None.  
-    # This is a service layer, so it should raise exceptions for invalid slugs/paths rather than returning None.
+    # TODO: Raise error if the board does not exist, rather than returning None.
+    
     def get_board(self, path: Path | Slug) -> Board | None:
         """Return the board for the given board path or slug, or None if not found."""
         board: Slug
