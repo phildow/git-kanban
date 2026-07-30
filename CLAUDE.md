@@ -814,6 +814,12 @@ KanbanApp(App)
 │
 ├── BoardSwitcherScreen (modal, pushed on `b`)
 │   └── ListView of board names — Enter switches BoardScreen's active board
+│       plus a "+ New board…" row that pushes BoardFormScreen
+│
+├── BoardFormScreen (modal, pushed from the board switcher)
+│   ├── Input: title
+│   └── Button row: Save / Cancel
+│       on save BoardScreen creates the board and switches to it
 │
 └── CommandBar (overlay, toggled by `:`)
     └── Input — free text, parsed with the same parser as the REPL

@@ -39,7 +39,7 @@ from ..widgets import (
     ModeBar,
     SidebarPanel,
 )
-from .board_switcher import BoardSwitcherScreen
+from .board_switcher import BoardChoice, BoardSwitcherScreen, CreateBoard
 from .confirm import ConfirmScreen
 from .help import HelpScreen
 from .output import OutputScreen
@@ -666,13 +666,28 @@ class BoardScreen(Screen[None]):
             BoardSwitcherScreen(self._boards, active=active), self._switch_board
         )
 
-    def _switch_board(self, slug: Slug | None) -> None:
-        """Make `slug` the active board and reload."""
-        if slug is None:
+    def _switch_board(self, choice: BoardChoice | None) -> None:
+        """Act on the switcher's result: change board, create one, or do nothing."""
+        if choice is None:
+            return
+
+        if isinstance(choice, CreateBoard):
+            self._create_board(choice.name)
             return
 
         with self._service_errors("board"):
-            self.svc.set_board(slug)
+            self.svc.set_board(choice.slug)
+        self._reload_soon()
+
+    def _create_board(self, name: str) -> None:
+        """Create a board with the default columns and switch to it."""
+        board: Board | None = None
+        with self._service_errors("board"):
+            board = self.svc.create_board(name)
+            self.svc.set_board(board.slug)
+
+        if board is not None:
+            self.notify(f"Created /{board.slug}")
         self._reload_soon()
 
     def action_toggle_sidebar(self) -> None:
