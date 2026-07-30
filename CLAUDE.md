@@ -24,6 +24,11 @@ Be succinct.
 - Run tests from the current working directory with the bash command `python -m unittest discover -s tests`
 - Tab indent key-value pairs in INI files
 
+## Documentation
+
+- When you make changes to CLI subcommands, update the the command line structure in CLAUDE.md if necessary
+- When you make changes to REPL commands, update the REPL structure if necessary
+
 ## Project
 
 We are building a kanban style task manager in python that uses the filesystem for storage and git for change tracking. Tasks are stored as markdown documents in directories that correspond to boards with subdirectories for columns. The task's filename is the slug conversion of its title.
@@ -302,7 +307,7 @@ class Task:
 
     created_by:     str | None = None
     assigned_to:    str | None = None
-    priority:       str | None = None
+    priority:       Priority | None = None
     due_date:       datetime | None = None
     tags:           list[str] = field(default_factory=list)
     created_at:     datetime | None = None
@@ -323,7 +328,7 @@ The kanban store includes a `userdata` INI file. It contains preferences specifi
 
 #### Boards
 
-...
+There is no intraboard metadata at this time. Boards are sorted alphabetically.
 
 #### Board
 
@@ -610,26 +615,26 @@ The `[]` brackets indicate optional path components that are inferred from the u
 3. Index search (scoped to active board if set)
 4. Error on ambiguity
 
-Task-target commands (`show`, `edit`, `update`, `move`, `assign`, `rename`, `delete`) identify a task by its bare `<task>` slug: the service locates the column that contains it within the active board and constructs the full path. Because slugs are unique board-wide, the column need not be given. A slash-prefixed path (`/board/column/task`) still overrides the active context. To target a column or the active board, `rename` and `delete` use the `-c/--column <column>` and `-b/--board` flags respectively.
+Task-target commands (`show`, `edit`, `update`, `move`, `assign`, `rename`, `delete`) identify a task by its bare `<task>` slug: the service locates the column that contains it within the active board and constructs the full path. Because slugs are unique board-wide, the column need not be given. To target a column or the active board, `rename` and `delete` use the `--column <column>` and `---board` flags respectively.
 
 The following command aliases are registered by default:
 
 ```
- new = create        (subcommands: board|b, column|c, task|t)
+ new = create
    n = create
 cols = columns
   mv = move
  del = delete
   rm = delete
 show = view
-   v = show
-   s = show
+   v = view
+   s = view
    i = info
 quit = exit
   :q = exit
 ```
 
-The REPL supports command control commands and tab completion:
+The REPL supports control commands and tab completion:
 
 ```
 Ctrl+C        - interrupt or cancel the current command
@@ -642,18 +647,15 @@ Tab           - context aware automcomplete commands, flags, files, tags, users,
 The REPL prints it prompt as:
 
 ```
-kanban >
+kanban (/board) >
 ```
 
 ### The User Context
 
-The user context is a service level model of user settings and preferences. It includes for example, the active board or board/column, akin to the current working directory.
-
-The REPL takes advantage of the user contex in the kanban service, allowing the user to set what is effectively the current working directory. If there is an active board or board/column, the REPL shows it in the prompt:
+The user context is a service level model of user settings and preferences. It includes for example the active board. The REPL takes advantage of the user contex in the kanban service. If there is an active board the REPL shows it in the prompt:
 
 ```
 kanban (/my-project) >
-kanban (/my-project/todo) >
 ```
 
 An example REPL interaction follows:
@@ -661,17 +663,17 @@ An example REPL interaction follows:
 ```
 $ kanban repl
 
-kanban> board my-project
+kanban () > board my-project
 
-kanban (/my-project)> ls todo
+kanban (/my-project)> tasks todo
   1. Fix login bug         [high]  alice    due 2026-06-20
   2. Write API docs        [med]   bob      due 2026-06-25
 
-kanban (/my-project)> new task todo "Add rate limiting" --priority high --assigned-to alice
+kanban (/my-project)> new todo "Add rate limiting" --priority high --assigned-to alice
 Created: Add rate limiting [a3f9c2d1]
 
-kanban (/my-project)> mv todo/add-rate-limiting in-progress
-Moved to: my-project/in-progress
+kanban (/my-project)> mv add-rate-limiting in-progress
+Moved to: in-progress
 
 kanban (/my-project)> history
   task list
@@ -687,97 +689,45 @@ The REPL supports tab completion for commands, positional arguments, and paths.
 
 #### For Commands and Positional Arguments
 
-Completion for commands and positional arguments is straightforward and looks like:
+Completion for commands, positional and optional arguments is straightforward. If there is only one option available it is autocompleted with a tab.
 
 ```
-kanban> m<TAB>
-move
+kanban (/my-project) > mo<TAB>
+kanban (/my-project) > move
 
-kanban> new ta<TABL>
-task
+kanban (/my-project) > new to<TAB>
+kanban (/my-project) > new todo
+
+kanban (/my-project) > new todo --pri<TAB>
+kanban (/my-project) > new todo --priority
 ```
 
-#### For Paths
-
-Tab completion for board/column/task paths works like it does on the terminal, with paths relative to the `.kanan-store` directory and beginning with a forward slash `/`, mapped direcly from the folders and files on the filesystem.
-
-Tab completion is resolved in the following manner:
-
-**When there is no board or column in the user context**
-
-The user must type everything. Completions offer the next segment with a trailing slash to drill in:
+If there is more than one option tabbing quickly in succession cycles through them:
 
 ```
-kanban> move <TAB>
-my-project/   ops/
-
-kanban> move /my-<TAB>
-my-project/
-
-kanban> move /my-project/<TAB>
-todo/   in-progress/   in-review/   done/
-
-kanban> move /my-project/to<TAB>
-todo/
-
-kanban> move /my-project/todo/<TAB>
-fix-login-bug   write-api-docs   add-rate-limiting
-
-kanban> move /my-project/todo/fix<TAB>
-fix-login-bug
+kanban (/my-project) > m<TAB>
+move     mv     <TAB>
+kanban (/my-project) > move<TAB>
+kanban (/my-project) > mv<TAB>
+kanban (/my-project) > m
 ```
 
-**When there is a board but no column in the user context**
+#### For Slugs
 
-The board segment is skipped. Completion starts at the column, resolved against the active board:
-
-```
-kanban (/my-project)> move <TAB>
-todo/   in-progress/   in-review/   done/
-
-kanban (/my-project)> move to<TAB>
-todo/
-
-kanban (/my-project)> move todo/<TAB>
-fix-login-bug   write-api-docs   add-rate-limiting
-
-kanban (/my-project)> move todo/fix<TAB>
-fix-login-bug
-```
-
-**When there is a board and column in the user context**
-
-Both segments are skipped. Completion starts directly at the task title:
+Tab completion for board, column, and task slugs works as expected. Positional and optional arguments are identified by the command parser as board, column, or task arguments, and tab completion completes the slugs that are avaialble for the type:
 
 ```
-kanban (/my-project/todo)> move <TAB>
-fix-login-bug   write-api-docs   add-rate-limiting
+kanban (/my-project) > move fix<TAB>
+fix-login-bug   fix-rename-output   fix-repl-init
 
-kanban (/my-project/todo)> move fix<TAB>
-fix-login-bug
+kanban (/my-project) > rename --column in<TAB>
+in-progress     in-review
+
+kanban (/my-project) > tasks to<TAB>
+kanban (/my-project) > tasks todo
 ```
 
-**In the the mixed case when the user overrides the context with an explicit path**
-
-The completer detects that board (and column) are being supplied explicitly and resolves subsequent segments from what's been typed rather than from context:
-
-```
-# User context is /my-project/todo, but user is typing a path from ops/
-kanban (/my-project/todo)> move /ops/<TAB>
-backlog/   todo/   in-progress/   done/
-
-kanban (/my-project/todo)> move /ops/in-pro<TAB>
-in-progress/
-
-kanban (/my-project/todo)> move /ops/in-progress/<TAB>
-deploy-staging   update-certs   rotate-keys
-
-# User context is my-project, user supplies board and column explicitly
-kanban (/my-project)> move /ops/todo/<TAB>
-deploy-staging   update-certs   rotate-keys
-```
-
-The signal that the user is overriding the context (current working directory) is the presence of a forward slash `/` at the beginning of the path.
+As with commands and other argumenbts, if there is more than one option for a slug previx tabbing quickly in succession cycles through them.
 
 ## The TUI
 
@@ -906,8 +856,3 @@ The filesystem remains the source of truth for the TUI, and the TUI consumes the
 3) **Manual refresh key** (`r` or `:refresh`) — explicit fallback for when focus-tracking isn't supported (notably gaps in tmux/screen pass-through) or when something changes while the terminal stays focused the whole time.
 
 In addition the TUI will refresh whenever a git sync is executed from within the app, akin to refreshing after a mutation.
-
-## Additional Project Instructions
-
-- When you make changes to CLI subcommands, update the the command line structure in CLAUDE.md if necessary
-- When you make changes to REPL commands, update the REPL structure if necessary
