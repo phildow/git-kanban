@@ -10,8 +10,8 @@ Conventions
 - Output checks use assertIn / assertTrue(out.strip()); for command output the
   only assertion is that *something* was printed, not what.
 - JSON output is parsed and key fields are asserted.
-- `log`, `search`, `status`, `config`, and `task edit` are excluded because
-  those service methods are not yet fully implemented.
+- `log`, `search`, `status`, and `config` are excluded because those service
+  methods are not yet fully implemented.
 
 Layout
 ------
@@ -478,6 +478,20 @@ class TestTaskCLI(_InitializedBase):
         out = self.run_cli("task", "create", "/proj/todo", "fix-login")
         self.assertIn("/proj/todo/fix-login", out)
 
+    def test_task_create_writes_description_to_body(self) -> None:
+        """task create --description writes the description text into the task body."""
+        self.run_cli("task", "create", "/proj/todo", "fix-login",
+                     "--description", "Investigate the login flow.")
+        out = self.run_cli("task", "view", "proj/todo/fix-login")
+        self.assertIn("Investigate the login flow.", out)
+
+    def test_task_create_json_includes_description_in_body(self) -> None:
+        """task create --description --format json includes the text in the body field."""
+        data = self.run_json("task", "create", "/proj/todo", "fix-login",
+                             "--description", "Investigate the login flow.",
+                             "--format", "json")
+        self.assertIn("Investigate the login flow.", data["body"])
+
     # -- list -----------------------------------------------------------------
 
     def test_task_list_empty(self) -> None:
@@ -641,6 +655,13 @@ class TestTaskCLI(_InitializedBase):
         data = self.run_json("task", "view", "proj/todo/fix-login", "--format", "json")
         self.assertIn("body", data)
 
+    def test_task_view_markdown_prints_body(self) -> None:
+        """task view --markdown renders the task body as markdown."""
+        self.run_cli("task", "create", "/proj/todo", "fix-login",
+                     "--description", "Investigate the login flow.")
+        out = self.run_cli("task", "view", "proj/todo/fix-login", "--markdown")
+        self.assertIn("Investigate the login flow.", out)
+
     # -- update ---------------------------------------------------------------
 
     def test_task_update_writes_assigned_to_file(self) -> None:
@@ -702,6 +723,71 @@ class TestTaskCLI(_InitializedBase):
         self.assertFalse((self.boards_dir / "proj" / "todo" / "fix-login.md").exists())
         fm = self._read_frontmatter("proj", "done", "fix-login")
         self.assertEqual(fm.get("assigned_to"), "alice")
+
+    def test_task_update_description_writes_to_body(self) -> None:
+        """task update --description writes the text into the task body."""
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
+        self.run_cli("task", "update", "proj/todo/fix-login",
+                     "--description", "Reproduce and fix the login bug.")
+        out = self.run_cli("task", "view", "proj/todo/fix-login")
+        self.assertIn("Reproduce and fix the login bug.", out)
+
+    def test_task_update_tag_merges_with_existing_tags(self) -> None:
+        """task update --tag merges the new tag with any existing tags."""
+        self.run_cli("task", "create", "/proj/todo", "fix-login", "--tag", "bug")
+        self.run_cli("task", "update", "proj/todo/fix-login", "--tag", "auth")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        tags = fm.get("tags", "")
+        self.assertIn("bug", tags)
+        self.assertIn("auth", tags)
+
+    # -- unset ----------------------------------------------------------------
+
+    def test_task_unset_assigned_to_removes_field_from_frontmatter(self) -> None:
+        """task unset --assigned-to removes assigned_to from the frontmatter."""
+        self.run_cli("task", "create", "/proj/todo", "fix-login", "--assigned-to", "alice")
+        self.run_cli("task", "unset", "proj/todo/fix-login", "--assigned-to")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        self.assertNotIn("assigned_to", fm)
+
+    def test_task_unset_priority_removes_field_from_frontmatter(self) -> None:
+        """task unset --priority removes priority from the frontmatter."""
+        self.run_cli("task", "create", "/proj/todo", "fix-login", "--priority", "high")
+        self.run_cli("task", "unset", "proj/todo/fix-login", "--priority")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        self.assertNotIn("priority", fm)
+
+    def test_task_unset_due_date_removes_field_from_frontmatter(self) -> None:
+        """task unset --due-date removes due_date from the frontmatter."""
+        self.run_cli("task", "create", "/proj/todo", "fix-login", "--due-date", "2026-12-31")
+        self.run_cli("task", "unset", "proj/todo/fix-login", "--due-date")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        self.assertNotIn("due_date", fm)
+
+    def test_task_unset_created_by_removes_field_from_frontmatter(self) -> None:
+        """task unset --created-by removes created_by from the frontmatter."""
+        self.run_cli("task", "create", "/proj/todo", "fix-login", "--created-by", "mark")
+        self.run_cli("task", "unset", "proj/todo/fix-login", "--created-by")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        self.assertNotIn("created_by", fm)
+
+    def test_task_unset_tag_removes_tag_from_frontmatter(self) -> None:
+        """task unset --tag removes the given tag from the frontmatter."""
+        self.run_cli("task", "create", "/proj/todo", "fix-login",
+                     "--tag", "bug", "--tag", "auth")
+        self.run_cli("task", "unset", "proj/todo/fix-login", "--tag", "bug")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        tags = fm.get("tags", "")
+        self.assertNotIn("bug", tags)
+        self.assertIn("auth", tags)
+
+    def test_task_unset_description_removes_description_body(self) -> None:
+        """task unset --description clears the Description section of the body."""
+        self.run_cli("task", "create", "/proj/todo", "fix-login",
+                     "--description", "Investigate the login flow.")
+        self.run_cli("task", "unset", "proj/todo/fix-login", "--description")
+        data = self.run_json("task", "view", "proj/todo/fix-login", "--format", "json")
+        self.assertNotIn("Investigate the login flow.", data["body"])
 
     # -- move -----------------------------------------------------------------
 
@@ -808,6 +894,69 @@ class TestTaskCLI(_InitializedBase):
         data = self.run_json("task", "assign", "proj/todo/fix-login", "alice",
                              "--format", "json")
         self.assertEqual(data["assigned_to"], "alice")
+
+    def test_task_assign_remove_clears_assigned_to_in_frontmatter(self) -> None:
+        """task assign --remove clears assigned_to in the frontmatter."""
+        self.run_cli("task", "create", "/proj/todo", "fix-login", "--assigned-to", "alice")
+        self.run_cli("task", "assign", "proj/todo/fix-login", "--remove")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        self.assertNotIn("assigned_to", fm)
+
+    def test_task_assign_remove_json_clears_assigned_to(self) -> None:
+        """task assign --remove --format json emits a null assigned_to field."""
+        self.run_cli("task", "create", "/proj/todo", "fix-login", "--assigned-to", "alice")
+        data = self.run_json("task", "assign", "proj/todo/fix-login", "--remove",
+                             "--format", "json")
+        self.assertIsNone(data["assigned_to"])
+
+    # -- tag ------------------------------------------------------------------
+
+    def test_task_tag_adds_tag_to_frontmatter(self) -> None:
+        """task tag adds the given tag to the frontmatter."""
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
+        self.run_cli("task", "tag", "proj/todo/fix-login", "bug")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        self.assertIn("bug", fm.get("tags", ""))
+
+    def test_task_tag_does_not_duplicate_existing_tag(self) -> None:
+        """task tag on a tag that already exists is a no-op (no duplicate)."""
+        self.run_cli("task", "create", "/proj/todo", "fix-login", "--tag", "bug")
+        self.run_cli("task", "tag", "proj/todo/fix-login", "bug")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        self.assertEqual(fm.get("tags"), "[bug]")
+
+    def test_task_tag_remove_removes_tag_from_frontmatter(self) -> None:
+        """task tag --remove removes the given tag from the frontmatter."""
+        self.run_cli("task", "create", "/proj/todo", "fix-login",
+                     "--tag", "bug", "--tag", "auth")
+        self.run_cli("task", "tag", "proj/todo/fix-login", "bug", "--remove")
+        fm = self._read_frontmatter("proj", "todo", "fix-login")
+        tags = fm.get("tags", "")
+        self.assertNotIn("bug", tags)
+        self.assertIn("auth", tags)
+
+    def test_task_tag_json_includes_tag(self) -> None:
+        """task tag --format json emits the added tag in the tags list."""
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
+        data = self.run_json("task", "tag", "proj/todo/fix-login", "bug",
+                             "--format", "json")
+        self.assertIn("bug", data["tags"])
+
+    # -- comment --------------------------------------------------------------
+
+    def test_task_comment_appends_comment_to_body(self) -> None:
+        """task comment appends the given text to the task body."""
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
+        self.run_cli("task", "comment", "proj/todo/fix-login", "Looks like a session bug.")
+        out = self.run_cli("task", "view", "proj/todo/fix-login")
+        self.assertIn("Looks like a session bug.", out)
+
+    def test_task_comment_creates_comments_heading(self) -> None:
+        """task comment inserts a `# Comments` heading before the first comment."""
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
+        self.run_cli("task", "comment", "proj/todo/fix-login", "First comment.")
+        data = self.run_json("task", "view", "proj/todo/fix-login", "--format", "json")
+        self.assertIn("# Comments", data["body"])
 
     # -- rename ---------------------------------------------------------------
 
