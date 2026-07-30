@@ -13,6 +13,10 @@ The repository uses pyenv and virtualenv. Run `.venv/bin/activate` to activate t
 - 0.9 - Implement the TUI
 - 1.0 - Release
 
+## Dogfooding
+
+With v0.5 I started dogfooding the project, which is to say I moved most of the TODOs out of the README where I was tracking them and into a kanban board saved in this repository. That work is on the `kanban` branch, which per dicussions with Claude is set up as a git worktree. See CLAUDE.md for more information about git worktrees and how this project uses them.
+
 ## Motivation
 
 After some initial success with LLMs at work I wanted to see how far I could get building an application from scratch with the help of a coding agent. I settled on a kanban applicaton for the terminal involving a CLI, REPL, and TUI. I thought it was both small enough in scope to be approachable and large enough in scope to be a challenge.
@@ -70,35 +74,6 @@ Run:
 ```
 
 ### TODO
-
-0.6: Error handling, Complete in memory store
-
-Error Handling
-
-- CHORE: Does the repo raise not found errors or does the service layer?
-    - I think the orchestrator just orchestrates and propogates errors but lets the storage layer determine if there is an error
-- FEAT: Use specific errors when a board/column/task isn't found
-- FEAT: Only show an "Unepected Error" when it actually is, vs say renaming to a name that already exists 
-- TEST: handle path errors better
-
-- FEAT: consider case-conversion package for unicode compatible kebab casing (pycases)
-- FEAT: kebab_case preserves accented characters
-
-~
-
-- CHORE: always pass the path to get_tasks not a reconstructed path
-- CHORE: basic refactoring to use exists methods in the filesystem, i'm sure there's more
-
-POTENTIAL INCONSISTENCY
-
-- Where metadata is required, eg sort order, files may be missing or renamed directly, change not reflected in metadata file
-- The file system is the source of truth, although metadata or the index may be out of sync.
-- Corrections defer to the filesystem, eg sort: 
--   If the filename appears in the metadata but not the folder, remove it from the metadata
--   If the filename appears in the folder but not the metadata, add it to the back
-- Two kinds of syncing:
--   Filesystem -> cache | metadata
--   Filesystme <-> git
 
 CONFIG
 
