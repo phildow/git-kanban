@@ -9,7 +9,7 @@ from rich.console import Console, ConsoleOptions, RenderResult
 from rich.markdown import Heading, Markdown
 from rich.text import Text
 
-from ..models import Board, Column, Slug, Task
+from ..models import Board, Column, Slug, Task, UserContext
 from ..protocols.command_renderer import CommandRenderer
 from ..services.kanban import GitCommit, KanbanStatus
 from ..services.render_service import RenderService
@@ -67,7 +67,7 @@ class Renderer(CommandRenderer):
 		else:
 			self._emit(args, "Failed to initialize Kanban system.")
 
-	def render_set_board(self, args: argparse.Namespace, result: object) -> None:
+	def render_set_board(self, args: argparse.Namespace, result: UserContext) -> None:
 		_ = args, result
 		raise NotImplementedError("Change directory is not supported by the CLI JSON renderer. Use the `cd` command in the REPL instead.")
 

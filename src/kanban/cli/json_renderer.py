@@ -154,7 +154,7 @@ class JsonRenderer(CommandRenderer):
     def render_column_reorder(self, args: argparse.Namespace, result: list[Column]) -> None:
         self._emit(args, json.dumps([self._column_dict(c) for c in result], indent=2))
 
-    def render_column_delete(self, args: argparse.Namespace, result: None) -> None:
+    def render_column_delete(self, args: argparse.Namespace, result: Column) -> None:
         _ = result
         self._emit(args, json.dumps({"deleted": self._path_str(args)}, indent=2))
 
@@ -197,7 +197,7 @@ class JsonRenderer(CommandRenderer):
     def render_task_comment(self, args: argparse.Namespace, result: Task) -> None:
         self._emit(args, json.dumps(self._task_detail_dict(result), indent=2))
 
-    def render_task_delete(self, args: argparse.Namespace, result: None) -> None:
+    def render_task_delete(self, args: argparse.Namespace, result: Task) -> None:
         _ = result
         self._emit(args, json.dumps({"deleted": self._path_str(args)}, indent=2))
 
