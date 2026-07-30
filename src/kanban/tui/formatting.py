@@ -98,8 +98,8 @@ def card_text(task: Task, *, dense: bool = False) -> Text:
 def _dense_card_text(task: Task) -> Text:
     """Return a single-line summary of a task for dense mode."""
     text = Text(no_wrap=True, overflow="ellipsis")
-    text.append(short_id(task), style="dim")
-    text.append(" ")
+    # text.append(short_id(task), style="dim")
+    # text.append(" ")
     text.append(task.title)
 
     if task.priority is not None:
@@ -114,8 +114,8 @@ def _dense_card_text(task: Task) -> Text:
 def _full_card_text(task: Task) -> Text:
     """Return the multi-line body of a task card: title, sigils, due date, and tags."""
     text = Text()
-    text.append(short_id(task), style="dim")
-    text.append(" ")
+    # text.append(short_id(task), style="dim")
+    # text.append(" ")
     text.append(task.title, style="bold")
 
     sigils = Text()
@@ -144,7 +144,7 @@ def detail_text(task: Task) -> Text:
     """Return the metadata block shown at the top of the task detail screen."""
     text = Text()
     text.append(task.title, style="bold")
-    text.append(f"  {short_id(task)}\n", style="dim")
+    # text.append(f"  {short_id(task)}\n", style="dim")
     text.append(f"{task.path}\n\n", style="dim")
 
     rows: list[tuple[str, str, str]] = [
