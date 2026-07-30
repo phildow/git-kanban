@@ -111,6 +111,9 @@ class BoardScreen(Screen[None]):
         self._tasks: dict[Slug, list[Task]] = {}
         self._filter: str = ""
         self._move: MoveState | None = None
+        # Position the moving card is currently drawn at, when its own column is
+        # previewing it; None when no column is showing a staged position.
+        self._previewed: int | None = None
 
     # ── Layout ────────────────────────────────────────────────────────────────
 
@@ -566,6 +569,9 @@ class BoardScreen(Screen[None]):
         )
 
         self._move = MoveState(task=task, column_index=column_index, position=position)
+        # The board already shows the card at this position, so the preview
+        # starts in sync and the first keystroke is the first redraw.
+        self._previewed = position
         self.move_mode = True
 
     def _stage_column(self, delta: int) -> None:
@@ -611,16 +617,19 @@ class BoardScreen(Screen[None]):
 
     def _mark_staged(self) -> None:
         """
-        Mark where the card would land, without moving anything.
+        Mark where the card would land.
 
-        Staging is preview-only, so the cards keep the arrangement they were
-        fetched with: the destination column takes a border and the footer hints
-        name it.  Nothing is re-rendered until the move is committed.
+        The destination column takes a border and the footer hints name it.  A
+        card staged within its own column also slides to its staged position;
+        one staged in another column stays put, so only that column's marking
+        moves.  Nothing is written until the move is committed.
         """
         move = self._move
         views = self.column_views
         if move is None or not views:
             return
+
+        self._sync_preview(move)
 
         target = views[move.column_index]
         for view in views:
@@ -636,7 +645,7 @@ class BoardScreen(Screen[None]):
         return f"  → /{target.slug}  {move.position + 1}/{slots}    {MOVE_KEYS}"
 
     def _set_moving_card(self, moving: bool) -> None:
-        """Mark, or unmark, the card being moved.  It stays where it is throughout."""
+        """Mark, or unmark, the card being moved."""
         move = self._move
 
         for view in self.column_views:
@@ -644,6 +653,74 @@ class BoardScreen(Screen[None]):
                 card.set_moving(
                     moving and move is not None and card.card_task.slug == move.task.slug
                 )
+
+    def _sync_preview(self, move: MoveState) -> None:
+        """
+        Slide the card to its staged position, but only within its own column.
+
+        Reordering is worth showing in place; a move to another column is not,
+        since taking the card out of the board it is still in reads as the move
+        having already happened.  Only the card's own column is ever redrawn.
+        """
+        origin = move.task.column
+        staged = self._columns[move.column_index].slug
+
+        position = move.position if staged == origin else None
+        if position == self._previewed:
+            return
+
+        self._previewed = position
+        order = (
+            _reposition(self._visible(origin), move.task.slug, position)
+            if position is not None
+            else None
+        )
+        self.run_worker(
+            self._render_column(origin, order=order, select=move.task.slug),
+            exclusive=False,
+        )
+
+    def _clear_preview(self, move: MoveState) -> None:
+        """Put the card back where it started, after a cancelled move."""
+        if self._previewed is None:
+            return
+
+        self._previewed = None
+        self.run_worker(
+            self._render_column(move.task.column, select=move.task.slug), exclusive=False
+        )
+
+    async def _render_column(
+        self,
+        column: Slug,
+        *,
+        order: list[Task] | None = None,
+        select: Slug | None = None,
+    ) -> None:
+        """
+        Redraw one column from data already held, leaving the rest of the board alone.
+
+        `order` overrides the column's ordering, which is how a staged position
+        is previewed without writing anything.
+        """
+        view = next(
+            (v for v in self.column_views if v.column.slug == column), None
+        )
+        if view is None:
+            return
+
+        desired = self._visible(column) if order is None else order
+
+        # Staging can arrive at the arrangement already on screen — entering and
+        # leaving a column without reordering, say.  Redrawing would be a no-op.
+        if [task.slug for task in desired] != [task.slug for task in view.tasks]:
+            await view.set_tasks(desired, dense=self.dense)
+
+        if select is not None:
+            view.select_task(select)
+
+        # set_tasks builds fresh cards, so the moving card needs marking again.
+        self._set_moving_card(self.move_mode)
 
     def _commit_move(self) -> None:
         """Write the staged move: one move_task when the column changed, then reorder."""
@@ -664,6 +741,7 @@ class BoardScreen(Screen[None]):
 
         self.move_mode = False
         self._move = None
+        self._previewed = None
 
         if moved is not None:
             self.notify(f"Moved to /{moved.board}/{target.slug}")
@@ -705,11 +783,15 @@ class BoardScreen(Screen[None]):
         """
         Leave move mode without writing anything.
 
-        Nothing has to be redrawn: staging never moved the card, so the board
-        already shows the arrangement the user is returning to.
+        Only a column that previewed the card in a new position has to be put
+        back; everything else still shows the arrangement it was fetched with.
         """
+        move = self._move
         self.move_mode = False
         self._move = None
+
+        if move is not None:
+            self._clear_preview(move)
 
     def watch_move_mode(self, move_mode: bool) -> None:
         """Lock the columns and swap the footer for the move-mode hints."""
@@ -926,6 +1008,17 @@ class BoardScreen(Screen[None]):
             description = str(exc) or exc.__class__.__name__
             logging.error("TUI %s failed: %s", action, description)
             self.notify(description, title=action, severity="error")
+
+
+def _reposition(tasks: list[Task], slug: Slug, position: int) -> list[Task]:
+    """Return `tasks` with the task named by `slug` moved to `position`."""
+    moving = next((task for task in tasks if task.slug == slug), None)
+    if moving is None:
+        return list(tasks)
+
+    rest = [task for task in tasks if task.slug != slug]
+    index = max(0, min(position, len(rest)))
+    return [*rest[:index], moving, *rest[index:]]
 
 
 def _matches(task: Task, needle: str) -> bool:
