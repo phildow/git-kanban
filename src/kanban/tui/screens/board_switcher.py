@@ -11,6 +11,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Label, ListItem, ListView, Static
 
 from ...models import Board, Slug
+from ..formatting import board_label
 from .board_form import BoardFormScreen
 
 NEW_BOARD_LABEL = "+ New board…"
@@ -59,13 +60,24 @@ class BoardSwitcherScreen(ModalScreen[BoardChoice | None]):
             (i for i, board in enumerate(self.boards) if board.slug == self.active), 0
         )
 
+        # Widths come from the widest entry, so the rows line up as columns.
+        name_width = max((len(board.name) for board in self.boards), default=0)
+        path_width = max((len(board.slug) + 1 for board in self.boards), default=0)
+        count_width = max(
+            (len(str(board.task_count)) for board in self.boards), default=0
+        )
+
         rows = [
-            ListItem(Label(_board_label(board)), id=f"board-{board.slug}")
+            ListItem(
+                Label(board_label(board, name_width, path_width, count_width)),
+                id=f"board-{board.slug}",
+            )
             for board in self.boards
         ]
         rows.append(ListItem(Label(NEW_BOARD_LABEL), id="new-board-option"))
 
-        with Vertical(id="dialog", classes="-narrow"):
+        # Full width rather than `-narrow`: rows carry a name, a path, and counts.
+        with Vertical(id="dialog"):
             yield Static("Switch board", id="form-heading")
             yield ListView(*rows, initial_index=initial, id="board-list")
 
@@ -101,8 +113,3 @@ class BoardSwitcherScreen(ModalScreen[BoardChoice | None]):
         if name is None:
             return
         self.dismiss(CreateBoard(name))
-
-
-def _board_label(board: Board) -> str:
-    """Return the switcher row for a board: its path and its counts."""
-    return f"/{board.slug}  ({board.column_count} columns, {board.task_count} tasks)"

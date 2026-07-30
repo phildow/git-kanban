@@ -83,6 +83,28 @@ def board_subtitle(board: Board | None, column_count: int, task_count: int) -> s
     return f"/{board.slug} — {column_count} columns, {task_count} tasks"
 
 
+def board_label(
+    board: Board,
+    name_width: int = 0,
+    path_width: int = 0,
+    count_width: int = 0,
+) -> Text:
+    """
+    Return a board's row in the switcher: its name, then its path and task count.
+
+    The widths pad each field so the rows read as three columns; the count is
+    right-aligned within `count_width` so the numbers line up too.  Callers
+    take the widths from the widest entry in the list.
+    """
+    text = Text()
+    text.append(board.name.ljust(name_width))
+    text.append("  ")
+    text.append(f"/{board.slug}".ljust(path_width), style="dim")
+    text.append("  ")
+    text.append(f"{board.task_count:>{count_width}} tasks", style="dim")
+    return text
+
+
 def card_text(task: Task, *, dense: bool = False) -> Text:
     """
     Return the renderable body of a card.

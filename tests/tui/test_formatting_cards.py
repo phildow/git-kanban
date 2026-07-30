@@ -5,7 +5,13 @@ from __future__ import annotations
 import unittest
 
 from kanban.models import Slug
-from kanban.tui.formatting import board_subtitle, card_text, column_title, detail_text
+from kanban.tui.formatting import (
+    board_label,
+    board_subtitle,
+    card_text,
+    column_title,
+    detail_text,
+)
 
 from .helpers import make_board, make_column, make_task
 
@@ -79,6 +85,73 @@ class TestBoardSubtitle(unittest.TestCase):
     def test_without_a_board(self) -> None:
         """With no active board the subtitle says so."""
         self.assertEqual(board_subtitle(None, 0, 0), "no board")
+
+
+class TestBoardLabel(unittest.TestCase):
+    """board_label renders a board's row in the switcher."""
+
+    def test_leads_with_the_name(self) -> None:
+        """The display name comes first, since it is what the user chose."""
+        label = board_label(make_board(column_count=4, task_count=12)).plain
+        self.assertTrue(label.startswith("Main"))
+
+    def test_includes_the_path(self) -> None:
+        """The path follows the name, identifying the board the way the CLI does."""
+        self.assertIn("/main", board_label(make_board()).plain)
+
+    def test_includes_the_task_count(self) -> None:
+        """The task count closes the row, unadorned."""
+        label = board_label(make_board(column_count=4, task_count=12)).plain
+        self.assertTrue(label.endswith("12 tasks"))
+
+    def test_omits_the_column_count(self) -> None:
+        """Columns are a detail of the board, not something to pick a board by."""
+        label = board_label(make_board(column_count=4, task_count=12)).plain
+        self.assertNotIn("columns", label)
+
+    def test_pads_the_name_to_align_paths(self) -> None:
+        """A name width pads the name so paths line up down the list."""
+        label = board_label(make_board(), 10).plain
+        self.assertTrue(label.startswith("Main      "))
+
+    def test_name_longer_than_the_width_is_not_truncated(self) -> None:
+        """Padding never shortens a name."""
+        board = make_board(name="Q3 Roadmap & Planning")
+        self.assertIn("Q3 Roadmap & Planning", board_label(board, 4).plain)
+
+
+class TestBoardLabelAlignment(unittest.TestCase):
+    """board_label lays its fields out as columns across a list of boards."""
+
+    def _rows(self) -> list[str]:
+        """Return rendered rows for boards of differing name, slug, and count widths."""
+        boards = [
+            make_board(name="Main", slug=Slug("main"), task_count=12),
+            make_board(name="Side Quests", slug=Slug("side-quests"), task_count=0),
+        ]
+        name_width = max(len(board.name) for board in boards)
+        path_width = max(len(board.slug) + 1 for board in boards)
+        count_width = max(len(str(board.task_count)) for board in boards)
+
+        return [
+            board_label(board, name_width, path_width, count_width).plain
+            for board in boards
+        ]
+
+    def test_paths_start_at_the_same_column(self) -> None:
+        """Padding the name puts every path at the same offset."""
+        rows = self._rows()
+        self.assertEqual(rows[0].index("/main"), rows[1].index("/side-quests"))
+
+    def test_counts_start_at_the_same_column(self) -> None:
+        """Padding the path puts every count at the same offset."""
+        rows = self._rows()
+        self.assertEqual(rows[0].index("12 tasks"), rows[1].index("0 tasks") - 1)
+
+    def test_counts_are_right_aligned(self) -> None:
+        """A narrower number is padded so the word `tasks` still lines up."""
+        rows = self._rows()
+        self.assertEqual(rows[0].index("tasks"), rows[1].index("tasks"))
 
 
 class TestDetailText(unittest.TestCase):
