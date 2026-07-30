@@ -99,6 +99,7 @@ class FilesystemRepository(KanbanRepository):
         return board_path.is_dir() and not slug.startswith(".")
 
     # TODO: SYNC - metadata must match the name and slug of the board directory
+
     def get_boards(self) -> list[Board]:
         boards = []
         for entry in sorted(self.boards_dir.iterdir()):
@@ -128,6 +129,7 @@ class FilesystemRepository(KanbanRepository):
         return boards
 
     # TODO: SYNC - metadata must match the name and slug of the board directory
+    
     def get_board(self, slug: Slug) -> Board:
         board_path = self.boards_dir / slug
 

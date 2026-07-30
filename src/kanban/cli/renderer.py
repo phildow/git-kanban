@@ -144,10 +144,10 @@ class Renderer(CommandRenderer):
 		self.render_column(args, result)
 
 	def render_column_reorder(self, args: argparse.Namespace, result: list[Column]) -> None:
-		board = self.board_for_slug(result[0].board) if result else None
-		if board is None:
+		if not result:
 			self._emit(args, "Unable to determine board for reordered columns.")
 			return
+		board = self.board_for_slug(result[0].board)
 		self.render_board(args, board)
 
 	def render_column_delete(self, args: argparse.Namespace, result: Column) -> None:
@@ -165,8 +165,8 @@ class Renderer(CommandRenderer):
 		lines = [
 			f"Path: {task.path}",
 			f"",
-			f"{' ' * spacing}Board: {board.name if board else '-'}",
-			f"{' ' * spacing}Column: {column.name if column else '-'}",
+			f"{' ' * spacing}Board: {board.name}",
+			f"{' ' * spacing}Column: {column.name}",
 			f"{' ' * spacing}Assigned To: {task.assigned_to or '-'}",
 			f"{' ' * spacing}Priority: {task.priority or '-'}",
 			f"{' ' * spacing}Due: {task.due_date.date().isoformat() if task.due_date else '-'}",
@@ -274,10 +274,10 @@ class Renderer(CommandRenderer):
 # Utilities and shared behavior for rendering commands
 # ---------------------------------------------------------------------------
 
-	def board_for_slug(self, slug: Slug) -> Board | None:
+	def board_for_slug(self, slug: Slug) -> Board:
 		"""Given a board slug, return the corresponding board."""
 		return self.render_service.board_for_slug(slug)
 	
-	def column_for_path(self, path: Path) -> Column | None:
+	def column_for_path(self, path: Path) -> Column:
 		"""Given a column path, return the corresponding column."""
 		return self.render_service.column_for_path(path)

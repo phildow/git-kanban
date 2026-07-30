@@ -264,8 +264,8 @@ class RichRenderer(CommandRenderer):
 		table.add_row("Title", Text(task.title, style="bold"))
 		table.add_row("Slug", str(task.slug), end_section=True)
 		
-		table.add_row("Board", board.name if board else "-")
-		table.add_row("Column", column.name if column else "-")
+		table.add_row("Board", board.name)
+		table.add_row("Column", column.name)
 		table.add_row("Assigned To", task.assigned_to or "-")
 		table.add_row("Priority", task.priority or "-")
 		table.add_row("Due", str(task.due_date.date().isoformat()) if task.due_date else "-")
@@ -352,7 +352,7 @@ class RichRenderer(CommandRenderer):
 			if include_tags:
 				elems.insert(3, tags)
 			if include_column:
-				elems.insert(1, column.name if column else "-")
+				elems.insert(1, column.name)
 
 			table.add_row(
 				*elems
@@ -415,8 +415,7 @@ class RichRenderer(CommandRenderer):
 		"""Render a message indicating that a task was moved to a new column."""
 		if result.column:
 			column = self.column_for_slug(result.column)
-			column_name = column.name if column else result.column
-			msg = f"Moved: {result.title} → {column_name}"
+			msg = f"Moved: {result.title} → {column.name}"
 		else:
 			msg = f"Moved: {result.title}"
 		self._emit(args, msg)
@@ -480,11 +479,11 @@ class RichRenderer(CommandRenderer):
 # Utilities and shared behavior for rendering commands
 # ---------------------------------------------------------------------------
 
-	def board_for_slug(self, slug: Slug) -> Board | None:
+	def board_for_slug(self, slug: Slug) -> Board:
 		"""Given a board slug, return the corresponding board."""
 		return self.render_service.board_for_slug(slug)
 	
-	def column_for_slug(self, slug: Slug) -> Column | None:
+	def column_for_slug(self, slug: Slug) -> Column:
 		"""Given a column slug, return the corresponding column."""
 		return self.render_service.column_for_slug(slug)
 	

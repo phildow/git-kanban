@@ -41,14 +41,6 @@ def _mock_render_service() -> MagicMock:
     return mock
 
 
-def _null_render_service() -> MagicMock:
-    """Return a `RenderService` mock whose lookups always return None."""
-    mock = MagicMock()
-    mock.board_for_slug.return_value = None
-    mock.column_for_path.return_value = None
-    return mock
-
-
 def _capture(fn) -> str:
     buf = io.StringIO()
     with redirect_stdout(buf):
@@ -211,12 +203,6 @@ class TestJsonRendererColumns(unittest.TestCase):
         out = _capture(lambda: self.r.render_column_info(_args(), _column("todo", "main", 0)))
         self.assertEqual(json.loads(out)["board"]["slug"], "main")
 
-    def test_column_info_board_none_when_render_service_returns_none(self) -> None:
-        """The board ref is null when the render service cannot resolve the slug."""
-        r = JsonRenderer(render_service=_null_render_service())
-        out = _capture(lambda: r.render_column_info(_args(), _column("todo", "main", 0)))
-        self.assertIsNone(json.loads(out)["board"])
-
     def test_column_info_path_field_present(self) -> None:
         """render_column_info emits a path field."""
         out = _capture(lambda: self.r.render_column_info(_args(), _column("todo", "main", 0)))
@@ -278,30 +264,6 @@ class TestJsonRendererTasks(unittest.TestCase):
         """Each task entry contains the column as a nested ref dict."""
         out = _capture(lambda: self.r.render_task_list(_args(), [_task()]))
         self.assertEqual(json.loads(out)[0]["column"]["slug"], "todo")
-
-    def test_task_list_board_none_when_render_service_returns_none(self) -> None:
-        """The board ref is null when the render service cannot resolve the slug."""
-        r = JsonRenderer(render_service=_null_render_service())
-        out = _capture(lambda: r.render_task_list(_args(), [_task()]))
-        self.assertIsNone(json.loads(out)[0]["board"])
-
-    def test_task_list_column_none_when_render_service_returns_none(self) -> None:
-        """The column ref is null when the render service cannot resolve the slug."""
-        r = JsonRenderer(render_service=_null_render_service())
-        out = _capture(lambda: r.render_task_list(_args(), [_task()]))
-        self.assertIsNone(json.loads(out)[0]["column"])
-
-    def test_task_show_board_none_when_render_service_returns_none(self) -> None:
-        """The board ref is null on detail output when the render service returns None."""
-        r = JsonRenderer(render_service=_null_render_service())
-        out = _capture(lambda: r.render_task_view(_args(), _task()))
-        self.assertIsNone(json.loads(out)["board"])
-
-    def test_task_show_column_none_when_render_service_returns_none(self) -> None:
-        """The column ref is null on detail output when the render service returns None."""
-        r = JsonRenderer(render_service=_null_render_service())
-        out = _capture(lambda: r.render_task_view(_args(), _task()))
-        self.assertIsNone(json.loads(out)["column"])
 
     def test_task_list_optional_fields_present(self) -> None:
         """Optional fields are present in each task entry (may be null)."""

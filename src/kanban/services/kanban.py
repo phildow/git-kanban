@@ -342,11 +342,12 @@ class KanbanService(CompletionDataSource):
         .kanban-store/boards/.metadata.)
         """
         return self.repository.get_boards()
-
-    # TODO: Raise error if the board does not exist, rather than returning None.
     
-    def get_board(self, path: Path | Slug) -> Board | None:
-        """Return the board for the given board path or slug, or None if not found."""
+    def get_board(self, path: Path | Slug) -> Board:
+        """Return the board for the given board path or slug.
+
+        Raises BoardNotFound if the board does not exist.
+        """
         board: Slug
         if isinstance(path, Path):
             board = Slug(str(path).lstrip("/"))

@@ -12,7 +12,7 @@ from ..services.kanban import GitCommit, KanbanStatus
 from ..services.render_service import RenderService
 
 
-def _task_dict(task: Task, board: dict | None, column: dict | None) -> dict:
+def _task_dict(task: Task, board: dict, column: dict) -> dict:
     """Minimal task representation used in list and search results."""
     return {
         "title": task.title,
@@ -28,7 +28,7 @@ def _task_dict(task: Task, board: dict | None, column: dict | None) -> dict:
     }
 
 
-def _task_detail_dict(task: Task, board: dict | None, column: dict | None) -> dict:
+def _task_detail_dict(task: Task, board: dict, column: dict) -> dict:
     """Full task representation including timestamps and body."""
     return {
         **_task_dict(task, board, column),
@@ -48,7 +48,7 @@ def _board_dict(board: Board) -> dict:
     }
 
 
-def _column_dict(column: Column, board: dict | None) -> dict:
+def _column_dict(column: Column, board: dict) -> dict:
     return {
         "name": column.name,
         "path": str(column.path),
@@ -89,16 +89,12 @@ class JsonRenderer(CommandRenderer):
             return
         print(value)
 
-    def _task_refs(self, task: Task) -> tuple[dict | None, dict | None]:
-        """Resolve nested board and column reference dicts for a task.
-
-        Returns `None` for either ref when the render service cannot resolve
-        the underlying slug.
-        """
+    def _task_refs(self, task: Task) -> tuple[dict, dict]:
+        """Resolve nested board and column reference dicts for a task."""
         board = self.render_service.board_for_slug(task.board)
         column = self.render_service.column_for_path(Path(f"/{task.board}/{task.column}"))
-        board_ref = _board_ref_dict(board) if board is not None else None
-        column_ref = _column_ref_dict(column) if column is not None else None
+        board_ref = _board_ref_dict(board)
+        column_ref = _column_ref_dict(column)
         return board_ref, column_ref
 
     def _task_dict(self, task: Task) -> dict:
@@ -110,13 +106,9 @@ class JsonRenderer(CommandRenderer):
         return _task_detail_dict(task, board, column)
 
     def _column_dict(self, column: Column) -> dict:
-        """Column representation with the board resolved as a nested ref dict.
-
-        The `board` value is `None` when the render service cannot resolve
-        the column's board slug.
-        """
+        """Column representation with the board resolved as a nested ref dict."""
         board = self.render_service.board_for_slug(column.board)
-        board_ref = _board_ref_dict(board) if board is not None else None
+        board_ref = _board_ref_dict(board)
         return _column_dict(column, board_ref)
 
     # ── Initialisation ────────────────────────────────────────────────────────
