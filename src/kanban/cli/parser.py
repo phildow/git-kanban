@@ -39,6 +39,7 @@ from ..cli.commands import (
     handle_task_unset,
     handle_task_update,
     handle_task_view,
+    handle_tui,
 )
 
 
@@ -339,9 +340,9 @@ def build_parser() -> argparse.ArgumentParser:
     epilog = """
 Start with `kanban init` to create a new kanban project in the current directory.
 Try `kanban repl` to start an interactive shell with tab completion and command history.
+Try `kanban tui` to start a cards-based terminal user interface for kanban.
 Use the CLI directly with `kanban board list`, `kanban task create`, etc.
     """
-    # Try `kanban tui` to start a cards-based terminal user interface for kanban.
     parser = argparse.ArgumentParser(
         prog="kanban",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -415,6 +416,11 @@ Use the CLI directly with `kanban board list`, `kanban task create`, etc.
     p = subparsers.add_parser("repl", help="Start an interactive kanban shell")
     _add_global_flags(p)
     p.set_defaults(func=handle_repl)
+
+    # tui
+    p = subparsers.add_parser("tui", help="Start the cards-based terminal user interface")
+    _add_global_flags(p)
+    p.set_defaults(func=handle_tui)
 
     return parser
 

@@ -395,6 +395,7 @@ The command line structure follows:
 ```
 kanban init
 kanban repl
+kanban tui
 
 kanban board list
 kanban board create <board>
@@ -801,7 +802,7 @@ KanbanApp(App)
 │   └── Footer (key bindings hint bar — swaps content in move mode)
 │
 ├── TaskDetailScreen (modal, pushed on Enter/show)
-│   └── renders a single Task: title, assigned_to, priority, due date, tags, description
+│   └── renders a single Task: title, assigned_to, priority, due date, tags, description, comments
 │
 ├── TaskFormScreen (modal, pushed on create/edit)
 │   ├── Input: title

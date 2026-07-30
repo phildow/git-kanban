@@ -37,6 +37,7 @@ from kanban.cli.commands import (
     handle_task_rename,
     handle_task_tag,
     handle_task_view,
+    handle_tui,
     handle_task_info,
     handle_task_unset,
     handle_task_update
@@ -57,7 +58,7 @@ class TestParserStructure(unittest.TestCase):
         top = self._subparser_choices(parser, "command")
         self.assertEqual(
             set(top.keys()),
-            {"init", "board", "column", "task", "search", "log", "status", "config", "repl"},
+            {"init", "board", "column", "task", "search", "log", "status", "config", "repl", "tui"},
         )
 
     def test_top_level_subcommands_do_not_include_cd(self):
@@ -459,6 +460,12 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         args = cli_parser.parse_args(["repl"])
         self.assertEqual(args.command, "repl")
         self.assertIs(args.func, handle_repl)
+
+    def test_tui_defaults(self):
+        """`tui` binds handle_tui."""
+        args = cli_parser.parse_args(["tui"])
+        self.assertEqual(args.command, "tui")
+        self.assertIs(args.func, handle_tui)
 
     def test_required_subparsers_raise(self):
         """Missing required subcommands trigger parser exit errors."""

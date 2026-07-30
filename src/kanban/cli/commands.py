@@ -328,3 +328,14 @@ def handle_repl(args: argparse.Namespace, svc: KanbanService, renderer: CommandR
 	repl_renderer = RichRenderer(render_service=render_service)
 
 	run_repl(svc=svc, renderer=repl_renderer)
+
+
+def handle_tui(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
+	_ = args, renderer, json_renderer
+	from ..tui import run_tui
+
+	if not svc.is_initialized:
+		print(f"No kanban repository found in {svc.root}. Run `kanban init` first.")
+		return
+
+	run_tui(svc=svc)

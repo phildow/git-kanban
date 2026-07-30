@@ -1,0 +1,215 @@
+/* Styles for the kanban TUI.
+
+   Colour carries meaning: the accent colour marks focus, amber (warning)
+   marks a card staged for a move, and dim greys mark metadata. */
+
+Screen {
+    background: $background;
+}
+
+#board-body {
+    height: 1fr;
+}
+
+/* ── Columns ──────────────────────────────────────────────────────────── */
+
+#columns {
+    height: 1fr;
+    width: 1fr;
+    overflow-x: auto;
+    padding: 0 0 0 1;
+}
+
+/* Columns keep a fixed width so cards stay a consistent size; the container
+   scrolls horizontally once the board outgrows the terminal. */
+ColumnView {
+    width: 34;
+    height: 1fr;
+    margin: 0 1 0 0;
+    padding: 0 1;
+    background: $surface;
+    border: round $panel;
+    border-title-align: center;
+    border-title-color: $text-muted;
+    border-title-style: bold;
+}
+
+ColumnView:focus {
+    border: round $accent;
+    border-title-color: $accent;
+}
+
+ColumnView.-locked {
+    border: round $warning;
+    border-title-color: $warning;
+}
+
+ColumnView > ListItem {
+    background: transparent;
+    padding: 0;
+    margin: 0 0 1 0;
+}
+
+ColumnView > ListItem.-highlight {
+    background: transparent;
+}
+
+/* ── Cards ────────────────────────────────────────────────────────────── */
+
+CardWidget {
+    width: 1fr;
+    height: auto;
+    padding: 0 1;
+    background: $surface;
+    border: round $panel-lighten-1;
+}
+
+ColumnView > ListItem.-highlight CardWidget {
+    border: round $accent-darken-2;
+}
+
+ColumnView:focus > ListItem.-highlight CardWidget {
+    background: $boost;
+    border: round $accent;
+}
+
+CardWidget.-moving,
+ColumnView > ListItem.-highlight CardWidget.-moving,
+ColumnView:focus > ListItem.-highlight CardWidget.-moving {
+    border: dashed $warning;
+    background: $warning 10%;
+}
+
+CardWidget.-dense {
+    height: 3;
+}
+
+/* ── Sidebar ──────────────────────────────────────────────────────────── */
+
+#sidebar {
+    width: 36;
+    height: 1fr;
+    padding: 0 1;
+    background: $surface;
+    border-left: vkey $panel;
+}
+
+#sidebar.-collapsed {
+    display: none;
+}
+
+#status-view, #log-view {
+    width: 1fr;
+    height: auto;
+    margin: 1 0 0 0;
+    padding: 0 1;
+    border: round $panel;
+    border-title-color: $text-muted;
+}
+
+/* ── Bottom bars ──────────────────────────────────────────────────────── */
+
+#filter-bar, #command-bar {
+    display: none;
+    dock: bottom;
+    border: tall $accent;
+}
+
+#filter-bar.-visible, #command-bar.-visible {
+    display: block;
+}
+
+#mode-bar {
+    display: none;
+    dock: bottom;
+    height: 1;
+    color: $text-muted;
+    background: $panel;
+}
+
+#mode-bar.-visible {
+    display: block;
+}
+
+.-empty {
+    width: 1fr;
+    height: auto;
+    padding: 1 2;
+    color: $text-muted;
+    text-style: italic;
+}
+
+/* ── Modals ───────────────────────────────────────────────────────────── */
+
+ModalScreen {
+    align: center middle;
+    background: $background 60%;
+}
+
+#dialog {
+    width: 78;
+    max-width: 90%;
+    height: auto;
+    max-height: 80%;
+    padding: 1 2;
+    background: $surface;
+    border: round $accent;
+}
+
+#dialog.-narrow {
+    width: 52;
+}
+
+#form-heading {
+    width: 1fr;
+    margin: 0 0 1 0;
+    text-style: bold;
+    color: $accent;
+}
+
+#form-fields {
+    height: auto;
+    max-height: 24;
+}
+
+#form-fields Label {
+    margin: 1 0 0 0;
+    color: $text-muted;
+}
+
+#form-error {
+    height: auto;
+    margin: 1 0 0 0;
+    color: $error;
+}
+
+#dialog-buttons {
+    height: auto;
+    margin: 1 0 0 0;
+    align-horizontal: right;
+}
+
+#dialog-buttons Button {
+    margin: 0 0 0 2;
+}
+
+#confirm-prompt {
+    height: auto;
+    padding: 1 0;
+}
+
+#task-detail-meta {
+    height: auto;
+    margin: 0 0 1 0;
+}
+
+#task-detail-body, #help-body, #output-body {
+    height: auto;
+    max-height: 24;
+}
+
+#board-list {
+    height: auto;
+    max-height: 16;
+    background: $surface;
+}

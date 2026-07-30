@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "kanban"
 version = "0.6.0"
 requires-python = ">=3.13"
-dependencies = ["rich"]
+dependencies = ["rich", "textual"]
 authors = [
     {name = "Philip Dow"}
 ]
@@ -27,6 +27,9 @@ addopts = ["--import-mode=importlib"]
 
 [tool.setuptools]
 package-dir = {"" = "src"}
+
+[tool.setuptools.package-data]
+kanban = ["tui/*.tcss"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
