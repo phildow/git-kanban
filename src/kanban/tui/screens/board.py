@@ -49,7 +49,7 @@ from .task_form import TaskFormResult, TaskFormScreen
 if TYPE_CHECKING:
     from ..app import KanbanApp
 
-MOVE_HINTS = "  ←/→ h/l  column    ↑/↓ j/k  position    enter  commit    esc  cancel"
+MOVE_KEYS = "←/→ h/l  column    ↑/↓ j/k  position    enter  commit    esc  cancel"
 FILTER_HINTS = "  type to filter    enter  keep filter    esc  clear"
 COMMAND_HINTS = "  REPL syntax    enter  run    esc  cancel"
 
@@ -528,8 +528,8 @@ class BoardScreen(Screen[None]):
             return
 
         move.column_index = target
-        move.position = min(move.position, len(self._visible(self._columns[target].slug)))
-        self._render_staged_soon()
+        move.position = min(move.position, self._staged_limit(move))
+        self._mark_staged()
 
     def _stage_position(self, delta: int) -> None:
         """Stage the card higher or lower within the staged column."""
@@ -537,58 +537,62 @@ class BoardScreen(Screen[None]):
         if move is None:
             return
 
-        limit = len(self._staged_tasks()[self._columns[move.column_index].slug]) - 1
-        target = max(0, min(move.position + delta, max(limit, 0)))
+        target = max(0, min(move.position + delta, self._staged_limit(move)))
         if target == move.position:
             return
 
         move.position = target
-        self._render_staged_soon()
+        self._mark_staged()
 
-    def _staged_tasks(self) -> dict[Slug, list[Task]]:
-        """Return the visible tasks with the moving card placed at its staged position."""
-        staged = {column.slug: self._visible(column.slug) for column in self._columns}
+    def _staged_limit(self, move: MoveState) -> int:
+        """
+        Return the highest position the card can be staged at.
+
+        Its own column already counts the card; any other column gains one when
+        the move is committed, so it has one more slot than it shows.
+        """
+        target = self._columns[move.column_index]
+        count = len(self._visible(target.slug))
+
+        if target.slug == move.task.column:
+            return max(count - 1, 0)
+        return count
+
+    def _mark_staged(self) -> None:
+        """
+        Mark where the card would land, without moving anything.
+
+        Staging is preview-only, so the cards keep the arrangement they were
+        fetched with: the destination column takes a border and the footer hints
+        name it.  Nothing is re-rendered until the move is committed.
+        """
         move = self._move
-        if move is None:
-            return staged
-
-        for slug, tasks in staged.items():
-            staged[slug] = [task for task in tasks if task.slug != move.task.slug]
-
-        target = self._columns[move.column_index].slug
-        position = max(0, min(move.position, len(staged[target])))
-        staged[target].insert(position, move.task)
-        return staged
-
-    def _render_staged_soon(self) -> None:
-        """Schedule a redraw of the staged arrangement."""
-        self.run_worker(self._render_staged(), exclusive=False)
-
-    async def _render_staged(self) -> None:
-        """Redraw the columns showing where the card would land.  Writes nothing."""
-        move = self._move
-        if move is None:
-            return
-
-        staged = self._staged_tasks()
-        for view in self.column_views:
-            await view.set_tasks(staged[view.column.slug], dense=self.dense)
-
         views = self.column_views
-        if not views:
+        if move is None or not views:
             return
 
         target = views[move.column_index]
-        target.index = min(move.position, max(len(target.tasks) - 1, 0))
-        target.focus()
-
-        # Only the destination is marked, so the highlight travels with the card.
         for view in views:
             view.staging = view is target
 
-        card = target.card_for(move.task.slug)
-        if card is not None:
-            card.set_moving(True)
+        target.scroll_visible()
+        self._show_hints(self._move_hints(move))
+
+    def _move_hints(self, move: MoveState) -> str:
+        """Return the move-mode footer, naming the staged destination and position."""
+        target = self._columns[move.column_index]
+        slots = self._staged_limit(move) + 1
+        return f"  → /{target.slug}  {move.position + 1}/{slots}    {MOVE_KEYS}"
+
+    def _set_moving_card(self, moving: bool) -> None:
+        """Mark, or unmark, the card being moved.  It stays where it is throughout."""
+        move = self._move
+
+        for view in self.column_views:
+            for card in view.cards:
+                card.set_moving(
+                    moving and move is not None and card.card_task.slug == move.task.slug
+                )
 
     def _commit_move(self) -> None:
         """Write the staged move: one move_task when the column changed, then reorder."""
@@ -644,11 +648,14 @@ class BoardScreen(Screen[None]):
             self.svc.reorder_task(task.path, op)
 
     def _cancel_move(self) -> None:
-        """Leave move mode without writing anything, back where the card started."""
-        move = self._move
+        """
+        Leave move mode without writing anything.
+
+        Nothing has to be redrawn: staging never moved the card, so the board
+        already shows the arrangement the user is returning to.
+        """
         self.move_mode = False
         self._move = None
-        self._render_soon(move.task.slug if move is not None else None)
 
     def watch_move_mode(self, move_mode: bool) -> None:
         """Lock the columns and swap the footer for the move-mode hints."""
@@ -657,9 +664,10 @@ class BoardScreen(Screen[None]):
             if not move_mode:
                 view.staging = False
 
+        self._set_moving_card(move_mode)
+
         if move_mode:
-            self._show_hints(MOVE_HINTS)
-            self._render_staged_soon()
+            self._mark_staged()
         else:
             self._hide_hints()
 
