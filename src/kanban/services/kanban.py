@@ -302,6 +302,8 @@ class KanbanService(CompletionDataSource):
         resolved_path = base.joinpath(*components).resolve(strict=False)
         return resolved_path
         
+    # TODO: Remove str type from path_components signature once all callers are updated to use Path or Slug.
+
     def path_components(self, path: str | Path | Slug | None = None) -> tuple[Slug | None, Slug | None, Slug | None]:
         """Resolve a [BOARD/][COLUMN/]TITLE path into its components."""
         # TODO: temporary until full path migration
@@ -361,38 +363,6 @@ class KanbanService(CompletionDataSource):
 
         self.working_board = board.slug
         return self.user_context
-
-    # ── All Items ─────────────────────────────────────────────────────────────
-
-    @deprecated("REPL list command has been removed")
-    def get_list(
-            self, 
-            path: str | None = None, 
-            filter: TaskFilter = TaskFilter(), 
-            sort: str | None = "column", 
-            reverse: bool = False
-        ) -> tuple[type[Board], list[Board]] | tuple[type[Column], list[Column]] | tuple[type[Task], list[Task]]:
-        """
-        Return a list of boards, columns, or tasks based on the given path.
-        If path is None, returns all boards.  If path is a board, returns all
-        columns in that board.  If path is a board/column, returns all tasks in
-        that column.  Applies filters and sort to tasks if applicable.
-
-        The returned tuple pairs a type marker with a list of that type: one of
-        (Board, list[Board]), (Column, list[Column]), or (Task, list[Task]).
-        Callers can dispatch on the marker to know which branch was taken.
-        """
-        board, column, task = self.path_components(path)
-
-        if task:
-            raise ValueError(f"Invalid path: {path} (cannot list a task)")
-
-        if board and column:
-            return Task, self.get_tasks(path=Path(f"/{board}/{column}"), filter=filter, sort=sort, reverse=reverse)
-        elif board:
-            return Column, self.get_columns(board=board)
-        else:
-            return Board, self.get_boards()
 
     # ── Boards ────────────────────────────────────────────────────────────────
 
@@ -641,6 +611,27 @@ class KanbanService(CompletionDataSource):
 
         raise TaskNotFound(path)
 
+    def _column_task_positions(
+        self,
+        tasks: list[Task],
+    ) -> dict[tuple[Slug, Slug, Slug], tuple[int, int]]:
+        """
+        Build a lookup of (board, column, task_slug) -> (column_position, task_position).
+
+        Column position is the column's ordering within the board (see
+        Column.position). Task position is the index of the task in its
+        column's stored task order, so tasks retain the order the user
+        arranged them in.
+        """
+        positions: dict[tuple[Slug, Slug, Slug], tuple[int, int]] = {}
+        boards = {t.board for t in tasks if t.board}
+        for board in boards:
+            for col in self.get_columns(board):
+                col_tasks = self.repository.get_tasks(board=board, column=col.slug)
+                for idx, task in enumerate(col_tasks):
+                    positions[(board, col.slug, task.slug)] = (col.position, idx)
+        return positions
+
     def get_tasks(
         self,
         path:    Path | None = None,
@@ -687,27 +678,6 @@ class KanbanService(CompletionDataSource):
             return task.title.lower()
 
         return sorted(tasks, key=lambda task: (_value(task) is None, _value(task)), reverse=reverse)
-
-    def _column_task_positions(
-        self,
-        tasks: list[Task],
-    ) -> dict[tuple[Slug, Slug, Slug], tuple[int, int]]:
-        """
-        Build a lookup of (board, column, task_slug) -> (column_position, task_position).
-
-        Column position is the column's ordering within the board (see
-        Column.position). Task position is the index of the task in its
-        column's stored task order, so tasks retain the order the user
-        arranged them in.
-        """
-        positions: dict[tuple[Slug, Slug, Slug], tuple[int, int]] = {}
-        boards = {t.board for t in tasks if t.board}
-        for board in boards:
-            for col in self.get_columns(board):
-                col_tasks = self.repository.get_tasks(board=board, column=col.slug)
-                for idx, task in enumerate(col_tasks):
-                    positions[(board, col.slug, task.slug)] = (col.position, idx)
-        return positions
 
     def create_task(
         self,
@@ -873,10 +843,6 @@ class KanbanService(CompletionDataSource):
         entry and commits.
         """
         task = self.get_task(path)
-
-        # TODO: how do we handle removing a field?
-        # If the user wants to remove a due date, for example, they would have to pass in updates.due_date = None, but that is indistinguishable from "don't change the due date".
-        # We could use a sentinel value or a separate "remove" flag for each field, but that seems cumbersome.  For now, we will just treat None as "don't change".
 
         due_date = updates.due_date
         slug = task.slug
