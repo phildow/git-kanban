@@ -468,10 +468,10 @@ class RichRenderer(CommandRenderer):
 	def render_status(self, args: argparse.Namespace, result: KanbanStatus) -> None:
 		self._emit(args, result)
 
-	def render_set_config(self, args: argparse.Namespace, result: None) -> None:
+	def render_set_config(self, args: argparse.Namespace, result: str | None) -> None:
 		self._emit(args, result)
 
-	def render_get_config(self, args: argparse.Namespace, result: str) -> None:
+	def render_get_config(self, args: argparse.Namespace, result: str | None) -> None:
 		self._emit(args, result)
 
 

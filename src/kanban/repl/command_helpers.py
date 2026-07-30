@@ -68,12 +68,12 @@ def handle_task_list_helper(args: argparse.Namespace, svc: KanbanService) -> lis
     return svc.get_tasks(path=Path(f"/{board}"), filter=filter, sort=sort, reverse=reverse)
 
 
-def handle_delete_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[type, Board | Column | Task] | tuple[None, None]:
+def handle_delete_helper(args: argparse.Namespace, svc: KanbanService) -> Board | Column | Task | None:
     """
     Delete the entity at the given path.  This is the main entry point for
     all delete/rm commands in the REPL, which pass a user-provided path or a flag
-    to delete the active board.  Returns a tuple of (entity_type, deleted_entity) 
-    or (None, None) if the user declines deletion.
+    to delete the active board.  Returns the deleted entity, or None if the user
+    declines deletion.
     """
 
     # args.path | args.board (flag to delete active board) | args.column (flag to delete a column)
@@ -87,23 +87,23 @@ def handle_delete_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[
     if args.board:
         board = svc.working_board
         if _confirm(f"Are you sure you want to delete the active board ({board})?"):
-            return Board, svc.delete_board(path=None)
+            return svc.delete_board(path=None)
     elif args.column:
         column = svc.get_column(args.column)
         if _confirm(f"Are you sure you want to delete the column '{column.name}'?"):
-            return Column, svc.delete_column(path=Slug(args.column))
+            return svc.delete_column(path=Slug(args.column))
     elif args.path:
         task = svc.get_task(args.path)
         if _confirm(f"Are you sure you want to delete the task '{task.title}'?"):
-            return Task, svc.delete_task(path=task.path)
+            return svc.delete_task(path=task.path)
     else:
         raise ValueError("Delete expects either --board, --column <column> or a <task> path")
 
     # User declined deletion
-    return None, None
+    return None
     
 
-def handle_rename_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[type, Board | Column | Task]:
+def handle_rename_helper(args: argparse.Namespace, svc: KanbanService) -> Board | Column | Task:
     """
     Rename the entity at the given path to a new name.  This is the main
     entry point for all rename commands in the REPL, which pass a user-provided
@@ -121,16 +121,16 @@ def handle_rename_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[
         raise ValueError("No active board; set one with `board` before renaming a board, column, or task")
 
     if args.board:
-        return Board, svc.rename_board(path=None, new_name=new_name)
+        return svc.rename_board(path=None, new_name=new_name)
     elif args.column:
-        return Column, svc.rename_column(path=Slug(args.column), new_name=new_name)
+        return svc.rename_column(path=Slug(args.column), new_name=new_name)
     elif args.path:
-        return Task, svc.rename_task(path=args.path, new_title=new_name)
+        return svc.rename_task(path=args.path, new_title=new_name)
     else:
         raise ValueError("Rename expects either --board, --column <column>, or a <task> path")
 
 
-def handle_create_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[type, Board | Column | Task]:
+def handle_create_helper(args: argparse.Namespace, svc: KanbanService) -> Board | Column | Task:
     """
     Create a new board, column, or task. This is the main entry point for
     all create/new/n commands in the REPL. The parser guarantees exactly one
@@ -144,12 +144,12 @@ def handle_create_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[
     # args.title      | args.edit        | task update args
 
     if args.new_board:
-        return Board, svc.create_board(args.new_board)
+        return svc.create_board(args.new_board)
 
     if args.new_column:
         if svc.working_board is None:
             raise ValueError("No active board; set one with `board` before creating a column")
-        return Column, svc.create_column(None, args.new_column)
+        return svc.create_column(None, args.new_column)
 
     if args.column:
         if not args.title:
@@ -168,6 +168,6 @@ def handle_create_helper(args: argparse.Namespace, svc: KanbanService) -> tuple[
         result = svc.create_task(Slug(args.column), params)
         if args.edit:
             result = svc.edit_task(Path(result.path))
-        return Task, result
+        return result
 
     raise ValueError("Create expects either --board NAME, --column NAME, or a <column> <title>")

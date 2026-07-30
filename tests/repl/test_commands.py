@@ -39,37 +39,37 @@ class TestReplCommandHandlers(unittest.TestCase):
 
     def test_handle_delete_renders_board_delete(self):
         args = self._args(path=None, board=True, column=None)
-        deleted = object()
-        with patch("kanban.repl.commands.handle_delete_helper", return_value=(Board, deleted)):
+        deleted = MagicMock(spec=Board)
+        with patch("kanban.repl.commands.handle_delete_helper", return_value=deleted):
             commands.handle_delete(args, self.svc, self.renderer)
 
         self.renderer.render_board_delete.assert_called_once_with(args, deleted)
 
     def test_handle_delete_renders_column_delete(self):
         args = self._args(path=None, board=False, column="todo")
-        deleted = object()
-        with patch("kanban.repl.commands.handle_delete_helper", return_value=(Column, deleted)):
+        deleted = MagicMock(spec=Column)
+        with patch("kanban.repl.commands.handle_delete_helper", return_value=deleted):
             commands.handle_delete(args, self.svc, self.renderer)
 
         self.renderer.render_column_delete.assert_called_once_with(args, deleted)
 
     def test_handle_delete_renders_task_delete(self):
         args = self._args(path="fix-parser", board=False, column=None)
-        deleted = object()
-        with patch("kanban.repl.commands.handle_delete_helper", return_value=(Task, deleted)):
+        deleted = MagicMock(spec=Task)
+        with patch("kanban.repl.commands.handle_delete_helper", return_value=deleted):
             commands.handle_delete(args, self.svc, self.renderer)
 
         self.renderer.render_task_delete.assert_called_once_with(args, deleted)
 
     def test_handle_delete_raises_for_unexpected_type(self):
         args = self._args(path=None, board=True, column=None)
-        with patch("kanban.repl.commands.handle_delete_helper", return_value=(str, object())):
+        with patch("kanban.repl.commands.handle_delete_helper", return_value=object()):
             with self.assertRaises(ValueError):
                 commands.handle_delete(args, self.svc, self.renderer)
 
     def test_board_handlers(self):
         args = self._args(new_board="alpha", new_column=None, column=None)
-        result = object()
+        result = MagicMock(spec=Board)
         self.svc.create_board.return_value = result
 
         commands.handle_create(args, self.svc, self.renderer)
@@ -78,12 +78,12 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.renderer.render_board_create.assert_called_once_with(args, result)
 
         args = self._args(board="alpha", new_name="beta")
-        result = object()
+        result = MagicMock(spec=Board)
         self.svc.rename_board.return_value = result
 
     def test_handle_rename_board(self) -> None:
         """`rename -b` calls rename_board for the active board and renders the result."""
-        result = object()
+        result = MagicMock(spec=Board)
         self.svc.rename_board.return_value = result
         self.svc.working_board = "proj"
         args = self._args(path=None, board=True, column=None, new_name="Work")
@@ -95,7 +95,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
     def test_handle_rename_column(self) -> None:
         """`rename -c COLUMN` calls rename_column and renders the result."""
-        result = object()
+        result = MagicMock(spec=Column)
         self.svc.rename_column.return_value = result
         self.svc.working_board = "proj"
         args = self._args(path=None, board=False, column="todo", new_name="Doing")
@@ -107,7 +107,7 @@ class TestReplCommandHandlers(unittest.TestCase):
 
     def test_handle_rename_task(self) -> None:
         """`rename <task-slug>` calls rename_task and renders the result."""
-        result = object()
+        result = MagicMock(spec=Task)
         self.svc.rename_task.return_value = result
         self.svc.working_board = "proj"
         args = self._args(path="fix-parser", board=False, column=None, new_name="Fixed Parser")
@@ -120,7 +120,7 @@ class TestReplCommandHandlers(unittest.TestCase):
     def test_column_handlers(self):
         args = self._args(new_board=None, new_column="todo", column=None)
         self.svc.working_board = "alpha"
-        result = object()
+        result = MagicMock(spec=Column)
         self.svc.create_column.return_value = result
         commands.handle_create(args, self.svc, self.renderer)
         self.svc.create_column.assert_called_once_with(None, "todo")
@@ -178,7 +178,7 @@ class TestReplCommandHandlers(unittest.TestCase):
     def test_handle_task_create_defaults(self):
         args = self._args(new_board=None, new_column=None, column="todo", title="fix-parser", edit=False, assigned_to=None, priority=None, tags=None, due_date=None, created_by=None, description=None)
         self.svc.working_board = "alpha"
-        result = object()
+        result = MagicMock(spec=Task)
         self.svc.create_task.return_value = result
 
         commands.handle_create(args, self.svc, self.renderer)
@@ -200,7 +200,7 @@ class TestReplCommandHandlers(unittest.TestCase):
         """create task without --edit does not call svc.edit_task."""
         args = self._args(new_board=None, new_column=None, column="todo", title="fix-parser", edit=False, assigned_to=None, priority=None, tags=None, due_date=None, created_by=None, description=None)
         self.svc.working_board = "alpha"
-        result = object()
+        result = MagicMock(spec=Task)
         self.svc.create_task.return_value = result
 
         commands.handle_create(args, self.svc, self.renderer)
@@ -237,7 +237,7 @@ class TestReplCommandHandlers(unittest.TestCase):
             description=None,
         )
         self.svc.working_board = "alpha"
-        result = object()
+        result = MagicMock(spec=Task)
         self.svc.create_task.return_value = result
 
         commands.handle_create(args, self.svc, self.renderer)
@@ -278,7 +278,7 @@ class TestReplCommandHandlers(unittest.TestCase):
             description="Login is broken",
         )
         self.svc.working_board = "alpha"
-        result = object()
+        result = MagicMock(spec=Task)
         self.svc.create_task.return_value = result
 
         commands.handle_create(args, self.svc, self.renderer)

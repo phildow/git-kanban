@@ -220,9 +220,9 @@ class JsonRenderer(CommandRenderer):
             "uncommitted_changes": result.uncommitted_changes,
         }, indent=2))
 
-    def render_set_config(self, args: argparse.Namespace, result: None) -> None:
+    def render_set_config(self, args: argparse.Namespace, result: str | None) -> None:
         _ = result
         self._emit(args, json.dumps({"key": args.key, "value": args.value}))
 
-    def render_get_config(self, args: argparse.Namespace, result: str) -> None:
+    def render_get_config(self, args: argparse.Namespace, result: str | None) -> None:
         self._emit(args, json.dumps({"key": args.key, "value": result}, indent=2))

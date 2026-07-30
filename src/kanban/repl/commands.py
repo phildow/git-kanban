@@ -81,49 +81,45 @@ def handle_set_board(args: argparse.Namespace, svc: KanbanService, renderer: Com
 
 @with_task_slug
 def handle_delete(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	typ, result = handle_delete_helper(args, svc)
+	result = handle_delete_helper(args, svc)
 
-	if typ is None:
+	if result is None:
 		# user declined deletion
 		return
-	elif typ is Board:
+	elif isinstance(result, Board):
 		renderer.render_board_delete(args, result)
-	elif typ is Column:
+	elif isinstance(result, Column):
 		renderer.render_column_delete(args, result)
-	elif typ is Task:
+	elif isinstance(result, Task):
 		renderer.render_task_delete(args, result)
 	else:
-		raise ValueError("Unexpected result type from handle_delete: {}".format(typ))
+		raise ValueError("Unexpected result type from handle_delete")
 
 
 def handle_create(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	typ, result = handle_create_helper(args, svc)
+	result = handle_create_helper(args, svc)
 
-	if typ is Board:
+	if isinstance(result, Board):
 		renderer.render_board_create(args, result)
-	elif typ is Column:
+	elif isinstance(result, Column):
 		renderer.render_column_create(args, result)
-	elif typ is Task:
+	elif isinstance(result, Task):
 		renderer.render_task_create(args, result)
 	else:
-		raise ValueError("Unexpected result type from handle_create: {}".format(typ))
-
+		raise ValueError("Unexpected result type from handle_create")
 
 @with_task_slug
 def handle_rename(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	typ, result = handle_rename_helper(args, svc)
+	result = handle_rename_helper(args, svc)
 
-	if typ is None:
-		# user declined rename
-		return
-	elif typ is Board:
+	if isinstance(result, Board):
 		renderer.render_board_rename(args, result)
-	elif typ is Column:
+	elif isinstance(result, Column):
 		renderer.render_column_rename(args, result)
-	elif typ is Task:
+	elif isinstance(result, Task):
 		renderer.render_task_rename(args, result)
 	else:
-		raise ValueError("Unexpected result type from handle_rename: {}".format(typ))
+		raise ValueError("Unexpected result type from handle_rename")
 
 # ---------------------------------------------------------------------------
 # Board subcommands

@@ -262,11 +262,11 @@ class Renderer(CommandRenderer):
 		# TODO: implement
 		self._emit(args, result)
 
-	def render_set_config(self, args: argparse.Namespace, result: None) -> None:
+	def render_set_config(self, args: argparse.Namespace, result: str | None) -> None:
 		# TODO: implement
 		self._emit(args, result)
 
-	def render_get_config(self, args: argparse.Namespace, result: str) -> None:
+	def render_get_config(self, args: argparse.Namespace, result: str | None) -> None:
 		# TODO: implement
 		self._emit(args, result)
 
