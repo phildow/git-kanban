@@ -40,19 +40,6 @@ class _FakeSvc:
     def user_context(self):
         return self._ctx
 
-    def change_dir(self, path=None, clear=False):
-        if clear:
-            self._ctx = SimpleNamespace(board=None, column=None)
-            return self._ctx
-        if path is None:
-            return self._ctx
-        if "/" in path:
-            board, column = path.split("/", 1)
-            self._ctx = SimpleNamespace(board=board, column=column)
-        else:
-            self._ctx = SimpleNamespace(board=path, column=None)
-        return self._ctx
-
     def completions_for_path(self, text: str) -> list[str]:
         path = Path(self.working_path) / text
         parts = path.parts # ["/", board|None, column|None, title-or-id|None]

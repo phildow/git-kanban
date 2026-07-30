@@ -27,16 +27,6 @@ class TestReplCommandHandlers(unittest.TestCase):
     def _args(self, **kwargs) -> Namespace:
         return Namespace(**kwargs)
 
-    def test_handle_set_board_defaults_to_clear_without_board(self):
-        args = self._args(board=None)
-        result = object()
-        self.svc.change_dir.return_value = result
-
-        commands.handle_set_board(args, self.svc, self.renderer)
-
-        self.svc.change_dir.assert_called_once_with(clear=True)
-        self.renderer.render_set_board.assert_called_once_with(args, result)
-
     def test_handle_set_board_with_board(self):
         args = self._args(board="alpha")
         result = object()

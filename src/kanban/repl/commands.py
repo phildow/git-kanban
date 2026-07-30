@@ -71,11 +71,6 @@ def handle_init(args: argparse.Namespace, svc: KanbanService, renderer: CommandR
 # ---------------------------------------------------------------------------
 
 def handle_set_board(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	if args.board is None:
-		result = svc.change_dir(clear=True)
-		renderer.render_set_board(args, result)
-		return
-
 	result = svc.set_board(slug=Slug(args.board))
 	renderer.render_set_board(args, result)
 

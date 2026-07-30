@@ -247,8 +247,9 @@ class KanbanService(CompletionDataSource):
         """Return the current working path based on the user context."""
         return self.user_context.path
     
-    @property
     # TODO: should svc.working_board return the board object instead of just the slug?
+
+    @property
     def working_board(self) -> Slug | None:
         """Return the current working board based on the user context."""
         return self.user_context.board
@@ -281,7 +282,8 @@ class KanbanService(CompletionDataSource):
         """Return True if the given column exists in the repository, False if not."""
         return self.repository.column_exists(board, column)
 
-    # TODO: revisit: if we have an active board always preface the path with it
+    # TODO: Revisit -- if we have an active board always preface the path with it
+
     def resolve_path(self, path: str | None = None) -> Path:
         """
         Resolve a user-provided path into an absolute Path object.
@@ -306,7 +308,6 @@ class KanbanService(CompletionDataSource):
 
     def path_components(self, path: str | Path | Slug | None = None) -> tuple[Slug | None, Slug | None, Slug | None]:
         """Resolve a [BOARD/][COLUMN/]TITLE path into its components."""
-        # TODO: temporary until full path migration
         if isinstance(path, Path):
             path = str(path)
 
@@ -316,46 +317,13 @@ class KanbanService(CompletionDataSource):
                Slug(parts[2]) if len(parts) > 2 else None, \
                Slug(parts[3]) if len(parts) > 3 else None
 
-    def change_dir(
-        self,
-        path:  str | None = None,
-        clear: bool = False,
-    ) -> UserContext:
-        """
-        Set or clear the current board/column context stored in .kanban/config.
-        Validates that the referenced board (and column, if given) exist before
-        writing.  No git commit — context is local working state.
-
-        kanban use my-project/todo  →  change_dir(path="my-project/todo")
-        kanban use my-project       →  change_dir(path="my-project")
-        kanban use --clear          →  change_dir(clear=True)
-        """
-
-        path = self._strip_trailing_slash(path) if path else None
-        
-        # address the simplest cases first: 
-        # no args, clear flag, or root path all reset to the default context
-
-        if clear:
-            return self.clear_user_context()
-        if path == "/":
-            return self.clear_user_context()
-        if path is None:
-            return self.user_context
-
-        board, column, task = self.path_components(path)
-
-        if task is not None:
-            raise ValueError(f"Invalid path: {path} (cannot cd to a task)")
-        if board is not None and not self._board_exists(board):
-            raise BoardNotFound(board)
-        if board is not None and column is not None and not self._column_exists(board, column):
-            raise ColumnNotFound(board, column)
-        
-        return self.update_user_context(board=board)
-
     def set_board(self, slug: Slug) -> UserContext:
-        """Set the current context to the given board, validating that it exists."""
+        """
+        Set the working board in the user context to the board with the given
+        slug.  Validates that the board exists before writing.  Raises
+        BoardNotFound if no board matches.  No git commit — context is local
+        working state.
+        """
         board = self.repository.get_board(slug)
 
         if not board:
@@ -1140,12 +1108,6 @@ class KanbanService(CompletionDataSource):
         raise NotImplementedError()
 
     # ── Internal helpers ──────────────────────────────────────────────────────
-
-    def _strip_trailing_slash(self, path: str) -> str:
-        """Return a path token without trailing slashes."""
-        if path == "/":
-            return path
-        return path.rstrip("/")
 
     def _commit(self, type: str, scope: str, description: str) -> None:
         """Compose a structured commit message and delegate to GitService."""
