@@ -111,9 +111,9 @@ class BoardScreen(Screen[None]):
         self._tasks: dict[Slug, list[Task]] = {}
         self._filter: str = ""
         self._move: MoveState | None = None
-        # Position the moving card is currently drawn at, when its own column is
-        # previewing it; None when no column is showing a staged position.
-        self._previewed: int | None = None
+        # Column and position the moving card is currently drawn at, or None
+        # when no column is showing a staged position.
+        self._preview: tuple[Slug, int] | None = None
 
     # ── Layout ────────────────────────────────────────────────────────────────
 
@@ -569,9 +569,9 @@ class BoardScreen(Screen[None]):
         )
 
         self._move = MoveState(task=task, column_index=column_index, position=position)
-        # The board already shows the card at this position, so the preview
-        # starts in sync and the first keystroke is the first redraw.
-        self._previewed = position
+        # The board already shows the card here, so the preview starts in sync
+        # and the first keystroke is the first redraw.
+        self._preview = (task.column, position)
         self.move_mode = True
 
     def _stage_column(self, delta: int) -> None:
@@ -617,12 +617,10 @@ class BoardScreen(Screen[None]):
 
     def _mark_staged(self) -> None:
         """
-        Mark where the card would land.
+        Show where the card would land: the card moves there and the column is marked.
 
-        The destination column takes a border and the footer hints name it.  A
-        card staged within its own column also slides to its staged position;
-        one staged in another column stays put, so only that column's marking
-        moves.  Nothing is written until the move is committed.
+        Only the columns the card is leaving and joining are redrawn, so staging
+        stays smooth however wide the board is.
         """
         move = self._move
         views = self.column_views
@@ -656,39 +654,64 @@ class BoardScreen(Screen[None]):
 
     def _sync_preview(self, move: MoveState) -> None:
         """
-        Slide the card to its staged position, but only within its own column.
+        Draw the card where it is staged, across columns and within one.
 
-        Reordering is worth showing in place; a move to another column is not,
-        since taking the card out of the board it is still in reads as the move
-        having already happened.  Only the card's own column is ever redrawn.
+        At most two columns are touched per keystroke — the one the card is
+        leaving and the one it is joining — so the rest of the board never
+        redraws.  Staying inside a column touches only that column.  Nothing is
+        written until the move is committed.
         """
-        origin = move.task.column
         staged = self._columns[move.column_index].slug
+        desired = (staged, move.position)
 
-        position = move.position if staged == origin else None
-        if position == self._previewed:
+        if desired == self._preview:
             return
 
-        self._previewed = position
-        order = (
-            _reposition(self._visible(origin), move.task.slug, position)
-            if position is not None
-            else None
-        )
-        self.run_worker(
-            self._render_column(origin, order=order, select=move.task.slug),
-            exclusive=False,
-        )
+        previous = self._preview
+        self._preview = desired
+
+        columns = [staged] if previous is None else [previous[0], staged]
+        for column in dict.fromkeys(columns):
+            self.run_worker(
+                self._render_column(
+                    column,
+                    order=self._preview_order(column, move),
+                    select=move.task.slug if column == staged else None,
+                ),
+                exclusive=False,
+            )
+
+    def _preview_order(self, column: Slug, move: MoveState) -> list[Task]:
+        """
+        Return what `column` should show while the card is staged.
+
+        The card is lifted out of whichever column holds it and dropped into the
+        staged one, which covers a move across columns and a reorder within one.
+        """
+        tasks = [task for task in self._visible(column) if task.slug != move.task.slug]
+
+        if column == self._columns[move.column_index].slug:
+            index = max(0, min(move.position, len(tasks)))
+            tasks.insert(index, move.task)
+
+        return tasks
 
     def _clear_preview(self, move: MoveState) -> None:
         """Put the card back where it started, after a cancelled move."""
-        if self._previewed is None:
+        preview = self._preview
+        if preview is None:
             return
 
-        self._previewed = None
-        self.run_worker(
-            self._render_column(move.task.column, select=move.task.slug), exclusive=False
-        )
+        self._preview = None
+        origin = move.task.column
+
+        for column in dict.fromkeys([preview[0], origin]):
+            self.run_worker(
+                self._render_column(
+                    column, select=move.task.slug if column == origin else None
+                ),
+                exclusive=False,
+            )
 
     async def _render_column(
         self,
@@ -716,8 +739,10 @@ class BoardScreen(Screen[None]):
         if [task.slug for task in desired] != [task.slug for task in view.tasks]:
             await view.set_tasks(desired, dense=self.dense)
 
-        if select is not None:
-            view.select_task(select)
+        if select is not None and view.select_task(select):
+            # Focus follows the card so it keeps the highlight of a live
+            # selection rather than the dimmer blurred one.
+            view.focus()
 
         # set_tasks builds fresh cards, so the moving card needs marking again.
         self._set_moving_card(self.move_mode)
@@ -741,7 +766,7 @@ class BoardScreen(Screen[None]):
 
         self.move_mode = False
         self._move = None
-        self._previewed = None
+        self._preview = None
 
         if moved is not None:
             self.notify(f"Moved to /{moved.board}/{target.slug}")
@@ -1008,17 +1033,6 @@ class BoardScreen(Screen[None]):
             description = str(exc) or exc.__class__.__name__
             logging.error("TUI %s failed: %s", action, description)
             self.notify(description, title=action, severity="error")
-
-
-def _reposition(tasks: list[Task], slug: Slug, position: int) -> list[Task]:
-    """Return `tasks` with the task named by `slug` moved to `position`."""
-    moving = next((task for task in tasks if task.slug == slug), None)
-    if moving is None:
-        return list(tasks)
-
-    rest = [task for task in tasks if task.slug != slug]
-    index = max(0, min(position, len(rest)))
-    return [*rest[:index], moving, *rest[index:]]
 
 
 def _matches(task: Task, needle: str) -> bool:
