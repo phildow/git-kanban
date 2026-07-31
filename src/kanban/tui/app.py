@@ -11,7 +11,7 @@ from textual.command import CommandPalette
 from ..services.kanban import KanbanService
 from ..services.render_service import RenderService
 from .commands import ThemeCommands
-from .renderer import TuiRenderer
+from .renderer import TUIRenderer
 from .screens.board import BoardScreen
 from .screens.help import HelpScreen
 
@@ -39,7 +39,7 @@ class KanbanApp(App[None]):
         """Create the app around an already-configured kanban service."""
         super().__init__()
         self.svc = svc
-        self.command_renderer = TuiRenderer(render_service=RenderService(service=svc))
+        self.command_renderer = TUIRenderer(render_service=RenderService(service=svc))
 
     def on_mount(self) -> None:
         """Show the board screen."""

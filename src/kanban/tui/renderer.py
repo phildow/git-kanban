@@ -15,7 +15,7 @@ from ..services.render_service import RenderService
 CAPTURE_WIDTH = 100
 
 
-class TuiRenderer(RichRenderer):
+class TUIRenderer(RichRenderer):
     """
     The REPL's renderer, redirected into a buffer.
 
