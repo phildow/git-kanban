@@ -46,6 +46,11 @@ class Task(Sluggable):
         """Return the task's Description section, without its heading."""
         return description_of(self.body)
 
+    @property
+    def comments(self) -> str:
+        """Return the task's Comments section, without its heading."""
+        return comments_of(self.body)
+
     def set_description(self, description: str) -> None:
         """
         Replace the task's Description section.  Mutates `body` in place.
@@ -120,3 +125,18 @@ def description_of(body: str) -> str:
         rest = rest[:comments.start()]
 
     return rest.strip("\n").rstrip()
+
+
+def comments_of(body: str) -> str:
+    """
+    Return the text under a body's `# Comments` heading.
+
+    The section runs to the end of the body — comments are the last thing in a
+    task file.  A body with no Comments heading has no comments.
+    """
+    body = body or ""
+    heading = COMMENTS_HEADING_RE.search(body)
+    if heading is None:
+        return ""
+
+    return body[heading.end() :].strip("\n").rstrip()

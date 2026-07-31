@@ -212,6 +212,16 @@ ModalScreen {
     border: tall $panel;
 }
 
+/* The comments already on the task, shown but not editable.  No height cap and
+   no scroll of its own: they are shown in full and the form scrolls. */
+#field-comments {
+    width: 1fr;
+    height: auto;
+    padding: 1 1;
+    margin: 1 0 0 0;
+    background: $panel;
+}
+
 #field-description:focus, #field-comment:focus {
     border: tall $accent;
 }

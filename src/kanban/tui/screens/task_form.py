@@ -9,7 +9,7 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen
-from textual.widgets import Button, Input, Label, Select, Static, TextArea
+from textual.widgets import Button, Input, Label, Markdown, Select, Static
 
 from ...models import Column, Priority, Task
 from ..widgets import AutoCompleteInput, MarkdownArea, TaskHeading, TextInput
@@ -138,6 +138,13 @@ class TaskFormScreen(ModalScreen[TaskFormResult | None]):
                 yield MarkdownArea(
                     task.description if task else "", id="field-description"
                 )
+                # Comments are append-only, so the ones already there are shown
+                # as rendered markdown rather than offered for editing.
+                if task is not None and task.comments:
+                    yield Label("Comments")
+                    # No scroll of its own: the comments run to their full
+                    # length and the form is what scrolls to reach them.
+                    yield Markdown(task.comments, id="field-comments")
                 yield Label("Add a comment")
                 yield MarkdownArea(id="field-comment")
                 yield Static("", id="form-error")

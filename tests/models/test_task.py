@@ -8,7 +8,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from kanban.models import Slug, Task
-from kanban.models.task import description_of
+from kanban.models.task import comments_of, description_of
 
 
 def make_task(body: str = "") -> Task:
@@ -164,6 +164,51 @@ class TestAppendComment(unittest.TestCase):
         task = make_task()
         self.assertIsNone(task.append_comment("hi"))
         self.assertIn("hi", task.body)
+
+
+class TestCommentsOf(unittest.TestCase):
+    """comments_of returns the text under the Comments heading."""
+
+    def test_reads_a_comment(self) -> None:
+        """The text below the heading is the comments."""
+        self.assertEqual(comments_of("# Comments\n\na note\n"), "a note")
+
+    def test_reads_several_comments(self) -> None:
+        """Comments are returned as written, blank lines and all."""
+        body = "# Comments\n\nfirst\n\nsecond\n"
+        self.assertEqual(comments_of(body), "first\n\nsecond")
+
+    def test_starts_after_the_description(self) -> None:
+        """The description above is not part of the comments."""
+        body = "# Description\n\nhello\n\n# Comments\n\na note\n"
+        self.assertEqual(comments_of(body), "a note")
+
+    def test_body_without_a_heading(self) -> None:
+        """A body with no Comments heading has no comments."""
+        self.assertEqual(comments_of("# Description\n\nhello\n"), "")
+
+    def test_empty_body(self) -> None:
+        """An empty body has no comments."""
+        self.assertEqual(comments_of(""), "")
+
+
+class TestTaskCommentsProperty(unittest.TestCase):
+    """Task.comments reads the task's own body."""
+
+    def test_reads_from_the_body(self) -> None:
+        """The property reports what the body holds."""
+        self.assertEqual(make_task("# Comments\n\na note\n").comments, "a note")
+
+    def test_task_with_no_comments(self) -> None:
+        """A task with no Comments section reports none."""
+        self.assertEqual(make_task().comments, "")
+
+    def test_reads_back_what_was_appended(self) -> None:
+        """Comments survive being appended and read."""
+        task = make_task()
+        task.append_comment("first")
+        task.append_comment("second")
+        self.assertEqual(task.comments, "first\n\nsecond")
 
 
 class TestCommentsAlongsideDescription(unittest.TestCase):
