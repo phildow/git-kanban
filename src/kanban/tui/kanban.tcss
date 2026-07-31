@@ -317,3 +317,14 @@ TaskHeading .-task-path {
     max-height: 16;
     background: $surface;
 }
+
+/* The columns a card can be moved to.  The subtitle carries whatever prefix
+   is being typed, so the jump is visible rather than mysterious. */
+#column-list {
+    height: auto;
+    max-height: 16;
+    background: $surface;
+    border: none;
+    border-subtitle-align: right;
+    border-subtitle-color: $accent;
+}

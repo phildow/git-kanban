@@ -39,6 +39,7 @@ MOVE_BINDINGS: list[tuple[str, str]] = [
     ("shift + any of those", "stage it as far as it will go that way"),
     ("shift + H/L/J/K", "the same, without reaching for the arrows"),
     ("page up/down", "stage it a screenful at a time"),
+    ("tab", "name the destination column, and move there at once"),
     ("enter", "commit the staged position"),
     ("esc", "cancel — nothing is written"),
 ]

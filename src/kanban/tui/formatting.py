@@ -106,6 +106,20 @@ def board_label(
     return text
 
 
+def column_label(column: Column, slug_width: int = 0) -> Text:
+    """
+    Return a column's row in a picker: its slug, then its name.
+
+    The slug leads because that is what typing matches against; `slug_width`
+    pads it so the names line up down the list.
+    """
+    text = Text()
+    text.append(column.slug.ljust(slug_width))
+    text.append("  ")
+    text.append(column.name, style="dim")
+    return text
+
+
 def card_text(task: Task, *, dense: bool = False) -> Text:
     """
     Return the renderable body of a card.

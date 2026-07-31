@@ -9,6 +9,7 @@ on demand with `r`.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import shlex
 from contextlib import contextmanager, redirect_stderr, redirect_stdout
@@ -46,6 +47,7 @@ from ..widgets import (
     format_hints,
 )
 from .board_switcher import BoardChoice, BoardSwitcherScreen, CreateBoard
+from .column_prompt import ColumnPromptScreen
 from .confirm import ConfirmScreen
 from .help import HelpScreen
 from .output import OutputScreen
@@ -97,9 +99,14 @@ MOVE_MODE_ACTIONS = frozenset(
         "nav_page_right",
         "activate",
         "move_task",
+        "move_to_column",
         "cancel",
     }
 )
+
+# Actions that only make sense mid-move.  Outside one they are refused, so the
+# key falls through to whatever else claims it — tab to moving focus, say.
+MOVE_ONLY_ACTIONS = frozenset({"move_to_column"})
 
 # Commands that need a real terminal — an editor or a confirmation prompt — and
 # so cannot be driven from the command bar while the TUI owns the screen.
@@ -147,6 +154,9 @@ class BoardScreen(Screen[None]):
         Binding("pagedown", "nav_page_down", "Page cards", show=False),
         Binding("ctrl+pageup", "nav_page_left", "Page columns", show=False),
         Binding("ctrl+pagedown", "nav_page_right", "Page columns", show=False),
+        # Only bound during a move; outside one it falls through to Textual's
+        # own tab, which moves focus.
+        Binding("tab", "move_to_column", "Column by name", show=False),
         Binding("enter", "activate", "Open", show=False),
         # An alias for Enter on the selected card.  Hidden from the footer,
         # where the column's own Enter binding already offers "Open".
@@ -184,6 +194,12 @@ class BoardScreen(Screen[None]):
         # Column and position the moving card is currently drawn at, or None
         # when no column is showing a staged position.
         self._preview: tuple[Slug, int] | None = None
+        # Redraws are scheduled as workers and empty a column before refilling
+        # it, so two of them running at once on the same column interleave and
+        # leave it holding both sets of cards.  Every redraw takes this first,
+        # which also keeps them in the order they were scheduled — so the draw
+        # that ran last is the one with the most recent data.
+        self._redraw = asyncio.Lock()
 
     # ── Layout ────────────────────────────────────────────────────────────────
 
@@ -273,7 +289,8 @@ class BoardScreen(Screen[None]):
             select = selected.slug if selected is not None else None
 
         self._fetch()
-        await self._render_board(select=select, focus_column=focus_column)
+        async with self._redraw:
+            await self._render_board(select=select, focus_column=focus_column)
 
         self._sync_subtitle()
         self._reload_sidebar()
@@ -297,14 +314,18 @@ class BoardScreen(Screen[None]):
             await self.reload(select)
             return
 
-        with self._service_errors("load"):
+        async with self._redraw:
+            # Queried under the lock so a draw waiting its turn re-reads rather
+            # than redrawing with what the service said before it waited.
+            with self._service_errors("load"):
+                for slug in targets:
+                    self._tasks[slug] = self.svc.get_tasks(Path(f"/{board.slug}/{slug}"))
+
             for slug in targets:
-                self._tasks[slug] = self.svc.get_tasks(Path(f"/{board.slug}/{slug}"))
+                await views[slug].set_tasks(self._visible(slug), dense=self.dense)
 
-        for slug in targets:
-            await views[slug].set_tasks(self._visible(slug), dense=self.dense)
+            self._select_task(select)
 
-        self._select_task(select)
         self._sync_subtitle()
         self._reload_sidebar()
 
@@ -412,11 +433,12 @@ class BoardScreen(Screen[None]):
         Focus is left where it is: the caller may well be the filter bar, which
         the user is still typing into.
         """
-        for view in self.column_views:
-            await self._render_column(view.column.slug)
+        async with self._redraw:
+            for view in self.column_views:
+                await self._render_column(view.column.slug)
 
-        if select is not None:
-            self._select_task(select)
+            if select is not None:
+                self._select_task(select)
 
     def _reload_soon(self, select: Slug | None = None) -> None:
         """Schedule a reload from a synchronous context, such as a modal callback."""
@@ -792,6 +814,43 @@ class BoardScreen(Screen[None]):
         self._preview = (task.column, position)
         self.move_mode = True
 
+    def action_move_to_column(self) -> None:
+        """Ask for a destination column by slug, and move the card there."""
+        move = self._move
+        if move is None:
+            return
+
+        self.app.push_screen(
+            ColumnPromptScreen(
+                self._columns, current=self._columns[move.column_index].slug
+            ),
+            self._move_to_named_column,
+        )
+
+    def _move_to_named_column(self, slug: Slug | None) -> None:
+        """
+        Move the card to the column the prompt came back with.
+
+        Naming a column commits the move outright — the user has already said
+        where the card goes, so there is nothing left to confirm.  The staged
+        column is therefore never previewed: the card would be drawn where it
+        is going only to be drawn there again by the refresh that follows the
+        commit.
+        """
+        move = self._move
+        if slug is None or move is None:
+            return
+
+        index = next(
+            (i for i, column in enumerate(self._columns) if column.slug == slug), None
+        )
+        if index is None:
+            return
+
+        move.column_index = index
+        move.position = min(move.position, self._staged_limit(move))
+        self._commit_move()
+
     def _stage_column(self, delta: int) -> None:
         """Stage the card `delta` columns away."""
         move = self._move
@@ -906,13 +965,10 @@ class BoardScreen(Screen[None]):
 
         columns = [staged] if previous is None else [previous[0], staged]
         for column in dict.fromkeys(columns):
-            self.run_worker(
-                self._render_column(
-                    column,
-                    order=self._preview_order(column, move),
-                    select=move.task.slug if column == staged else None,
-                ),
-                exclusive=False,
+            self._draw_soon(
+                column,
+                order=self._preview_order(column, move),
+                select=move.task.slug if column == staged else None,
             )
 
     def _preview_order(self, column: Slug, move: MoveState) -> list[Task]:
@@ -940,12 +996,32 @@ class BoardScreen(Screen[None]):
         origin = move.task.column
 
         for column in dict.fromkeys([preview[0], origin]):
-            self.run_worker(
-                self._render_column(
-                    column, select=move.task.slug if column == origin else None
-                ),
-                exclusive=False,
+            self._draw_soon(
+                column, select=move.task.slug if column == origin else None
             )
+
+    def _draw_soon(
+        self,
+        column: Slug,
+        *,
+        order: list[Task] | None = None,
+        select: Slug | None = None,
+    ) -> None:
+        """Schedule a single-column redraw from a synchronous context."""
+        self.run_worker(
+            self._draw_column(column, order=order, select=select), exclusive=False
+        )
+
+    async def _draw_column(
+        self,
+        column: Slug,
+        *,
+        order: list[Task] | None = None,
+        select: Slug | None = None,
+    ) -> None:
+        """Redraw one column, waiting for any redraw already in progress."""
+        async with self._redraw:
+            await self._render_column(column, order=order, select=select)
 
     async def _render_column(
         self,
@@ -959,6 +1035,10 @@ class BoardScreen(Screen[None]):
 
         `order` overrides the column's ordering, which is how a staged position
         is previewed without writing anything.
+
+        Callers must hold `_redraw`: emptying and refilling a column takes
+        several passes through the event loop, and another draw arriving part
+        way through leaves the column holding cards from both.
         """
         view = next(
             (v for v in self.column_views if v.column.slug == column), None
@@ -990,6 +1070,7 @@ class BoardScreen(Screen[None]):
         task = move.task
         source = task.column
         target = self._columns[move.column_index]
+        preview = self._preview
         moved: Task | None = None
 
         with self._service_errors("move"):
@@ -1007,9 +1088,15 @@ class BoardScreen(Screen[None]):
                 f"Moved {_task_name(moved.title)} to {_place_name(target.name)}"
             )
 
-        # A move only disturbs the column it left and the one it landed in.
+        # A move only disturbs the column it left and the one it landed in —
+        # plus, when the card was staged elsewhere on the way, the column that
+        # was last previewing it and is still drawing it there.
+        disturbed = [source, target.slug]
+        if preview is not None:
+            disturbed.append(preview[0])
+
         self._refresh_columns_soon(
-            [source, target.slug], moved.slug if moved is not None else None
+            disturbed, moved.slug if moved is not None else None
         )
 
     def _reorder_to(self, task: Task, position: int) -> None:
@@ -1314,7 +1401,7 @@ class BoardScreen(Screen[None]):
 
         if self.move_mode:
             return action in MOVE_MODE_ACTIONS
-        return True
+        return action not in MOVE_ONLY_ACTIONS
 
     @contextmanager
     def _service_errors(self, action: str) -> Iterator[None]:

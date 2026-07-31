@@ -8,6 +8,7 @@ from .board_switcher import (
     CreateBoard,
     SwitchToBoard,
 )
+from .column_prompt import ColumnPromptScreen
 from .confirm import ConfirmScreen
 from .help import HelpScreen
 from .output import OutputScreen
@@ -19,6 +20,7 @@ __all__ = [
     "BoardFormScreen",
     "BoardScreen",
     "BoardSwitcherScreen",
+    "ColumnPromptScreen",
     "CreateBoard",
     "SwitchToBoard",
     "ConfirmScreen",
