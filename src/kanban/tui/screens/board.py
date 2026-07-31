@@ -78,6 +78,29 @@ COMMAND_KEYS: list[tuple[str, str]] = [
 # How many completion candidates the hint bar will list before giving up.
 COMPLETION_HINTS = 12
 
+# What the board still answers to while a card is staged for a move: staging
+# keys, and the two ways out.  A move is a mode — editing the card being moved,
+# or refreshing the board out from under it, has no meaning half way through.
+MOVE_MODE_ACTIONS = frozenset(
+    {
+        "nav_left",
+        "nav_right",
+        "nav_up",
+        "nav_down",
+        "nav_far_left",
+        "nav_far_right",
+        "nav_far_up",
+        "nav_far_down",
+        "nav_page_up",
+        "nav_page_down",
+        "nav_page_left",
+        "nav_page_right",
+        "activate",
+        "move_task",
+        "cancel",
+    }
+)
+
 # Commands that need a real terminal — an editor or a confirmation prompt — and
 # so cannot be driven from the command bar while the TUI owns the screen.
 UNSUPPORTED_COMMANDS = {"edit"}
@@ -1279,6 +1302,19 @@ class BoardScreen(Screen[None]):
         through `_task_name` or `_place_name`, which style and escape it.
         """
         self.notify(message)
+
+    def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
+        """
+        Disable the board's other actions while a card is staged for a move.
+
+        A disabled binding is not matched, so the key bubbles past the board
+        rather than doing something the move did not ask for.
+        """
+        _ = parameters
+
+        if self.move_mode:
+            return action in MOVE_MODE_ACTIONS
+        return True
 
     @contextmanager
     def _service_errors(self, action: str) -> Iterator[None]:

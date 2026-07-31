@@ -86,7 +86,7 @@ class TestBoardSubtitle(unittest.TestCase):
 
     def test_uses_the_supplied_count(self) -> None:
         """The count comes from the caller so the header matches the screen."""
-        self.assertEqual(board_subtitle(make_board(), 12), "Main — /main — 12 tasks")
+        self.assertEqual(board_subtitle(make_board(), 12), "Main (/main) — 12 tasks")
 
     def test_omits_the_column_count(self) -> None:
         """Columns are visible on the board itself and are not counted here."""
