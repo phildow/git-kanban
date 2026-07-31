@@ -217,9 +217,15 @@ class BoardScreen(Screen[None]):
         yield Footer(compact=True)
 
     async def on_mount(self) -> None:
-        """Attach the completers and load the board."""
+        """Attach the completers, load the board, and ask which board to show if none is active."""
         self._install_completers()
         await self.reload()
+
+        # Without a working board the screen falls back to the first one, which
+        # is a guess: ask instead.  With no boards at all there is nothing to
+        # choose between, so the empty board's message stands.
+        if self.svc.working_board is None and self._boards:
+            self.action_switch_board()
 
     def _install_completers(self) -> None:
         """

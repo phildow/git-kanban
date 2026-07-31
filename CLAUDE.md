@@ -845,7 +845,7 @@ KanbanApp(App)
 │   ├── Input: tags (comma separated)
 │   └── Button row: Save / Cancel
 │
-├── BoardSwitcherScreen (modal, pushed on `b`)
+├── BoardSwitcherScreen (modal, pushed on `b`, and on startup when no board is active)
 │   └── PrefixList of board names — typing jumps to a board by slug, Enter
 │       switches BoardScreen's active board; plus a "+ New board…" row that
 │       pushes BoardFormScreen

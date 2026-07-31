@@ -21,8 +21,8 @@ from kanban.tui.widgets import PrefixList
 BOARDS = ["alpha", "beta", "gamma"]
 
 
-def _make_service() -> KanbanService:
-    """Return a service holding three boards, with alpha active."""
+def _make_service(*, boards: list[str] = BOARDS, active: str | None = "alpha") -> KanbanService:
+    """Return a service holding `boards`, with `active` set as the working board."""
     temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
     temp_dir.mkdir()
     repo = InMemoryRepository(root=temp_dir)
@@ -32,11 +32,12 @@ def _make_service() -> KanbanService:
         git_service=GitService(),
     )
 
-    for slug in BOARDS:
+    for slug in boards:
         repo.create_board(slug.capitalize(), slug=Slug(slug))
         repo.create_column(Slug(slug), "todo", slug=Slug("todo"))
 
-    svc.set_board(Slug("alpha"))
+    if active is not None:
+        svc.set_board(Slug(active))
     return svc
 
 
@@ -189,6 +190,47 @@ class TestBoardSwitcherChoice(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
 
             self.assertEqual(_rows(screen).highlighted, len(BOARDS))
+
+
+class TestBoardSwitcherOnStartup(unittest.IsolatedAsyncioTestCase):
+    """With no working board the app opens on the switcher."""
+
+    async def test_switcher_opens_without_a_working_board(self) -> None:
+        """The switcher is on screen as soon as the board has loaded."""
+        app = KanbanApp(_make_service(active=None))
+
+        async with app.run_test() as pilot:
+            await pilot.pause()
+
+            self.assertIsInstance(pilot.app.screen, BoardSwitcherScreen)
+
+    async def test_choosing_sets_the_working_board(self) -> None:
+        """Picking from the startup switcher sets the board that was missing."""
+        svc = _make_service(active=None)
+
+        async with KanbanApp(svc).run_test() as pilot:
+            await pilot.pause()
+            await pilot.press("g")
+            await pilot.press("enter")
+            await pilot.pause()
+
+            self.assertEqual(svc.working_board, "gamma")
+
+    async def test_switcher_stays_closed_with_a_working_board(self) -> None:
+        """An active board is shown directly, without asking."""
+        async with KanbanApp(_make_service()).run_test() as pilot:
+            await pilot.pause()
+
+            self.assertNotIsInstance(pilot.app.screen, BoardSwitcherScreen)
+
+    async def test_switcher_stays_closed_without_any_boards(self) -> None:
+        """With nothing to choose between, the empty board screen stands."""
+        app = KanbanApp(_make_service(boards=[], active=None))
+
+        async with app.run_test() as pilot:
+            await pilot.pause()
+
+            self.assertNotIsInstance(pilot.app.screen, BoardSwitcherScreen)
 
 
 if __name__ == "__main__":
