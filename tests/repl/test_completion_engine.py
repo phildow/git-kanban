@@ -23,6 +23,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from kanban.repl.completion_engine import CompletionEngine
+from kanban.services.kanban import CONFIG_KEYS
 
 _NOOP = lambda args: None  # noqa: E731 - trivial stand-in for real handlers
 
@@ -117,6 +118,21 @@ def _build_fixture_parser() -> argparse.ArgumentParser:
 
     # status: no arguments at all
     p = subparsers.add_parser("status")
+    p.set_defaults(func=_NOOP)
+
+    # config <get|set>: positional whose dest is "key" and metavar is "KEY"
+    config_parser = subparsers.add_parser("config")
+    config_parser.set_defaults(func=_NOOP)
+    config_sub = config_parser.add_subparsers(dest="config_command", metavar="COMMAND")
+    config_sub.required = False
+
+    p = config_sub.add_parser("get")
+    p.add_argument("key", metavar="KEY")
+    p.set_defaults(func=_NOOP)
+
+    p = config_sub.add_parser("set")
+    p.add_argument("key", metavar="KEY")
+    p.add_argument("value", metavar="VALUE")
     p.set_defaults(func=_NOOP)
 
     # exit: aliases only, no arguments
@@ -484,6 +500,28 @@ class AssignedToCompletionTests(EngineTestCase):
         context = _Context(board="my-project")
         line = "create task /my-project/todo/new-task -w "
         self.assertEqual(self.complete(line, context), ["alice", "bob"])
+
+
+class ConfigKeyCompletionTests(EngineTestCase):
+    """Positionals with metavar KEY complete against the supported config keys."""
+
+    def test_lists_all_keys_with_no_input(self) -> None:
+        self.assertEqual(self.complete("config get "), sorted(CONFIG_KEYS))
+
+    def test_filters_keys_by_prefix(self) -> None:
+        self.assertEqual(self.complete("config get user."), ["user.name"])
+
+    def test_completes_key_for_set(self) -> None:
+        self.assertEqual(self.complete("config set "), sorted(CONFIG_KEYS))
+
+    def test_unknown_prefix_completes_nothing(self) -> None:
+        self.assertEqual(self.complete("config get bogus"), [])
+
+    def test_value_after_key_has_no_suggestions(self) -> None:
+        self.assertEqual(self.complete("config set user.name "), [])
+
+    def test_completes_config_subcommands(self) -> None:
+        self.assertEqual(self.complete("config "), ["get", "set"])
 
 
 class FreeTextCompletionTests(EngineTestCase):

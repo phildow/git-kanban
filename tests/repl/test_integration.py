@@ -1200,5 +1200,25 @@ class TestReplTaskEnglishNames(_InitializedReplBase):
         self.assertIn("fix-login-bug", out)
 
 
+class TestReplConfig(_InitializedReplBase):
+    """`config` with and without a subcommand against a real .kanban/config file."""
+
+    def test_set_then_get_round_trips(self) -> None:
+        """A value written by `config set` is returned by `config get`."""
+        self.run_repl("config", "set", "user.name", "philip")
+        self.assertIn("philip", self.run_repl("config", "get", "user.name"))
+
+    def test_bare_config_lists_set_value(self) -> None:
+        """Bare `config` shows the key and its stored value."""
+        self.run_repl("config", "set", "user.name", "philip")
+        out = self.run_repl("config")
+        self.assertIn("user.name", out)
+        self.assertIn("philip", out)
+
+    def test_bare_config_lists_unset_keys(self) -> None:
+        """Bare `config` lists supported keys even when they have no value."""
+        self.assertIn("user.name", self.run_repl("config"))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -250,8 +250,6 @@ def init(repo_path):
         subprocess.run(["git", "-C", ".kanban-store", "push", "--set-upstream", "origin", "kanban"])
 ```
 
-#### Storing Configuration
-
 The worktree and branch are stored in the .kanban/config file:
 
 ```INI
@@ -349,15 +347,6 @@ class Task:
 ```
 
 ### Metadata
-
-#### The Store
-
-The kanban store includes a `userdata` INI file. It contains preferences specific to the user and is added to the git ignore. (TODO) For example the user's most recently active /board/column is saved here and reloaded when the user starts the repl. For example:
-
-```
-[user-context]
-    board = main
-```
 
 #### Boards
 
@@ -512,8 +501,9 @@ kanban search <query>
 kanban log <board>/<column>/<task> [--limit <n>]
 kanban status
 
-kanban config set <key> <value>    # key: name
-kanban config get <key>            # key: name
+kanban config set <key> <value>
+kanban config get <key>
+kanban config list
 ```
 
 Most commands take a `--format` argument with options `plain|json` (default: `plain`).
@@ -617,8 +607,8 @@ tag <task> <tag>
 reorder <column> <position>
 
 config
-config set <key> <value>    # key: name
-config get <key>            # key: name
+config set <key> <value>
+config get <key>
 
 search <query>
     [--slugs]
@@ -671,11 +661,11 @@ quit = exit
 The REPL supports control commands and tab completion:
 
 ```
-Ctrl+C        - interrupt or cancel the current command
-Ctrl+L        - clear the screen
-Ctrl+D        - exit
-Ctrl+Z        - exit
-Tab           - context aware automcomplete commands, flags, files, tags, users, tags, etc
+   Tab = context aware automcomplete commands, flags, files, tags, users, tags, etc
+Ctrl+C = interrupt or cancel the current command
+Ctrl+L = clear the screen
+Ctrl+D = exit
+Ctrl+Z = exit
 ```
 
 The REPL prints it prompt as:
@@ -862,28 +852,29 @@ KanbanApp(App)
 #### Key Bindings (Board Screen, normal mode)
 
 ```
-←/→ or h/l     move focus between columns
-↑/↓ or j/k     move focus between cards within a column
-Enter          open TaskDetailScreen for focused card
-n              open TaskFormScreen (create)
-e              open TaskFormScreen (edit, pre-filled)
-d              delete focused card (confirm modal)
-m              enter move mode for focused card
-b              open BoardSwitcherScreen
-/              inline filter — live-filters visible cards as typed
-:              open CommandBar — full REPL-syntax command line
-s              toggle SidebarPanel collapse
-q / Ctrl+Q     quit
-?              help screen — bindings reference
+←/→ or h/l = move focus between columns
+↑/↓ or j/k = move focus between cards within a column
+     Enter = open TaskDetailScreen for focused card
+         n = open TaskFormScreen (create)
+         e = open TaskFormScreen (edit, pre-filled)
+         d = delete focused card (confirm modal)
+         m = enter move mode for focused card
+         b = open BoardSwitcherScreen
+         / = inline filter — live-filters visible cards as typed
+         : = open CommandBar — full REPL-syntax command line
+         s = toggle SidebarPanel collapse
+q / Ctrl+Q = quit
+         ? = help screen — bindings reference
 ```
 
 #### Key bindings (move mode, once `m` pressed)
 
 ```
-←/→ or h/l     move card to adjacent column
-↑/↓ or j/k     reorder card within current column
-Enter          commit — single move_task/reorder call
-Esc            cancel — discard, no calls made
+←/→ or h/l = move card to adjacent column
+↑/↓ or j/k = reorder card within current column
+     Enter = commit — single move_task/reorder call
+       Tab = show column list
+       Esc = cancel — discard, no calls made
 ```
 
 ### Refresh Strategy
@@ -914,3 +905,35 @@ While a move is being staged the same rule applies to the preview: only the colu
 Rebuilding the entire board is reserved for changes whose effects are not confined to known columns — switching boards, a column being added, renamed, or removed — and for the manual refresh key, which exists precisely to re-read everything. A targeted refresh should fall back to a full reload when it cannot establish that its assumption holds, such as when a named column is not on screen.
 
 The same principle governs everything else the TUI draws: a widget is handed new data only when its own data changed, and a redraw is skipped altogether when the new data matches what is already displayed.
+
+## Config and Userdata
+
+Configuration values are addressed by a `section.key` keypath. The supported set is defined by `CONFIG_KEYS` in the service layer, and `KanbanService.get_config`/`set_config` raise `InvalidConfigKey` for anything outside it. `KanbanService.list_config` returns every supported keypath with its value (None when unset), which is what `kanban config list`, the bare REPL `config` command, and REPL tab completion of keys report. 
+
+Config and user data contain different kinds of data.
+
+Config is reserved for values that can be set by the user. Global configuration values can be placed in the user's home directory under `~/.kanban/config` and will be overriden by local configuration values.
+
+User data contains settings that cannot be changed by the user and which are generally set by the kanban service in response to user actions, for example the currently selected board.
+
+### Config Key-Value Pairs
+
+```INI
+[user]
+    # the name of the user, used when creating a task or comment
+    name = "philip"
+
+[repository]
+    # the folder in the repository that contains the kanban store
+    worktree = ".kanban-store"
+    # the git branch associated with the worktree
+    branch = "kanban"
+```
+
+### Userdata Key-Value Pairs
+
+```INI
+[user-context]
+    # the currently selected board
+    board = main
+```

@@ -58,6 +58,26 @@ class TaskUnsetParams:
     description: bool = False
 
 
+# ── Config ────────────────────────────────────────────────────────────────────
+
+CONFIG_USER_NAME = "user.name"
+
+# The complete set of configuration keypaths the application supports. Config is
+# structured application settings, so unknown keys are rejected rather than
+# stored; arbitrary values belong in userdata.
+CONFIG_KEYS: frozenset[str] = frozenset({
+    CONFIG_USER_NAME,
+})
+
+
+class InvalidConfigKey(ValueError):
+    """Raised when a config keypath is not one of the supported CONFIG_KEYS."""
+    def __init__(self, keypath: str):
+        supported = ", ".join(sorted(CONFIG_KEYS))
+        super().__init__(f"Invalid config key: {keypath}. Supported keys: {supported}")
+        self.keypath = keypath
+
+
 # ── Return types ──────────────────────────────────────────────────────────────
 
 @dataclass
@@ -603,7 +623,8 @@ class KanbanService(CompletionDataSource):
     ) -> Task:
         """
         Write a new .md file into board/column/ with a generated UUID and the
-        provided metadata as frontmatter.  Raises BoardNotFound or ColumnNotFound
+        provided metadata as frontmatter.  When params.created_by is not given the
+        configured `user.name` is used.  Raises BoardNotFound or ColumnNotFound
         if the target location does not exist, and TaskAlreadyExists if a file
         with the same title slug is already present in that column.  Updates the
         index and commits.
@@ -632,7 +653,9 @@ class KanbanService(CompletionDataSource):
         priority = params.priority
         tags = params.tags or []
         due_date = params.due_date
-        created_by = params.created_by
+        # An explicit creator wins; otherwise fall back to the configured user
+        # name so tasks record who made them without repeating --created-by.
+        created_by = params.created_by or self.get_config(CONFIG_USER_NAME)
 
         if isinstance(due_date, str):
             due_date = datetime.fromisoformat(due_date)
@@ -1014,20 +1037,34 @@ class KanbanService(CompletionDataSource):
 
     def get_config(self, keypath: str) -> str | None:
         """
-        Read a configuration value from .kanban/.config.  Raises
-        InvalidConfigKey if the key is not supported and ConfigKeyNotSet if
-        the key is valid but has not been assigned a value.
+        Read a configuration value from .kanban/config.  Raises InvalidConfigKey
+        if the key is not in the supported set, and returns None if the key is
+        valid but has not been assigned a value.
         """
+        if keypath not in CONFIG_KEYS:
+            raise InvalidConfigKey(keypath)
+
         return self.repository.get_config(keypath)
 
     def set_config(self, keypath: str, value: str) -> str | None:
         """
-        Persist a configuration value to .kanban/.config under the given key.
+        Persist a configuration value to .kanban/config under the given key.
         Raises InvalidConfigKey if the key is not in the supported set.  No
         git commit — config is local working state, like current context.
         """
+        if keypath not in CONFIG_KEYS:
+            raise InvalidConfigKey(keypath)
+
         self.repository.set_config(keypath, value)
         return self.get_config(keypath)
+
+    def list_config(self) -> dict[str, str | None]:
+        """
+        Return every supported configuration keypath mapped to its value, in
+        sorted keypath order.  Keys that have never been set map to None, so the
+        result doubles as a listing of the keys the application accepts.
+        """
+        return {keypath: self.repository.get_config(keypath) for keypath in sorted(CONFIG_KEYS)}
 
     # ── Userdata ──────────────────────────────────────────────────────────────
 

@@ -12,6 +12,7 @@ Path arguments are explicit and fully specified by the caller.
 import argparse
 
 from ..models import Priority
+from ..services.kanban import CONFIG_KEYS
 from ..repl.commands import (
     handle_board_list,
     handle_column_list,
@@ -20,6 +21,7 @@ from ..repl.commands import (
     handle_delete,
     handle_column_reorder,
     handle_get_config,
+    handle_list_config,
     handle_set_config,
     handle_log,
     handle_rename,
@@ -40,6 +42,7 @@ from ..repl.commands import (
 
 SORT_TASK_CHOICES = ["title", "priority", "due-date", "created-at", "updated-at", "created-by", "column"]
 PRIORITY_CHOICES = [p.value for p in Priority]
+_CONFIG_KEYS_HELP = ", ".join(sorted(CONFIG_KEYS))
 
 class CustomFormatter(argparse.RawDescriptionHelpFormatter):
     @staticmethod
@@ -240,18 +243,19 @@ def _add_move_parser(subparsers: argparse._SubParsersAction) -> None:
 def _add_config_parser(subparsers: argparse._SubParsersAction) -> None:
     config_parser = subparsers.add_parser("config", help="List, get, or set configuration values")
     _add_global_flags(config_parser)
-    
+    config_parser.set_defaults(func=handle_list_config)  # bare `config` lists all config values
+
     config_sub = config_parser.add_subparsers(dest="config_command", metavar="COMMAND")
     config_sub.required = False  # allow `config` with no subcommand to list all config values
 
     p = config_sub.add_parser("set", help="Set a configuration value")
-    p.add_argument("key", metavar="KEY", help="Configuration key (e.g. name)")
+    p.add_argument("key", metavar="KEY", help=f"Configuration key ({_CONFIG_KEYS_HELP})")
     p.add_argument("value", metavar="VALUE", help="Configuration value")
     _add_global_flags(p)
     p.set_defaults(func=handle_set_config)
 
     p = config_sub.add_parser("get", help="Get a configuration value")
-    p.add_argument("key", metavar="KEY", help="Configuration key (e.g. name)")
+    p.add_argument("key", metavar="KEY", help=f"Configuration key ({_CONFIG_KEYS_HELP})")
     _add_global_flags(p)
     p.set_defaults(func=handle_get_config)
 

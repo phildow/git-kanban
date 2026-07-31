@@ -683,5 +683,16 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.get_config.assert_called_once_with("name")
         self.renderer.render_get_config.assert_called_once_with(args, result)
 
+    def test_handle_list_config(self):
+        """Bare `config` renders every configuration value."""
+        args = self._args()
+        result = {"user.name": "Philip"}
+        self.svc.list_config.return_value = result
+
+        commands.handle_list_config(args, self.svc, self.renderer)
+
+        self.svc.list_config.assert_called_once_with()
+        self.renderer.render_list_config.assert_called_once_with(args, result)
+
 if __name__ == "__main__":
     unittest.main()

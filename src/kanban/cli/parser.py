@@ -7,6 +7,7 @@ Path arguments are explicit and fully specified by the caller.
 import argparse
 
 from ..models import Priority
+from ..services.kanban import CONFIG_KEYS
 from ..cli.commands import (
     handle_board_create,
     handle_board_info,
@@ -20,6 +21,7 @@ from ..cli.commands import (
     handle_column_rename,
     handle_column_reorder,
     handle_get_config,
+    handle_list_config,
     handle_set_config,
     handle_init,
     handle_log,
@@ -46,6 +48,7 @@ from ..cli.commands import (
 FORMAT_CHOICES = ["plain", "json"]
 SORT_TASK_CHOICES = ["title", "priority", "due-date", "created-at", "updated-at", "created-by", "column"]
 PRIORITY_CHOICES = [p.value for p in Priority]
+_CONFIG_KEYS_HELP = ", ".join(sorted(CONFIG_KEYS))
 
 
 def _add_global_flags(parser: argparse.ArgumentParser) -> None:
@@ -400,17 +403,22 @@ Use the CLI directly with `kanban board list`, `kanban task create`, etc.
     config_sub.required = True
 
     p = config_sub.add_parser("set", help="Set a configuration value")
-    p.add_argument("key", metavar="KEY", help="Configuration key (e.g. name)")
+    p.add_argument("key", metavar="KEY", help=f"Configuration key ({_CONFIG_KEYS_HELP})")
     p.add_argument("value", metavar="VALUE", help="Configuration value")
     _add_format_arg(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_set_config)
 
     p = config_sub.add_parser("get", help="Get a configuration value")
-    p.add_argument("key", metavar="KEY", help="Configuration key (e.g. name)")
+    p.add_argument("key", metavar="KEY", help=f"Configuration key ({_CONFIG_KEYS_HELP})")
     _add_format_arg(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_get_config)
+
+    p = config_sub.add_parser("list", help="List all configuration values")
+    _add_format_arg(p)
+    _add_global_flags(p)
+    p.set_defaults(func=handle_list_config)
 
     # repl
     p = subparsers.add_parser("repl", help="Start an interactive kanban shell")

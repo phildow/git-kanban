@@ -279,3 +279,8 @@ def handle_get_config(args: argparse.Namespace, svc: KanbanService, renderer: Co
 	result = svc.get_config(args.key)
 	renderer.render_get_config(args, result)
 
+
+def handle_list_config(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
+	result = svc.list_config()
+	renderer.render_list_config(args, result)
+

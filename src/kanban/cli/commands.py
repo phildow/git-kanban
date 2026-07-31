@@ -318,6 +318,11 @@ def handle_get_config(args: argparse.Namespace, svc: KanbanService, renderer: Co
 	_pick(args, renderer, json_renderer).render_get_config(args, result)
 
 
+def handle_list_config(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
+	result = svc.list_config()
+	_pick(args, renderer, json_renderer).render_list_config(args, result)
+
+
 def handle_repl(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
 	_ = args, renderer, json_renderer
 	from ..services.render_service import RenderService
