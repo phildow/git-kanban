@@ -21,6 +21,10 @@ class ConfirmScreen(ModalScreen[bool]):
         Binding("escape", "cancel", "Cancel", show=True),
         Binding("y", "confirm", "Confirm", show=True),
         Binding("n", "cancel", "Cancel", show=False),
+        # The buttons are the only focusable things here, so stepping through
+        # the focus chain moves between them.
+        Binding("left", "app.focus_previous", "Previous", show=False),
+        Binding("right", "app.focus_next", "Next", show=False),
     ]
 
     def __init__(
