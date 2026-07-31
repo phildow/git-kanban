@@ -30,10 +30,12 @@ class CompletingInput(TextInput):
     never asks the kanban service anything itself.
     """
 
-    # Tab is bound on the screen for focus movement, without priority, so a
-    # binding here takes it while one of these bars has focus.
+    # Tab is bound on the screen for focus movement, and ctrl+c on the app for
+    # quitting and on `Input` for copying — none of them with priority, so a
+    # binding here takes the key while one of these bars has focus.
     BINDINGS = [
         Binding("tab", "complete", "Complete", show=False),
+        Binding("ctrl+c", "clear", "Clear", show=False),
     ]
 
     class Ambiguous(Message):
@@ -49,6 +51,10 @@ class CompletingInput(TextInput):
         """Create a bar with no completer; the screen attaches one on mount."""
         super().__init__(placeholder=placeholder, id=id)
         self.completer: Completer | None = None
+
+    def action_clear(self) -> None:
+        """Empty the bar, leaving it open and focused to type into again."""
+        self.value = ""
 
     def action_complete(self) -> None:
         """Complete the token at the cursor, as far as the candidates agree."""
