@@ -46,58 +46,60 @@ class Task(Sluggable):
         """Return the task's Description section, without its heading."""
         return description_of(self.body)
 
+    def set_description(self, description: str) -> None:
+        """
+        Replace the task's Description section.  Mutates `body` in place.
+
+        The section runs from the `# Description` heading to the `# Comments`
+        heading, or to the end of the body when there is none; any Comments
+        section is left untouched.  A body with no Description heading gains
+        one, ahead of the Comments section.  An empty `description` leaves the
+        heading with nothing under it.
+        """
+        body = self.body or ""
+        heading = DESCRIPTION_HEADING_RE.search(body)
+        comments = COMMENTS_HEADING_RE.search(body)
+
+        description = description.strip("\n")
+        block = (
+            f"# Description\n\n{description}\n" if description else "# Description\n\n"
+        )
+
+        preamble = ""
+        if heading:
+            before = body[: heading.start()].rstrip()
+            if before:
+                preamble = f"{before}\n\n"
+
+        if comments:
+            kept = body[comments.start() :].rstrip() + "\n"
+            self.body = f"{preamble}{block}\n{kept}"
+            return
+
+        self.body = f"{preamble}{block}"
+
+    def append_comment(self, comment: str) -> None:
+        """
+        Add `comment` under the task's `# Comments` heading.  Mutates `body` in place.
+
+        Comments are only ever appended, never rewritten.  Trailing whitespace
+        is trimmed from the body first, and the heading is added if the body
+        does not already carry one.
+        """
+        body = (self.body or "").rstrip()
+
+        if COMMENTS_HEADING_RE.search(body):
+            self.body = f"{body}\n\n{comment}" if body else comment
+        elif body:
+            self.body = f"{body}\n\n# Comments\n\n{comment}"
+        else:
+            self.body = f"# Comments\n\n{comment}"
+
 
 # ── Markdown body sections ────────────────────────────────────────────────────
 
 COMMENTS_HEADING_RE = re.compile(r"^# Comments\s*$", re.MULTILINE)
-def append_comment(body: str, comment: str) -> str:
-    """
-    Return `body` with `comment` appended under a `# Comments` heading.
-
-    Trailing whitespace is stripped from the body before appending. If the body
-    does not already contain a `# Comments` heading, one is inserted before the
-    comment. An empty body results in a body that starts with the heading.
-    """
-    body = (body or "").rstrip()
-    if COMMENTS_HEADING_RE.search(body):
-        return f"{body}\n\n{comment}" if body else comment
-    if body:
-        return f"{body}\n\n# Comments\n\n{comment}"
-    return f"# Comments\n\n{comment}"
-
-
 DESCRIPTION_HEADING_RE = re.compile(r"^# Description\s*$", re.MULTILINE)
-def set_description(body: str, description: str) -> str:
-    """
-    Return `body` with the Description section content replaced by `description`.
-
-    The description section is the portion of the markdown body between the
-    `# Description` heading and either the `# Comments` heading (if any) or the
-    end of the document. Any Comments section is preserved unchanged. If the
-    body does not already contain a `# Description` heading, one is inserted
-    ahead of the Comments section (or at the start if no Comments section
-    exists). An empty description leaves only the `# Description` heading.
-    """
-    body = body or ""
-    desc_match = DESCRIPTION_HEADING_RE.search(body)
-    comments_match = COMMENTS_HEADING_RE.search(body)
-
-    description = description.strip("\n")
-    if description:
-        description_block = f"# Description\n\n{description}\n"
-    else:
-        description_block = "# Description\n\n"
-
-    preamble = ""
-    if desc_match:
-        preamble_text = body[:desc_match.start()].rstrip()
-        if preamble_text:
-            preamble = f"{preamble_text}\n\n"
-
-    if comments_match:
-        comments_block = body[comments_match.start():].rstrip() + "\n"
-        return f"{preamble}{description_block}\n{comments_block}"
-    return f"{preamble}{description_block}"
 
 
 def description_of(body: str) -> str:

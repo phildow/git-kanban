@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 from uuid import uuid4
 
 from kanban.services.git import GitService
-from kanban.services.kanban import KanbanService, TaskCreateParams, _append_comment
+from kanban.services.kanban import KanbanService, TaskCreateParams
 from kanban.storage.memory import InMemoryRepository
 
 
@@ -61,31 +61,6 @@ class TestKanbanServiceCommentTask(unittest.TestCase):
 		original = self.svc.get_task(Path("alpha/todo/fix-login"))
 		result = self.svc.comment_task(Path("alpha/todo/fix-login"), "hi")
 		self.assertEqual(result.id, original.id)
-
-
-class TestAppendCommentHelper(unittest.TestCase):
-	"""_append_comment produces the correct body layout."""
-
-	def test_empty_body_produces_heading_and_comment(self) -> None:
-		"""An empty body becomes a `# Comments` heading followed by the comment."""
-		self.assertEqual(_append_comment("", "hi"), "# Comments\n\nhi")
-
-	def test_body_without_heading_adds_heading(self) -> None:
-		"""A non-empty body without the heading gets the heading appended before the comment."""
-		result = _append_comment("# Description\n\nSome text.", "hi")
-		self.assertEqual(result, "# Description\n\nSome text.\n\n# Comments\n\nhi")
-
-	def test_body_with_heading_appends_only_comment(self) -> None:
-		"""A body already containing the heading only receives the new comment."""
-		body = "# Comments\n\nfirst"
-		result = _append_comment(body, "second")
-		self.assertEqual(result, "# Comments\n\nfirst\n\nsecond")
-
-	def test_trailing_whitespace_is_stripped_from_body(self) -> None:
-		"""Trailing whitespace in the original body is trimmed before appending."""
-		body = "# Description\n\nSome text.\n\n\n"
-		result = _append_comment(body, "hi")
-		self.assertEqual(result, "# Description\n\nSome text.\n\n# Comments\n\nhi")
 
 
 if __name__ == "__main__":

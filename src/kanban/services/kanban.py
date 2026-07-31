@@ -13,8 +13,6 @@ from warnings import deprecated
 from ..index.query import SearchQuery, SortField
 from ..models import Board, Column, Priority, Slug, Task, TaskFilter, UserContext
 from ..models.priority import PRIORITY_ORDER
-from ..models.task import append_comment as _append_comment
-from ..models.task import set_description as _set_description
 from ..protocols.completion_data_source import CompletionDataSource
 from ..storage.base import KanbanRepository, ColumnNotFound, BoardNotFound, TaskNotFound, TaskAlreadyExists
 from ..storage.seeds import BootstrapConfig, DEFAULT_COLUMNS
@@ -632,8 +630,8 @@ class KanbanService(CompletionDataSource):
             tags=tags,
             due_date=due_date,
             created_by=created_by,
-            body=_set_description("", params.description or ""),
         )
+        task.set_description(params.description or "")
         filename = task.slug
         created_task = self.repository.create_task(task, filename)
         self.index_service.upsert_task(created_task)
@@ -765,7 +763,7 @@ class KanbanService(CompletionDataSource):
         if updates.created_by is not None:
             task.created_by = updates.created_by
         if updates.description is not None:
-            task.body = _set_description(task.body, updates.description)
+            task.set_description(updates.description)
 
         updated = self.repository.update_task(task, slug=slug)
         self.index_service.upsert_task(updated)
@@ -796,7 +794,7 @@ class KanbanService(CompletionDataSource):
         if unsets.created_by:
             task.created_by = None
         if unsets.description:
-            task.body = _set_description(task.body, "")
+            task.set_description("")
         if unsets.tags:
             task.tags = list(set(task.tags) - set(unsets.tags))
 
@@ -904,7 +902,7 @@ class KanbanService(CompletionDataSource):
         cannot be resolved. Updates the index and commits.
         """
         task = self.get_task(path)
-        task.body = _append_comment(task.body, comment)
+        task.append_comment(comment)
         updated = self.repository.update_task(task, slug=task.slug)
         self.index_service.upsert_task(updated)
         return updated
