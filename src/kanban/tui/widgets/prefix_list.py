@@ -42,6 +42,21 @@ class PrefixList(OptionList):
         self._search = ""
         self._searched_at = 0.0
 
+    def set_entries(self, entries: Sequence[tuple[str, Text]]) -> None:
+        """
+        Replace the list's contents with `entries`, keys and rows together.
+
+        Used when the data behind a list changes while it is on screen — a
+        configuration value edited in place, say.  Any prefix being typed is
+        dropped, since it was matched against the keys that have just gone.
+        """
+        self.keys = [key for key, _ in entries]
+        self._search = ""
+        self._show_search()
+
+        self.clear_options()
+        self.add_options([label for _, label in entries])
+
     @property
     def selected_key(self) -> str | None:
         """Return the key of the highlighted entry, or None when there is none."""

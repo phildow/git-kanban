@@ -97,7 +97,7 @@ class TaskFormScreen(ModalScreen[TaskFormResult | None]):
                 # going into markup, and coloured to stand out of the sentence.
                 column = escape(self.column.name) if self.column else ""
                 yield Static(
-                    f"New task in [$primary]{column}[/]", id="form-heading"
+                    f"New task [$primary]{column}[/]", id="form-heading"
                 )
             with VerticalScroll(id="form-fields"):
                 yield Label("Title")

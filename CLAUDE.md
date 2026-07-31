@@ -845,9 +845,27 @@ KanbanApp(App)
 │   └── Button row: Save / Cancel
 │       on save BoardScreen creates the board and switches to it
 │
+├── ConfigScreen (modal, pushed from the command palette's "Configuration")
+│   └── PrefixList of KanbanService.list_config() — every supported keypath and
+│       its value, unset keys included; typing jumps to a key, Enter pushes
+│       ConfigValueScreen for it
+│
+├── ConfigValueScreen (modal, pushed from the configuration screen)
+│   ├── Input: value (pre-filled with the current one)
+│   └── Button row: Save / Cancel
+│       on save ConfigScreen writes it with set_config and redraws the row
+│
 └── CommandBar (overlay, toggled by `:`)
     └── Input — free text, parsed with the same parser as the REPL
 ```
+
+#### The Command Palette
+
+Textual's own palette (`ctrl+p`) carries the app-level actions — the ones that
+belong to the application rather than to the board in front of the user, and so
+have no key of their own. `KanbanCommands` is the provider that supplies them,
+registered on `KanbanApp.COMMANDS` alongside Textual's system commands. It
+currently offers **Configuration**, which opens `ConfigScreen`.
 
 #### Key Bindings (Board Screen, normal mode)
 
@@ -863,6 +881,7 @@ KanbanApp(App)
          / = inline filter — live-filters visible cards as typed
          : = open CommandBar — full REPL-syntax command line
          s = toggle SidebarPanel collapse
+    Ctrl+P = command palette — app-level actions, including configuration
 q / Ctrl+Q = quit
          ? = help screen — bindings reference
 ```

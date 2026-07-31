@@ -9,9 +9,10 @@ from textual.binding import Binding
 
 from ..services.kanban import KanbanService
 from ..services.render_service import RenderService
-from .commands import ThemeCommands, ThemePalette
+from .commands import KanbanCommands, ThemeCommands, ThemePalette
 from .renderer import TUIRenderer
 from .screens.board import BoardScreen
+from .screens.config import ConfigScreen
 from .screens.help import HelpScreen
 
 
@@ -27,6 +28,9 @@ class KanbanApp(App[None]):
 
     CSS_PATH = "kanban.tcss"
     TITLE = "kanban"
+
+    # The app's own palette entries, on top of Textual's system commands.
+    COMMANDS = App.COMMANDS | {KanbanCommands}
 
     BINDINGS = [
         Binding("q", "quit", "Quit", show=True),
@@ -48,6 +52,11 @@ class KanbanApp(App[None]):
         """Open the bindings reference."""
         if not isinstance(self.screen, HelpScreen):
             self.push_screen(HelpScreen())
+
+    def action_configuration(self) -> None:
+        """Show the configuration values, and edit one."""
+        if not isinstance(self.screen, ConfigScreen):
+            self.push_screen(ConfigScreen(self.svc))
 
     def search_themes(self) -> None:
         """

@@ -106,7 +106,6 @@ class Task(Sluggable):
 COMMENTS_HEADING_RE = re.compile(r"^# Comments\s*$", re.MULTILINE)
 DESCRIPTION_HEADING_RE = re.compile(r"^# Description\s*$", re.MULTILINE)
 
-
 def description_of(body: str) -> str:
     """
     Return the text under a body's `# Description` heading.
@@ -125,7 +124,6 @@ def description_of(body: str) -> str:
         rest = rest[:comments.start()]
 
     return rest.strip("\n").rstrip()
-
 
 def comments_of(body: str) -> str:
     """

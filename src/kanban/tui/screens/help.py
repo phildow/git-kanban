@@ -12,12 +12,11 @@ from textual.widgets import Static
 NORMAL_BINDINGS: list[tuple[str, str]] = [
     ("←/→ or h/l", "move focus between columns"),
     ("↑/↓ or j/k", "move focus between cards"),
-    ("shift + any of those", "jump to the far end of the column or board"),
+    ("shift + any of those", "jump to the end of the column or board"),
     ("page up/down", "page through the cards in a column"),
     ("ctrl + page up/down", "page across the columns"),
     ("tab", "cycle between columns"),
     ("enter or v", "view the focused card"),
-    ("e", "in the detail view, edit the task being shown"),
     ("n", "new task in the focused column"),
     ("e", "edit the focused card"),
     ("d", "delete the focused card"),
@@ -29,6 +28,7 @@ NORMAL_BINDINGS: list[tuple[str, str]] = [
     ("s", "collapse or expand the sidebar"),
     ("c", "collapse or expand the cards"),
     ("r", "refresh from the filesystem"),
+    ("ctrl+p", "command palette — app actions and config"),
     ("?", "this help"),
     ("q / ctrl+q", "quit"),
 ]
@@ -39,7 +39,7 @@ MOVE_BINDINGS: list[tuple[str, str]] = [
     ("shift + any of those", "stage it as far as it will go that way"),
     ("shift + H/L/J/K", "the same, without reaching for the arrows"),
     ("page up/down", "stage it a screenful at a time"),
-    ("tab", "name the destination column, and move there at once"),
+    ("tab", "choose the column by name"),
     ("enter", "commit the staged position"),
     ("esc", "cancel — nothing is written"),
 ]

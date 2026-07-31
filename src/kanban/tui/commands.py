@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Callable, cast
+
 from textual.command import (
     Command,
     CommandInput,
@@ -10,13 +12,58 @@ from textual.command import (
     DiscoveryHit,
     Hit,
     Hits,
+    Provider,
 )
 from textual.content import Content
 from textual.theme import ThemeProvider
 
+if TYPE_CHECKING:
+    from .app import KanbanApp
+
 # The marker sits in front of every row so the names line up either way.
 ACTIVE_MARK = "● "
 INACTIVE_MARK = "  "
+
+
+class KanbanCommands(Provider):
+    """
+    The app's own palette entries, alongside Textual's system ones.
+
+    Each entry names an app-level action — one that belongs to the application
+    rather than to the board in front of the user, and so has nowhere to live
+    among the board's keys.
+    """
+
+    @property
+    def _commands(self) -> list[tuple[str, str, Callable[[], None]]]:
+        """Return the entries to offer: a name, what it does, and the action."""
+        app = cast("KanbanApp", self.app)
+        return [
+            (
+                "Configuration",
+                "Show the configuration values, and edit one",
+                app.action_configuration,
+            ),
+        ]
+
+    async def discover(self) -> Hits:
+        """Offer every entry when the palette is opened with nothing typed."""
+        for name, description, callback in self._commands:
+            yield DiscoveryHit(name, callback, text=name, help=description)
+
+    async def search(self, query: str) -> Hits:
+        """Offer the entries matching `query`."""
+        matcher = self.matcher(query)
+
+        for name, description, callback in self._commands:
+            if (match := matcher.match(name)) > 0:
+                yield Hit(
+                    match,
+                    matcher.highlight(name),
+                    callback,
+                    text=name,
+                    help=description,
+                )
 
 
 class ThemeCommands(ThemeProvider):

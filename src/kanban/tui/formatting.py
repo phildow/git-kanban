@@ -25,6 +25,9 @@ PRIORITY_STYLES: dict[Priority, str] = {
     Priority.LOW: "dim cyan",
 }
 
+# What a configuration key with no value shows instead of an empty column.
+UNSET_VALUE = "not set"
+
 # The spec's card sigils abbreviate medium so every priority fits the same width.
 PRIORITY_LABELS: dict[Priority, str] = {
     Priority.HIGH: "HIGH",
@@ -117,6 +120,25 @@ def column_label(column: Column, slug_width: int = 0) -> Text:
     text.append(column.slug.ljust(slug_width))
     text.append("  ")
     text.append(column.name, style="dim")
+    return text
+
+
+def config_label(key: str, value: str | None, key_width: int = 0) -> Text:
+    """
+    Return a configuration key's row: the keypath, then its value.
+
+    The keypath leads because that is what typing matches against; `key_width`
+    pads it so the values line up down the list.  A key that has never been set
+    says so rather than showing an empty column, which would read as a blank
+    value the user had typed.
+    """
+    text = Text()
+    text.append(key.ljust(key_width))
+    text.append("  ")
+    if value is None:
+        text.append(UNSET_VALUE, style="dim italic")
+    else:
+        text.append(value)
     return text
 
 
