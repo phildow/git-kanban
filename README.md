@@ -54,6 +54,12 @@ $ pip install -e .
 $ kanban tui
 ```
 
+Or more simply, verify that kanban is working after installation with pip. This command should print the kanban boards in this project:
+
+```
+$ kanban board list
+```
+
 ## Claude Dekstop Conversations
 
 Before writing any code I had a number of discussions with Claude about the pros and cons of my initial design choices. The conversations led to architecture decisions, design patterns, and UI choices.

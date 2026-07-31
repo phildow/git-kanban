@@ -93,6 +93,28 @@ class TestTypeAhead(unittest.TestCase):
         self.assertEqual(columns.highlighted, COLUMNS.index("done"))
 
 
+class TestShowSearch(unittest.TestCase):
+    """The typed prefix is shown in the border subtitle unless it is turned off."""
+
+    def test_search_is_shown_by_default(self) -> None:
+        """The subtitle carries what has been typed."""
+        columns = make_list()
+        type_text(columns, "do")
+        self.assertIn("do", columns.border_subtitle or "")
+
+    def test_search_is_hidden_when_turned_off(self) -> None:
+        """With show_search off the subtitle stays empty."""
+        columns = PrefixList([(slug, Text(slug)) for slug in COLUMNS], show_search=False)
+        type_text(columns, "do")
+        self.assertFalse(columns.border_subtitle)
+
+    def test_hidden_search_still_jumps(self) -> None:
+        """Hiding the prefix only hides it — the jump still happens."""
+        columns = PrefixList([(slug, Text(slug)) for slug in COLUMNS], show_search=False)
+        type_text(columns, "do")
+        self.assertEqual(columns.highlighted, COLUMNS.index("done"))
+
+
 class TestSearchTimeout(unittest.TestCase):
     """A pause starts the next keystroke off as a fresh search."""
 

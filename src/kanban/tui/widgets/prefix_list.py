@@ -23,12 +23,22 @@ class PrefixList(OptionList):
     """
 
     def __init__(
-        self, entries: Sequence[tuple[str, Text]], *, id: str | None = None
+        self,
+        entries: Sequence[tuple[str, Text]],
+        *,
+        show_search: bool = True,
+        id: str | None = None,
     ) -> None:
-        """Create a list over `entries`, each a key and the row to show for it."""
+        """
+        Create a list over `entries`, each a key and the row to show for it.
+
+        `show_search` puts the prefix being typed in the border subtitle; lists
+        without a border to carry it pass False and jump silently.
+        """
         super().__init__(*[label for _, label in entries], id=id)
 
         self.keys = [key for key, _ in entries]
+        self.show_search = show_search
         self._search = ""
         self._searched_at = 0.0
 
@@ -100,4 +110,6 @@ class PrefixList(OptionList):
 
     def _show_search(self) -> None:
         """Show what is being typed, so the jump does not look like magic."""
+        if not self.show_search:
+            return
         self.border_subtitle = f" {self._search} " if self._search else ""

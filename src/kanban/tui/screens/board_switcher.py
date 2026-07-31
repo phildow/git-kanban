@@ -4,17 +4,23 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from rich.text import Text
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical
 from textual.screen import ModalScreen
-from textual.widgets import Label, ListItem, ListView, Static
+from textual.widgets import OptionList, Static
 
 from ...models import Board, Slug
 from ..formatting import board_label
+from ..widgets import PrefixList
 from .board_form import BoardFormScreen
 
 NEW_BOARD_LABEL = "+ New board…"
+
+# What typing jumps to the new-board row.  No board slug starts with it, so it
+# never competes with a board for a typed prefix.
+NEW_BOARD_KEY = "+"
 
 
 @dataclass(frozen=True)
@@ -39,9 +45,10 @@ class BoardSwitcherScreen(ModalScreen[BoardChoice | None]):
     """
     Lists the available boards, plus an option to create one.
 
-    Dismisses with the chosen board, a board to create, or None when cancelled.
-    Neither outcome touches the kanban service — the board screen acts on the
-    choice.
+    Arrow keys move through the boards and typing jumps to the one whose slug
+    starts with what was typed, as the column prompt does.  Dismisses with the
+    chosen board, a board to create, or None when cancelled.  Neither outcome
+    touches the kanban service — the board screen acts on the choice.
     """
 
     BINDINGS = [
@@ -56,10 +63,6 @@ class BoardSwitcherScreen(ModalScreen[BoardChoice | None]):
 
     def compose(self) -> ComposeResult:
         """Lay out the board list, followed by the new-board option, under a heading."""
-        initial = next(
-            (i for i, board in enumerate(self.boards) if board.slug == self.active), 0
-        )
-
         # Widths come from the widest entry, so the rows line up as columns.
         name_width = max((len(board.name) for board in self.boards), default=0)
         path_width = max((len(board.slug) + 1 for board in self.boards), default=0)
@@ -67,30 +70,31 @@ class BoardSwitcherScreen(ModalScreen[BoardChoice | None]):
             (len(str(board.task_count)) for board in self.boards), default=0
         )
 
-        rows = [
-            ListItem(
-                Label(board_label(board, name_width, path_width, count_width)),
-                id=f"board-{board.slug}",
-            )
+        entries = [
+            (str(board.slug), board_label(board, name_width, path_width, count_width))
             for board in self.boards
         ]
-        rows.append(ListItem(Label(NEW_BOARD_LABEL), id="new-board-option"))
+        entries.append((NEW_BOARD_KEY, Text(NEW_BOARD_LABEL)))
 
         # Full width rather than `-narrow`: rows carry a name, a path, and counts.
         with Vertical(id="dialog"):
             yield Static("Switch board", id="form-heading")
-            yield ListView(*rows, initial_index=initial, id="board-list")
+            yield PrefixList(entries, show_search=False, id="board-list")
 
     def on_mount(self) -> None:
-        """Focus the list so the arrow keys work immediately."""
-        for view in self.query(ListView):
-            view.focus()
+        """Start on the active board, and take focus so the arrow keys work."""
+        boards = self.query_one("#board-list", PrefixList)
 
-    def on_list_view_selected(self, event: ListView.Selected) -> None:
+        if self.active is not None and self.active in boards.keys:
+            boards.highlighted = boards.keys.index(self.active)
+
+        boards.focus()
+
+    def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
         """Switch to the selected board, or start creating a new one."""
-        index = event.list_view.index
+        index = event.option_index
 
-        if index is None or not (0 <= index <= len(self.boards)):
+        if not (0 <= index <= len(self.boards)):
             self.dismiss(None)
             return
 
