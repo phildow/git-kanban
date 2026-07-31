@@ -288,7 +288,7 @@ class BoardScreen(Screen[None]):
     def _sync_subtitle(self) -> None:
         """Update the header to match the tasks currently held."""
         task_count = sum(len(tasks) for tasks in self._tasks.values())
-        self.sub_title = board_subtitle(self._board, len(self._columns), task_count)
+        self.sub_title = board_subtitle(self._board, task_count)
 
     def _reload_sidebar(self) -> None:
         """Re-query the sidebar, if it has mounted."""

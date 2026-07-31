@@ -76,15 +76,25 @@ class TestColumnTitle(unittest.TestCase):
 class TestBoardSubtitle(unittest.TestCase):
     """board_subtitle describes the active board in the header."""
 
-    def test_uses_supplied_counts(self) -> None:
-        """The counts come from the caller so the header matches the screen."""
-        self.assertEqual(
-            board_subtitle(make_board(), 4, 12), "/main — 4 columns, 12 tasks"
-        )
+    def test_names_the_board(self) -> None:
+        """The display name leads, since it is what the user chose."""
+        self.assertTrue(board_subtitle(make_board(), 12).startswith("Main"))
+
+    def test_includes_the_path(self) -> None:
+        """The path identifies the board the way the CLI does."""
+        self.assertIn("/main", board_subtitle(make_board(), 12))
+
+    def test_uses_the_supplied_count(self) -> None:
+        """The count comes from the caller so the header matches the screen."""
+        self.assertEqual(board_subtitle(make_board(), 12), "Main — /main — 12 tasks")
+
+    def test_omits_the_column_count(self) -> None:
+        """Columns are visible on the board itself and are not counted here."""
+        self.assertNotIn("column", board_subtitle(make_board(column_count=4), 12))
 
     def test_without_a_board(self) -> None:
         """With no active board the subtitle says so."""
-        self.assertEqual(board_subtitle(None, 0, 0), "no board")
+        self.assertEqual(board_subtitle(None, 0), "no board")
 
 
 class TestBoardLabel(unittest.TestCase):

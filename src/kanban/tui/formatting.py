@@ -71,16 +71,17 @@ def column_title(column: Column, task_count: int) -> str:
     return f" {column.name.upper()} ({task_count}) "
 
 
-def board_subtitle(board: Board | None, column_count: int, task_count: int) -> str:
+def board_subtitle(board: Board | None, task_count: int) -> str:
     """
     Return the header subtitle describing the active board.
 
-    The counts are passed in rather than read off the board so the header
-    always agrees with what is actually on screen.
+    Names the board, then the path that identifies it and how much is on it.
+    The count is passed in rather than read off the board so the header always
+    agrees with what is actually on screen.
     """
     if board is None:
         return "no board"
-    return f"/{board.slug} — {column_count} columns, {task_count} tasks"
+    return f"{board.name} (/{board.slug}) — {task_count} tasks"
 
 
 def board_label(
