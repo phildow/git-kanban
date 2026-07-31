@@ -13,16 +13,21 @@ from ..formatting import metadata_text
 from ..widgets import TaskHeading
 
 
-class TaskDetailScreen(ModalScreen[None]):
+class TaskDetailScreen(ModalScreen[bool]):
     """
     Renders a single task: metadata block followed by the markdown body.
 
     The body is the task's file content below the frontmatter, so the
     Description and Comments sections render as written on disk.
+
+    Dismisses with True when the user asked to edit the task, so the board
+    screen can open the form on it — editing belongs to the board, which is the
+    screen that talks to the kanban service.
     """
 
     BINDINGS = [
         Binding("escape,q,enter", "dismiss_screen", "Close", show=True),
+        Binding("e", "edit", "Edit", show=True),
     ]
 
     def __init__(self, task: Task) -> None:
@@ -41,4 +46,8 @@ class TaskDetailScreen(ModalScreen[None]):
 
     def action_dismiss_screen(self) -> None:
         """Close the modal."""
-        self.dismiss(None)
+        self.dismiss(False)
+
+    def action_edit(self) -> None:
+        """Close the modal and ask the board to open this task for editing."""
+        self.dismiss(True)

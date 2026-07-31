@@ -125,6 +125,9 @@ class BoardScreen(Screen[None]):
         Binding("ctrl+pageup", "nav_page_left", "Page columns", show=False),
         Binding("ctrl+pagedown", "nav_page_right", "Page columns", show=False),
         Binding("enter", "activate", "Open", show=False),
+        # An alias for Enter on the selected card.  Hidden from the footer,
+        # where the column's own Enter binding already offers "Open".
+        Binding("v", "view_task", "View", show=False),
         Binding("n", "new_task", "New", show=True),
         Binding("e", "edit_task", "Edit", show=True),
         Binding("d", "delete_task", "Delete", show=True),
@@ -585,7 +588,11 @@ class BoardScreen(Screen[None]):
         if task is None:
             self.notify("No task selected", severity="warning")
             return
-        self.app.push_screen(TaskDetailScreen(task))
+
+        self.app.push_screen(
+            TaskDetailScreen(task),
+            lambda edit: self._edit_form(task) if edit else None,
+        )
 
     def action_new_task(self) -> None:
         """Open the task form to create a task in the focused column."""
@@ -607,6 +614,10 @@ class BoardScreen(Screen[None]):
             self.notify("No task selected", severity="warning")
             return
 
+        self._edit_form(task)
+
+    def _edit_form(self, task: Task) -> None:
+        """Open the task form on `task`, wherever the request came from."""
         self.app.push_screen(
             TaskFormScreen(task=task, assignees=self._assignees(), tags=self._tags()),
             lambda result: self._update_task(task, result),

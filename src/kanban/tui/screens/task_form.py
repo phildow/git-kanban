@@ -46,7 +46,10 @@ class TaskFormScreen(ModalScreen[TaskFormResult | None]):
 
     BINDINGS = [
         Binding("escape", "cancel", "Cancel", show=True),
-        Binding("ctrl+s", "save", "Save", show=True),
+        # Saves from any field.  Plain Enter cannot: in the description and
+        # comment it starts a new line, which is what it should do there.
+        Binding("shift+enter", "save", "Save", show=True),
+        Binding("ctrl+s", "save", "Save", show=False),
     ]
 
     def __init__(
