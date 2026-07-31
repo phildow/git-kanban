@@ -75,10 +75,13 @@ class MoveState:
 class BoardScreen(Screen[None]):
     """The main board area: one column per board column, plus a collapsible sidebar."""
 
+    # The footer shows one entry per action.  Where an action answers to several
+    # keys, the first binding carries a `key_display` naming them all and the
+    # rest are hidden, so the hints stay complete without repeating themselves.
     BINDINGS = [
-        Binding("left,h", "nav_left", "Column", show=True),
+        Binding("left,h", "nav_left", "Column", show=True, key_display="←/→ h/l"),
         Binding("right,l", "nav_right", "Column", show=False),
-        Binding("up,k", "nav_up", "Card", show=False),
+        Binding("up,k", "nav_up", "Card", show=True, key_display="↑/↓ j/k"),
         Binding("down,j", "nav_down", "Card", show=False),
         Binding("enter", "activate", "Open", show=False),
         Binding("n", "new_task", "New", show=True),
@@ -86,10 +89,10 @@ class BoardScreen(Screen[None]):
         Binding("d", "delete_task", "Delete", show=True),
         Binding("m", "move_task", "Move", show=True),
         Binding("b", "switch_board", "Board", show=True),
-        Binding("slash", "filter", "Filter", show=True),
-        Binding("colon", "command", "Command", show=True),
+        Binding("slash", "filter", "Filter", show=True, key_display="/"),
+        Binding("colon", "command", "Command", show=True, key_display=":"),
         Binding("s", "toggle_sidebar", "Sidebar", show=True),
-        Binding("c", "toggle_density", "Density", show=False),
+        Binding("c", "toggle_density", "Collapse", show=True),
         Binding("r", "reload_board", "Refresh", show=True),
         Binding("escape", "cancel", "Cancel", show=False),
     ]
@@ -126,7 +129,9 @@ class BoardScreen(Screen[None]):
         yield FilterBar(id="filter-bar")
         yield CommandBar(id="command-bar")
         yield ModeBar(id="mode-bar")
-        yield Footer()
+        # Compact, and without the command palette hint: the board has its own
+        # command bar on `:`, and the space is better spent on board keys.
+        yield Footer(show_command_palette=False, compact=True)
 
     async def on_mount(self) -> None:
         """Load the board once the screen is attached."""

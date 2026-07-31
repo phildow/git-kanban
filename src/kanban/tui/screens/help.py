@@ -22,7 +22,7 @@ NORMAL_BINDINGS: list[tuple[str, str]] = [
     ("/", "filter cards as you type"),
     (":", "command bar (REPL syntax)"),
     ("s", "collapse or expand the sidebar"),
-    ("c", "toggle card density"),
+    ("c", "collapse or expand the cards"),
     ("r", "refresh from the filesystem"),
     ("?", "this help"),
     ("q / ctrl+q", "quit"),

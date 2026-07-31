@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from textual.binding import Binding
 from textual.reactive import reactive
 from textual.widgets import ListItem, ListView
 
@@ -28,6 +29,12 @@ class ColumnView(ListView):
     service itself.  When `locked` is set the column releases its cursor keys so
     the board screen can drive them during move mode.
     """
+
+    # ListView binds Enter without showing it.  The board's footer should name
+    # the action, and the focused column is what the footer reads bindings from.
+    BINDINGS = [
+        Binding("enter", "select_cursor", "Open", show=True, key_display="↵"),
+    ]
 
     locked: reactive[bool] = reactive(False)
     """
