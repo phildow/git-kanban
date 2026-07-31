@@ -236,6 +236,26 @@ AutoCompleteInput > OptionList.-suggestions > .option-list--option-highlighted {
     padding: 1 0;
 }
 
+/* The title and path naming the task a screen is acting on.  Weight carries
+   the distinction rather than colour: the title is bold and the path is muted,
+   the same way paths read elsewhere in the TUI. */
+
+TaskHeading {
+    width: 1fr;
+    height: auto;
+    margin: 0 0 1 0;
+}
+
+TaskHeading .-task-title {
+    width: 1fr;
+    text-style: bold;
+}
+
+TaskHeading .-task-path {
+    width: 1fr;
+    color: $text-muted;
+}
+
 #task-detail-meta {
     height: auto;
     margin: 0 0 1 0;

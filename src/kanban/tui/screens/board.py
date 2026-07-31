@@ -31,7 +31,7 @@ from ...services.kanban import (
     TaskUnsetParams,
     TaskUpdateParams,
 )
-from ..formatting import board_subtitle, delete_prompt
+from ..formatting import board_subtitle
 from ..widgets import (
     ColumnView,
     CommandBar,
@@ -505,7 +505,7 @@ class BoardScreen(Screen[None]):
             return
 
         self.app.push_screen(
-            ConfirmScreen(delete_prompt(task)),
+            ConfirmScreen("Delete Task?", task=task),
             lambda confirmed: self._delete_task(task, confirmed),
         )
 

@@ -105,20 +105,6 @@ def board_label(
     return text
 
 
-def delete_prompt(task: Task) -> Text:
-    """
-    Return the confirmation prompt for deleting a task.
-
-    The title says which task is about to go; the path on the line below says
-    exactly which file, since titles need not be unique across boards.
-    """
-    text = Text()
-    text.append("Delete task?\n\n")
-    text.append(f"{task.title}\n", style="bold")
-    text.append(str(task.path), style="dim")
-    return text
-
-
 def card_text(task: Task, *, dense: bool = False) -> Text:
     """
     Return the renderable body of a card.
@@ -176,11 +162,14 @@ def _full_card_text(task: Task) -> Text:
     return text
 
 
-def detail_text(task: Task) -> Text:
-    """Return the metadata block shown at the top of the task detail screen."""
+def metadata_text(task: Task) -> Text:
+    """
+    Return a task's metadata as aligned label/value rows.
+
+    The title and path are not repeated here; screens lead with a `TaskHeading`
+    for those.
+    """
     text = Text()
-    text.append(f"{task.title}\n", style="bold")
-    text.append(f"{task.path}\n\n", style="dim")
 
     rows: list[tuple[str, str, str]] = [
         ("priority", priority_sigil(task.priority) or "—", priority_style(task.priority)),

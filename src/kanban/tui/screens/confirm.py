@@ -9,6 +9,9 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Static
 
+from ...models import Task
+from ..widgets import TaskHeading
+
 
 class ConfirmScreen(ModalScreen[bool]):
     """Asks the user to confirm a destructive action.  Dismisses with True or False."""
@@ -19,21 +22,31 @@ class ConfirmScreen(ModalScreen[bool]):
         Binding("n", "cancel", "Cancel", show=False),
     ]
 
-    def __init__(self, prompt: str | Text, *, confirm_label: str = "Delete") -> None:
+    def __init__(
+        self,
+        prompt: str | Text,
+        *,
+        task: Task | None = None,
+        confirm_label: str = "Delete",
+    ) -> None:
         """
         Create a confirmation modal showing `prompt` above the buttons.
 
-        `prompt` may be styled text, so a caller can spell out what is at stake
-        over several lines rather than in one sentence.
+        `prompt` may be styled text.  Pass `task` when the question is about one
+        task, and its title and path are named beneath the question so the user
+        can see exactly what is about to go.
         """
         super().__init__()
         self.prompt = prompt
+        self.confirm_task = task
         self.confirm_label = confirm_label
 
     def compose(self) -> ComposeResult:
-        """Lay out the prompt and the confirm/cancel buttons."""
+        """Lay out the prompt, the task it concerns, and the confirm/cancel buttons."""
         with Vertical(id="dialog", classes="-narrow"):
             yield Static(self.prompt, id="confirm-prompt")
+            if self.confirm_task is not None:
+                yield TaskHeading(self.confirm_task)
             with Horizontal(id="dialog-buttons"):
                 yield Button(self.confirm_label, variant="error", id="confirm")
                 yield Button("Cancel", variant="default", id="cancel")

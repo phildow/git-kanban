@@ -9,7 +9,8 @@ from textual.screen import ModalScreen
 from textual.widgets import Markdown, Static
 
 from ...models import Task
-from ..formatting import detail_text
+from ..formatting import metadata_text
+from ..widgets import TaskHeading
 
 
 class TaskDetailScreen(ModalScreen[None]):
@@ -33,7 +34,8 @@ class TaskDetailScreen(ModalScreen[None]):
     def compose(self) -> ComposeResult:
         """Lay out the metadata block above a scrollable rendering of the body."""
         with Vertical(id="dialog"):
-            yield Static(detail_text(self.detail_task), id="task-detail-meta")
+            yield TaskHeading(self.detail_task)
+            yield Static(metadata_text(self.detail_task), id="task-detail-meta")
             with VerticalScroll(id="task-detail-body"):
                 yield Markdown(self.detail_task.body or "*(no description)*")
 

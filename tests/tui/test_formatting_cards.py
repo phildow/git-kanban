@@ -10,8 +10,7 @@ from kanban.tui.formatting import (
     board_subtitle,
     card_text,
     column_title,
-    delete_prompt,
-    detail_text,
+    metadata_text,
 )
 
 from .helpers import make_board, make_column, make_task
@@ -155,50 +154,28 @@ class TestBoardLabelAlignment(unittest.TestCase):
         self.assertEqual(rows[0].index("tasks"), rows[1].index("tasks"))
 
 
-class TestDeletePrompt(unittest.TestCase):
-    """delete_prompt spells out which task a confirmation is about."""
-
-    def test_asks_the_question_first(self) -> None:
-        """The prompt opens with the question being answered."""
-        lines = delete_prompt(make_task()).plain.splitlines()
-        self.assertEqual(lines[0], "Delete task?")
-
-    def test_names_the_task(self) -> None:
-        """The title identifies the task the way the user thinks of it."""
-        lines = delete_prompt(make_task()).plain.splitlines()
-        self.assertEqual(lines[2], "Fix login bug")
-
-    def test_path_sits_on_its_own_line(self) -> None:
-        """The path follows on the next line, pinning down which task it is."""
-        lines = delete_prompt(make_task()).plain.splitlines()
-        self.assertEqual(lines[3], "/main/todo/fix-login-bug")
-
-
-class TestDetailText(unittest.TestCase):
-    """detail_text renders the metadata block of the task detail screen."""
-
-    def test_includes_the_task_path(self) -> None:
-        """The path identifies the task the same way the CLI does."""
-        self.assertIn("/main/todo/fix-login-bug", detail_text(make_task()).plain)
-
-    def test_title_and_path_are_on_separate_lines(self) -> None:
-        """The title heads the block and the path sits on its own line below it."""
-        lines = detail_text(make_task()).plain.splitlines()
-        self.assertEqual(lines[0], "Fix login bug")
-        self.assertEqual(lines[1], "/main/todo/fix-login-bug")
+class TestMetadataText(unittest.TestCase):
+    """metadata_text renders a task's fields as aligned label/value rows."""
 
     def test_labels_every_field(self) -> None:
         """Each metadata field is labelled, including the ones that are unset."""
-        text = detail_text(make_task(created_by=None)).plain
+        text = metadata_text(make_task(created_by=None)).plain
         for label in ("priority", "assigned", "created by", "due", "tags"):
             self.assertIn(label, text)
 
     def test_unset_fields_render_as_a_dash(self) -> None:
         """Unset fields render as an em dash rather than being omitted."""
         task = make_task(priority=None, assigned_to=None, due_date=None, tags=[])
-        self.assertIn("—", detail_text(task).plain)
+        self.assertIn("—", metadata_text(task).plain)
 
-    def test_renames_follow_the_slug(self) -> None:
-        """The rendered path reflects the task's current slug."""
-        task = make_task(slug=Slug("fix-logout-bug"))
-        self.assertIn("/main/todo/fix-logout-bug", detail_text(task).plain)
+    def test_omits_the_title_and_path(self) -> None:
+        """The heading widget carries those, so the rows do not repeat them."""
+        text = metadata_text(make_task()).plain
+        self.assertNotIn("Fix login bug", text)
+        self.assertNotIn("/main/todo/fix-login-bug", text)
+
+    def test_values_follow_their_labels(self) -> None:
+        """Each row pairs a label with its value."""
+        text = metadata_text(make_task()).plain
+        self.assertIn("priority  !HIGH", text)
+        self.assertIn("assigned  @alice", text)

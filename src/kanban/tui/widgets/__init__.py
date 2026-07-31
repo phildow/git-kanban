@@ -5,6 +5,7 @@ from .bars import CommandBar, FilterBar, ModeBar
 from .card import CardWidget
 from .column import ColumnView, item_task
 from .sidebar import LogView, SidebarPanel, StatusView
+from .task_heading import TaskHeading
 
 __all__ = [
     "AutoCompleteInput",
@@ -17,5 +18,6 @@ __all__ = [
     "SidebarPanel",
     "StatusView",
     "SuggestionInput",
+    "TaskHeading",
     "item_task",
 ]

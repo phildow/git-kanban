@@ -12,7 +12,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, Select, Static
 
 from ...models import Column, Priority, Task
-from ..widgets import AutoCompleteInput
+from ..widgets import AutoCompleteInput, TaskHeading
 
 
 @dataclass
@@ -79,13 +79,17 @@ class TaskFormScreen(ModalScreen[TaskFormResult | None]):
     def compose(self) -> ComposeResult:
         """Lay out the labelled fields above the button row."""
         task = self.form_task
-        heading = (
-            f"Edit {task.slug}" if task is not None
-            else f"New task in {self.column.name if self.column else ''}"
-        )
 
         with Vertical(id="dialog"):
-            yield Static(heading, id="form-heading")
+            # Editing names the task being changed; creating names the column
+            # it will land in, there being no task yet.
+            if task is not None:
+                yield TaskHeading(task)
+            else:
+                yield Static(
+                    f"New task in {self.column.name if self.column else ''}",
+                    id="form-heading",
+                )
             with VerticalScroll(id="form-fields"):
                 yield Label("Title")
                 yield Input(
