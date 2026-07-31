@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from rich.text import Text
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
@@ -18,8 +19,13 @@ class ConfirmScreen(ModalScreen[bool]):
         Binding("n", "cancel", "Cancel", show=False),
     ]
 
-    def __init__(self, prompt: str, *, confirm_label: str = "Delete") -> None:
-        """Create a confirmation modal showing `prompt` above the buttons."""
+    def __init__(self, prompt: str | Text, *, confirm_label: str = "Delete") -> None:
+        """
+        Create a confirmation modal showing `prompt` above the buttons.
+
+        `prompt` may be styled text, so a caller can spell out what is at stake
+        over several lines rather than in one sentence.
+        """
         super().__init__()
         self.prompt = prompt
         self.confirm_label = confirm_label

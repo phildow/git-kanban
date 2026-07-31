@@ -10,6 +10,7 @@ from kanban.tui.formatting import (
     board_subtitle,
     card_text,
     column_title,
+    delete_prompt,
     detail_text,
 )
 
@@ -152,6 +153,25 @@ class TestBoardLabelAlignment(unittest.TestCase):
         """A narrower number is padded so the word `tasks` still lines up."""
         rows = self._rows()
         self.assertEqual(rows[0].index("tasks"), rows[1].index("tasks"))
+
+
+class TestDeletePrompt(unittest.TestCase):
+    """delete_prompt spells out which task a confirmation is about."""
+
+    def test_asks_the_question_first(self) -> None:
+        """The prompt opens with the question being answered."""
+        lines = delete_prompt(make_task()).plain.splitlines()
+        self.assertEqual(lines[0], "Delete task?")
+
+    def test_names_the_task(self) -> None:
+        """The title identifies the task the way the user thinks of it."""
+        lines = delete_prompt(make_task()).plain.splitlines()
+        self.assertEqual(lines[2], "Fix login bug")
+
+    def test_path_sits_on_its_own_line(self) -> None:
+        """The path follows on the next line, pinning down which task it is."""
+        lines = delete_prompt(make_task()).plain.splitlines()
+        self.assertEqual(lines[3], "/main/todo/fix-login-bug")
 
 
 class TestDetailText(unittest.TestCase):

@@ -105,6 +105,20 @@ def board_label(
     return text
 
 
+def delete_prompt(task: Task) -> Text:
+    """
+    Return the confirmation prompt for deleting a task.
+
+    The title says which task is about to go; the path on the line below says
+    exactly which file, since titles need not be unique across boards.
+    """
+    text = Text()
+    text.append("Delete task?\n\n")
+    text.append(f"{task.title}\n", style="bold")
+    text.append(str(task.path), style="dim")
+    return text
+
+
 def card_text(task: Task, *, dense: bool = False) -> Text:
     """
     Return the renderable body of a card.
