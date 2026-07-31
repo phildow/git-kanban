@@ -31,6 +31,8 @@ NORMAL_BINDINGS: list[tuple[str, str]] = [
 MOVE_BINDINGS: list[tuple[str, str]] = [
     ("←/→ or h/l", "stage the card in the adjacent column"),
     ("↑/↓ or j/k", "stage the card higher or lower"),
+    ("shift + any of those", "stage it as far as it will go that way"),
+    ("shift + H/L/J/K", "the same, without reaching for the arrows"),
     ("enter", "commit the staged position"),
     ("esc", "cancel — nothing is written"),
 ]

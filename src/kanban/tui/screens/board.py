@@ -49,7 +49,10 @@ from .task_form import TaskFormResult, TaskFormScreen
 if TYPE_CHECKING:
     from ..app import KanbanApp
 
-MOVE_KEYS = "←/→ h/l  column    ↑/↓ j/k  position    enter  commit    esc  cancel"
+MOVE_KEYS = (
+    "←/→ h/l  column    ↑/↓ j/k  position    ⇧  to the end    "
+    "enter  commit    esc  cancel"
+)
 FILTER_HINTS = "  type to filter    enter  keep filter    esc  clear"
 COMMAND_HINTS = "  REPL syntax    enter  run    esc  cancel"
 
@@ -83,6 +86,12 @@ class BoardScreen(Screen[None]):
         Binding("right,l", "nav_right", "Column", show=False),
         Binding("up,k", "nav_up", "Card", show=True, key_display="↑/↓ j/k"),
         Binding("down,j", "nav_down", "Card", show=False),
+        # Shift sends a staged card as far as it will go.  Terminals report the
+        # shifted arrows by name and the shifted letters as capitals.
+        Binding("shift+left,H", "nav_far_left", "Move to end", show=False),
+        Binding("shift+right,L", "nav_far_right", "Move to end", show=False),
+        Binding("shift+up,K", "nav_far_up", "Move to end", show=False),
+        Binding("shift+down,J", "nav_far_down", "Move to end", show=False),
         Binding("enter", "activate", "Open", show=False),
         Binding("n", "new_task", "New", show=True),
         Binding("e", "edit_task", "Edit", show=True),
@@ -381,6 +390,27 @@ class BoardScreen(Screen[None]):
         if column is not None:
             column.action_cursor_down()
 
+    def action_nav_far_left(self) -> None:
+        """Stage the card in the leftmost column."""
+        if self.move_mode:
+            self._stage_column_at(0)
+
+    def action_nav_far_right(self) -> None:
+        """Stage the card in the rightmost column."""
+        if self.move_mode:
+            self._stage_column_at(len(self._columns) - 1)
+
+    def action_nav_far_up(self) -> None:
+        """Stage the card at the top of its column."""
+        if self.move_mode:
+            self._stage_position_at(0)
+
+    def action_nav_far_down(self) -> None:
+        """Stage the card at the bottom of its column."""
+        move = self._move
+        if self.move_mode and move is not None:
+            self._stage_position_at(self._staged_limit(move))
+
     def _focus_column(self, delta: int) -> None:
         """Move focus `delta` columns, clamped to the ends of the board."""
         views = self.column_views
@@ -580,12 +610,18 @@ class BoardScreen(Screen[None]):
         self.move_mode = True
 
     def _stage_column(self, delta: int) -> None:
-        """Stage the card in an adjacent column, clamped to the ends of the board."""
+        """Stage the card `delta` columns away."""
+        move = self._move
+        if move is not None:
+            self._stage_column_at(move.column_index + delta)
+
+    def _stage_column_at(self, index: int) -> None:
+        """Stage the card in column `index`, clamped to the ends of the board."""
         move = self._move
         if move is None:
             return
 
-        target = max(0, min(move.column_index + delta, len(self._columns) - 1))
+        target = max(0, min(index, len(self._columns) - 1))
         if target == move.column_index:
             return
 
@@ -594,12 +630,18 @@ class BoardScreen(Screen[None]):
         self._mark_staged()
 
     def _stage_position(self, delta: int) -> None:
-        """Stage the card higher or lower within the staged column."""
+        """Stage the card `delta` places higher or lower."""
+        move = self._move
+        if move is not None:
+            self._stage_position_at(move.position + delta)
+
+    def _stage_position_at(self, position: int) -> None:
+        """Stage the card at `position`, clamped to the ends of the staged column."""
         move = self._move
         if move is None:
             return
 
-        target = max(0, min(move.position + delta, self._staged_limit(move)))
+        target = max(0, min(position, self._staged_limit(move)))
         if target == move.position:
             return
 
