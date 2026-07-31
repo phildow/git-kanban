@@ -6,11 +6,10 @@ import logging
 
 from textual.app import App
 from textual.binding import Binding
-from textual.command import CommandPalette
 
 from ..services.kanban import KanbanService
 from ..services.render_service import RenderService
-from .commands import ThemeCommands
+from .commands import ThemeCommands, ThemePalette
 from .renderer import TUIRenderer
 from .screens.board import BoardScreen
 from .screens.help import HelpScreen
@@ -52,15 +51,13 @@ class KanbanApp(App[None]):
 
     def search_themes(self) -> None:
         """
-        Show the theme list, with the theme in use marked.
+        Show the theme list, marking the theme in use and opening on it.
 
-        Overrides Textual's own, which lists the themes by name alone and so
-        does not say which one is already active.
+        Overrides Textual's own, which lists the themes by name alone, says
+        nothing about which one is already active, and starts on the first.
         """
         self.push_screen(
-            CommandPalette(
-                providers=[ThemeCommands], placeholder="Search for themes…"
-            )
+            ThemePalette(providers=[ThemeCommands], placeholder="Search for themes…")
         )
 
     # The app deliberately does not re-sync on `events.AppFocus`.  Returning to

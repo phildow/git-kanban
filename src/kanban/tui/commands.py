@@ -2,7 +2,15 @@
 
 from __future__ import annotations
 
-from textual.command import DiscoveryHit, Hit, Hits
+from textual.command import (
+    Command,
+    CommandInput,
+    CommandList,
+    CommandPalette,
+    DiscoveryHit,
+    Hit,
+    Hits,
+)
 from textual.content import Content
 from textual.theme import ThemeProvider
 
@@ -55,3 +63,36 @@ class ThemeCommands(ThemeProvider):
                     callback,
                     text=name,
                 )
+
+
+class ThemePalette(CommandPalette):
+    """
+    The palette the themes are shown in, opening on the theme in use.
+
+    Textual highlights the first row every time the list is rebuilt, which for
+    a list of themes means starting on one the user is not using.  Only the
+    unsearched list is repositioned: once a query narrows it the best match
+    leads, as it does in every other palette.
+    """
+
+    def _refresh_command_list(
+        self, command_list: CommandList, commands: list[Command], clear_current: bool
+    ) -> None:
+        """Rebuild the list, then highlight the active theme while unsearched."""
+        super()._refresh_command_list(command_list, commands, clear_current)
+
+        if self.query_one(CommandInput).value.strip():
+            return
+
+        index = self._index_of(command_list, self.app.theme)
+        if index is not None:
+            command_list.highlighted = index
+
+    @staticmethod
+    def _index_of(command_list: CommandList, name: str) -> int | None:
+        """Return the row `name` was listed at, or None when it is not listed."""
+        for index in range(command_list.option_count):
+            option = command_list.get_option_at_index(index)
+            if isinstance(option, Command) and option.hit.text == name:
+                return index
+        return None
