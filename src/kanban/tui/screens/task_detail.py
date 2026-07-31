@@ -35,7 +35,7 @@ class TaskDetailScreen(ModalScreen[None]):
         """Lay out the metadata block above a scrollable rendering of the body."""
         with Vertical(id="dialog"):
             yield TaskHeading(self.detail_task)
-            yield Static(metadata_text(self.detail_task), id="task-detail-meta")
+            yield Static(metadata_text(self.detail_task), classes="-task-meta")
             with VerticalScroll(id="task-detail-body"):
                 yield Markdown(self.detail_task.body or "*(no description)*")
 

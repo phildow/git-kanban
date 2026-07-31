@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Iterable, Iterator, cast
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal
+from textual.markup import escape
 from textual.reactive import reactive
 from textual.screen import Screen
 from textual.widgets import Footer, Header, ListView, Static
@@ -528,7 +529,7 @@ class BoardScreen(Screen[None]):
             )
 
         if created is not None:
-            self.notify(f"Created {created.path}")
+            self._announce(f"Created {_task_name(created.title)}")
             self._reload_soon(created.slug)
 
     def _update_task(self, task: Task, result: TaskFormResult | None) -> None:
@@ -561,7 +562,7 @@ class BoardScreen(Screen[None]):
                 updated = self.svc.unset_task(updated.path, unsets)
 
         if updated is not None:
-            self.notify(f"Updated {updated.path}")
+            self._announce(f"Updated {_task_name(updated.title)}")
             self._reload_soon(updated.slug)
 
     def _delete_task(self, task: Task, confirmed: bool) -> None:
@@ -574,7 +575,7 @@ class BoardScreen(Screen[None]):
             deleted = self.svc.delete_task(task.path)
 
         if deleted is not None:
-            self.notify(f"Deleted {deleted.path}")
+            self._announce(f"Deleted {_task_name(deleted.title)}")
             self._reload_soon()
 
     # ── Move mode ─────────────────────────────────────────────────────────────
@@ -816,7 +817,9 @@ class BoardScreen(Screen[None]):
         self._preview = None
 
         if moved is not None:
-            self.notify(f"Moved to /{moved.board}/{target.slug}")
+            self._announce(
+                f"Moved {_task_name(moved.title)} to {_place_name(target.name)}"
+            )
 
         # A move only disturbs the column it left and the one it landed in.
         self._refresh_columns_soon(
@@ -909,7 +912,7 @@ class BoardScreen(Screen[None]):
             self.svc.set_board(board.slug)
 
         if board is not None:
-            self.notify(f"Created /{board.slug}")
+            self._announce(f"Created board {_place_name(board.name)}")
         self._reload_soon()
 
     def action_toggle_sidebar(self) -> None:
@@ -1071,6 +1074,15 @@ class BoardScreen(Screen[None]):
 
     # ── Errors ────────────────────────────────────────────────────────────────
 
+    def _announce(self, message: str) -> None:
+        """
+        Show a toast reporting what happened.
+
+        The message is read as markup, so any name the user wrote has to go
+        through `_task_name` or `_place_name`, which style and escape it.
+        """
+        self.notify(message)
+
     @contextmanager
     def _service_errors(self, action: str) -> Iterator[None]:
         """Report a failed service call as a toast instead of tearing down the app."""
@@ -1080,6 +1092,26 @@ class BoardScreen(Screen[None]):
             description = str(exc) or exc.__class__.__name__
             logging.error("TUI %s failed: %s", action, description)
             self.notify(description, title=action, severity="error")
+
+
+def _styled(name: str, style: str) -> str:
+    """
+    Return `name` marked up in `style`.
+
+    Titles and names come from the user, so they are escaped: a `[` in one
+    would otherwise be read as the start of a style tag.
+    """
+    return f"[{style}]{escape(name)}[/]"
+
+
+def _task_name(title: str) -> str:
+    """Return a task's title in the accent colour."""
+    return _styled(title, "$accent")
+
+
+def _place_name(name: str) -> str:
+    """Return a column or board name in the primary colour."""
+    return _styled(name, "$primary")
 
 
 def _matches(task: Task, needle: str) -> bool:

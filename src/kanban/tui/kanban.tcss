@@ -231,9 +231,11 @@ AutoCompleteInput > OptionList.-suggestions > .option-list--option-highlighted {
     margin: 0 0 0 2;
 }
 
+/* The question names the dialog, so it takes the dialog's border colour. */
 #confirm-prompt {
     height: auto;
     padding: 1 0;
+    color: $accent;
 }
 
 /* The title and path naming the task a screen is acting on.  Weight carries
@@ -256,7 +258,9 @@ TaskHeading .-task-path {
     color: $text-muted;
 }
 
-#task-detail-meta {
+/* A task's metadata rows, shown wherever a screen describes one task. */
+.-task-meta {
+    width: 1fr;
     height: auto;
     margin: 0 0 1 0;
 }

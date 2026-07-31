@@ -10,6 +10,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Static
 
 from ...models import Task
+from ..formatting import metadata_text
 from ..widgets import TaskHeading
 
 
@@ -33,8 +34,8 @@ class ConfirmScreen(ModalScreen[bool]):
         Create a confirmation modal showing `prompt` above the buttons.
 
         `prompt` may be styled text.  Pass `task` when the question is about one
-        task, and its title and path are named beneath the question so the user
-        can see exactly what is about to go.
+        task, and its title, path, and metadata are shown beneath the question
+        so the user can see exactly what is about to go.
         """
         super().__init__()
         self.prompt = prompt
@@ -42,11 +43,18 @@ class ConfirmScreen(ModalScreen[bool]):
         self.confirm_label = confirm_label
 
     def compose(self) -> ComposeResult:
-        """Lay out the prompt, the task it concerns, and the confirm/cancel buttons."""
+        """
+        Lay out the prompt, the task it concerns, and the confirm/cancel buttons.
+
+        The task is described the way the detail screen describes it, minus the
+        body: a confirmation should show what is at stake at a glance, and the
+        description and comments are too long for that.
+        """
         with Vertical(id="dialog", classes="-narrow"):
             yield Static(self.prompt, id="confirm-prompt")
             if self.confirm_task is not None:
                 yield TaskHeading(self.confirm_task)
+                yield Static(metadata_text(self.confirm_task), classes="-task-meta")
             with Horizontal(id="dialog-buttons"):
                 yield Button(self.confirm_label, variant="error", id="confirm")
                 yield Button("Cancel", variant="default", id="cancel")
