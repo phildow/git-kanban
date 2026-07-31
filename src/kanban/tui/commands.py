@@ -1,0 +1,57 @@
+"""Command palette providers for the TUI."""
+
+from __future__ import annotations
+
+from textual.command import DiscoveryHit, Hit, Hits
+from textual.content import Content
+from textual.theme import ThemeProvider
+
+# The marker sits in front of every row so the names line up either way.
+ACTIVE_MARK = "● "
+INACTIVE_MARK = "  "
+
+
+class ThemeCommands(ThemeProvider):
+    """
+    The theme list, with the theme already in use marked.
+
+    Textual's own provider lists every theme by name alone, which leaves the
+    user to guess which one they are looking at.  This one puts a mark against
+    the active theme.
+    """
+
+    def _is_active(self, name: str) -> bool:
+        """Return True when `name` is the theme the app is currently using."""
+        return name == self.app.theme
+
+    def _display(self, name: str, label: Content | None = None) -> Content:
+        """
+        Return the palette row for a theme.
+
+        `label` carries the search highlighting when there is a query; without
+        one the plain name is used.
+        """
+        mark = (
+            Content.from_markup(f"[$accent]{ACTIVE_MARK}[/]")
+            if self._is_active(name)
+            else Content(INACTIVE_MARK)
+        )
+        return mark + (Content(name) if label is None else label)
+
+    async def discover(self) -> Hits:
+        """Offer every theme, with the active one marked."""
+        for name, callback in self.commands:
+            yield DiscoveryHit(self._display(name), callback, text=name)
+
+    async def search(self, query: str) -> Hits:
+        """Offer the themes matching `query`, with the active one marked."""
+        matcher = self.matcher(query)
+
+        for name, callback in self.commands:
+            if (match := matcher.match(name)) > 0:
+                yield Hit(
+                    match,
+                    self._display(name, matcher.highlight(name)),
+                    callback,
+                    text=name,
+                )

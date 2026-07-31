@@ -6,9 +6,11 @@ import logging
 
 from textual.app import App
 from textual.binding import Binding
+from textual.command import CommandPalette
 
 from ..services.kanban import KanbanService
 from ..services.render_service import RenderService
+from .commands import ThemeCommands
 from .renderer import TuiRenderer
 from .screens.board import BoardScreen
 from .screens.help import HelpScreen
@@ -47,6 +49,19 @@ class KanbanApp(App[None]):
         """Open the bindings reference."""
         if not isinstance(self.screen, HelpScreen):
             self.push_screen(HelpScreen())
+
+    def search_themes(self) -> None:
+        """
+        Show the theme list, with the theme in use marked.
+
+        Overrides Textual's own, which lists the themes by name alone and so
+        does not say which one is already active.
+        """
+        self.push_screen(
+            CommandPalette(
+                providers=[ThemeCommands], placeholder="Search for themes…"
+            )
+        )
 
     # The app deliberately does not re-sync on `events.AppFocus`.  Returning to
     # the terminal leaves the board as the user left it; changes made outside
