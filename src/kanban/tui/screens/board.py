@@ -105,9 +105,12 @@ class BoardScreen(Screen[None]):
     # rest are hidden, so the hints stay complete without repeating themselves.
     BINDINGS = [
         Binding("left,h", "nav_left", "Column", show=True, key_display="←/→ h/l"),
-        Binding("right,l", "nav_right", "Column", show=False),
         Binding("up,k", "nav_up", "Card", show=True, key_display="↑/↓ j/k"),
-        Binding("down,j", "nav_down", "Card", show=False),
+        # The other half of each pair.  `system` keeps them out of the key
+        # panel, which lists an entry per action however `show` is set — the
+        # entries above already name all four keys.
+        Binding("right,l", "nav_right", "Column", show=False, system=True),
+        Binding("down,j", "nav_down", "Card", show=False, system=True),
         # Shift goes as far as it will go — the end of a column, the end of the
         # board — whether moving focus or a staged card.  Terminals report the
         # shifted arrows by name and the shifted letters as capitals.
