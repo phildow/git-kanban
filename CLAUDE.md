@@ -863,3 +863,20 @@ The filesystem remains the source of truth for the TUI, and the TUI consumes the
 The TUI does **not** refresh when the terminal regains focus. Textual exposes app-level focus/blur events, but re-syncing on them redraws the board whenever the user tabs back from another window, which is disruptive more often than it is useful.
 
 In addition the TUI will refresh whenever a git sync is executed from within the app, akin to refreshing after a mutation.
+
+#### Refresh Only What Changed
+
+A refresh is scoped to the components the operation could actually have affected. Never re-render a component to pick up a change that cannot have reached it — redrawing the whole screen for a local change costs the user a visible flicker and loses scroll position, selection, and focus.
+
+For the board this means **column refreshes are limited to the columns an operation touches**:
+
+- creating a task re-queries and redraws only the column it was created in
+- deleting a task, only the column it was deleted from
+- editing a task, only the column it is in
+- moving a task, only the source and destination columns — and only one when the task is reordered within a column
+
+While a move is being staged the same rule applies to the preview: only the column the card is leaving and the column it is joining are redrawn as it travels, never the intervening ones.
+
+Rebuilding the entire board is reserved for changes whose effects are not confined to known columns — switching boards, a column being added, renamed, or removed — and for the manual refresh key, which exists precisely to re-read everything. A targeted refresh should fall back to a full reload when it cannot establish that its assumption holds, such as when a named column is not on screen.
+
+The same principle governs everything else the TUI draws: a widget is handed new data only when its own data changed, and a redraw is skipped altogether when the new data matches what is already displayed.

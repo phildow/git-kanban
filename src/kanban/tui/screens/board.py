@@ -530,7 +530,8 @@ class BoardScreen(Screen[None]):
 
         if created is not None:
             self._announce(f"Created {_task_name(created.title)}")
-            self._reload_soon(created.slug)
+            # A new task only lands in the column it was created in.
+            self._refresh_columns_soon([created.column], created.slug)
 
     def _update_task(self, task: Task, result: TaskFormResult | None) -> None:
         """Apply the form result to `task`, clearing the fields the user emptied."""
@@ -576,7 +577,8 @@ class BoardScreen(Screen[None]):
 
         if deleted is not None:
             self._announce(f"Deleted {_task_name(deleted.title)}")
-            self._reload_soon()
+            # A deleted task only leaves a gap in the column it was in.
+            self._refresh_columns_soon([deleted.column])
 
     # ── Move mode ─────────────────────────────────────────────────────────────
 
