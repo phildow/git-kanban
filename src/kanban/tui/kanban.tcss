@@ -212,21 +212,35 @@ ModalScreen {
     border: tall $panel;
 }
 
-/* The comments already on the task, shown but not editable.  No height cap and
-   no scroll of its own: they are shown in full and the form scrolls. */
+/* The comments already on the task, shown but not editable.  They read as they
+   do in the task detail modal — markdown on the dialog's own background — so a
+   comment looks the same wherever it is met, rather than like a filled field
+   the user might try to type into.  No height cap and no scroll of its own
+   either: they are shown in full and the form scrolls. */
 #field-comments {
     width: 1fr;
     height: auto;
-    padding: 0 0 ;
-    margin: 0 0 0 0;
-    background: $panel;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+}
+
+/* A comment's own heading, which Textual gives a document's spacing — two rows
+   above it — where among the form's fields one row reads as the same break.
+   Fenced code keeps Textual's own padding: the padded rows carry the fence's
+   background, so they are what makes a code block look like a block. */
+#field-comments MarkdownH2 {
+    margin: 1 0 1 0;
 }
 
 #field-description:focus, #field-comment:focus {
     border: tall $accent;
 }
 
-#form-fields Label {
+/* The form's own field captions.  Direct children only: a descendant selector
+   also catches the Label a markdown fence keeps its code in, which put a row
+   above every code block and none below it. */
+#form-fields > Label {
     margin: 1 0 0 0;
     color: $text-muted;
 }
