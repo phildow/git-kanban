@@ -19,6 +19,8 @@ Convention (matches the parser's own naming):
       board.
     - An action with ``choices`` set (e.g. ``--priority``) completes
       against those choices directly from the parser.
+    - ``dest == "key"`` with metavar ``KEY`` (the ``config`` command's
+      keypath) completes against the supported ``CONFIG_KEYS``.
     - Anything else is free text: no suggestions.
 
 No dependency on ``readline`` or any terminal lives here, so this stays
@@ -35,6 +37,7 @@ import shlex
 from ..models import Slug
 from ..protocols.sluggable import Sluggable
 from ..protocols.completion_data_source import CompletionDataSource
+from ..services.kanban import CONFIG_KEYS
 
 # Positional/flag dest names that complete as a full board/column/task
 # path rather than a single segment. "path" is the parser's own
@@ -225,6 +228,8 @@ class CompletionEngine:
             return self._matching(
                 self._service.get_assigned_tos(self._service.working_board), partial
             )
+        if action.dest == "key" and action.metavar == "KEY":
+            return self._matching(list(CONFIG_KEYS), partial)
         return []  # free text: no suggestions
 
     @staticmethod

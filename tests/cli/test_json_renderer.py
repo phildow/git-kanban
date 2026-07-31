@@ -543,6 +543,16 @@ class TestJsonRendererConfig(unittest.TestCase):
         out = _capture(lambda: self.r.render_set_config(_args(key="name", value="bob"), None))
         self.assertEqual(json.loads(out)["value"], "bob")
 
+    def test_list_config_emits_every_key(self) -> None:
+        """render_list_config emits the key/value mapping as an object."""
+        out = _capture(lambda: self.r.render_list_config(_args(), {"user.name": "alice"}))
+        self.assertEqual(json.loads(out), {"user.name": "alice"})
+
+    def test_list_config_emits_unset_values_as_null(self) -> None:
+        """An unset key is emitted as null rather than omitted."""
+        out = _capture(lambda: self.r.render_list_config(_args(), {"user.name": None}))
+        self.assertIsNone(json.loads(out)["user.name"])
+
 
 if __name__ == "__main__":
     unittest.main()

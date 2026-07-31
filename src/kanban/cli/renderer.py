@@ -270,6 +270,15 @@ class Renderer(CommandRenderer):
 		# TODO: implement
 		self._emit(args, result)
 
+	def render_list_config(self, args: argparse.Namespace, result: dict[str, str | None]) -> None:
+		"""Print every supported key and its value, one per line, unset keys included."""
+		if not result:
+			self._emit(args, "No configuration keys")
+			return
+
+		for key, value in result.items():
+			self._emit(args, Text(f"{key} = ") + Text(value or "", style="bold"))
+
 # ---------------------------------------------------------------------------
 # Utilities and shared behavior for rendering commands
 # ---------------------------------------------------------------------------

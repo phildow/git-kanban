@@ -226,3 +226,7 @@ class JsonRenderer(CommandRenderer):
 
     def render_get_config(self, args: argparse.Namespace, result: str | None) -> None:
         self._emit(args, json.dumps({"key": args.key, "value": result}, indent=2))
+
+    def render_list_config(self, args: argparse.Namespace, result: dict[str, str | None]) -> None:
+        """Emit every supported key and its value as a JSON object."""
+        self._emit(args, json.dumps(result, indent=2))

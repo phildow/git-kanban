@@ -250,8 +250,6 @@ def init(repo_path):
         subprocess.run(["git", "-C", ".kanban-store", "push", "--set-upstream", "origin", "kanban"])
 ```
 
-#### Storing Configuration
-
 The worktree and branch are stored in the .kanban/config file:
 
 ```INI
@@ -349,15 +347,6 @@ class Task:
 ```
 
 ### Metadata
-
-#### The Store
-
-The kanban store includes a `userdata` INI file. It contains preferences specific to the user and is added to the git ignore. (TODO) For example the user's most recently active /board/column is saved here and reloaded when the user starts the repl. For example:
-
-```
-[user-context]
-    board = main
-```
 
 #### Boards
 
@@ -513,6 +502,7 @@ kanban status
 
 kanban config set <key> <value>
 kanban config get <key>
+kanban config list
 ```
 
 Most commands take a `--format` argument with options `plain|json` (default: `plain`).
@@ -875,6 +865,7 @@ q / Ctrl+Q = quit
 ←/→ or h/l = move card to adjacent column
 ↑/↓ or j/k = reorder card within current column
      Enter = commit — single move_task/reorder call
+       Tab = show column list
        Esc = cancel — discard, no calls made
 ```
 
@@ -890,22 +881,34 @@ The filesystem remains the source of truth for the TUI, and the TUI consumes the
 
 In addition the TUI will refresh whenever a git sync is executed from within the app, akin to refreshing after a mutation.
 
-## Configuration
+## Config and Userdata
 
-Configuration values are addressed by a `section.key` keypath. The supported set is defined by `CONFIG_KEYS` in the service layer, and `KanbanService.get_config`/`set_config` raise `InvalidConfigKey` for anything outside it. 
+Configuration values are addressed by a `section.key` keypath. The supported set is defined by `CONFIG_KEYS` in the service layer, and `KanbanService.get_config`/`set_config` raise `InvalidConfigKey` for anything outside it. `KanbanService.list_config` returns every supported keypath with its value (None when unset), which is what `kanban config list`, the bare REPL `config` command, and REPL tab completion of keys report. 
 
-Arbitrary values belong in userdata, although it may make sense to combine the two.
+Config and user data contain different kinds of data.
 
-The supported keys follow:
+Config is reserved for values that can be set by the user. Global configuration values can be placed in the user's home directory under `~/.kanban/config` and will be overriden by local configuration values.
+
+User data contains settings that cannot be changed by the user and which are generally set by the kanban service in response to user actions, for example the currently selected board.
+
+### Config Key-Value Pairs
 
 ```INI
 [user]
-  # the name of the user, used when creating a task and in comments
-  name = "philip"
+    # the name of the user, used when creating a task or comment
+    name = "philip"
 
 [repository]
-  # the folder in the repository that contains the kanban store
-  worktree = ".kanban-store"
-  # the git branch associated with the worktree
-  branch = "kanban"
+    # the folder in the repository that contains the kanban store
+    worktree = ".kanban-store"
+    # the git branch associated with the worktree
+    branch = "kanban"
+```
+
+### Userdata Key-Value Pairs
+
+```INI
+[user-context]
+    # the currently selected board
+    board = main
 ```

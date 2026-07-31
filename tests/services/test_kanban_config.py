@@ -50,6 +50,40 @@ class TestKanbanServiceConfig(unittest.TestCase):
         self.assertEqual(self.svc.get_config("user.name"), "Alice")
 
 
+class TestKanbanServiceListConfig(unittest.TestCase):
+    """list_config reports every supported key with its current value."""
+
+    def setUp(self) -> None:
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+        temp_dir.mkdir()
+        self.repo = InMemoryRepository(root=temp_dir)
+        self.svc = KanbanService(
+            repository=self.repo,
+            index_service=MagicMock(),
+            git_service=GitService(),
+        )
+
+    def test_lists_every_supported_key(self) -> None:
+        """The result covers exactly the supported key set."""
+        self.assertEqual(set(self.svc.list_config()), set(CONFIG_KEYS))
+
+    def test_unset_keys_map_to_none(self) -> None:
+        """A key that has never been set maps to None."""
+        self.assertIsNone(self.svc.list_config()[CONFIG_USER_NAME])
+
+    def test_reports_stored_values(self) -> None:
+        """A key that has been set maps to its stored value."""
+        self.svc.set_config(CONFIG_USER_NAME, "Philip")
+
+        self.assertEqual(self.svc.list_config()[CONFIG_USER_NAME], "Philip")
+
+    def test_keys_are_sorted(self) -> None:
+        """Keys are returned in sorted keypath order."""
+        keys = list(self.svc.list_config())
+
+        self.assertEqual(keys, sorted(keys))
+
+
 class TestKanbanServiceConfigKeys(unittest.TestCase):
     """Only keys in CONFIG_KEYS may be read or written."""
 

@@ -1128,6 +1128,14 @@ class KanbanService(CompletionDataSource):
         self.repository.set_config(keypath, value)
         return self.get_config(keypath)
 
+    def list_config(self) -> dict[str, str | None]:
+        """
+        Return every supported configuration keypath mapped to its value, in
+        sorted keypath order.  Keys that have never been set map to None, so the
+        result doubles as a listing of the keys the application accepts.
+        """
+        return {keypath: self.repository.get_config(keypath) for keypath in sorted(CONFIG_KEYS)}
+
     # ── Userdata ──────────────────────────────────────────────────────────────
 
     def get_userdata(self, keypath: str) -> str | None:

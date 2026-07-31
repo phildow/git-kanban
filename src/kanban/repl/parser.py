@@ -21,6 +21,7 @@ from ..repl.commands import (
     handle_delete,
     handle_column_reorder,
     handle_get_config,
+    handle_list_config,
     handle_set_config,
     handle_log,
     handle_rename,
@@ -241,7 +242,8 @@ def _add_move_parser(subparsers: argparse._SubParsersAction) -> None:
 def _add_config_parser(subparsers: argparse._SubParsersAction) -> None:
     config_parser = subparsers.add_parser("config", help="List, get, or set configuration values")
     _add_global_flags(config_parser)
-    
+    config_parser.set_defaults(func=handle_list_config)  # bare `config` lists all config values
+
     config_sub = config_parser.add_subparsers(dest="config_command", metavar="COMMAND")
     config_sub.required = False  # allow `config` with no subcommand to list all config values
 

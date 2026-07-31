@@ -1144,5 +1144,44 @@ class TestTaskCLIEnglishNames(_InitializedBase):
         self.assertEqual(data["slug"], "fix-login-bug")
 
 
+class TestConfigCLI(_InitializedBase):
+    """`config` subcommands against a real .kanban/config file."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.repo.init_local_data()
+
+    def test_set_then_get_round_trips(self) -> None:
+        """A value written by `config set` is returned by `config get`."""
+        self.run_cli("config", "set", "user.name", "philip")
+        self.assertIn("philip", self.run_cli("config", "get", "user.name"))
+
+    def test_list_includes_set_value(self) -> None:
+        """`config list` shows the key and its stored value."""
+        self.run_cli("config", "set", "user.name", "philip")
+        out = self.run_cli("config", "list")
+        self.assertIn("user.name", out)
+        self.assertIn("philip", out)
+
+    def test_list_includes_unset_keys(self) -> None:
+        """`config list` lists supported keys even when they have no value."""
+        self.assertIn("user.name", self.run_cli("config", "list"))
+
+    def test_list_json_reports_values(self) -> None:
+        """`config list --format json` emits the key/value mapping."""
+        self.run_cli("config", "set", "user.name", "philip")
+        self.assertEqual(self.run_json("config", "list", "--format", "json"),
+                         {"user.name": "philip"})
+
+    def test_task_create_uses_configured_user_name(self) -> None:
+        """A task created after setting user.name records it as created_by."""
+        self.run_cli("board", "create", "Proj")
+        self.run_cli("config", "set", "user.name", "philip")
+        self.run_cli("task", "create", "/proj/todo", "Fix login bug")
+
+        fm = self._read_frontmatter("proj", "todo", "fix-login-bug")
+        self.assertEqual(fm["created_by"], "philip")
+
+
 if __name__ == "__main__":
     unittest.main()

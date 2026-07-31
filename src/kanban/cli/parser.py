@@ -21,6 +21,7 @@ from ..cli.commands import (
     handle_column_rename,
     handle_column_reorder,
     handle_get_config,
+    handle_list_config,
     handle_set_config,
     handle_init,
     handle_log,
@@ -412,6 +413,11 @@ Use the CLI directly with `kanban board list`, `kanban task create`, etc.
     _add_format_arg(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_get_config)
+
+    p = config_sub.add_parser("list", help="List all configuration values")
+    _add_format_arg(p)
+    _add_global_flags(p)
+    p.set_defaults(func=handle_list_config)
 
     # repl
     p = subparsers.add_parser("repl", help="Start an interactive kanban shell")

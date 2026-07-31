@@ -81,7 +81,7 @@ class TestParserStructure(unittest.TestCase):
         self.assertEqual(set(task.keys()), {"list", "create", "info", "view", "edit", "update", "unset", "move", "delete", "assign", "tag", "comment", "rename"})
 
         config = self._subparser_choices(top["config"], "config_command")
-        self.assertEqual(set(config.keys()), {"get", "set"})
+        self.assertEqual(set(config.keys()), {"get", "set", "list"})
 
 
 class TestParserArgumentsAndDefaults(unittest.TestCase):

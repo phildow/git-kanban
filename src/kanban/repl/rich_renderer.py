@@ -474,6 +474,18 @@ class RichRenderer(CommandRenderer):
 	def render_get_config(self, args: argparse.Namespace, result: str | None) -> None:
 		self._emit(args, result)
 
+	def render_list_config(self, args: argparse.Namespace, result: dict[str, str | None]) -> None:
+		"""Render every supported configuration key and its value, unset keys included."""
+		table = Table(title=f"Configuration ({len(result)})", box=box.ASCII2, show_header=True, header_style="bold")
+
+		table.add_column("Key", width=32, no_wrap=True)
+		table.add_column("Value", width=32, no_wrap=True)
+
+		for key, value in result.items():
+			table.add_row(key, value or "")
+
+		self._emit(args, table)
+
 
 # ---------------------------------------------------------------------------
 # Utilities and shared behavior for rendering commands

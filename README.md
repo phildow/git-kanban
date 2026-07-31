@@ -114,7 +114,7 @@ Run:
 
 CONFIG
 
-- Tabcomplete config keys?
+- ~~Tabcomplete config keys~~ (done)
 - Allow the user to alias repl commands in the config file
     - eg `c=create`
 - ~~Allow the user to set a name to use for default created_by~~ (done: `config set user.name philip`)
