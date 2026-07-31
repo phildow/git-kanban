@@ -75,7 +75,8 @@ def _add_global_flags(parser: argparse.ArgumentParser) -> None:
     # parser.add_argument("--verbose", action="store_true", default=False, help="Enable verbose output")
 
 
-def _add_task_filter_args(parser: argparse.ArgumentParser) -> None:
+def add_task_filter_args(parser: argparse.ArgumentParser) -> None:
+    """Add the task filter flags.  Public so the TUI's filter bar takes the same ones."""
     parser.add_argument("-w", "--assigned-to", dest="assigned_to", metavar="NAME", help="Filter by assigned-to user")
     parser.add_argument("-p", "--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Filter by priority")
     parser.add_argument("-t", "--tag", metavar="TAG", action="append", dest="tags", help="Filter by tag (repeatable)")
@@ -282,7 +283,7 @@ def _add_tasks_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("--slugs", action="store_true", default=False, help="Render a compact list of slugs only, like filenames")
     p.add_argument("-x", "--exclude", metavar="COLUMN", action="append", dest="exclude_columns", help="Exclude tasks in this column (repeatable)")
     _add_list_args(p, SORT_TASK_CHOICES)
-    _add_task_filter_args(p)
+    add_task_filter_args(p)
     _add_global_flags(p)
     p.set_defaults(func=handle_task_list)
 
@@ -392,7 +393,7 @@ Slugs:
     p = subparsers.add_parser("search", help="Full-text search across tasks")
     p.add_argument("query", metavar="QUERY", help="Search query")
     p.add_argument("--slugs", action="store_true", default=False, help="Render a compact list of slugs only, like filenames")
-    _add_task_filter_args(p)
+    add_task_filter_args(p)
     p.add_argument("--board", metavar="BOARD", help="Restrict search to a specific board")
     _add_list_args(p, SORT_TASK_CHOICES)
     _add_global_flags(p)

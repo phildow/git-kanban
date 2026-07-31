@@ -32,6 +32,7 @@ from ...services.kanban import (
     TaskUnsetParams,
     TaskUpdateParams,
 )
+from ..filter_query import FilterQuery, parse_filter
 from ..formatting import board_subtitle
 from ..widgets import (
     ColumnView,
@@ -54,7 +55,10 @@ MOVE_KEYS = (
     "←/→ h/l  column    ↑/↓ j/k  position    ⇧  to the end    "
     "enter  commit    esc  cancel"
 )
-FILTER_HINTS = "  type to filter    enter  keep filter    esc  clear"
+FILTER_HINTS = (
+    "  text, or search flags such as -t bug -p high    "
+    "enter  keep filter    esc  clear"
+)
 COMMAND_HINTS = "  REPL syntax    enter  run    esc  cancel"
 
 # Commands that need a real terminal — an editor or a confirmation prompt — and
@@ -122,7 +126,7 @@ class BoardScreen(Screen[None]):
         self._board: Board | None = None
         self._columns: list[Column] = []
         self._tasks: dict[Slug, list[Task]] = {}
-        self._filter: str = ""
+        self._filter = FilterQuery()
         self._move: MoveState | None = None
         # Column and position the moving card is currently drawn at, or None
         # when no column is showing a staged position.
@@ -273,10 +277,9 @@ class BoardScreen(Screen[None]):
     def _visible(self, column: Slug) -> list[Task]:
         """Return the tasks of `column` that survive the current filter."""
         tasks = self._tasks.get(column, [])
-        if not self._filter:
+        if self._filter.is_empty:
             return tasks
-        needle = self._filter
-        return [task for task in tasks if _matches(task, needle)]
+        return [task for task in tasks if self._filter.matches(task)]
 
     async def _render_board(self, *, select: Slug | None = None, focus_column: Slug | None = None) -> None:
         """Rebuild the column views from the fetched data and restore focus."""
@@ -330,18 +333,21 @@ class BoardScreen(Screen[None]):
         return False
 
     async def _render_current(self, select: Slug | None = None) -> None:
-        """Repopulate the columns from data already fetched, without touching the service."""
-        views = self.column_views
-        if not views:
-            return
+        """
+        Repopulate the columns from data already fetched, without touching the service.
 
-        column = self.focused_column
-        focus_column = column.column.slug if column is not None else None
+        Used when the filter changes, which can add or remove cards anywhere, so
+        every column is offered the new contents — but `_render_column` skips
+        the ones that end up unchanged.
 
-        for view in views:
-            await view.set_tasks(self._visible(view.column.slug), dense=self.dense)
+        Focus is left where it is: the caller may well be the filter bar, which
+        the user is still typing into.
+        """
+        for view in self.column_views:
+            await self._render_column(view.column.slug)
 
-        self._restore_focus(views, select=select, focus_column=focus_column)
+        if select is not None:
+            self._select_task(select)
 
     def _reload_soon(self, select: Slug | None = None) -> None:
         """Schedule a reload from a synchronous context, such as a modal callback."""
@@ -966,9 +972,10 @@ class BoardScreen(Screen[None]):
             return
 
         filter_bar = self.query_one(FilterBar)
-        if filter_bar.has_class("-visible") or self._filter:
+        if filter_bar.has_class("-visible") or not self._filter.is_empty:
             filter_bar.value = ""
-            self._filter = ""
+            self._filter = FilterQuery()
+            filter_bar.remove_class("-invalid")
             self._close_bar(filter_bar)
             self._render_soon()
             return
@@ -989,7 +996,15 @@ class BoardScreen(Screen[None]):
         """Live-filter the visible cards as the user types in the filter bar."""
         if not isinstance(event.input, FilterBar):
             return
-        self._filter = event.value.strip().lower()
+        parsed = parse_filter(event.value)
+
+        # A half-typed flag is not an empty filter: keep the last query that
+        # parsed so the board holds still until the user finishes typing.
+        event.input.set_class(parsed is None, "-invalid")
+        if parsed is None:
+            return
+
+        self._filter = parsed
         self._render_soon()
 
     def on_input_submitted(self, event: FilterBar.Submitted) -> None:
@@ -1116,10 +1131,3 @@ def _place_name(name: str) -> str:
     return _styled(name, "$primary")
 
 
-def _matches(task: Task, needle: str) -> bool:
-    """Return True when `needle` appears in a task's title, assignee, or tags."""
-    haystack = [task.title.lower(), task.slug.lower()]
-    if task.assigned_to:
-        haystack.append(task.assigned_to.lower())
-    haystack.extend(tag.lower() for tag in task.tags)
-    return any(needle in value for value in haystack)

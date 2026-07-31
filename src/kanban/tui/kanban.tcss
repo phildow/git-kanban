@@ -131,6 +131,11 @@ CardWidget.-dense {
     display: block;
 }
 
+/* A half-typed flag: the board holds still until the query parses again. */
+#filter-bar.-invalid {
+    border: tall $error;
+}
+
 #mode-bar {
     display: none;
     dock: bottom;

@@ -75,25 +75,6 @@ class KanbanStatus:
 
 # ── Private Utilities ─────────────────────────────────────────────────────────
 
-def _task_matches_filter(task: Task, filter: TaskFilter) -> bool:
-    """Return True if task satisfies all non-None criteria in filter."""
-    if filter.assigned_to is not None and task.assigned_to != filter.assigned_to:
-        return False
-    if filter.priority is not None and task.priority != filter.priority:
-        return False
-    if filter.tags and not any(t in task.tags for t in filter.tags):
-        return False
-    if filter.created_by is not None and task.created_by != filter.created_by:
-        return False
-    if filter.due_before is not None and (task.due_date is None or task.due_date >= filter.due_before):
-        return False
-    if filter.due_after is not None and (task.due_date is None or task.due_date <= filter.due_after):
-        return False
-    if filter.exclude_columns and task.column in filter.exclude_columns:
-        return False
-    return True
-
-
 _COMMENTS_HEADING_RE = re.compile(r"^# Comments\s*$", re.MULTILINE)
 def _append_comment(body: str, comment: str) -> str:
     """
@@ -625,7 +606,7 @@ class KanbanService(CompletionDataSource):
         tasks = self.repository.get_tasks(board=board, column=column)
 
         if filter:
-            tasks = [t for t in tasks if _task_matches_filter(t, filter)]
+            tasks = [t for t in tasks if filter.matches(t)]
 
         if sort is None or sort == "column":
             positions = self._column_task_positions(tasks)

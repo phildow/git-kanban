@@ -19,7 +19,7 @@ NORMAL_BINDINGS: list[tuple[str, str]] = [
     ("d", "delete the focused card"),
     ("m", "enter move mode"),
     ("b", "switch board"),
-    ("/", "filter cards as you type"),
+    ("/", "filter cards as you type — text or `search` flags"),
     (":", "command bar (REPL syntax)"),
     ("s", "collapse or expand the sidebar"),
     ("c", "collapse or expand the cards"),
