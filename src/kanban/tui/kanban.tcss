@@ -7,6 +7,12 @@ Screen {
     background: $background;
 }
 
+/* Vertical scrollbars default to two cells wide.  One reads just as well and
+   hands the extra cell back to the cards. */
+* {
+    scrollbar-size-vertical: 1;
+}
+
 #board-body {
     height: 1fr;
 }
