@@ -12,9 +12,17 @@ from ...models import Column, Slug, Task
 from ..formatting import column_title
 from .card import CardWidget
 
-# ListView inherits horizontal scroll bindings from its container base class,
-# and the board needs left/right for moving between columns.
-_SCROLL_ACTIONS = {"scroll_left", "scroll_right"}
+# ListView inherits scrolling bindings from its container base class.  The board
+# needs those keys for moving between columns and paging through cards, and a
+# column that scrolls without moving the selection is not what they should do.
+_SCROLL_ACTIONS = {
+    "scroll_left",
+    "scroll_right",
+    "page_up",
+    "page_down",
+    "page_left",
+    "page_right",
+}
 
 # Cursor actions the board takes over while a card is being staged in move mode.
 _CURSOR_ACTIONS = {"cursor_up", "cursor_down", "select_cursor"}

@@ -12,6 +12,9 @@ from textual.widgets import Static
 NORMAL_BINDINGS: list[tuple[str, str]] = [
     ("←/→ or h/l", "move focus between columns"),
     ("↑/↓ or j/k", "move focus between cards"),
+    ("shift + any of those", "jump to the far end of the column or board"),
+    ("page up/down", "page through the cards in a column"),
+    ("ctrl + page up/down", "page across the columns"),
     ("tab", "cycle between columns"),
     ("enter", "open the focused card"),
     ("n", "new task in the focused column"),
@@ -34,6 +37,7 @@ MOVE_BINDINGS: list[tuple[str, str]] = [
     ("↑/↓ or j/k", "stage the card higher or lower"),
     ("shift + any of those", "stage it as far as it will go that way"),
     ("shift + H/L/J/K", "the same, without reaching for the arrows"),
+    ("page up/down", "stage it a screenful at a time"),
     ("enter", "commit the staged position"),
     ("esc", "cancel — nothing is written"),
 ]

@@ -108,12 +108,19 @@ class BoardScreen(Screen[None]):
         Binding("right,l", "nav_right", "Column", show=False),
         Binding("up,k", "nav_up", "Card", show=True, key_display="↑/↓ j/k"),
         Binding("down,j", "nav_down", "Card", show=False),
-        # Shift sends a staged card as far as it will go.  Terminals report the
+        # Shift goes as far as it will go — the end of a column, the end of the
+        # board — whether moving focus or a staged card.  Terminals report the
         # shifted arrows by name and the shifted letters as capitals.
         Binding("shift+left,H", "nav_far_left", "Move to end", show=False),
         Binding("shift+right,L", "nav_far_right", "Move to end", show=False),
         Binding("shift+up,K", "nav_far_up", "Move to end", show=False),
         Binding("shift+down,J", "nav_far_down", "Move to end", show=False),
+        # Paging: within a column, and — as terminals spell "page left/right" —
+        # across columns with ctrl.
+        Binding("pageup", "nav_page_up", "Page cards", show=False),
+        Binding("pagedown", "nav_page_down", "Page cards", show=False),
+        Binding("ctrl+pageup", "nav_page_left", "Page columns", show=False),
+        Binding("ctrl+pagedown", "nav_page_right", "Page columns", show=False),
         Binding("enter", "activate", "Open", show=False),
         Binding("n", "new_task", "New", show=True),
         Binding("e", "edit_task", "Edit", show=True),
@@ -431,25 +438,97 @@ class BoardScreen(Screen[None]):
             column.action_cursor_down()
 
     def action_nav_far_left(self) -> None:
-        """Stage the card in the leftmost column."""
+        """Stage the card in, or move focus to, the leftmost column."""
         if self.move_mode:
             self._stage_column_at(0)
+        else:
+            self._focus_column_at(0)
 
     def action_nav_far_right(self) -> None:
-        """Stage the card in the rightmost column."""
+        """Stage the card in, or move focus to, the rightmost column."""
         if self.move_mode:
             self._stage_column_at(len(self._columns) - 1)
+        else:
+            self._focus_column_at(len(self.column_views) - 1)
 
     def action_nav_far_up(self) -> None:
-        """Stage the card at the top of its column."""
+        """Stage, or select, the card at the top of the column."""
         if self.move_mode:
             self._stage_position_at(0)
+        else:
+            self._select_card_at(0)
 
     def action_nav_far_down(self) -> None:
-        """Stage the card at the bottom of its column."""
+        """Stage, or select, the card at the bottom of the column."""
         move = self._move
-        if self.move_mode and move is not None:
-            self._stage_position_at(self._staged_limit(move))
+        if self.move_mode:
+            if move is not None:
+                self._stage_position_at(self._staged_limit(move))
+            return
+
+        column = self.focused_column
+        if column is not None:
+            self._select_card_at(len(column.tasks) - 1)
+
+    def action_nav_page_up(self) -> None:
+        """Move a screenful of cards towards the top of the column."""
+        self._page_cards(-1)
+
+    def action_nav_page_down(self) -> None:
+        """Move a screenful of cards towards the bottom of the column."""
+        self._page_cards(1)
+
+    def action_nav_page_left(self) -> None:
+        """Move a screenful of columns towards the start of the board."""
+        self._page_columns(-1)
+
+    def action_nav_page_right(self) -> None:
+        """Move a screenful of columns towards the end of the board."""
+        self._page_columns(1)
+
+    def _page_cards(self, direction: int) -> None:
+        """Move `direction` pages through the focused column's cards."""
+        column = self.focused_column
+        if column is None:
+            return
+
+        step = direction * _cards_per_page(column)
+
+        if self.move_mode:
+            self._stage_position(step)
+            return
+
+        index = column.index or 0
+        self._select_card_at(index + step)
+
+    def _page_columns(self, direction: int) -> None:
+        """Move `direction` pages through the board's columns."""
+        step = direction * self._columns_per_page()
+
+        if self.move_mode:
+            self._stage_column(step)
+            return
+
+        self._focus_column(step)
+
+    def _columns_per_page(self) -> int:
+        """Return how many columns fit across the board at once."""
+        views = self.column_views
+        if not views:
+            return 1
+
+        column_width = max(1, views[0].outer_size.width)
+        visible = self.query_one("#columns", Horizontal).container_size.width
+
+        return max(1, visible // column_width)
+
+    def _select_card_at(self, index: int) -> None:
+        """Highlight the card at `index` in the focused column, clamped to its ends."""
+        column = self.focused_column
+        if column is None or not column.tasks:
+            return
+
+        column.index = max(0, min(index, len(column.tasks) - 1))
 
     def _focus_column(self, delta: int) -> None:
         """Move focus `delta` columns, clamped to the ends of the board."""
@@ -458,8 +537,15 @@ class BoardScreen(Screen[None]):
             return
 
         current = views.index(self.focused_column) if self.focused_column in views else 0
-        target = max(0, min(current + delta, len(views) - 1))
-        views[target].focus()
+        self._focus_column_at(current + delta)
+
+    def _focus_column_at(self, index: int) -> None:
+        """Focus the column at `index`, clamped to the ends of the board."""
+        views = self.column_views
+        if not views:
+            return
+
+        views[max(0, min(index, len(views) - 1))].focus()
 
     def action_activate(self) -> None:
         """Commit the staged move, or open the focused card."""
@@ -1189,6 +1275,21 @@ class BoardScreen(Screen[None]):
             description = str(exc) or exc.__class__.__name__
             logging.error("TUI %s failed: %s", action, description)
             self.notify(description, title=action, severity="error")
+
+
+def _cards_per_page(column: ColumnView) -> int:
+    """
+    Return how many of a column's cards fit on screen at once.
+
+    Cards vary in height with their metadata, so this works from the average
+    height of the ones the column is holding rather than assuming a size.
+    """
+    count = len(column.tasks)
+    if count == 0:
+        return 1
+
+    card_height = max(1, column.virtual_size.height // count)
+    return max(1, column.container_size.height // card_height)
 
 
 def _styled(name: str, style: str) -> str:
