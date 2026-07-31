@@ -564,8 +564,11 @@ class BoardScreen(Screen[None]):
                     priority=result.priority,
                     tags=result.tags,
                     due_date=result.due_date,
+                    description=result.description,
                 ),
             )
+            if created is not None and result.comment:
+                created = self.svc.comment_task(created.path, result.comment)
 
         if created is not None:
             self._announce(f"Created {_task_name(created.title)}")
@@ -587,6 +590,7 @@ class BoardScreen(Screen[None]):
                     priority=result.priority,
                     due_date=result.due_date,
                     tags=result.tags,
+                    description=result.description or None,
                 ),
             )
 
@@ -597,9 +601,22 @@ class BoardScreen(Screen[None]):
                 priority=result.priority is None and task.priority is not None,
                 due_date=result.due_date is None and task.due_date is not None,
                 tags=sorted(set(task.tags) - set(result.tags)),
+                description=not result.description and bool(task.description),
             )
-            if any([unsets.assigned_to, unsets.priority, unsets.due_date, unsets.tags]):
+            if any(
+                [
+                    unsets.assigned_to,
+                    unsets.priority,
+                    unsets.due_date,
+                    unsets.tags,
+                    unsets.description,
+                ]
+            ):
                 updated = self.svc.unset_task(updated.path, unsets)
+
+            # Comments are appended, never rewritten, so this is its own call.
+            if result.comment:
+                updated = self.svc.comment_task(updated.path, result.comment)
 
         if updated is not None:
             self._announce(f"Updated {_task_name(updated.title)}")

@@ -198,6 +198,24 @@ ModalScreen {
     max-height: 24;
 }
 
+/* Markdown source, edited as text.  Fixed heights keep the form from growing
+   past the dialog as the user types. */
+#field-description {
+    width: 1fr;
+    height: 8;
+    border: tall $panel;
+}
+
+#field-comment {
+    width: 1fr;
+    height: 5;
+    border: tall $panel;
+}
+
+#field-description:focus, #field-comment:focus {
+    border: tall $accent;
+}
+
 #form-fields Label {
     margin: 1 0 0 0;
     color: $text-muted;

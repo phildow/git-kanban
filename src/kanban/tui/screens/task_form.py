@@ -9,7 +9,7 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen
-from textual.widgets import Button, Input, Label, Select, Static
+from textual.widgets import Button, Input, Label, Select, Static, TextArea
 
 from ...models import Column, Priority, Task
 from ..widgets import AutoCompleteInput, TaskHeading
@@ -31,6 +31,9 @@ class TaskFormResult:
     priority:    Priority | None = None
     due_date:    datetime | None = None
     tags:        list[str] = field(default_factory=list)
+    description: str = ""
+    comment:     str = ""
+    """A comment to add.  Comments are append-only, so this is never a rewrite."""
 
 
 class TaskFormScreen(ModalScreen[TaskFormResult | None]):
@@ -125,13 +128,34 @@ class TaskFormScreen(ModalScreen[TaskFormResult | None]):
                     delimiter=",",
                     id="field-tags",
                 )
+                yield Label("Description")
+                # Markdown source, not rendered markdown: Textual has no
+                # rich-text editor.  With `textual[syntax]` installed the
+                # language turns on highlighting of the source itself.
+                yield TextArea(
+                    task.description if task else "",
+                    language="markdown",
+                    soft_wrap=True,
+                    id="field-description",
+                )
+                yield Label("Add a comment")
+                yield TextArea(
+                    language="markdown",
+                    soft_wrap=True,
+                    id="field-comment",
+                )
                 yield Static("", id="form-error")
             with Horizontal(id="dialog-buttons"):
                 yield Button("Save", variant="primary", id="save")
                 yield Button("Cancel", variant="default", id="cancel")
 
     def on_mount(self) -> None:
-        """Put the cursor in the title field."""
+        """Put the cursor in the title field, and at the end of the description."""
+        # Otherwise tabbing into a filled description starts typing at its very
+        # beginning, which is never where the user means to carry on.
+        description = self.query_one("#field-description", TextArea)
+        description.move_cursor(description.document.end)
+
         self.query_one("#field-title", Input).focus()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -172,6 +196,9 @@ class TaskFormScreen(ModalScreen[TaskFormResult | None]):
             self.query_one("#field-assigned-to", AutoCompleteInput).value.strip() or None
         )
 
+        description = self.query_one("#field-description", TextArea).text.strip()
+        comment = self.query_one("#field-comment", TextArea).text.strip()
+
         self.dismiss(
             TaskFormResult(
                 title=title,
@@ -179,6 +206,8 @@ class TaskFormScreen(ModalScreen[TaskFormResult | None]):
                 priority=priority,
                 due_date=due_date,
                 tags=tags,
+                description=description,
+                comment=comment,
             )
         )
 

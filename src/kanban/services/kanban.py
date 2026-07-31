@@ -13,6 +13,8 @@ from warnings import deprecated
 from ..index.query import SearchQuery, SortField
 from ..models import Board, Column, Priority, Slug, Task, TaskFilter, UserContext
 from ..models.priority import PRIORITY_ORDER
+from ..models.task import append_comment as _append_comment
+from ..models.task import set_description as _set_description
 from ..protocols.completion_data_source import CompletionDataSource
 from ..storage.base import KanbanRepository, ColumnNotFound, BoardNotFound, TaskNotFound, TaskAlreadyExists
 from ..storage.seeds import BootstrapConfig, DEFAULT_COLUMNS
@@ -74,57 +76,6 @@ class KanbanStatus:
     uncommitted_changes: bool
 
 # ── Private Utilities ─────────────────────────────────────────────────────────
-
-_COMMENTS_HEADING_RE = re.compile(r"^# Comments\s*$", re.MULTILINE)
-def _append_comment(body: str, comment: str) -> str:
-    """
-    Return `body` with `comment` appended under a `# Comments` heading.
-
-    Trailing whitespace is stripped from the body before appending. If the body
-    does not already contain a `# Comments` heading, one is inserted before the
-    comment. An empty body results in a body that starts with the heading.
-    """
-    body = (body or "").rstrip()
-    if _COMMENTS_HEADING_RE.search(body):
-        return f"{body}\n\n{comment}" if body else comment
-    if body:
-        return f"{body}\n\n# Comments\n\n{comment}"
-    return f"# Comments\n\n{comment}"
-
-
-_DESCRIPTION_HEADING_RE = re.compile(r"^# Description\s*$", re.MULTILINE)
-def _set_description(body: str, description: str) -> str:
-    """
-    Return `body` with the Description section content replaced by `description`.
-
-    The description section is the portion of the markdown body between the
-    `# Description` heading and either the `# Comments` heading (if any) or the
-    end of the document. Any Comments section is preserved unchanged. If the
-    body does not already contain a `# Description` heading, one is inserted
-    ahead of the Comments section (or at the start if no Comments section
-    exists). An empty description leaves only the `# Description` heading.
-    """
-    body = body or ""
-    desc_match = _DESCRIPTION_HEADING_RE.search(body)
-    comments_match = _COMMENTS_HEADING_RE.search(body)
-
-    description = description.strip("\n")
-    if description:
-        description_block = f"# Description\n\n{description}\n"
-    else:
-        description_block = "# Description\n\n"
-
-    preamble = ""
-    if desc_match:
-        preamble_text = body[:desc_match.start()].rstrip()
-        if preamble_text:
-            preamble = f"{preamble_text}\n\n"
-
-    if comments_match:
-        comments_block = body[comments_match.start():].rstrip() + "\n"
-        return f"{preamble}{description_block}\n{comments_block}"
-    return f"{preamble}{description_block}"
-
 
 # ── KanbanService ─────────────────────────────────────────────────────────────
 
