@@ -122,6 +122,18 @@ class ColumnView(ListView):
         """Mark the column as the staged destination so it stands out during a move."""
         self.set_class(staging, "-staging")
 
+    def watch_scroll_y(self, old_value: float, new_value: float) -> None:
+        """
+        Keep the scrollbar in step with the offset, even while it is hidden.
+
+        The base watcher moves the scrollbar only when it is showing.  Emptying
+        a column to repopulate it hides the scrollbar for a moment, and the
+        offset is clamped to zero in that moment — so without this the thumb is
+        left stranded wherever it was when the cards come back.
+        """
+        super().watch_scroll_y(old_value, new_value)
+        self.vertical_scrollbar.position = new_value
+
 
 def item_task(item: ListItem | Any) -> Task | None:
     """Return the task rendered by a list item, or None when it holds no card."""
