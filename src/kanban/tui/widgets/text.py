@@ -11,6 +11,10 @@ from textual.widgets import Input, TextArea
 WORD_LEFT = "alt+left,alt+b"
 WORD_RIGHT = "alt+right,alt+f"
 
+# Command + arrows are not bound: macOS terminals keep Command for their own
+# shortcuts and never forward it, so the key never reaches the app.  Textual's
+# own `home,ctrl+a` and `end,ctrl+e` already reach the ends of a line.
+
 
 class TextInput(Input):
     """A single-line field where option/alt + ← → move by word."""
