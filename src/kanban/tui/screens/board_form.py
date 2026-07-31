@@ -8,6 +8,8 @@ from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, Static
 
+from ..widgets import TextInput
+
 
 class BoardFormScreen(ModalScreen[str | None]):
     """
@@ -29,7 +31,7 @@ class BoardFormScreen(ModalScreen[str | None]):
             yield Static("New board", id="form-heading")
             with VerticalScroll(id="form-fields"):
                 yield Label("Title")
-                yield Input(placeholder="board title", id="field-board-title")
+                yield TextInput(placeholder="board title", id="field-board-title")
                 yield Static("", id="form-error")
             with Horizontal(id="dialog-buttons"):
                 yield Button("Save", variant="primary", id="save")

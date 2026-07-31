@@ -17,9 +17,10 @@ from textual.message import Message
 from textual.widgets import Input, Static
 
 from ...protocols.completer import Completer
+from .text import TextInput
 
 
-class CompletingInput(Input):
+class CompletingInput(TextInput):
     """
     An input that completes what has been typed when Tab is pressed.
 

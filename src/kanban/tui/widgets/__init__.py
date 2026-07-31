@@ -6,6 +6,7 @@ from .card import CardWidget
 from .column import ColumnView, item_task
 from .sidebar import LogView, SidebarPanel, StatusView
 from .task_heading import TaskHeading
+from .text import MarkdownArea, TextInput
 
 __all__ = [
     "AutoCompleteInput",
@@ -15,11 +16,13 @@ __all__ = [
     "CompletingInput",
     "FilterBar",
     "LogView",
+    "MarkdownArea",
     "ModeBar",
     "SidebarPanel",
     "StatusView",
     "SuggestionInput",
     "TaskHeading",
+    "TextInput",
     "format_hints",
     "item_task",
 ]

@@ -12,6 +12,8 @@ from textual.containers import Vertical
 from textual.reactive import reactive
 from textual.widgets import Input, OptionList
 
+from .text import TextInput
+
 # Enough suggestions to be useful without burying the rest of the form.
 MAX_SUGGESTIONS = 8
 
@@ -97,7 +99,7 @@ def matching_candidates(
     ][:limit]
 
 
-class SuggestionInput(Input):
+class SuggestionInput(TextInput):
     """
     The text field of an `AutoCompleteInput`.
 
