@@ -139,9 +139,9 @@ class BoardScreen(Screen[None]):
         yield FilterBar(id="filter-bar")
         yield CommandBar(id="command-bar")
         yield ModeBar(id="mode-bar")
-        # Compact, and without the command palette hint: the board has its own
-        # command bar on `:`, and the space is better spent on board keys.
-        yield Footer(show_command_palette=False, compact=True)
+        # Compact so more board keys fit.  The palette hint stays, docked to
+        # the right of the bar where Textual puts it.
+        yield Footer(compact=True)
 
     async def on_mount(self) -> None:
         """Load the board once the screen is attached."""
