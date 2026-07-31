@@ -117,8 +117,8 @@ CONFIG
 - Tabcomplete config keys?
 - Allow the user to alias repl commands in the config file
     - eg `c=create`
-- Allow the user to set a name to use for default createdb_by and assigned_to (get this from get config if available)
-    - eg `name=philip`
+- ~~Allow the user to set a name to use for default created_by~~ (done: `config set user.name philip`)
+- Use the configured `user.name` as the default assigned_to as well
 - Allow the user to set their preferred editor?
 - Allow the user to decide what columns are shown for a given terminal size when listing tasks
     - eg `task-cols:80=title,assigned-to,tags`

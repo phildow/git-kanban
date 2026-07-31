@@ -511,8 +511,8 @@ kanban search <query>
 kanban log <board>/<column>/<task> [--limit <n>]
 kanban status
 
-kanban config set <key> <value>    # key: name
-kanban config get <key>            # key: name
+kanban config set <key> <value>
+kanban config get <key>
 ```
 
 Most commands take a `--format` argument with options `plain|json` (default: `plain`).
@@ -616,8 +616,8 @@ tag <task> <tag>
 reorder <column> <position>
 
 config
-config set <key> <value>    # key: name
-config get <key>            # key: name
+config set <key> <value>
+config get <key>
 
 search <query>
     [--slugs]
@@ -670,11 +670,11 @@ quit = exit
 The REPL supports control commands and tab completion:
 
 ```
-Ctrl+C        - interrupt or cancel the current command
-Ctrl+L        - clear the screen
-Ctrl+D        - exit
-Ctrl+Z        - exit
-Tab           - context aware automcomplete commands, flags, files, tags, users, tags, etc
+   Tab = context aware automcomplete commands, flags, files, tags, users, tags, etc
+Ctrl+C = interrupt or cancel the current command
+Ctrl+L = clear the screen
+Ctrl+D = exit
+Ctrl+Z = exit
 ```
 
 The REPL prints it prompt as:
@@ -854,28 +854,28 @@ KanbanApp(App)
 #### Key Bindings (Board Screen, normal mode)
 
 ```
-←/→ or h/l     move focus between columns
-↑/↓ or j/k     move focus between cards within a column
-Enter          open TaskDetailScreen for focused card
-n              open TaskFormScreen (create)
-e              open TaskFormScreen (edit, pre-filled)
-d              delete focused card (confirm modal)
-m              enter move mode for focused card
-b              open BoardSwitcherScreen
-/              inline filter — live-filters visible cards as typed
-:              open CommandBar — full REPL-syntax command line
-s              toggle SidebarPanel collapse
-q / Ctrl+Q     quit
-?              help screen — bindings reference
+←/→ or h/l = move focus between columns
+↑/↓ or j/k = move focus between cards within a column
+     Enter = open TaskDetailScreen for focused card
+         n = open TaskFormScreen (create)
+         e = open TaskFormScreen (edit, pre-filled)
+         d = delete focused card (confirm modal)
+         m = enter move mode for focused card
+         b = open BoardSwitcherScreen
+         / = inline filter — live-filters visible cards as typed
+         : = open CommandBar — full REPL-syntax command line
+         s = toggle SidebarPanel collapse
+q / Ctrl+Q = quit
+         ? = help screen — bindings reference
 ```
 
 #### Key bindings (move mode, once `m` pressed)
 
 ```
-←/→ or h/l     move card to adjacent column
-↑/↓ or j/k     reorder card within current column
-Enter          commit — single move_task/reorder call
-Esc            cancel — discard, no calls made
+←/→ or h/l = move card to adjacent column
+↑/↓ or j/k = reorder card within current column
+     Enter = commit — single move_task/reorder call
+       Esc = cancel — discard, no calls made
 ```
 
 ### Refresh Strategy
@@ -889,3 +889,23 @@ The filesystem remains the source of truth for the TUI, and the TUI consumes the
 3) **Manual refresh key** (`r` or `:refresh`) — explicit fallback for when focus-tracking isn't supported (notably gaps in tmux/screen pass-through) or when something changes while the terminal stays focused the whole time.
 
 In addition the TUI will refresh whenever a git sync is executed from within the app, akin to refreshing after a mutation.
+
+## Configuration
+
+Configuration values are addressed by a `section.key` keypath. The supported set is defined by `CONFIG_KEYS` in the service layer, and `KanbanService.get_config`/`set_config` raise `InvalidConfigKey` for anything outside it. 
+
+Arbitrary values belong in userdata, although it may make sense to combine the two.
+
+The supported keys follow:
+
+```INI
+[user]
+  # the name of the user, used when creating a task and in comments
+  name = "philip"
+
+[repository]
+  # the folder in the repository that contains the kanban store
+  worktree = ".kanban-store"
+  # the git branch associated with the worktree
+  branch = "kanban"
+```

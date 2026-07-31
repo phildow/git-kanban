@@ -12,6 +12,7 @@ Path arguments are explicit and fully specified by the caller.
 import argparse
 
 from ..models import Priority
+from ..services.kanban import CONFIG_KEYS
 from ..repl.commands import (
     handle_board_list,
     handle_column_list,
@@ -40,6 +41,7 @@ from ..repl.commands import (
 
 SORT_TASK_CHOICES = ["title", "priority", "due-date", "created-at", "updated-at", "created-by", "column"]
 PRIORITY_CHOICES = [p.value for p in Priority]
+_CONFIG_KEYS_HELP = ", ".join(sorted(CONFIG_KEYS))
 
 class CustomFormatter(argparse.RawDescriptionHelpFormatter):
     @staticmethod
@@ -244,13 +246,13 @@ def _add_config_parser(subparsers: argparse._SubParsersAction) -> None:
     config_sub.required = False  # allow `config` with no subcommand to list all config values
 
     p = config_sub.add_parser("set", help="Set a configuration value")
-    p.add_argument("key", metavar="KEY", help="Configuration key (e.g. name)")
+    p.add_argument("key", metavar="KEY", help=f"Configuration key ({_CONFIG_KEYS_HELP})")
     p.add_argument("value", metavar="VALUE", help="Configuration value")
     _add_global_flags(p)
     p.set_defaults(func=handle_set_config)
 
     p = config_sub.add_parser("get", help="Get a configuration value")
-    p.add_argument("key", metavar="KEY", help="Configuration key (e.g. name)")
+    p.add_argument("key", metavar="KEY", help=f"Configuration key ({_CONFIG_KEYS_HELP})")
     _add_global_flags(p)
     p.set_defaults(func=handle_get_config)
 

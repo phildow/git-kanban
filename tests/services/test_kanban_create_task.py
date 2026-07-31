@@ -12,7 +12,7 @@ from uuid import uuid4
 
 from kanban.models import Priority, Task
 from kanban.services.git import GitService
-from kanban.services.kanban import KanbanService, TaskCreateParams
+from kanban.services.kanban import CONFIG_USER_NAME, KanbanService, TaskCreateParams
 from kanban.storage.base import BoardNotFound, ColumnNotFound, TaskAlreadyExists
 from kanban.storage.memory import InMemoryRepository
 
@@ -205,10 +205,39 @@ class TestKanbanServiceCreateTaskCreatedBy(unittest.TestCase):
         self.assertEqual(task.created_by, "bob")
 
     def test_created_by_defaults_to_none(self) -> None:
-        """When no creator is supplied created_by is None."""
+        """When no creator is supplied and user.name is unset created_by is None."""
         task = self.svc.create_task("alpha/todo", TaskCreateParams(title="fix-login"))
 
         self.assertIsNone(task.created_by)
+
+
+class TestKanbanServiceCreateTaskCreatedByConfig(unittest.TestCase):
+    """The configured user.name is the fallback creator for new tasks."""
+
+    def setUp(self) -> None:
+        self.svc, self.repo = _make_service()
+        self.svc.set_config(CONFIG_USER_NAME, "philip")
+
+    def test_configured_user_name_is_used(self) -> None:
+        """With user.name set and no explicit creator, created_by is the configured name."""
+        task = self.svc.create_task("alpha/todo", TaskCreateParams(title="fix-login"))
+
+        self.assertEqual(task.created_by, "philip")
+
+    def test_configured_user_name_is_persisted(self) -> None:
+        """The fallback creator is written to the stored task, not just the returned one."""
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="fix-login"))
+
+        self.assertEqual(self.repo.get_task("alpha", "todo", "fix-login").created_by, "philip")
+
+    def test_explicit_created_by_wins(self) -> None:
+        """An explicit creator takes precedence over the configured user.name."""
+        task = self.svc.create_task(
+            "alpha/todo",
+            TaskCreateParams(title="fix-login", created_by="bob"),
+        )
+
+        self.assertEqual(task.created_by, "bob")
 
 
 class TestKanbanServiceCreateTaskDescription(unittest.TestCase):
