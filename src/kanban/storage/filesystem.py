@@ -41,18 +41,14 @@ class FilesystemRepository(KanbanRepository):
     @property
     def kanban_dir(self) -> Path | None:
         return self.root / ".kanban"
-
-    @property
-    def kanban_store_dir(self) -> Path:
-        return self.root / ".kanban-store"
-
-    @property
-    def boards_dir(self) -> Path:
-        return self.kanban_store_dir / "boards"
     
     @property
     def config_file(self) -> Path:
         return cast(Path, self.kanban_dir) / "config"
+
+    @property
+    def history_file(self) -> Path:
+        return cast(Path, self.kanban_dir) / "history"
 
     @property
     def userdata_file(self) -> Path:
@@ -62,33 +58,52 @@ class FilesystemRepository(KanbanRepository):
     def index_file(self) -> Path:
         return cast(Path, self.kanban_dir) / "index.db"
 
+    @property
+    def kanban_store_dir(self) -> Path:
+        return self.root / ".kanban-store"
+
+    @property
+    def boards_dir(self) -> Path:
+        return self.kanban_store_dir / "boards"
+
     # ------------------------------------------------------------------
     # Initialization (setup)
     # ------------------------------------------------------------------
 
     @property
     def is_initialized(self) -> bool:
-        kanban_dir = cast(Path, self.kanban_dir)
-        return kanban_dir.exists() and self.kanban_store_dir.exists()
+        """Return True when the kanban store exists. Local data is not required."""
+        return self.kanban_store_dir.exists()
+
+    @property
+    def has_local_data(self) -> bool:
+        """Return True when the local data directory exists."""
+        return cast(Path, self.kanban_dir).exists()
 
     def init_storage(self) -> None:
+        """Create the .kanban-store directory where boards and tasks are stored."""
         if self.is_initialized:
             raise RepositoryAlreadyInitialized(self.root)
 
-        kanban_dir = cast(Path, self.kanban_dir)
-        kanban_dir.mkdir()
-        (kanban_dir / "history").touch()
-        self.config_file.touch()
-
-        kanban_store_dir = self.kanban_store_dir
-        kanban_store_dir.mkdir()
-        self.userdata_file.touch()
-        
-        self.index_file.touch()
+        self.kanban_store_dir.mkdir()
 
         boards_dir = self.boards_dir
         boards_dir.mkdir()
         (boards_dir / ".metadata").touch()
+
+    def init_local_data(self) -> None:
+        """Create the .kanban directory holding config, user data, history, and the index.
+
+        Local data is machine-local and disposable, so this is idempotent: existing
+        directories and files are left as they are.
+        """
+        kanban_dir = cast(Path, self.kanban_dir)
+        kanban_dir.mkdir(exist_ok=True)
+
+        self.history_file.touch()
+        self.config_file.touch()
+        self.userdata_file.touch()
+        self.index_file.touch()
 
     # ------------------------------------------------------------------
     # Board operations

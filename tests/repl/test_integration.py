@@ -15,7 +15,7 @@ Conventions
 Layout
 ------
 _ReplBase               setUp/tearDown, run_repl helper, boards_dir
-_InitializedReplBase    Adds repo.init_storage() so commands run immediately
+_InitializedReplBase    Adds repo.init_storage()/init_local_data() so commands run immediately
 TestReplInit            `init` and `init --bootstrap` on a fresh repo
 TestReplContext         `board` context command
 TestReplCreate          `create`/`new`/`n` for boards, columns, and tasks
@@ -120,11 +120,12 @@ class _ReplBase(unittest.TestCase):
 
 
 class _InitializedReplBase(_ReplBase):
-    """Adds init_storage() so all commands run immediately."""
+    """Adds init_storage() and init_local_data() so all commands run immediately."""
 
     def setUp(self) -> None:
         super().setUp()
         self.repo.init_storage()
+        self.repo.init_local_data()
 
 
 # ---------------------------------------------------------------------------

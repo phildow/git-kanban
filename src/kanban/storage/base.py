@@ -134,20 +134,45 @@ class KanbanRepository(ABC):
     @property
     @abstractmethod
     def is_initialized(self) -> bool:
-        """Return True if the repository is already initialized at the current path."""
+        """
+        Return True if the repository is already initialized at the current path.
+
+        Only the store must exist for a repository to be considered initialized;
+        local data is optional.
+        """
+        return False
+
+    @property
+    @abstractmethod
+    def has_local_data(self) -> bool:
+        """Return True if local data storage exists, or False when the repository has none."""
         return False
 
     @abstractmethod
     def init_storage(self) -> None:
         """
-        Initialize repository state for first use. Called by the KanbanService when creating 
-        a new repository.
+        Initialize the kanban store for first use. Called by the KanbanService when
+        creating a new repository.
 
-        Do not create the default board/column structure here; the service handles that. 
-        This method is for storage-specific initialization, such as creating necessary 
+        The store holds the boards, columns, and tasks and is the only storage
+        required for kanban to operate.
+
+        Do not create the default board/column structure here; the service handles that.
+        This method is for storage-specific initialization, such as creating necessary
         directories or files.
 
-        Raises ValueError when already initialized.
+        Raises RepositoryAlreadyInitialized when the store already exists.
+        """
+
+    @abstractmethod
+    def init_local_data(self) -> None:
+        """
+        Initialize local data storage: config, user data, history, and the index cache.
+
+        Local data is machine-local, disposable, and not required for kanban to
+        operate, so implementations are idempotent and never raise when the local
+        data already exists. Repositories without local data implement this as a
+        no-op.
         """
 
     # ------------------------------------------------------------------

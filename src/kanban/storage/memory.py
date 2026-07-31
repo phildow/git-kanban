@@ -62,11 +62,19 @@ class InMemoryRepository(KanbanRepository):
            raise ValueError("Kanban is already initialized")
         else:
             self._is_initialized = True
-        
+
+    def init_local_data(self) -> None:
+        """No-op: the in-memory repository keeps no local data on disk."""
+
     @property
     def is_initialized(self) -> bool:
         """Return True if the repository is already initialized at the current path."""
         return self._is_initialized
+
+    @property
+    def has_local_data(self) -> bool:
+        """Return False: the in-memory repository keeps no local data on disk."""
+        return False
 
     # ------------------------------------------------------------------
     # Board operations
