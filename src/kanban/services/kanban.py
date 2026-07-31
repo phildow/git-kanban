@@ -91,6 +91,15 @@ class KanbanService(CompletionDataSource):
         self._user_context = UserContext()
 
         if self.is_initialized:
+            # The store may exist without local data, e.g. on a fresh clone or after
+            # the user deletes .kanban. Local data is machine-local and disposable,
+            # so recreate it lazily rather than requiring another initialization.
+            if not self.has_local_data:
+                try:
+                    self.repository.init_local_data()
+                except OSError as exc:
+                    logging.warning("Failed to create local data storage: %s", exc)
+
             # Load user context from userdata if available, else use defaults.
             user_board = self.get_userdata("user-context.board")
             self._user_context.board = Slug(user_board) if user_board else None
@@ -111,20 +120,29 @@ class KanbanService(CompletionDataSource):
 
     @property
     def is_initialized(self) -> bool:
-        """Return True if the repository is already initialized at the current path."""
-        # Move path.exists() check to repository
+        """
+        Return True if the repository is already initialized at the current path.
+
+        Only the store is required; local data may be missing.
+        """
         return self.repository.is_initialized
+
+    @property
+    def has_local_data(self) -> bool:
+        """Return True if local data (config, user data, history, index) storage exists."""
+        return self.repository.has_local_data
 
     def initialize_kanban(self, path: Path = Path("."), config: BootstrapConfig | None = None) -> bool:
         """
-        Create the .kanban/ and .kanban-store/ directory skeleton, initialize git, and write the
-        first commit.  Raises AlreadyInitialized if .kanban/ or .kanban-store/ already exists at
-        path.  This is the only method that runs before the services are fully
+        Create the .kanban-store/ store and the .kanban/ local data skeleton, initialize git,
+        and write the first commit.  Raises AlreadyInitialized if .kanban-store/ already exists
+        at path.  This is the only method that runs before the services are fully
         operational, so it orchestrates creation order directly: filesystem
         first, index second, git last.
         """
 
         self.repository.init_storage()
+        self.repository.init_local_data()
         self._bootstrap(config)
 
         if config is not None:

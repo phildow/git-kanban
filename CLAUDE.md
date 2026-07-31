@@ -168,6 +168,8 @@ root-directory
 ### Git
 
 The kanban store is set up as a git worktree, created when the kanban project is initialized and before the kanban store folder is created. It must be created in multiple steps using an orphan branch.
+
+#### Setting up a Worktree
  
 ```bash
 # 1. create the orphan branch (must be done from the main working tree)
@@ -206,6 +208,8 @@ The kanban-store worktree shares the same object store as the root directory but
 - Its own index — the staging area for the next commit
 - Its own working tree files — the actual files on disk
 
+#### Using the Worktree
+
 In order for changes to the kanban-store directory to be tracked in their own worktree, git commands executed by kanban service must be instructed to execute within that folder, for example:
 
 ```bash
@@ -218,6 +222,35 @@ git -C .kanban-store status
 git -C .kanban-store push
 git -C .kanban-store pull
 ```
+
+#### Onboarding a New Team Member
+
+When setting up a new teammate with the kanban store after cloning the repository, you must run the following commands:
+
+```bash
+git checkout kanban
+git checkout main
+git worktree add .kanban-store kanban
+```
+
+In python:
+
+```python
+def init(repo_path):
+    repo = pygit2.Repository(repo_path)
+    
+    if "origin/kanban" in repo.branches.remote:
+        # branch exists on remote — check it out into the worktree
+        repo.create_branch("kanban", repo.branches.remote["origin/kanban"].peel())
+        subprocess.run(["git", "worktree", "add", ".kanban-store", "kanban"])
+    else:
+        # first time — create the orphan branch and push it
+        _create_orphan_branch(repo)
+        subprocess.run(["git", "worktree", "add", ".kanban-store", "kanban"])
+        subprocess.run(["git", "-C", ".kanban-store", "push", "--set-upstream", "origin", "kanban"])
+```
+
+#### Storing Configuration
 
 The worktree and branch are stored in the .kanban/config file:
 

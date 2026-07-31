@@ -17,6 +17,7 @@ class TestFilesystemGetConfig(unittest.TestCase):
         self.root = Path(self._tmp.name)
         self.repo = FilesystemRepository(root=self.root)
         self.repo.init_storage()
+        self.repo.init_local_data()
 
     def tearDown(self) -> None:
         self._tmp.cleanup()
@@ -48,6 +49,7 @@ class TestFilesystemGetUserdata(unittest.TestCase):
         self.root = Path(self._tmp.name)
         self.repo = FilesystemRepository(root=self.root)
         self.repo.init_storage()
+        self.repo.init_local_data()
         self.repo.set_userdata("user-context.board", "alpha")
 
     def tearDown(self) -> None:

@@ -1,27 +1,58 @@
 
-# Git Kanban
+# Terminal Kanban
 
 Kanban for engineers. Git-backed, Markdown-based kanban for your terminal.
 
-The repository uses pyenv and virtualenv. Run `.venv/bin/activate` to activate the virtual environment.
+Run it as a first class CLI, REPL, or TUI:
+
+```
+$ kanban
+$ kanban repl
+$ kanban tui
+```
+
+Requirements:
+
+```
+Python 3.13
+```
 
 ## Version Map
 
 - 0.6 - CLI and REPL stable
-- 0.7 - Implement indexing and search
+- 0.7 - Implement the TUI
 - 0.8 - Implement git tracking
-- 0.9 - Implement the TUI
+- 0.9 - Implement indexing and search
 - 1.0 - Release
 
 ## Motivation
 
 After some initial success with LLMs at work I wanted to see how far I could get building an application from scratch with the help of a coding agent. I settled on a kanban applicaton for the terminal involving a CLI, REPL, and TUI. I thought it was both small enough in scope to be approachable and large enough in scope to be a challenge. I liked the idea of building a terminal application, being a tool I use daily in my work, and I love the idea of replacing Jira boards.
 
-Some 80% or more of the actual coding is done by an agent. I sometimess hand code features or make changes across components to make sure that I understand the system.
+Some 80% or more of the actual coding is done by an agent. I sometimes hand code features or make changes across components to make sure that I understand the system.
 
 ## Dogfooding
 
 With v0.5 I started dogfooding the project. I moved most of the TODOs out of the README where I was tracking them and into a kanban board saved in this repository. That work is on the `kanban` branch, which per dicussions with Claude is set up as a git worktree. See CLAUDE.md for more information about git worktrees and how this project uses them.
+
+**Try it yourself:**
+
+Git integration is not set up yet, so after cloning the repo run the following commands from the project's root directory:
+
+```
+$ git checkout kanban
+$ git checkout main
+$ git worktree add .kanban-store kanban
+```
+
+To run the TUI, check out the `tui` branch, set up your python environment, and start the application:
+
+```
+$ git checkout tui
+$ python -m venv .venv
+$ pip install -e .
+$ kanban tui
+```
 
 ## Claude Dekstop Conversations
 
