@@ -620,7 +620,8 @@ class BoardScreen(Screen[None]):
 
         if updated is not None:
             self._announce(f"Updated {_task_name(updated.title)}")
-            self._reload_soon(updated.slug)
+            # The form cannot move a task, so an edit stays in one column.
+            self._refresh_columns_soon([updated.column], updated.slug)
 
     def _delete_task(self, task: Task, confirmed: bool) -> None:
         """Delete `task` once the confirmation modal comes back positive."""
