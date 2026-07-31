@@ -136,16 +136,25 @@ CardWidget.-dense {
     border: tall $error;
 }
 
+/* Stands in for the footer while a mode is active, so it wears the footer's
+   own colours rather than looking like a different kind of bar. */
 #mode-bar {
     display: none;
     dock: bottom;
     height: 1;
-    color: $text-muted;
-    background: $panel;
+    padding: 0 1;
+    color: $footer-foreground;
+    background: $footer-background;
 }
 
 #mode-bar.-visible {
     display: block;
+}
+
+/* Completion candidates, which the bar colours itself rather than through
+   markup: the muted colour carries an alpha that only CSS applies. */
+#mode-bar.-muted {
+    color: $text-muted;
 }
 
 .-empty {

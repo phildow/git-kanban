@@ -21,6 +21,7 @@ NORMAL_BINDINGS: list[tuple[str, str]] = [
     ("b", "switch board"),
     ("/", "filter cards as you type — text or `search` flags"),
     (":", "command bar (REPL syntax)"),
+    ("tab", "in either bar, complete the flag or name being typed"),
     ("s", "collapse or expand the sidebar"),
     ("c", "collapse or expand the cards"),
     ("r", "refresh from the filesystem"),

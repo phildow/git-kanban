@@ -93,6 +93,17 @@ class CompletionEngine:
 
         return self._leaf_completions(parser, remaining, partial)
 
+    def partial_at(self, line: str, cursor: int) -> str:
+        """Return the partial token the cursor sits in.
+
+        Callers that splice a candidate back into the line need to know
+        how much of it the candidate replaces. Readline works this out
+        for itself; the TUI has to ask.
+        """
+
+        _, partial = self._split_for_completion(line[:cursor])
+        return partial
+
     def _descend(
         self, parser: argparse.ArgumentParser, tokens: list[str]
     ) -> tuple[argparse.ArgumentParser, list[str], argparse._SubParsersAction | None]:

@@ -23,7 +23,7 @@ from textual.containers import Horizontal
 from textual.markup import escape
 from textual.reactive import reactive
 from textual.screen import Screen
-from textual.widgets import Footer, Header, ListView, Static
+from textual.widgets import Footer, Header, Input, ListView, Static
 
 from ...models import Board, Column, Slug, Task
 from ...services.kanban import (
@@ -32,14 +32,18 @@ from ...services.kanban import (
     TaskUnsetParams,
     TaskUpdateParams,
 )
-from ..filter_query import FilterQuery, parse_filter
+from ...repl.completion_engine import CompletionEngine
+from ...repl.parser import build_parser as build_repl_parser
+from ..filter_query import FilterQuery, build_filter_parser, parse_filter
 from ..formatting import board_subtitle
 from ..widgets import (
     ColumnView,
     CommandBar,
+    CompletingInput,
     FilterBar,
     ModeBar,
     SidebarPanel,
+    format_hints,
 )
 from .board_switcher import BoardChoice, BoardSwitcherScreen, CreateBoard
 from .confirm import ConfirmScreen
@@ -51,15 +55,28 @@ from .task_form import TaskFormResult, TaskFormScreen
 if TYPE_CHECKING:
     from ..app import KanbanApp
 
-MOVE_KEYS = (
-    "←/→ h/l  column    ↑/↓ j/k  position    ⇧  to the end    "
-    "enter  commit    esc  cancel"
-)
-FILTER_HINTS = (
-    "  text, or search flags such as -t bug -p high    "
-    "enter  keep filter    esc  clear"
-)
-COMMAND_HINTS = "  REPL syntax    enter  run    esc  cancel"
+# Hints for the modes that replace the footer, in the footer's own key/description
+# form so the bar reads as a continuation of it rather than as something else.
+MOVE_KEYS: list[tuple[str, str]] = [
+    ("←/→ h/l", "Column"),
+    ("↑/↓ j/k", "Position"),
+    ("⇧", "To the end"),
+    ("↵", "Commit"),
+    ("esc", "Cancel"),
+]
+FILTER_KEYS: list[tuple[str, str]] = [
+    ("tab", "Complete"),
+    ("↵", "Keep filter"),
+    ("esc", "Clear"),
+]
+COMMAND_KEYS: list[tuple[str, str]] = [
+    ("tab", "Complete"),
+    ("↵", "Run"),
+    ("esc", "Cancel"),
+]
+
+# How many completion candidates the hint bar will list before giving up.
+COMPLETION_HINTS = 12
 
 # Commands that need a real terminal — an editor or a confirmation prompt — and
 # so cannot be driven from the command bar while the TUI owns the screen.
@@ -148,8 +165,24 @@ class BoardScreen(Screen[None]):
         yield Footer(compact=True)
 
     async def on_mount(self) -> None:
-        """Load the board once the screen is attached."""
+        """Attach the completers and load the board."""
+        self._install_completers()
         await self.reload()
+
+    def _install_completers(self) -> None:
+        """
+        Give each bar the completions it should offer.
+
+        Both reuse the REPL's completion engine, so Tab completes the same
+        commands, flags, tags, and names it does there.  The filter bar is
+        walked against its own parser, the command bar against the REPL's.
+        """
+        self.query_one(FilterBar).completer = CompletionEngine(
+            self.svc, build_filter_parser()
+        )
+        self.query_one(CommandBar).completer = CompletionEngine(
+            self.svc, build_repl_parser()
+        )
 
     # ── Accessors ─────────────────────────────────────────────────────────────
 
@@ -693,10 +726,14 @@ class BoardScreen(Screen[None]):
         self._show_hints(self._move_hints(move))
 
     def _move_hints(self, move: MoveState) -> str:
-        """Return the move-mode footer, naming the staged destination and position."""
+        """Return the move-mode hints, naming the staged destination and position."""
         target = self._columns[move.column_index]
         slots = self._staged_limit(move) + 1
-        return f"  → /{target.slug}  {move.position + 1}/{slots}    {MOVE_KEYS}"
+        destination = (
+            f"[$accent]→ /{escape(target.slug)}[/]"
+            f" [$text-muted]{move.position + 1}/{slots}[/]"
+        )
+        return f"{destination}   {format_hints(MOVE_KEYS)}"
 
     def _set_moving_card(self, moving: bool) -> None:
         """Mark, or unmark, the card being moved."""
@@ -954,14 +991,19 @@ class BoardScreen(Screen[None]):
         bar = self.query_one(FilterBar)
         bar.add_class("-visible")
         bar.focus()
-        self._show_hints(FILTER_HINTS)
+        self._show_hints(self._bar_hints(bar))
 
     def action_command(self) -> None:
         """Open the command bar."""
         bar = self.query_one(CommandBar)
         bar.add_class("-visible")
         bar.focus()
-        self._show_hints(COMMAND_HINTS)
+        self._show_hints(self._bar_hints(bar))
+
+    def _bar_hints(self, bar: Input) -> str:
+        """Return the hints belonging to whichever bar is open."""
+        keys = FILTER_KEYS if isinstance(bar, FilterBar) else COMMAND_KEYS
+        return format_hints(keys)
 
     def action_cancel(self) -> None:
         """Escape: close an open bar, clear the filter, or cancel a staged move."""
@@ -992,8 +1034,28 @@ class BoardScreen(Screen[None]):
         if column is not None:
             column.focus()
 
+    def on_completing_input_ambiguous(self, event: CompletingInput.Ambiguous) -> None:
+        """
+        Show the candidates Tab could not choose between.
+
+        They are muted so they read as suggestions rather than as the key
+        hints they stand in for.
+        """
+        candidates = "   ".join(
+            escape(candidate) for candidate in event.candidates[:COMPLETION_HINTS]
+        )
+        self._show_hints(candidates, muted=True)
+
     def on_input_changed(self, event: FilterBar.Changed) -> None:
         """Live-filter the visible cards as the user types in the filter bar."""
+        # Closing a bar clears it, and that change arrives after the close.  A
+        # hidden bar has no hints to restore.
+        if not event.input.has_class("-visible"):
+            return
+
+        # Typing moves past any completion candidates still on the hint bar.
+        self._show_hints(self._bar_hints(event.input))
+
         if not isinstance(event.input, FilterBar):
             return
         parsed = parse_filter(event.value)
@@ -1069,12 +1131,12 @@ class BoardScreen(Screen[None]):
         if output:
             self.app.push_screen(OutputScreen(line, output))
 
-    def _show_hints(self, hints: str) -> None:
+    def _show_hints(self, hints: str, *, muted: bool = False) -> None:
         """Swap the footer for a contextual hint bar."""
         mode_bar = self.mode_bar
         if mode_bar is None:
             return
-        mode_bar.show(hints)
+        mode_bar.show(hints, muted=muted)
         self._set_footer_visible(False)
 
     def _hide_hints(self) -> None:
