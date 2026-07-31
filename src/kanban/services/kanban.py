@@ -938,12 +938,14 @@ class KanbanService(CompletionDataSource):
         """
         Append a comment to a task's body under a `# Comments` heading. If the
         task body does not already contain a `# Comments` heading, one is
-        added before the comment. Accepts a fully-qualified Path (from the CLI)
-        or a bare task Slug (from the REPL). Raises TaskNotFound if the task
-        cannot be resolved. Updates the index and commits.
+        added before the comment. The comment is filed under a dated `##`
+        heading of its own, naming the configured `user.name` when there is
+        one. Accepts a fully-qualified Path (from the CLI) or a bare task Slug
+        (from the REPL). Raises TaskNotFound if the task cannot be resolved.
+        Updates the index and commits.
         """
         task = self.get_task(path)
-        task.append_comment(comment)
+        task.append_comment(comment, author=self.get_config(CONFIG_USER_NAME))
         updated = self.repository.update_task(task, slug=task.slug)
         self.index_service.upsert_task(updated)
         return updated

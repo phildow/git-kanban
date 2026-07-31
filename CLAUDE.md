@@ -405,10 +405,19 @@ updated_at: 2026-06-12T10:00:00Z
 # Description  
 ...
 # Comments
-...
+
+## 2026-06-12 @mark
+
+Investigating.
+
+## 2026-06-13 @alice
+
+Fixed on the auth branch.
 ```
 
 Following the frontmatter are two sections delineated by markdown headers: the task's Description and Comments that have been added to the task. The `# Description` header is added to the task's markdown when it is created. The `# Comments` header is added only when a comment has been made on the task.
+
+Each comment is filed under an `## H2` heading of its own carrying the date it was made, in `YYYY-MM-DD` format, and — when the `user.name` config value is set — the author as `@name`. Comments are only ever appended, never rewritten.
 
 ### The CLI
 

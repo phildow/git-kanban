@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import MagicMock
 from uuid import uuid4
 
 from kanban.services.git import GitService
-from kanban.services.kanban import KanbanService, TaskCreateParams
+from kanban.services.kanban import CONFIG_USER_NAME, KanbanService, TaskCreateParams
 from kanban.storage.memory import InMemoryRepository
 
 
@@ -61,6 +62,35 @@ class TestKanbanServiceCommentTask(unittest.TestCase):
 		original = self.svc.get_task(Path("alpha/todo/fix-login"))
 		result = self.svc.comment_task(Path("alpha/todo/fix-login"), "hi")
 		self.assertEqual(result.id, original.id)
+
+	def test_comment_is_filed_under_a_dated_heading(self) -> None:
+		"""Each comment gets an `## YYYY-MM-DD` heading of its own."""
+		result = self.svc.comment_task(Path("alpha/todo/fix-login"), "First comment")
+		today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+		self.assertIn(f"## {today}", result.body)
+
+	def test_each_comment_gets_its_own_heading(self) -> None:
+		"""A second comment is filed under a heading of its own, not the first one's."""
+		self.svc.comment_task(Path("alpha/todo/fix-login"), "First comment")
+		result = self.svc.comment_task(Path("alpha/todo/fix-login"), "Second comment")
+
+		self.assertEqual(result.body.count("## "), 2)
+
+	def test_heading_names_the_configured_user(self) -> None:
+		"""With user.name set the heading names the author with an `@`."""
+		self.svc.set_config(CONFIG_USER_NAME, "philip")
+
+		result = self.svc.comment_task(Path("alpha/todo/fix-login"), "First comment")
+		today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+		self.assertIn(f"## {today} @philip", result.body)
+
+	def test_heading_is_the_date_alone_without_a_configured_user(self) -> None:
+		"""With no user.name the heading carries no author."""
+		result = self.svc.comment_task(Path("alpha/todo/fix-login"), "First comment")
+
+		self.assertNotIn("@", result.body)
 
 
 if __name__ == "__main__":

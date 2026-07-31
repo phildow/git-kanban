@@ -4,11 +4,15 @@ from __future__ import annotations
 
 import unittest
 
+from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
 from kanban.models import Slug, Task
-from kanban.models.task import comments_of, description_of
+from kanban.models.task import comment_heading, comments_of, description_of
+
+# A fixed moment, so a comment's dated heading is predictable.
+WHEN = datetime(2026, 7, 31, 10, 0, tzinfo=timezone.utc)
 
 
 def make_task(body: str = "") -> Task:
@@ -132,32 +136,78 @@ class TestTaskDescriptionProperty(unittest.TestCase):
         self.assertEqual(task.description, "hello world")
 
 
+class TestCommentHeading(unittest.TestCase):
+    """comment_heading dates a comment, and names its author when there is one."""
+
+    def test_date_only_without_an_author(self) -> None:
+        """With no author the heading is the date alone."""
+        self.assertEqual(comment_heading(when=WHEN), "## 2026-07-31")
+
+    def test_author_follows_the_date(self) -> None:
+        """A named author is appended to the date with an `@`."""
+        self.assertEqual(comment_heading(author="philip", when=WHEN), "## 2026-07-31 @philip")
+
+    def test_author_at_is_not_doubled(self) -> None:
+        """A name already written with an `@` keeps the one it has."""
+        self.assertEqual(comment_heading(author="@philip", when=WHEN), "## 2026-07-31 @philip")
+
+    def test_blank_author_is_treated_as_none(self) -> None:
+        """An author of whitespace names nobody."""
+        self.assertEqual(comment_heading(author="   ", when=WHEN), "## 2026-07-31")
+
+    def test_date_defaults_to_today(self) -> None:
+        """Without a date the heading carries today's, in UTC."""
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        self.assertEqual(comment_heading(), f"## {today}")
+
+
 class TestAppendComment(unittest.TestCase):
     """Task.append_comment produces the correct body layout."""
 
     def test_empty_body_produces_heading_and_comment(self) -> None:
         """An empty body becomes a `# Comments` heading followed by the comment."""
         task = make_task()
-        task.append_comment("hi")
-        self.assertEqual(task.body, "# Comments\n\nhi")
+        task.append_comment("hi", when=WHEN)
+        self.assertEqual(task.body, "# Comments\n\n## 2026-07-31\n\nhi")
 
     def test_body_without_heading_adds_heading(self) -> None:
         """A non-empty body without the heading gets the heading before the comment."""
         task = make_task("# Description\n\nSome text.")
-        task.append_comment("hi")
-        self.assertEqual(task.body, "# Description\n\nSome text.\n\n# Comments\n\nhi")
+        task.append_comment("hi", when=WHEN)
+        self.assertEqual(
+            task.body,
+            "# Description\n\nSome text.\n\n# Comments\n\n## 2026-07-31\n\nhi",
+        )
 
     def test_body_with_heading_appends_only_comment(self) -> None:
         """A body already containing the heading only receives the new comment."""
-        task = make_task("# Comments\n\nfirst")
-        task.append_comment("second")
-        self.assertEqual(task.body, "# Comments\n\nfirst\n\nsecond")
+        task = make_task("# Comments\n\n## 2026-07-30\n\nfirst")
+        task.append_comment("second", when=WHEN)
+        self.assertEqual(
+            task.body,
+            "# Comments\n\n## 2026-07-30\n\nfirst\n\n## 2026-07-31\n\nsecond",
+        )
 
     def test_trailing_whitespace_is_stripped_from_body(self) -> None:
         """Trailing whitespace in the original body is trimmed before appending."""
         task = make_task("# Description\n\nSome text.\n\n\n")
-        task.append_comment("hi")
-        self.assertEqual(task.body, "# Description\n\nSome text.\n\n# Comments\n\nhi")
+        task.append_comment("hi", when=WHEN)
+        self.assertEqual(
+            task.body,
+            "# Description\n\nSome text.\n\n# Comments\n\n## 2026-07-31\n\nhi",
+        )
+
+    def test_author_is_named_in_the_heading(self) -> None:
+        """The comment's heading carries the author it was given."""
+        task = make_task()
+        task.append_comment("hi", author="philip", when=WHEN)
+        self.assertEqual(task.body, "# Comments\n\n## 2026-07-31 @philip\n\nhi")
+
+    def test_comment_whitespace_is_trimmed(self) -> None:
+        """Blank lines around the comment do not separate it from its heading."""
+        task = make_task()
+        task.append_comment("\n  hi  \n\n", when=WHEN)
+        self.assertEqual(task.body, "# Comments\n\n## 2026-07-31\n\nhi")
 
     def test_mutates_in_place(self) -> None:
         """The task itself is changed; nothing is returned to assign back."""
@@ -204,11 +254,14 @@ class TestTaskCommentsProperty(unittest.TestCase):
         self.assertEqual(make_task().comments, "")
 
     def test_reads_back_what_was_appended(self) -> None:
-        """Comments survive being appended and read."""
+        """Comments survive being appended and read, each under its own heading."""
         task = make_task()
-        task.append_comment("first")
-        task.append_comment("second")
-        self.assertEqual(task.comments, "first\n\nsecond")
+        task.append_comment("first", when=WHEN)
+        task.append_comment("second", when=WHEN)
+        self.assertEqual(
+            task.comments,
+            "## 2026-07-31\n\nfirst\n\n## 2026-07-31\n\nsecond",
+        )
 
 
 class TestCommentsAlongsideDescription(unittest.TestCase):

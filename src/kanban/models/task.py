@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from uuid import UUID
 
@@ -83,28 +83,57 @@ class Task(Sluggable):
 
         self.body = f"{preamble}{block}"
 
-    def append_comment(self, comment: str) -> None:
+    def append_comment(
+        self,
+        comment: str,
+        *,
+        author: str | None = None,
+        when: datetime | None = None,
+    ) -> None:
         """
         Add `comment` under the task's `# Comments` heading.  Mutates `body` in place.
 
+        Each comment is filed under a `## YYYY-MM-DD @author` heading of its
+        own, naming the day it was made and, when it is known, who made it, so
+        the section reads as a dated thread rather than as one run of text.
+        `when` defaults to now; an unknown `author` leaves the heading as just
+        the date.
+
         Comments are only ever appended, never rewritten.  Trailing whitespace
-        is trimmed from the body first, and the heading is added if the body
-        does not already carry one.
+        is trimmed from the body first, and the `# Comments` heading is added if
+        the body does not already carry one.
         """
         body = (self.body or "").rstrip()
+        entry = f"{comment_heading(author=author, when=when)}\n\n{comment.strip()}"
 
         if COMMENTS_HEADING_RE.search(body):
-            self.body = f"{body}\n\n{comment}" if body else comment
+            self.body = f"{body}\n\n{entry}" if body else entry
         elif body:
-            self.body = f"{body}\n\n# Comments\n\n{comment}"
+            self.body = f"{body}\n\n# Comments\n\n{entry}"
         else:
-            self.body = f"# Comments\n\n{comment}"
+            self.body = f"# Comments\n\n{entry}"
 
 
 # ── Markdown body sections ────────────────────────────────────────────────────
 
 COMMENTS_HEADING_RE = re.compile(r"^# Comments\s*$", re.MULTILINE)
 DESCRIPTION_HEADING_RE = re.compile(r"^# Description\s*$", re.MULTILINE)
+
+# How the date reads in a comment's own heading.
+COMMENT_DATE_FORMAT = "%Y-%m-%d"
+
+def comment_heading(author: str | None = None, when: datetime | None = None) -> str:
+    """
+    Return the heading a single comment is filed under: `## YYYY-MM-DD @author`.
+
+    `when` defaults to now, in UTC, as the rest of the task's timestamps are.
+    An author is named with a leading `@`, written only once however the name
+    was configured; without one the heading is the date alone.
+    """
+    stamp = (when or datetime.now(timezone.utc)).strftime(COMMENT_DATE_FORMAT)
+    name = (author or "").strip().lstrip("@").strip()
+
+    return f"## {stamp} @{name}" if name else f"## {stamp}"
 
 def description_of(body: str) -> str:
     """
