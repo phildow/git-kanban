@@ -8,6 +8,7 @@ from datetime import datetime
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
+from textual.markup import escape
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, Markdown, Select, Static
 
@@ -92,9 +93,11 @@ class TaskFormScreen(ModalScreen[TaskFormResult | None]):
             if task is not None:
                 yield TaskHeading(task)
             else:
+                # The column name is the user's own, so it is escaped before
+                # going into markup, and coloured to stand out of the sentence.
+                column = escape(self.column.name) if self.column else ""
                 yield Static(
-                    f"New task in {self.column.name if self.column else ''}",
-                    id="form-heading",
+                    f"New task in [$primary]{column}[/]", id="form-heading"
                 )
             with VerticalScroll(id="form-fields"):
                 yield Label("Title")
