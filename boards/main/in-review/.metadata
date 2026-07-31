@@ -5,28 +5,5 @@
 
 [tasks]
 	order = 
-		scaffold-indexing.md
-		refactor-index-service-into-separate-base-and-service-classes.md
-		repl-uses-rich-text-by-default.md
-		add-edit-flag-to-new-to-immediately-edit.md
-		taskpath-should-not-include-md-extension.md
-		remove-filename-from-model-objects.md
-		implement-search.md
-		fileystemmove-task-returning-board-and-column-name.md
-		exlude-flag-with-list-all-to-exclude-columns-multiple.md
-		check-repl-feedback-after-commands.md
-		spec-the-repl-in-claudemd.md
-		append-description-to-start-of-every-task.md
-		list-continues-to-behave-as-it-previously-did.md
-		rework-repl-commands.md
-		remove-svcworking-from-command-handlers.md
-		use-working-board-and-working-column-in-kanban-service.md
-		update-task-path-title-handling.md
-		revisit-all-path-arguments-in-repl.md
-		remove-fully-qualified-paths-from-the-repl.md
-		move-path-typing-to-with-absolute-path.md
-		update-kanban-service-to-use-slugs-and-paths.md
-		repl-help-shows-path-and-explains-what-it-contains.md
-		remove-support-for-absoulte-paths-from-repl.md
-		reconsider-cli-output-on-all-commands-to-show-slugs.md
+	
 

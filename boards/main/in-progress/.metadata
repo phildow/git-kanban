@@ -5,5 +5,5 @@
 
 [tasks]
 	order = 
-	
+		scaffold-tui.md
 

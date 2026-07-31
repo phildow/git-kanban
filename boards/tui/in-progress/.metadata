@@ -1,0 +1,11 @@
+[fields]
+	name = In Progress
+	slug = in-progress
+	id = a1cd9a74-8fa5-4dca-bf05-6adf56ba4d3e
+
+[tasks]
+	order = 
+		visually-indicate-that-a-filter-has-been-kept.md
+		show-comments-when-editing-a-task.md
+		indicate-there-is-no-description.md
+

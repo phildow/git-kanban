@@ -1,0 +1,12 @@
+[fields]
+	name = TUI
+	slug = tui
+	id = 9d930efa-2e90-46e2-97cb-5bdf5eef55c4
+
+[columns]
+	order = 
+		todo
+		in-progress
+		in-review
+		done
+

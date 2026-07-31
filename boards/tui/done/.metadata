@@ -1,0 +1,29 @@
+[fields]
+	name = Done
+	slug = done
+	id = abc5dc15-8dfe-417c-b1a2-be3235b622b4
+
+[tasks]
+	order = 
+		shit-enter-from-any-field-to-save-a-task.md
+		description-field-when-creating-and-editing-a-task.md
+		pimary-color-for-the-column-name-in-the-new-task-dialog.md
+		ctrl-c-clears-command-and-filter-input.md
+		comments-field-when-creating-and-editing-a-task.md
+		search-behaves-like-it-does-in-the-repl.md
+		the-filter-field-loses-focus-after-typing.md
+		if-viewing-a-comment-e-should-edit-it.md
+		when-creating-a-new-task-only-refresh-the-target-column.md
+		include-board-name-at-top-of-screen.md
+		board-title-shows-name-and-path.md
+		add-a-v-keyboard-to-view-the-selected-task.md
+		bind-page-keys-and-arrow-key-modifiers.md
+		toasts-show-name-in-primary-color-path-in-secondary.md
+		show-the-task-title-when-deleting.md
+		edit-shows-the-task-title-in-the-primary-color-path-in-secondary.md
+		use-board-titles-in-board-switcher.md
+		dont-refresh-when-switching-back-to-terminal.md
+		board-hints-at-bottom-missing-items.md
+		reduce-the-width-of-the-scroll-bars.md
+		cmd-arrow-should-move-to-the-start-or-end-of-a-text-line.md
+
