@@ -127,6 +127,45 @@ class TestBoardSelection(unittest.IsolatedAsyncioTestCase):
 
             self.assertEqual(svc.selection.task, "second")
 
+    async def test_arrows_in_the_command_bar_do_not_move_the_selection(self) -> None:
+        """↑/↓ belong to the open bar: the cards behind it hold still."""
+        svc = _make_service(INSERT_BELOW)
+        async with KanbanApp(svc).run_test() as pilot:
+            await pilot.pause()
+            await pilot.press("down")  # select "second"
+            await pilot.press("slash")
+            await pilot.pause()
+            await pilot.press("down", "down", "up")
+            await pilot.pause()
+
+            self.assertEqual(svc.selection.task, "second")
+
+    async def test_paging_in_the_command_bar_does_not_move_the_selection(self) -> None:
+        """The rest of the navigation family is refused while the bar has focus."""
+        svc = _make_service(INSERT_BELOW)
+        async with KanbanApp(svc).run_test() as pilot:
+            await pilot.pause()
+            await pilot.press("down")  # select "second"
+            await pilot.press("slash")
+            await pilot.pause()
+            await pilot.press("pagedown", "shift+down", "shift+up")
+            await pilot.pause()
+
+            self.assertEqual(svc.selection.task, "second")
+
+    async def test_arrows_in_the_filter_bar_do_not_move_the_selection(self) -> None:
+        """The filter bar takes them too — it is typed into just the same."""
+        svc = _make_service(INSERT_BELOW)
+        async with KanbanApp(svc).run_test() as pilot:
+            await pilot.pause()
+            await pilot.press("down")  # select "second"
+            await pilot.press("colon")
+            await pilot.pause()
+            await pilot.press("down", "pagedown")
+            await pilot.pause()
+
+            self.assertEqual(svc.selection.task, "second")
+
 
 class TestCommandBarNewTaskInsert(unittest.IsolatedAsyncioTestCase):
     """A task created from the command bar is placed against the selected card."""

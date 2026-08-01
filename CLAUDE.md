@@ -893,6 +893,13 @@ KanbanApp(App)
         standing on the card the user was on
 ```
 
+An open bar takes the navigation keys off the board: it binds ↑/↓ itself —
+reserved, doing nothing yet — and the board refuses the rest of the family
+(`BAR_REFUSED_ACTIONS`: the shifted arrows and the paging keys) while a bar
+holds the focus. Otherwise the cards move under a user who is typing, and the
+selection a command is meant for is no longer the card they started on. Escape
+still reaches the board, which is what closes the bar.
+
 #### The Command Palette
 
 The palette (`ctrl+p`) carries app-level actions, the ones with no key of their

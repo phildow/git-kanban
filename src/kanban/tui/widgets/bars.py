@@ -33,9 +33,17 @@ class CompletingInput(TextInput):
     # Tab is bound on the screen for focus movement, and ctrl+c on the app for
     # quitting and on `Input` for copying — none of them with priority, so a
     # binding here takes the key while one of these bars has focus.
+    #
+    # ↑/↓ are the board's card navigation, which a bar with the focus must not
+    # leave running: the cards would move under a user who is typing, and the
+    # selection a command is meant for is the card they started typing on.  The
+    # bar claims them and does nothing with them yet — they are its own keys,
+    # reserved for what it will offer through them.
     BINDINGS = [
         Binding("tab", "complete", "Complete", show=False),
         Binding("ctrl+c", "clear", "Clear", show=False),
+        Binding("up", "previous", "Previous", show=False),
+        Binding("down", "next", "Next", show=False),
     ]
 
     class Ambiguous(Message):
@@ -55,6 +63,12 @@ class CompletingInput(TextInput):
     def action_clear(self) -> None:
         """Empty the bar, leaving it open and focused to type into again."""
         self.value = ""
+
+    def action_previous(self) -> None:
+        """Take ↑ from the board.  Reserved for the bar's own use; does nothing yet."""
+
+    def action_next(self) -> None:
+        """Take ↓ from the board.  Reserved for the bar's own use; does nothing yet."""
 
     def action_complete(self) -> None:
         """Complete the token at the cursor, as far as the candidates agree."""

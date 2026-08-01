@@ -126,6 +126,27 @@ HEADER_ACTIONS = frozenset(
     }
 )
 
+# What the board refuses while the filter or command bar holds the focus.  A
+# bar is typed into, and the board moving beneath it would take the selection
+# off the card the user was on — the card a command from the bar is meant for.
+# The bar binds ↑/↓ itself; these are the rest of the family, which it does not.
+BAR_REFUSED_ACTIONS = frozenset(
+    {
+        "nav_left",
+        "nav_right",
+        "nav_up",
+        "nav_down",
+        "nav_far_left",
+        "nav_far_right",
+        "nav_far_up",
+        "nav_far_down",
+        "nav_page_up",
+        "nav_page_down",
+        "nav_page_left",
+        "nav_page_right",
+    }
+)
+
 # Commands that need a real terminal — an editor or a confirmation prompt — and
 # so cannot be driven from the command bar while the TUI owns the screen.
 UNSUPPORTED_COMMANDS = {"edit"}
@@ -1902,7 +1923,10 @@ class BoardScreen(Screen[None]):
         A card staged for a move keeps the staging keys; a focused column header
         keeps only what moves between columns and back to the cards, so that the
         column's own actions are all it answers to; a column being named gives up
-        everything to the field.
+        everything to the field.  An open input bar gives up the navigation keys
+        the bar itself does not bind — the shifted arrows and the paging keys —
+        so nothing moves under a user who is typing; escape still reaches the
+        board, which is what closes the bar.
 
         A disabled binding is not matched, so the key bubbles past the board
         rather than doing something that was not asked for — and the footer
@@ -1918,6 +1942,8 @@ class BoardScreen(Screen[None]):
             return action in HEADER_ACTIONS
         if focused is not None and isinstance(focused.parent, ColumnHeader):
             return False
+        if isinstance(focused, CompletingInput):
+            return action not in BAR_REFUSED_ACTIONS
 
         return True
 
