@@ -14,7 +14,6 @@ Be succinct.
 
 Update CLAUDE.md when making structural or system design changes. Be even more succinct. CLAUDE.md is a README for humans and machines. Reserve updates to CLAUDE.md for structural changes. Do not include implementation details.
 
-
 ## Python
 
 - Use python as the programming language

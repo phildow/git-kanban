@@ -256,6 +256,9 @@ class BoardScreen(Screen[None]):
         # Column and position the moving card is currently drawn at, or None
         # when no column is showing a staged position.
         self._preview: tuple[Slug, int] | None = None
+        # The column the focus came from when a bar was opened: the bar takes
+        # the focus with it, so the board cannot read where to hand it back.
+        self._bar_focus: Slug | None = None
         # Redraws are scheduled as workers and empty a column before refilling
         # it, so two of them running at once on the same column interleave and
         # leave it holding both sets of cards.  Every redraw takes this first,
@@ -1801,9 +1804,25 @@ class BoardScreen(Screen[None]):
         if bar.history is not None:
             bar.history.reset()
 
+        self._remember_focus()
         bar.add_class("-visible")
         bar.focus()
         self._show_hints(self._bar_hints(bar))
+
+    def _remember_focus(self) -> None:
+        """
+        Note the column the focus is leaving, so closing a bar can return to it.
+
+        Only a column of the board's is worth noting.  Opening a bar from
+        another bar leaves the note where it is: the column it names is still
+        where the user was before any of them opened.
+        """
+        if not isinstance(self.app.focused, ColumnView):
+            return
+
+        column = self.focused_column
+        if column is not None:
+            self._bar_focus = column.column.slug
 
     def _bar_hints(self, bar: Input) -> str:
         """Return the hints belonging to whichever bar is open."""
@@ -1831,10 +1850,23 @@ class BoardScreen(Screen[None]):
             self._cancel_move()
 
     def _close_bar(self, bar: FilterBar | CommandBar) -> None:
-        """Hide an input bar and hand focus back to the board."""
+        """Hide an input bar and hand focus back to the column it was opened from."""
         bar.remove_class("-visible")
         self._hide_hints()
 
+        remembered = self._bar_focus
+        self._bar_focus = None
+        if remembered is not None:
+            view = next(
+                (view for view in self.column_views if view.column.slug == remembered),
+                None,
+            )
+            if view is not None:
+                view.focus()
+                return
+
+        # Nothing was noted, or the column it named is gone: the leftmost column
+        # `focused_column` falls back to is as good a landing as any.
         column = self.focused_column
         if column is not None:
             column.focus()
