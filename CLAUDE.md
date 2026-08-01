@@ -837,7 +837,16 @@ KanbanApp(App)
 │   └── Footer (key bindings hint bar — swaps content in move mode)
 │
 ├── TaskDetailScreen (modal, pushed on Enter/show)
-│   └── renders a single Task: title, assigned_to, priority, due date, tags, description, comments
+│   ├── renders a single Task: title, assigned_to, priority, due date, tags, description, comments
+│   └── the board's ←/→ ↑/↓ and h/j/k/l keep moving the selection underneath and
+│       the screen redraws on the task they land on.  The modal holds the app's
+│       focus, so the board hands it a `navigate` callable and tracks the column
+│       being read from rather than reading it off `app.focused`.  Focus is per
+│       screen, though, and the board's own still says which column it draws as
+│       focused — so navigating moves that too, or the column the modal opened
+│       from would go on looking focused beside the one being read.  An empty
+│       column is not moved into: there would be no task to draw.  `e` dismisses
+│       with the task shown, which is what the board opens the form on
 │
 ├── TaskFormScreen (modal, pushed on create/edit)
 │   ├── Input: title
@@ -912,6 +921,19 @@ a preference: a failed config read or write is logged, never fatal.
 q / Ctrl+Q = quit
          ? = help screen — bindings reference
 ```
+
+#### Key bindings (task detail, once `Enter` opens it)
+
+```
+←/→ or h/l = show the card selected in the adjacent column
+↑/↓ or j/k = show the next or previous card in this column
+         e = edit the task shown
+q/Esc/Enter = close
+```
+
+The arrows move the board's selection, so closing leaves the user on the card
+they navigated to.  They are the body's scrolling keys, released to the screen
+by `DetailBody.check_action`; PgUp/PgDn, Home/End, and the mouse still scroll it.
 
 #### Key bindings (column header, once `c` reaches it)
 

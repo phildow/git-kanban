@@ -29,3 +29,15 @@ class TaskHeading(Vertical):
         """Lay out the title above the path, each on its own line."""
         yield Static(self.heading_task.title, classes="-task-title")
         yield Static(str(self.heading_task.path), classes="-task-path")
+
+    def set_task(self, task: Task) -> None:
+        """
+        Name `task` in place of the one shown.
+
+        For a screen that follows a selection rather than standing on the task
+        it was opened with — the detail screen, which the board's arrow keys
+        move underneath.
+        """
+        self.heading_task = task
+        self.query_one(".-task-title", Static).update(task.title)
+        self.query_one(".-task-path", Static).update(str(task.path))

@@ -55,6 +55,14 @@ HEADER_BINDINGS: list[tuple[str, str]] = [
     ("the board's keys", "inactive — a header answers to columns only"),
 ]
 
+DETAIL_BINDINGS: list[tuple[str, str]] = [
+    ("←/→ or h/l", "show the card selected in the adjacent column"),
+    ("↑/↓ or j/k", "show the next or previous card in this column"),
+    ("page up/down", "scroll the description and comments"),
+    ("e", "edit the task shown"),
+    ("q, esc, enter", "close"),
+]
+
 MOVE_BINDINGS: list[tuple[str, str]] = [
     ("←/→ or h/l", "stage the card in the adjacent column"),
     ("↑/↓ or j/k", "stage the card higher or lower"),
@@ -75,12 +83,13 @@ class HelpScreen(ModalScreen[None]):
     ]
 
     def compose(self) -> ComposeResult:
-        """Lay out the board, column header, move-mode, and board-switcher tables."""
+        """Lay out the board, column header, task detail, move-mode, and board-switcher tables."""
         with Vertical(id="dialog"):
             yield Static("Key bindings", id="form-heading")
             with VerticalScroll(id="help-body"):
                 yield Static(_section("Board", NORMAL_BINDINGS))
                 yield Static(_section("Column header (c)", HEADER_BINDINGS))
+                yield Static(_section("Task detail (enter)", DETAIL_BINDINGS))
                 yield Static(_section("Move mode", MOVE_BINDINGS))
                 yield Static(_section("Boards (b)", BOARD_BINDINGS))
 

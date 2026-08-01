@@ -187,10 +187,10 @@ class BoardScreen(Screen[None]):
         Binding("e", "edit_task", "Edit", show=True),
         Binding("d", "delete_task", "Delete", show=True),
         Binding("m", "move_task", "Move", show=True),
-        Binding("b", "switch_board", "Board", show=True),
         Binding("slash", "command", "Command", show=True, key_display="/"),
         Binding("colon", "filter", "Filter", show=True, key_display=":"),
         Binding("s", "toggle_sidebar", "Sidebar", show=True),
+        Binding("b", "switch_board", "Board", show=True),
         Binding("c", "focus_header", "Column", show=True),
         Binding("x", "toggle_density", "Collapse", show=True),
         Binding("r", "reload_board", "Refresh", show=True),
@@ -214,6 +214,9 @@ class BoardScreen(Screen[None]):
         self._tasks: dict[Slug, list[Task]] = {}
         self._filter = FilterQuery()
         self._move: MoveState | None = None
+        # The column the detail screen is reading from, while one is open.  The
+        # modal holds focus, so the board's current column cannot be read off it.
+        self._detail_view: ColumnView | None = None
         # The panel standing in for a column being named, before it exists.
         self._draft: ColumnPanel | None = None
         # Column and position the moving card is currently drawn at, or None
@@ -285,8 +288,13 @@ class BoardScreen(Screen[None]):
         Return the focused column, falling back to the leftmost one.
 
         A column is two focus targets — its header and its cards — and either
-        means the same column.
+        means the same column.  A modal covering the board takes the focus with
+        it, but the detail screen still reads from a column of the board's, and
+        that is the one the board is on until it closes.
         """
+        if self._detail_view is not None:
+            return self._detail_view
+
         focused = self.app.focused
         if isinstance(focused, ColumnView):
             return focused
@@ -744,6 +752,10 @@ class BoardScreen(Screen[None]):
     def on_list_view_highlighted(self, event: ListView.Highlighted) -> None:
         """Scope the sidebar log to the highlighted task, or to the board when none."""
         _ = event
+        self._scope_sidebar()
+
+    def _scope_sidebar(self) -> None:
+        """Point the sidebar log at the selected task, or at the board when there is none."""
         sidebar = self.sidebar
         if sidebar is None:
             return
@@ -759,15 +771,73 @@ class BoardScreen(Screen[None]):
 
     def action_view_task(self) -> None:
         """Open the detail screen for the focused card."""
+        column = self.focused_column
         task = self.selected_task
-        if task is None:
+        if column is None or task is None:
             self.notify("No task selected", severity="warning")
             return
 
+        # Held for as long as the modal is up: it is what the board is reading
+        # from, and what its navigation keys move.
+        self._detail_view = column
         self.app.push_screen(
-            TaskDetailScreen(task),
-            lambda edit: self._edit_form(task) if edit else None,
+            TaskDetailScreen(task, navigate=self._navigate_detail),
+            self._detail_closed,
         )
+
+    def _navigate_detail(self, columns: int, cards: int) -> Task | None:
+        """
+        Move the selection under the detail screen, and return what it lands on.
+
+        The same movement the board's own arrows make — `columns` between
+        columns, `cards` within one — so closing the screen leaves the user on
+        the card they navigated to.  A column with nothing in it is not moved
+        into: the detail screen always has a task to draw.
+
+        Returns None when the selection did not move, which is what tells the
+        detail screen it has nothing to redraw.
+        """
+        views = self.column_views
+        view = self._detail_view
+        if view is None or view not in views:
+            return None
+
+        if columns:
+            target = views[
+                max(0, min(views.index(view) + columns, len(views) - 1))
+            ]
+            if target is view or not target.tasks:
+                return None
+
+            if target.index is None:
+                target.index = 0
+            self._detail_view = target
+            # Focus is per screen, so the board's own focus is still on the
+            # column the modal was opened from and still drawn as focused.
+            # Moving it is what moves the board's mark of where it is.
+            target.focus()
+            target.panel.scroll_visible()
+            view = target
+            # Changing column leaves the highlight where it was, so nothing
+            # else tells the sidebar the selection moved.
+            self._scope_sidebar()
+        elif cards and view.tasks:
+            view.index = max(0, min((view.index or 0) + cards, len(view.tasks) - 1))
+
+        return view.selected_task
+
+    def _detail_closed(self, task: Task | None) -> None:
+        """
+        Let go of the column the detail screen was reading from.
+
+        Navigating already moved the board's focus to it, so there is nothing to
+        restore — the screen is handed back exactly as it was left.  `task` is
+        the task the user asked to edit, if they did.
+        """
+        self._detail_view = None
+
+        if task is not None:
+            self._edit_form(task)
 
     def action_new_task(self) -> None:
         """Open the task form to create a task in the focused column."""
