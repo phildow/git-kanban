@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 from uuid import uuid4
 
 from textual.command import Command, CommandInput, CommandList, CommandPalette, Hit
+from textual.pilot import Pilot
 
 from kanban.models import Slug
 from kanban.services.git import GitService
@@ -19,6 +20,10 @@ from kanban.tui.commands import KanbanCommands
 from kanban.tui.screens.config import ConfigScreen
 
 CONFIGURATION = "Configuration"
+
+# Textual's own entries, named as its App yields them.
+QUIT = "Quit"
+THEME = "Theme"
 
 
 def _make_app() -> KanbanApp:
@@ -112,6 +117,75 @@ class TestConfigurationCommand(unittest.IsolatedAsyncioTestCase):
                 if isinstance(option := command_list.get_option_at_index(index), Command)
             ]
             self.assertIn(CONFIGURATION, names)
+
+
+class TestPaletteOrder(unittest.IsolatedAsyncioTestCase):
+    """The palette lists Quit at the bottom, below everything else."""
+
+    async def _discovered(self, pilot: Pilot[None]) -> list[str]:
+        """Return the entry names offered when nothing has been typed, in order."""
+        provider = KanbanCommands(pilot.app.screen)
+        return [hit.text async for hit in provider.discover()]
+
+    async def test_quit_is_last(self) -> None:
+        """Quit is the final entry."""
+        async with _make_app().run_test() as pilot:
+            await pilot.pause()
+
+            self.assertEqual((await self._discovered(pilot))[-1], QUIT)
+
+    async def test_configuration_comes_before_quit(self) -> None:
+        """The app's own entries sit above Quit."""
+        async with _make_app().run_test() as pilot:
+            await pilot.pause()
+            names = await self._discovered(pilot)
+
+            self.assertLess(names.index(CONFIGURATION), names.index(QUIT))
+
+    async def test_system_commands_are_still_offered(self) -> None:
+        """Taking over the listing does not lose Textual's own commands."""
+        async with _make_app().run_test() as pilot:
+            await pilot.pause()
+            names = await self._discovered(pilot)
+
+            self.assertIn(THEME, names)
+
+    async def test_system_commands_keep_their_name_order(self) -> None:
+        """The entries above Quit are Textual's in name order, then the app's."""
+        async with _make_app().run_test() as pilot:
+            await pilot.pause()
+            names = await self._discovered(pilot)
+            system = names[: names.index(CONFIGURATION)]
+
+            self.assertEqual(system, sorted(system))
+
+    async def test_quit_is_still_searchable(self) -> None:
+        """Moving Quit down the list does not take it out of the search."""
+        app = _make_app()
+
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            provider = KanbanCommands(pilot.app.screen)
+            hits = [hit.text async for hit in provider.search("quit")]
+
+            self.assertIn(QUIT, hits)
+
+    async def test_palette_lists_quit_last(self) -> None:
+        """The rendered palette, not just the provider, ends on Quit."""
+        app = _make_app()
+
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            await pilot.press("ctrl+p")
+            # The palette gathers its commands in a worker and batches what it
+            # finds, so the list is not there the moment the screen is.
+            await pilot.pause(0.5)
+
+            command_list = pilot.app.screen.query_one(CommandList)
+            last = command_list.get_option_at_index(command_list.option_count - 1)
+
+            self.assertIsInstance(last, Command)
+            self.assertEqual(last.hit.text, QUIT)  # type: ignore[union-attr]
 
 
 if __name__ == "__main__":

@@ -29,8 +29,9 @@ class KanbanApp(App[None]):
     CSS_PATH = "kanban.tcss"
     TITLE = "kanban"
 
-    # The app's own palette entries, on top of Textual's system commands.
-    COMMANDS = App.COMMANDS | {KanbanCommands}
+    # Every palette entry comes from one provider — Textual's system commands
+    # included — since that is the only way the list has an order of its own.
+    COMMANDS = {KanbanCommands}
 
     BINDINGS = [
         Binding("q", "quit", "Quit", show=True),

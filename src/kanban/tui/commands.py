@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable, cast
 
+from textual.app import SystemCommand
 from textual.command import (
     Command,
     CommandInput,
@@ -12,9 +13,9 @@ from textual.command import (
     DiscoveryHit,
     Hit,
     Hits,
-    Provider,
 )
 from textual.content import Content
+from textual.system_commands import SystemCommandsProvider
 from textual.theme import ThemeProvider
 
 if TYPE_CHECKING:
@@ -25,44 +26,77 @@ ACTIVE_MARK = "● "
 INACTIVE_MARK = "  "
 
 
-class KanbanCommands(Provider):
+class KanbanCommands(SystemCommandsProvider):
     """
-    The app's own palette entries, alongside Textual's system ones.
+    Every palette entry: Textual's system commands, the app's own, then Quit.
 
-    Each entry names an app-level action — one that belongs to the application
-    rather than to the board in front of the user, and so has nowhere to live
-    among the board's keys.
+    The app's entries name app-level actions — ones that belong to the
+    application rather than to the board in front of the user, and so have
+    nowhere to live among the board's keys.
+
+    This stands in for Textual's own provider rather than sitting beside it.
+    The palette gathers each provider's hits off a queue as they arrive, so no
+    provider can say where another's entries land; supplying the whole list
+    from one place is what makes its order ours to decide.  Quit goes at the
+    bottom, out of the way of the entries reached by running an eye down the
+    list.
     """
 
-    @property
-    def _commands(self) -> list[tuple[str, str, Callable[[], None]]]:
-        """Return the entries to offer: a name, what it does, and the action."""
+    def _kanban_commands(self) -> list[SystemCommand]:
+        """Return the app's own entries: a name, what it does, and the action."""
         app = cast("KanbanApp", self.app)
         return [
-            (
+            SystemCommand(
                 "Configuration",
                 "Show the configuration values, and edit one",
                 app.action_configuration,
             ),
         ]
 
+    def _ordered_commands(self) -> list[SystemCommand]:
+        """
+        Return every entry in the order the palette lists them.
+
+        Textual's own lead, in the name order its provider puts them in, then
+        the app's, then Quit.
+        """
+        system = sorted(
+            self.app.get_system_commands(self.screen), key=lambda command: command.title
+        )
+        quit_command = [command for command in system if self._is_quit(command)]
+        rest = [command for command in system if not self._is_quit(command)]
+
+        return [*rest, *self._kanban_commands(), *quit_command]
+
+    def _is_quit(self, command: SystemCommand) -> bool:
+        """
+        Return True for the command that quits the app.
+
+        Matched on the action rather than the name so that renaming the command
+        upstream moves nothing: at worst it sorts by name as it always did.
+        """
+        return command.callback == self.app.action_quit
+
     async def discover(self) -> Hits:
         """Offer every entry when the palette is opened with nothing typed."""
-        for name, description, callback in self._commands:
-            yield DiscoveryHit(name, callback, text=name, help=description)
+        for command in self._ordered_commands():
+            if command.discover:
+                yield DiscoveryHit(
+                    command.title, command.callback, text=command.title, help=command.help
+                )
 
     async def search(self, query: str) -> Hits:
-        """Offer the entries matching `query`."""
+        """Offer the entries matching `query`, ranked by how well they match."""
         matcher = self.matcher(query)
 
-        for name, description, callback in self._commands:
-            if (match := matcher.match(name)) > 0:
+        for command in self._ordered_commands():
+            if (match := matcher.match(command.title)) > 0:
                 yield Hit(
                     match,
-                    matcher.highlight(name),
-                    callback,
-                    text=name,
-                    help=description,
+                    matcher.highlight(command.title),
+                    command.callback,
+                    text=command.title,
+                    help=command.help,
                 )
 
 
