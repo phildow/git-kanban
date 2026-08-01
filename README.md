@@ -55,7 +55,7 @@ Having already installed from source, and from the project's root directory, che
 $ git checkout tui
 ```
 
-Git integration is not set up yet, so run the following commands to associate the .kanban-store directory with the kanban worktree:
+Git integration isn't set up yet, so associate the .kanban-store directory with the kanban worktree:
 
 ```
 $ git checkout kanban
@@ -63,16 +63,10 @@ $ git checkout main
 $ git worktree add .kanban-store kanban
 ```
 
-Run the TUI:
+And run the TUI:
 
 ```
 $ kanban tui
-```
-
-Or more simply, verify that kanban is working after installation with pip. This command should print the kanban boards in this project:
-
-```
-$ kanban board list
 ```
 
 ## Claude Dekstop Conversations
