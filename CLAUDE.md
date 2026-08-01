@@ -850,14 +850,7 @@ KanbanApp(App)
 ├── TaskDetailScreen (modal, pushed on Enter/show)
 │   ├── renders a single Task: title, assigned_to, priority, due date, tags, description, comments
 │   └── the board's ←/→ ↑/↓ and h/j/k/l keep moving the selection underneath and
-│       the screen redraws on the task they land on.  The modal holds the app's
-│       focus, so the board hands it a `navigate` callable and tracks the column
-│       being read from rather than reading it off `app.focused`.  Focus is per
-│       screen, though, and the board's own still says which column it draws as
-│       focused — so navigating moves that too, or the column the modal opened
-│       from would go on looking focused beside the one being read.  An empty
-│       column is not moved into: there would be no task to draw.  `e` dismisses
-│       with the task shown, which is what the board opens the form on
+│       the screen redraws on the task they land on.
 │
 ├── TaskFormScreen (modal, pushed on create/edit)
 │   ├── Input: title
@@ -875,10 +868,7 @@ KanbanApp(App)
 │   └── Static — the key hints, swapped for the field's while naming
 │       `N` appends a row and names a new board in it, as "+ New board…" does;
 │       `R` renames the highlighted board on its row; `D` deletes it after a
-│       ConfirmScreen.  Creates, renames, and deletes go through the service
-│       here and the modal stays open, as ConfigScreen does with settings —
-│       switching is still the board screen's, reached by dismissing with
-│       SwitchToBoard, BoardsChanged, or None
+│       ConfirmScreen.
 │
 ├── ConfigScreen (modal, pushed from the command palette's "Configuration")
 │   └── PrefixList of KanbanService.list_config() — every supported keypath and
@@ -896,43 +886,10 @@ KanbanApp(App)
         standing on the card the user was on
 ```
 
-An open bar takes the navigation keys off the board: it binds ↑/↓ for its
-history, and the board refuses the rest of the family (`BAR_REFUSED_ACTIONS`:
-the shifted arrows and the paging keys) while a bar holds the focus. Otherwise
-the cards move under a user who is typing, and the selection a command is meant
-for is no longer the card they started on. Escape still reaches the board,
-which is what closes the bar.
-
-Each bar keeps a history of the lines submitted to it (`CommandHistory`),
-cycled with ↑/↓ — back through the entries, forward again to the draft the user
-was typing when they first pressed ↑. Blank lines and immediate repeats are not
-recorded, and a bar opens at the newest end. The board loads both on mount and
-writes them on unmount, from references it holds itself: a screen unmounts after
-its children, so the bars are gone by then.
-
-The files are the TUI's own — `.kanban/tui-history` and
-`.kanban/tui-filter-history`, plain text, one entry per line, oldest first,
-capped at `HISTORY_LIMIT`. The REPL's `.kanban/history` is not shared: readline
-rewrites it wholesale from its own buffer when a REPL session ends, which would
-drop anything the TUI had added. A repository with no `.kanban/` directory (the
-in-memory one) still gets histories; they just do not outlive the session.
-
 #### The Command Palette
 
 The palette (`ctrl+p`) carries app-level actions, the ones with no key of their
 own. **Configuration** opens `ConfigScreen`; **Theme** opens `ThemePalette`.
-
-`KanbanCommands` is the only provider registered on `KanbanApp.COMMANDS` and
-supplies the whole list, subclassing Textual's `SystemCommandsProvider` rather
-than sitting beside it: hits from separate providers arrive on a queue in no
-fixed order, so one provider is what gives the list an order. That order is
-Textual's commands by name, then the app's, then **Quit** last — matched by its
-action, not its name.
-
-`KanbanApp.watch_theme` writes every theme change to `tui.theme` and `on_mount`
-restores it, falling back to `DEFAULT_THEME` when the configured theme is not
-registered. Watching the reactive catches every route to a new theme. A theme is
-a preference: a failed config read or write is logged, never fatal.
 
 #### Key Bindings (Board Screen, normal mode)
 
@@ -962,12 +919,8 @@ q / Ctrl+Q = quit
 ←/→ or h/l = show the card selected in the adjacent column
 ↑/↓ or j/k = show the next or previous card in this column
          e = edit the task shown
-q/Esc/Enter = close
+ q/Esc/Ent = close
 ```
-
-The arrows move the board's selection, so closing leaves the user on the card
-they navigated to.  They are the body's scrolling keys, released to the screen
-by `DetailBody.check_action`; PgUp/PgDn, Home/End, and the mouse still scroll it.
 
 #### Key bindings (column header, once `c` reaches it)
 
@@ -975,51 +928,11 @@ by `DetailBody.check_action`; PgUp/PgDn, Home/End, and the mouse still scroll it
          r = rename this column, in a field that replaces its label
          n = new column, named in a draft drawn to the right of this one
          d = delete this column (confirm modal)
-     ⇧←/→ = move this column along the board
+      ⇧←/→ = move this column along the board
 ←/→ or h/l = move along the header strip
     c, Esc = return focus to the cards below — `c` both enters and leaves
        Tab = on to the next column's header
 ```
-
-A column is two focus targets — its header and its cards — inside one
-`ColumnPanel`, which carries the border so they read as one thing. The header
-posts what it was asked for; every service call still happens on the board
-screen.
-
-A focused header is a mode, as a staged move is. It answers to the keys above
-and to nothing else the board offers: `HEADER_ACTIONS` is what `check_action`
-leaves enabled, and it holds only the moves between columns and back to the
-cards — the column's own actions are the header's own bindings, which sit closer
-to focus than the board's, so `n`, `d`, and `r` reach the column rather than the
-card. A refused binding is dropped from the hints, so the footer becomes the
-column's without a bar of its own. The app's keys (`q`, `?`, `ctrl+p`) are not
-the board's and stay live throughout.
-
-A column arriving, leaving, or changing its name is not confined to columns the
-screen knows, so each of these ends in a full reload, landing on the header.
-Reordering is not one of them: it moves the panel and leaves the board standing.
-
-Nothing focuses a header the reload is about to replace — `end_naming(focus=…)`
-is what says so. Textual defers `focus()` to a later callback, so a header
-focused on its way out is focused *after* the prune that removed it, and the
-prune had no focus to reset: the screen is left pointing at a header with no
-panel, and the next `ListView.Highlighted` reads a column off it.
-`BoardScreen.focused_column` also refuses to name a column from a header with no
-panel, so a focus left anywhere else cannot crash the board either.
-
-Headers are out of the focus chain: a header is reached with `c` and never by
-tabbing. A screen binding replaces Textual's own `tab` rather than sitting beside
-it, so `BoardScreen.action_step_focus` is what moves focus — on to the next
-column, wrapping at the ends, and staying on the half the tab was pressed on, as
-`←/→` does. Cards hand over to the next column's cards; a focused header is the
-mode, so it hands over to the next column's header.
-
-A name is typed where it is read. The field claims every printable key while it
-is open, so the header's keys are unreachable and the footer would have nothing
-to say: `ColumnHeader.NamingChanged` is what swaps it for the field's own hints
-and back. A draft header stands in for a column that does not exist yet, drawn
-where the column will stand — which is the position it is created at — and is
-discarded if it is never named.
 
 #### Key bindings (move mode, once `m` pressed)
 
@@ -1042,10 +955,6 @@ any letter = jump to the board whose slug starts with it
          D = delete the highlighted board (confirm modal)
        Esc = close, or cancel the name being typed
 ```
-
-The management keys are shifted so that every lowercase letter is left to the
-list for type-ahead — a board called `roadmap` is still reached by typing `r`.
-`PrefixList(reserved=…)` is what stops the list swallowing them.
 
 ### Refresh Strategy
 
