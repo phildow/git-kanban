@@ -10,6 +10,7 @@ from ..models import Slug, Task, Board, Column
 from ..models.config import CONFIG_DEFAULTS
 from ..storage.base import (
     KanbanRepository,
+    relative_task_index,
     BoardNotFound,
     BoardAlreadyExists,
     ColumnNotFound,
@@ -422,7 +423,7 @@ class InMemoryRepository(KanbanRepository):
         stored.updated_at = datetime.now(UTC)
         return stored
 
-    def reorder_task(self, task: Task, op: str) -> Task:
+    def reorder_task(self, task: Task, op: str, relative_to: Slug | None = None) -> Task:
         stored = self._tasks_by_id.get(task.id)
         if stored is None:
             raise TaskNotFound(str(task.id))
@@ -448,8 +449,15 @@ class InMemoryRepository(KanbanRepository):
             new_index = 0
         elif op == "bottom":
             new_index = len(order) - 1
+        elif op in ("above", "below"):
+            new_index = relative_task_index(
+                order, current_index, op, relative_to, f"{board}/{column}/{relative_to}"
+            )
         else:
-            raise ValueError(f"Invalid operation '{op}': must be one of 'up', 'down', 'top', 'bottom'")
+            raise ValueError(
+                f"Invalid operation '{op}': must be one of "
+                "'up', 'down', 'top', 'bottom', 'above', 'below'"
+            )
 
         if new_index != current_index:
             order.insert(new_index, order.pop(current_index))

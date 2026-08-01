@@ -136,6 +136,78 @@ class TestFilesystemReorderTask(unittest.TestCase):
         self.assertEqual(self._titles(), ["Alpha", "Gamma", "Beta"])
 
     # ------------------------------------------------------------------
+    # above / below
+    # ------------------------------------------------------------------
+
+    def test_above_moves_task_before_a_later_one(self) -> None:
+        """'above' places a task immediately before the one it is given."""
+        t1, t2, t3 = self._setup_three()
+        self.repo.reorder_task(t1, "above", "gamma")
+        self.assertEqual(self._titles(), ["Beta", "Alpha", "Gamma"])
+
+    def test_above_moves_task_before_an_earlier_one(self) -> None:
+        """'above' works backwards through the column as well as forwards."""
+        t1, t2, t3 = self._setup_three()
+        self.repo.reorder_task(t3, "above", "beta")
+        self.assertEqual(self._titles(), ["Alpha", "Gamma", "Beta"])
+
+    def test_below_moves_task_after_an_earlier_one(self) -> None:
+        """'below' places a task immediately after the one it is given."""
+        t1, t2, t3 = self._setup_three()
+        self.repo.reorder_task(t3, "below", "alpha")
+        self.assertEqual(self._titles(), ["Alpha", "Gamma", "Beta"])
+
+    def test_below_moves_task_after_a_later_one(self) -> None:
+        """'below' works forwards through the column as well as backwards."""
+        t1, t2, t3 = self._setup_three()
+        self.repo.reorder_task(t1, "below", "beta")
+        self.assertEqual(self._titles(), ["Beta", "Alpha", "Gamma"])
+
+    def test_above_the_first_task_is_the_top(self) -> None:
+        """'above' the first task puts the moved task at the head of the column."""
+        t1, t2, t3 = self._setup_three()
+        self.repo.reorder_task(t3, "above", "alpha")
+        self.assertEqual(self._titles(), ["Gamma", "Alpha", "Beta"])
+
+    def test_below_the_last_task_is_the_bottom(self) -> None:
+        """'below' the last task puts the moved task at the end of the column."""
+        t1, t2, t3 = self._setup_three()
+        self.repo.reorder_task(t1, "below", "gamma")
+        self.assertEqual(self._titles(), ["Beta", "Gamma", "Alpha"])
+
+    def test_above_itself_is_noop_for_order(self) -> None:
+        """A task positioned against itself stays where it is."""
+        t1, t2, t3 = self._setup_three()
+        self.repo.reorder_task(t2, "above", "beta")
+        self.assertEqual(self._titles(), ["Alpha", "Beta", "Gamma"])
+
+    def test_below_itself_is_noop_for_order(self) -> None:
+        """A task positioned below itself stays where it is."""
+        t1, t2, t3 = self._setup_three()
+        self.repo.reorder_task(t2, "below", "beta")
+        self.assertEqual(self._titles(), ["Alpha", "Beta", "Gamma"])
+
+    def test_relative_order_is_written_to_the_column_metadata(self) -> None:
+        """A relative move is recorded in the column's .metadata, not only in memory."""
+        t1, t2, t3 = self._setup_three()
+        self.repo.reorder_task(t1, "below", "gamma")
+        reread = FilesystemRepository(root=self.root)
+        titles = [t.title for t in reread.get_tasks(board="proj", column="todo")]
+        self.assertEqual(titles, ["Beta", "Gamma", "Alpha"])
+
+    def test_above_raises_value_error_without_a_reference(self) -> None:
+        """'above' with no task to position against is not a usable request."""
+        t1, t2, t3 = self._setup_three()
+        with self.assertRaises(ValueError):
+            self.repo.reorder_task(t2, "above")
+
+    def test_below_raises_task_not_found_for_unknown_reference(self) -> None:
+        """'below' a task the column does not hold raises TaskNotFound."""
+        t1, t2, t3 = self._setup_three()
+        with self.assertRaises(TaskNotFound):
+            self.repo.reorder_task(t2, "below", "ghost")
+
+    # ------------------------------------------------------------------
     # updated_at
     # ------------------------------------------------------------------
 

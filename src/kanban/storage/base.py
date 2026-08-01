@@ -88,6 +88,46 @@ class TaskAlreadyExists(RepositoryError):
         self.title = title
 
 # ---------------------------------------------------------------------------
+# Ordering helpers
+# ---------------------------------------------------------------------------
+
+def relative_task_index(
+    order:         list[str],
+    current_index: int,
+    op:            str,
+    entry:         str | None,
+    identifier:    str,
+) -> int:
+    """
+    Return the index the entry at `current_index` takes when moved `above` or
+    `below` `entry`, another entry of the same `order`.
+
+    The result is an index into the order with the moving entry removed, which
+    is where both repositories insert it.  What an entry is named is the
+    implementation's — a filename on disk, a slug in memory — so the caller
+    names it, and `identifier` names it again for the error.
+
+    Raises ValueError when no entry is given to position against, and
+    TaskNotFound when it is not one this order holds.
+    """
+    if entry is None:
+        raise ValueError(f"Operation '{op}' requires a task to position against")
+
+    # Positioning a task against itself leaves it where it is.
+    if entry == order[current_index]:
+        return current_index
+
+    if entry not in order:
+        raise TaskNotFound(identifier)
+
+    index = order.index(entry)
+    if index > current_index:
+        index -= 1
+
+    return index if op == "above" else index + 1
+
+
+# ---------------------------------------------------------------------------
 # Abstract base class
 # ---------------------------------------------------------------------------
 
@@ -398,12 +438,14 @@ class KanbanRepository(ABC):
         """
 
     @abstractmethod
-    def reorder_task(self, path: Task, op: str) -> Task:
+    def reorder_task(self, task: Task, op: str, relative_to: Slug | None = None) -> Task:
         """
-        Bump a task's priority up or down or to the top or bottom.
-        
-        Validates that the new priority is valid. Raises TaskNotFound or 
-        if the task does not exist.
+        Move a task within its column: `up`, `down`, `top`, `bottom`, or
+        `above`/`below` the task named by `relative_to`.
+
+        Validates the operation. Raises ValueError for an unknown op or for a
+        relative op given no `relative_to`, and TaskNotFound if the task — or
+        the task it is positioned against — does not exist.
         """
 
     @abstractmethod

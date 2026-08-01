@@ -23,6 +23,8 @@ from ..models.config import (
     CONFIG_USER_NAME,
     CONFIG_VALUES,
     DEFAULT_THEME,
+    INSERT_ABOVE,
+    INSERT_BELOW,
     INSERT_BOTTOM,
     INSERT_TOP,
     InvalidConfigKey,
@@ -616,15 +618,20 @@ class KanbanService(CompletionDataSource):
         self,
         path: Path | Slug,
         params: TaskCreateParams,
+        relative_to: Slug | None = None,
     ) -> Task:
         """
         Write a new .md file into board/column/ with a generated UUID and the
         provided metadata as frontmatter.  When params.created_by is not given the
         configured `user.name` is used.  The task lands at the end of its column
-        unless `new-task.insert` is set to `top`.  Raises BoardNotFound or ColumnNotFound
-        if the target location does not exist, and TaskAlreadyExists if a file
-        with the same title slug is already present in that column.  Updates the
-        index and commits.
+        unless `new-task.insert` says otherwise: `top`, or `above`/`below`
+        `relative_to`, the task selected when this one was created.  Only a
+        consumer with a selection has one to give; without it `above` falls back
+        to `top` and `below` to `bottom`, as does a `relative_to` naming a task
+        outside the column being created in.  Raises BoardNotFound or
+        ColumnNotFound if the target location does not exist, and
+        TaskAlreadyExists if a file with the same title slug is already present
+        in that column.  Updates the index and commits.
         """
         slug = slug_it(params.title)
         board, column, _ = self.path_components(path)
@@ -632,11 +639,19 @@ class KanbanService(CompletionDataSource):
         if board is None or column is None:
             raise ValueError(f"No working board/column and no explicit path provided: {path}")
 
+        board_tasks = self.get_tasks(Path(f"/{board}"))
+
         # Task slugs are unique board-wide, not merely within a column, so the
         # slug can address a task from any column of the board.
-        existing = next((t for t in self.get_tasks(Path(f"/{board}")) if t.slug == slug), None)
+        existing = next((t for t in board_tasks if t.slug == slug), None)
         if existing is not None:
             raise TaskAlreadyExists(board, existing.column, params.title)
+
+        # A task is only positioned against one it shares a column with — the
+        # ordering it is joining is that column's.
+        reference = next(
+            (t for t in board_tasks if t.slug == relative_to and t.column == column), None
+        ) if relative_to is not None else None
 
         assigned_to: str | None
         priority: Priority | None
@@ -671,8 +686,22 @@ class KanbanService(CompletionDataSource):
         filename = task.slug
         created_task = self.repository.create_task(task, filename)
 
-        if self.get_config(CONFIG_NEW_TASK_INSERT) == INSERT_TOP:
-            created_task = self.repository.reorder_task(created_task, "top")
+        insert = self.get_config(CONFIG_NEW_TASK_INSERT)
+
+        if insert == INSERT_ABOVE:
+            op = INSERT_ABOVE if reference is not None else INSERT_TOP
+        elif insert == INSERT_BELOW:
+            # Bottom is where the repository already put it.
+            op = INSERT_BELOW if reference is not None else None
+        elif insert == INSERT_TOP:
+            op = INSERT_TOP
+        else:
+            op = None
+
+        if op is not None:
+            created_task = self.repository.reorder_task(
+                created_task, op, reference.slug if reference is not None else None
+            )
 
         self.index_service.upsert_task(created_task)
         return created_task
@@ -861,17 +890,19 @@ class KanbanService(CompletionDataSource):
 
     def reorder_task(
         self,
-        path: Path | Slug,
-        op:   str,
+        path:        Path | Slug,
+        op:          str,
+        relative_to: Slug | None = None,
     ) -> Task:
         """
-        Bump a task's priority up/down or to top/bottom.  Accepts a
-        fully-qualified Path (from the CLI) or a bare task Slug (from the REPL).
-        Validates that the new priority is valid.  Raises TaskNotFound if the
-        task cannot be resolved.  Updates the index and commits.
+        Move a task up/down, to top/bottom, or above/below the task named by
+        `relative_to`.  Accepts a fully-qualified Path (from the CLI) or a bare
+        task Slug (from the REPL).  Validates that the operation is valid.
+        Raises TaskNotFound if the task — or the one it is positioned against —
+        cannot be resolved.  Updates the index and commits.
         """
         task = self.get_task(path)
-        result = self.repository.reorder_task(task, op)
+        result = self.repository.reorder_task(task, op, relative_to)
         self.index_service.upsert_task(result)
         return result
 

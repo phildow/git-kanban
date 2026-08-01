@@ -1065,8 +1065,9 @@ User data contains settings that cannot be changed by the user and which are gen
     name = "philip"
 
 [new-task]
-    # which end of its column a newly created task is inserted at
-    # values: top | bottom, default: bottom
+    # where in its column a newly created task is inserted
+    # values: top | bottom | above | below, default: bottom
+    # above/below are relative to the selected task
     insert = bottom
 
 [tui]

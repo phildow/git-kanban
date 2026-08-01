@@ -12,6 +12,8 @@ from kanban.models.config import (
     CONFIG_USER_NAME,
     CONFIG_VALUES,
     DEFAULT_THEME,
+    INSERT_ABOVE,
+    INSERT_BELOW,
     INSERT_BOTTOM,
     INSERT_TOP,
     InvalidConfigKey,
@@ -48,7 +50,18 @@ class TestConfigValues(unittest.TestCase):
 
     def test_new_task_insert_permits_top_and_bottom(self) -> None:
         """new-task.insert is one end of the column or the other."""
-        self.assertEqual(CONFIG_VALUES[CONFIG_NEW_TASK_INSERT], {INSERT_TOP, INSERT_BOTTOM})
+        self.assertLessEqual({INSERT_TOP, INSERT_BOTTOM}, CONFIG_VALUES[CONFIG_NEW_TASK_INSERT])
+
+    def test_new_task_insert_permits_above_and_below(self) -> None:
+        """new-task.insert is also either side of the selected task."""
+        self.assertLessEqual({INSERT_ABOVE, INSERT_BELOW}, CONFIG_VALUES[CONFIG_NEW_TASK_INSERT])
+
+    def test_new_task_insert_permits_nothing_else(self) -> None:
+        """The four positions are all new-task.insert takes."""
+        self.assertEqual(
+            CONFIG_VALUES[CONFIG_NEW_TASK_INSERT],
+            {INSERT_TOP, INSERT_BOTTOM, INSERT_ABOVE, INSERT_BELOW},
+        )
 
     def test_new_task_insert_defaults_to_bottom(self) -> None:
         """A new task goes to the bottom of its column unless told otherwise."""

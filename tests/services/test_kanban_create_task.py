@@ -10,11 +10,13 @@ from unittest.mock import MagicMock
 from uuid import UUID
 from uuid import uuid4
 
-from kanban.models import Priority, Task
+from kanban.models import Priority, Slug, Task
 from kanban.services.git import GitService
 from kanban.services.kanban import (
     CONFIG_NEW_TASK_INSERT,
     CONFIG_USER_NAME,
+    INSERT_ABOVE,
+    INSERT_BELOW,
     INSERT_BOTTOM,
     INSERT_TOP,
     KanbanService,
@@ -394,6 +396,119 @@ class TestKanbanServiceCreateTaskInsert(unittest.TestCase):
         """The index is updated with the task as it stands after placement."""
         self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_TOP)
         task = self.svc.create_task("alpha/todo", TaskCreateParams(title="first"))
+
+        self.svc.index_service.upsert_task.assert_called_with(task)
+
+
+class TestKanbanServiceCreateTaskRelativeInsert(unittest.TestCase):
+    """Set to above or below, a new task lands beside the task it is given."""
+
+    def setUp(self) -> None:
+        self.svc, self.repo = _make_service()
+
+    def _slugs(self) -> list[str]:
+        """Return the slugs of the todo column, in the order the column holds them."""
+        return [task.slug for task in self.svc.get_tasks("/alpha/todo", sort=None)]
+
+    def _create(self, *titles: str) -> None:
+        """Create a task per title, in order, with no task to position against."""
+        for title in titles:
+            self.svc.create_task("alpha/todo", TaskCreateParams(title=title))
+
+    def test_above_inserts_before_the_given_task(self) -> None:
+        """Set to above, the new task takes the place of the one it is given."""
+        self._create("first", "second", "third")
+        self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_ABOVE)
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="fourth"), Slug("second"))
+
+        self.assertEqual(self._slugs(), ["first", "fourth", "second", "third"])
+
+    def test_below_inserts_after_the_given_task(self) -> None:
+        """Set to below, the new task follows the one it is given."""
+        self._create("first", "second", "third")
+        self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_BELOW)
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="fourth"), Slug("second"))
+
+        self.assertEqual(self._slugs(), ["first", "second", "fourth", "third"])
+
+    def test_above_the_first_task_is_the_top(self) -> None:
+        """Above the head of the column is the head of the column."""
+        self._create("first", "second")
+        self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_ABOVE)
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="third"), Slug("first"))
+
+        self.assertEqual(self._slugs(), ["third", "first", "second"])
+
+    def test_below_the_last_task_is_the_bottom(self) -> None:
+        """Below the end of the column is the end of the column."""
+        self._create("first", "second")
+        self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_BELOW)
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="third"), Slug("second"))
+
+        self.assertEqual(self._slugs(), ["first", "second", "third"])
+
+    def test_above_falls_back_to_the_top_without_a_selection(self) -> None:
+        """With no task to position against, above places the task at the top."""
+        self._create("first", "second")
+        self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_ABOVE)
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="third"))
+
+        self.assertEqual(self._slugs(), ["third", "first", "second"])
+
+    def test_below_falls_back_to_the_bottom_without_a_selection(self) -> None:
+        """With no task to position against, below places the task at the bottom."""
+        self._create("first", "second")
+        self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_BELOW)
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="third"))
+
+        self.assertEqual(self._slugs(), ["first", "second", "third"])
+
+    def test_a_task_from_another_column_is_not_positioned_against(self) -> None:
+        """A selection outside the target column falls back to the configured end."""
+        self._create("first", "second")
+        self.svc.create_task("alpha/done", TaskCreateParams(title="elsewhere"))
+        self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_ABOVE)
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="third"), Slug("elsewhere"))
+
+        self.assertEqual(self._slugs(), ["third", "first", "second"])
+
+    def test_an_unknown_selection_falls_back(self) -> None:
+        """A selection naming no task of the board falls back to the configured end."""
+        self._create("first", "second")
+        self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_BELOW)
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="third"), Slug("ghost"))
+
+        self.assertEqual(self._slugs(), ["first", "second", "third"])
+
+    def test_a_selection_is_ignored_by_the_other_settings(self) -> None:
+        """Top and bottom place a task by the setting alone, selection or not."""
+        self._create("first", "second")
+        self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_TOP)
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="third"), Slug("first"))
+
+        self.assertEqual(self._slugs(), ["third", "first", "second"])
+
+    def test_into_an_empty_column(self) -> None:
+        """The first task of a column lands there however it was positioned."""
+        self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_ABOVE)
+        self.svc.create_task("alpha/todo", TaskCreateParams(title="first"), Slug("ghost"))
+
+        self.assertEqual(self._slugs(), ["first"])
+
+    def test_created_task_is_returned_after_placement(self) -> None:
+        """The task returned is the one that was created, wherever it was placed."""
+        self._create("first", "second")
+        self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_ABOVE)
+        task = self.svc.create_task("alpha/todo", TaskCreateParams(title="third"), Slug("second"))
+
+        self.assertEqual(task.slug, "third")
+        self.assertEqual(task.column, "todo")
+
+    def test_index_records_the_placed_task(self) -> None:
+        """The index is updated with the task as it stands after placement."""
+        self._create("first")
+        self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_BELOW)
+        task = self.svc.create_task("alpha/todo", TaskCreateParams(title="second"), Slug("first"))
 
         self.svc.index_service.upsert_task.assert_called_with(task)
 

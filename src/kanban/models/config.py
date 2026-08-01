@@ -19,10 +19,16 @@ CONFIG_USER_NAME = "user.name"
 """The current user's name, used as the author of tasks and comments."""
 
 CONFIG_NEW_TASK_INSERT = "new-task.insert"
-"""Which end of its column a newly created task is inserted at."""
+"""Where in its column a newly created task is inserted."""
 
 INSERT_TOP = "top"
 INSERT_BOTTOM = "bottom"
+
+# Positions relative to the task selected when the new one is created.  Only a
+# consumer with a selection — the TUI — can supply one; without it `above` falls
+# back to `top` and `below` to `bottom`.
+INSERT_ABOVE = "above"
+INSERT_BELOW = "below"
 
 CONFIG_TUI_THEME = "tui.theme"
 """The theme the TUI opens in, by name."""
@@ -40,7 +46,9 @@ CONFIG_KEYS: frozenset[str] = frozenset({
 # the TUI's to know, so it is the TUI that falls back to the default when it is
 # asked for one it cannot find.
 CONFIG_VALUES: dict[str, frozenset[str]] = {
-    CONFIG_NEW_TASK_INSERT: frozenset({INSERT_TOP, INSERT_BOTTOM}),
+    CONFIG_NEW_TASK_INSERT: frozenset({
+        INSERT_TOP, INSERT_BOTTOM, INSERT_ABOVE, INSERT_BELOW
+    }),
 }
 
 # What a new configuration file is written with.  A key with no default here is

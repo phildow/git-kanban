@@ -8,8 +8,10 @@ from pathlib import Path
 from unittest.mock import MagicMock
 from uuid import uuid4
 
+from kanban.models import Slug
 from kanban.services.git import GitService
 from kanban.services.kanban import KanbanService, TaskCreateParams
+from kanban.storage.base import TaskNotFound
 from kanban.storage.memory import InMemoryRepository
 
 
@@ -63,6 +65,26 @@ class TestKanbanServiceReorderTask(unittest.TestCase):
         """'down' on the last task leaves the column order unchanged."""
         self.svc.reorder_task(Path("alpha/todo/third"), "down")
         self.assertEqual(self._slugs(), ["first", "second", "third"])
+
+    def test_above_places_the_task_before_the_one_given(self) -> None:
+        """'above' places the target task immediately before the task named."""
+        self.svc.reorder_task(Path("alpha/todo/third"), "above", Slug("second"))
+        self.assertEqual(self._slugs(), ["first", "third", "second"])
+
+    def test_below_places_the_task_after_the_one_given(self) -> None:
+        """'below' places the target task immediately after the task named."""
+        self.svc.reorder_task(Path("alpha/todo/first"), "below", Slug("second"))
+        self.assertEqual(self._slugs(), ["second", "first", "third"])
+
+    def test_relative_op_without_a_reference_raises(self) -> None:
+        """A relative op with nothing to position against is refused."""
+        with self.assertRaises(ValueError):
+            self.svc.reorder_task(Path("alpha/todo/first"), "above")
+
+    def test_relative_op_against_an_unknown_task_raises(self) -> None:
+        """A relative op naming a task the column does not hold raises TaskNotFound."""
+        with self.assertRaises(TaskNotFound):
+            self.svc.reorder_task(Path("alpha/todo/first"), "above", Slug("ghost"))
 
     def test_returns_the_reordered_task(self) -> None:
         """reorder_task returns the task that was moved."""

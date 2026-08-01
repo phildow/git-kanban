@@ -12,8 +12,9 @@ from uuid import UUID, uuid4
 from ..models import Priority, Slug, Task, Board, Column
 from ..models.config import CONFIG_DEFAULTS
 from ..storage.base import (
-    KanbanRepository, 
-    BoardNotFound, 
+    KanbanRepository,
+    relative_task_index,
+    BoardNotFound,
     BoardAlreadyExists,
     ColumnAlreadyExists, 
     ColumnNotFound, 
@@ -601,7 +602,7 @@ class FilesystemRepository(KanbanRepository):
 
         return self._parse_task_file(dest_file)
 
-    def reorder_task(self, task: Task, op: str) -> Task:
+    def reorder_task(self, task: Task, op: str, relative_to: Slug | None = None) -> Task:
         board_slug = task.board
         column_slug = task.column
         filename = f"{task.slug}.md"
@@ -622,8 +623,19 @@ class FilesystemRepository(KanbanRepository):
             new_index = 0
         elif op == "bottom":
             new_index = len(order) - 1
+        elif op in ("above", "below"):
+            new_index = relative_task_index(
+                order,
+                current_index,
+                op,
+                f"{relative_to}.md" if relative_to is not None else None,
+                f"{task.board}/{task.column}/{relative_to}",
+            )
         else:
-            raise ValueError(f"Invalid operation '{op}': must be one of 'up', 'down', 'top', 'bottom'")
+            raise ValueError(
+                f"Invalid operation '{op}': must be one of "
+                "'up', 'down', 'top', 'bottom', 'above', 'below'"
+            )
 
         if new_index != current_index:
             order.insert(new_index, order.pop(current_index))

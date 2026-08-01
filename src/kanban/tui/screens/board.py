@@ -847,9 +847,15 @@ class BoardScreen(Screen[None]):
             return
 
         target = column.column
+        # `new-task.insert` may place the task against the selected one, and the
+        # selection is the board's to know.  It is read now, before the form
+        # takes the focus off the card it names.
+        selected = column.selected_task
+        relative_to = selected.slug if selected is not None else None
+
         self.app.push_screen(
             TaskFormScreen(column=target, assignees=self._assignees(), tags=self._tags()),
-            lambda result: self._create_task(target, result),
+            lambda result: self._create_task(target, result, relative_to),
         )
 
     def action_edit_task(self) -> None:
@@ -894,8 +900,15 @@ class BoardScreen(Screen[None]):
             lambda confirmed: self._delete_task(task, confirmed),
         )
 
-    def _create_task(self, column: Column, result: TaskFormResult | None) -> None:
-        """Create a task from the form result, or do nothing when cancelled."""
+    def _create_task(
+        self, column: Column, result: TaskFormResult | None, relative_to: Slug | None = None
+    ) -> None:
+        """
+        Create a task from the form result, or do nothing when cancelled.
+
+        `relative_to` is the task that was selected when the form opened, which
+        `new-task.insert` positions the new one against when set to above/below.
+        """
         if result is None:
             return
 
@@ -911,6 +924,7 @@ class BoardScreen(Screen[None]):
                     due_date=result.due_date,
                     description=result.description,
                 ),
+                relative_to,
             )
             if created is not None and result.comment:
                 created = self.svc.comment_task(created.path, result.comment)
