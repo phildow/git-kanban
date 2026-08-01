@@ -13,7 +13,7 @@ from textual.widgets import Static
 
 from kanban.models import Slug
 from kanban.services.git import GitService
-from kanban.services.kanban import KanbanService, TaskCreateParams
+from kanban.services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
 from kanban.storage.memory import InMemoryRepository
 from kanban.tui.app import KanbanApp
 from kanban.tui.screens.board import BoardScreen
@@ -169,6 +169,54 @@ class TestDetailNavigation(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
 
             self.assertIs(board.focused, panels[1].view)
+
+    async def test_shifted_keys_scroll_the_body(self) -> None:
+        """`shift+down` and `K` scroll the body without moving the selection."""
+        from kanban.tui.screens.task_detail import DetailBody
+
+        self.svc.update_task(
+            "/alpha/todo/first", TaskUpdateParams(description="\n\n".join("line" for _ in range(200)))
+        )
+
+        async with self.app.run_test(size=(80, 24)) as pilot:
+            detail = await _open_detail(pilot)
+            body = detail.query_one(DetailBody)
+            self.assertEqual(body.scroll_offset.y, 0)
+
+            await pilot.press("shift+down", "shift+down")
+            await pilot.pause()
+
+            self.assertGreater(body.scroll_offset.y, 0)
+            self.assertEqual(detail.detail_task.slug, "first")
+
+            scrolled = body.scroll_offset.y
+            await pilot.press("K")
+            await pilot.pause()
+
+            self.assertLess(body.scroll_offset.y, scrolled)
+            self.assertEqual(detail.detail_task.slug, "first")
+
+    async def test_scrolling_resets_when_the_selection_moves(self) -> None:
+        """A task navigated to is read from its start."""
+        from kanban.tui.screens.task_detail import DetailBody
+
+        self.svc.update_task(
+            "/alpha/todo/first", TaskUpdateParams(description="\n\n".join("line" for _ in range(200)))
+        )
+
+        async with self.app.run_test(size=(80, 24)) as pilot:
+            detail = await _open_detail(pilot)
+            body = detail.query_one(DetailBody)
+
+            await pilot.press("shift+down", "shift+down")
+            await pilot.pause()
+            self.assertGreater(body.scroll_offset.y, 0)
+
+            await pilot.press("j")
+            await pilot.pause()
+
+            self.assertEqual(detail.detail_task.slug, "second")
+            self.assertEqual(body.scroll_offset.y, 0)
 
     async def test_edit_opens_on_the_task_shown(self) -> None:
         """`e` edits the task navigated to, not the one the screen opened with."""

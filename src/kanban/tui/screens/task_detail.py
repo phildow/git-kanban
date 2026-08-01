@@ -29,7 +29,8 @@ class DetailBody(VerticalScroll):
 
     The arrows belong to the board while the detail screen is open, so its own
     scrolling bindings for them are released and the keys reach the screen.
-    Paging, Home, and End still scroll the body, as does the mouse.
+    The shifted arrows scroll it in their place, as do paging, Home, End, and
+    the mouse.
     """
 
     # Bindings released to the screen: a disabled binding is not matched, so the
@@ -70,6 +71,13 @@ class TaskDetailScreen(ModalScreen[Task | None]):
         Binding("right,l", "navigate(1, 0)", "Column", show=False, system=True),
         Binding("up,k", "navigate(0, -1)", "Card", show=True, key_display="↑/↓ j/k"),
         Binding("down,j", "navigate(0, 1)", "Card", show=False, system=True),
+        # The unshifted keys move the selection, so scrolling the body the
+        # selection lands on is the shifted form of the same keys.  As on the
+        # board, the shifted arrows are named and the shifted letters capitals.
+        Binding("shift+up,K", "scroll_body(0, -1)", "Scroll", show=True, key_display="⇧↑/↓"),
+        Binding("shift+down,J", "scroll_body(0, 1)", "Scroll", show=False, system=True),
+        Binding("shift+left,H", "scroll_body(-1, 0)", "Scroll", show=False, system=True),
+        Binding("shift+right,L", "scroll_body(1, 0)", "Scroll", show=False, system=True),
     ]
 
     def __init__(self, task: Task, *, navigate: TaskNavigator | None = None) -> None:
@@ -110,6 +118,12 @@ class TaskDetailScreen(ModalScreen[Task | None]):
             return
 
         self.show_task(task)
+
+    def action_scroll_body(self, columns: int, lines: int) -> None:
+        """Scroll the body by `columns` cells and `lines` lines, leaving the selection alone."""
+        self.query_one(DetailBody).scroll_relative(
+            x=columns, y=lines, animate=False
+        )
 
     def show_task(self, task: Task) -> None:
         """Draw `task` in place of the one on screen."""

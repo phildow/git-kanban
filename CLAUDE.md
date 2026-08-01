@@ -917,6 +917,7 @@ q / Ctrl+Q = quit
 ```
 ←/→ or h/l = show the card selected in the adjacent column
 ↑/↓ or j/k = show the next or previous card in this column
+ ⇧ + those = scroll the body of the task shown
          e = edit the task shown
  q/Esc/Ent = close
 ```

@@ -59,6 +59,7 @@ HEADER_BINDINGS: list[tuple[str, str]] = [
 DETAIL_BINDINGS: list[tuple[str, str]] = [
     ("←/→ or h/l", "show the card selected in the adjacent column"),
     ("↑/↓ or j/k", "show the next or previous card in this column"),
+    ("shift + any of those", "scroll the description and comments"),
     ("page up/down", "scroll the description and comments"),
     ("e", "edit the task shown"),
     ("q, esc, enter", "close"),
