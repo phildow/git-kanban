@@ -326,10 +326,36 @@ TaskHeading .-task-path {
     max-height: 24;
 }
 
+/* The board switcher.  A board is named on its own row, and the list is an
+   OptionList, whose rows are drawn rather than mounted — so the field goes on
+   a layer of its own, where it can cover a row without taking one. */
+#dialog.-boards {
+    layers: base editor;
+}
+
 #board-list {
     height: auto;
     max-height: 16;
     background: $surface;
+}
+
+#board-hint {
+    width: 1fr;
+    height: auto;
+    margin: 1 0 0 0;
+}
+
+/* Placed over the highlighted row from the screen, which is the only place the
+   row's position is known.  Compact already makes it one line with no border,
+   so it occupies exactly the row it covers. */
+#board-name {
+    layer: editor;
+    display: none;
+    background: $boost;
+}
+
+#board-name.-visible {
+    display: block;
 }
 
 /* The columns a card can be moved to.  The subtitle carries whatever prefix

@@ -1,11 +1,10 @@
 """Screens presented by the TUI."""
 
 from .board import BoardScreen
-from .board_form import BoardFormScreen
 from .board_switcher import (
     BoardChoice,
+    BoardsChanged,
     BoardSwitcherScreen,
-    CreateBoard,
     SwitchToBoard,
 )
 from .column_prompt import ColumnPromptScreen
@@ -19,13 +18,12 @@ from .task_form import TaskFormResult, TaskFormScreen
 
 __all__ = [
     "BoardChoice",
-    "BoardFormScreen",
     "BoardScreen",
+    "BoardsChanged",
     "BoardSwitcherScreen",
     "ColumnPromptScreen",
     "ConfigScreen",
     "ConfigValueScreen",
-    "CreateBoard",
     "SwitchToBoard",
     "ConfirmScreen",
     "HelpScreen",

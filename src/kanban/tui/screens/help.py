@@ -21,7 +21,7 @@ NORMAL_BINDINGS: list[tuple[str, str]] = [
     ("e", "edit the focused card"),
     ("d", "delete the focused card"),
     ("m", "enter move mode"),
-    ("b", "switch board"),
+    ("b", "switch or manage boards"),
     ("/", "command bar (REPL syntax)"),
     (":", "filter cards as you type — text or flags"),
     ("tab", "tab complete in filter and command bar"),
@@ -31,6 +31,16 @@ NORMAL_BINDINGS: list[tuple[str, str]] = [
     ("ctrl+p", "command palette — app actions and config"),
     ("?", "this help"),
     ("q / ctrl+q", "quit"),
+]
+
+BOARD_BINDINGS: list[tuple[str, str]] = [
+    ("↑/↓", "move through the boards"),
+    ("any letter", "jump to the board whose slug starts with it"),
+    ("enter", "switch to the highlighted board"),
+    ("N", "new board — named on a row of its own"),
+    ("R", "rename the highlighted board, on its row"),
+    ("D", "delete the highlighted board (confirm first)"),
+    ("esc", "close, or cancel the name being typed"),
 ]
 
 MOVE_BINDINGS: list[tuple[str, str]] = [
@@ -53,12 +63,13 @@ class HelpScreen(ModalScreen[None]):
     ]
 
     def compose(self) -> ComposeResult:
-        """Lay out the normal-mode and move-mode binding tables."""
+        """Lay out the normal-mode, move-mode, and board-switcher binding tables."""
         with Vertical(id="dialog"):
             yield Static("Key bindings", id="form-heading")
             with VerticalScroll(id="help-body"):
                 yield Static(_section("Board", NORMAL_BINDINGS))
                 yield Static(_section("Move mode", MOVE_BINDINGS))
+                yield Static(_section("Boards (b)", BOARD_BINDINGS))
 
     def action_dismiss_screen(self) -> None:
         """Close the modal."""

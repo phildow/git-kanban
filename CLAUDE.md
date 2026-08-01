@@ -844,14 +844,17 @@ KanbanApp(App)
 │   └── Button row: Save / Cancel
 │
 ├── BoardSwitcherScreen (modal, pushed on `b`, and on startup when no board is active)
-│   └── PrefixList of board names — typing jumps to a board by slug, Enter
-│       switches BoardScreen's active board; plus a "+ New board…" row that
-│       pushes BoardFormScreen
-│
-├── BoardFormScreen (modal, pushed from the board switcher)
-│   ├── Input: title
-│   └── Button row: Save / Cancel
-│       on save BoardScreen creates the board and switches to it
+│   ├── PrefixList of board names — typing jumps to a board by slug, Enter
+│   │   switches BoardScreen's active board; plus a "+ New board…" row
+│   ├── Input — a board named in place, laid over the row it belongs to on a
+│   │   layer of its own (an OptionList draws its rows, it cannot mount one)
+│   └── Static — the key hints, swapped for the field's while naming
+│       `N` appends a row and names a new board in it, as "+ New board…" does;
+│       `R` renames the highlighted board on its row; `D` deletes it after a
+│       ConfirmScreen.  Creates, renames, and deletes go through the service
+│       here and the modal stays open, as ConfigScreen does with settings —
+│       switching is still the board screen's, reached by dismissing with
+│       SwitchToBoard, BoardsChanged, or None
 │
 ├── ConfigScreen (modal, pushed from the command palette's "Configuration")
 │   └── PrefixList of KanbanService.list_config() — every supported keypath and
@@ -912,6 +915,22 @@ q / Ctrl+Q = quit
        Tab = show column list
        Esc = cancel — discard, no calls made
 ```
+
+#### Key bindings (board switcher, once `b` pressed)
+
+```
+       ↑/↓ = move through the boards
+any letter = jump to the board whose slug starts with it
+     Enter = switch to the highlighted board
+         N = new board, named in a row appended to the list
+         R = rename the highlighted board, on its row
+         D = delete the highlighted board (confirm modal)
+       Esc = close, or cancel the name being typed
+```
+
+The management keys are shifted so that every lowercase letter is left to the
+list for type-ahead — a board called `roadmap` is still reached by typing `r`.
+`PrefixList(reserved=…)` is what stops the list swallowing them.
 
 ### Refresh Strategy
 

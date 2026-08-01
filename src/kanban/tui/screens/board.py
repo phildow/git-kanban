@@ -46,7 +46,7 @@ from ..widgets import (
     SidebarPanel,
     format_hints,
 )
-from .board_switcher import BoardChoice, BoardSwitcherScreen, CreateBoard
+from .board_switcher import BoardChoice, BoardSwitcherScreen, SwitchToBoard
 from .column_prompt import ColumnPromptScreen
 from .confirm import ConfirmScreen
 from .help import HelpScreen
@@ -1164,34 +1164,27 @@ class BoardScreen(Screen[None]):
     # ── Board, sidebar, density ───────────────────────────────────────────────
 
     def action_switch_board(self) -> None:
-        """Open the board switcher."""
+        """Open the board switcher, which also creates, renames, and deletes boards."""
         active = self._board.slug if self._board is not None else None
         self.app.push_screen(
-            BoardSwitcherScreen(self._boards, active=active), self._switch_board
+            BoardSwitcherScreen(self.svc, active=active), self._switch_board
         )
 
     def _switch_board(self, choice: BoardChoice | None) -> None:
-        """Act on the switcher's result: change board, create one, or do nothing."""
+        """
+        Act on the switcher's result: change board, or reload after a change.
+
+        The switcher writes its own creates, renames, and deletes, so a result
+        that names no board still means the boards on screen are stale.  Only
+        `None` — nothing chosen and nothing altered — leaves the screen alone.
+        """
         if choice is None:
             return
 
-        if isinstance(choice, CreateBoard):
-            self._create_board(choice.name)
-            return
+        if isinstance(choice, SwitchToBoard):
+            with self._service_errors("board"):
+                self.svc.set_board(choice.slug)
 
-        with self._service_errors("board"):
-            self.svc.set_board(choice.slug)
-        self._reload_soon()
-
-    def _create_board(self, name: str) -> None:
-        """Create a board with the default columns and switch to it."""
-        board: Board | None = None
-        with self._service_errors("board"):
-            board = self.svc.create_board(name)
-            self.svc.set_board(board.slug)
-
-        if board is not None:
-            self._announce(f"Created board {_place_name(board.name)}")
         self._reload_soon()
 
     def action_toggle_sidebar(self) -> None:
