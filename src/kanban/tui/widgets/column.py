@@ -1,16 +1,18 @@
-"""The column widget: a scrollable, focusable list of task cards."""
+"""The column widget: a focusable header over a scrollable list of task cards."""
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
+from textual.app import ComposeResult
 from textual.binding import Binding
+from textual.containers import Vertical
 from textual.reactive import reactive
 from textual.widgets import ListItem, ListView
 
 from ...models import Column, Slug, Task
-from ..formatting import column_title
 from .card import CardWidget
+from .column_header import ColumnHeader
 
 # ListView inherits scrolling bindings from its container base class.  The board
 # needs those keys for moving between columns and paging through cards, and a
@@ -55,12 +57,21 @@ class ColumnView(ListView):
     staging: reactive[bool] = reactive(False)
     """True when this is the column the card being moved would land in."""
 
-    def __init__(self, column: Column, *, id: str | None = None) -> None:
+    def __init__(self, column: Column) -> None:
         """Create an empty view for `column`; call `set_tasks` to populate it."""
-        super().__init__(id=id)
+        super().__init__()
         self.column = column
         self._tasks: list[Task] = []
-        self.border_title = column_title(column, 0)
+
+    @property
+    def panel(self) -> ColumnPanel:
+        """Return the column this list belongs to."""
+        return cast("ColumnPanel", self.parent)
+
+    @property
+    def header(self) -> ColumnHeader:
+        """Return the header above this list."""
+        return self.panel.header
 
     @property
     def tasks(self) -> list[Task]:
@@ -83,7 +94,7 @@ class ColumnView(ListView):
     async def set_tasks(self, tasks: list[Task], *, dense: bool = False) -> None:
         """Replace the column's contents with `tasks` and update the header count."""
         self._tasks = list(tasks)
-        self.border_title = column_title(self.column, len(tasks))
+        self.header.set_count(len(tasks))
 
         await self.clear()
         await self.extend(
@@ -110,6 +121,17 @@ class ColumnView(ListView):
         self.index = index
         return True
 
+    # Walking up out of the cards and onto the header, disabled for now: the
+    # board screen's `c` is what focuses the header, so ↑ stays inside the
+    # column and stops at the top card, as it does in any other list.
+    #
+    # def action_cursor_up(self) -> None:
+    #     """Move the cursor up, or onto the header once it is at the top card."""
+    #     if self.index is None or self.index == 0:
+    #         self.header.focus()
+    #         return
+    #     super().action_cursor_up()
+
     def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
         """
         Disable the bindings the board screen needs to own.
@@ -127,8 +149,14 @@ class ColumnView(ListView):
         return True
 
     def watch_staging(self, staging: bool) -> None:
-        """Mark the column as the staged destination so it stands out during a move."""
-        self.set_class(staging, "-staging")
+        """
+        Mark the column as the staged destination so it stands out during a move.
+
+        The mark goes on the panel: the border and the header it colours belong
+        to the column as a whole, not to the list of cards inside it.
+        """
+        if self.is_mounted:
+            self.panel.set_class(staging, "-staging")
 
     def watch_scroll_y(self, old_value: float, new_value: float) -> None:
         """
@@ -141,6 +169,56 @@ class ColumnView(ListView):
         """
         super().watch_scroll_y(old_value, new_value)
         self.vertical_scrollbar.position = new_value
+
+
+class ColumnPanel(Vertical):
+    """
+    One board column: its header above the cards it holds.
+
+    The panel carries the column's border and its focus colours, so the header
+    and the cards read as one thing however focus moves between them.  It holds
+    no state of its own — the header and the list each own theirs.
+    """
+
+    def __init__(
+        self, column: Column, *, draft: bool = False, id: str | None = None
+    ) -> None:
+        """
+        Create a panel for `column`.
+
+        A `draft` panel stands in for a column that does not exist yet: its
+        header opens a field to name it, and the board screen removes the panel
+        again if no name arrives.
+        """
+        super().__init__(id=id)
+        self.column = column
+        self.draft = draft
+
+    def compose(self) -> ComposeResult:
+        """Lay out the header over the cards."""
+        yield ColumnHeader(self.column, draft=self.draft)
+        yield ColumnView(self.column)
+
+    @property
+    def header(self) -> ColumnHeader:
+        """Return the column's header."""
+        return self.query_one(ColumnHeader)
+
+    @property
+    def view(self) -> ColumnView:
+        """Return the column's cards."""
+        return self.query_one(ColumnView)
+
+    def set_column(self, column: Column) -> None:
+        """
+        Hand the panel, and the two widgets in it, a new record of the column.
+
+        Used when the column itself changed but its cards did not — a reorder,
+        which moves the panel and renumbers it, and nothing else.
+        """
+        self.column = column
+        self.header.set_column(column)
+        self.view.column = column
 
 
 def item_task(item: ListItem | Any) -> Task | None:

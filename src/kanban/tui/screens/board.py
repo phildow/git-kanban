@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterable, Iterator, cast
+from uuid import uuid4
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -38,6 +39,8 @@ from ...repl.parser import build_parser as build_repl_parser
 from ..filter_query import FilterQuery, build_filter_parser, parse_filter
 from ..formatting import board_subtitle
 from ..widgets import (
+    ColumnHeader,
+    ColumnPanel,
     ColumnView,
     CommandBar,
     CompletingInput,
@@ -76,6 +79,10 @@ COMMAND_KEYS: list[tuple[str, str]] = [
     ("↵", "Run"),
     ("esc", "Cancel"),
 ]
+NAME_KEYS: list[tuple[str, str]] = [
+    ("↵", "Save"),
+    ("esc", "Cancel"),
+]
 
 # How many completion candidates the hint bar will list before giving up.
 COMPLETION_HINTS = 12
@@ -99,14 +106,24 @@ MOVE_MODE_ACTIONS = frozenset(
         "nav_page_right",
         "activate",
         "move_task",
-        "move_to_column",
+        "step_focus",
         "cancel",
     }
 )
 
-# Actions that only make sense mid-move.  Outside one they are refused, so the
-# key falls through to whatever else claims it — tab to moving focus, say.
-MOVE_ONLY_ACTIONS = frozenset({"move_to_column"})
+# A focused column header is a mode of its own, as a staged move is: it answers
+# to the keys that manipulate a column — which are the header's own bindings —
+# and to these, which move between the columns being manipulated and back down
+# to the cards.  Everything else the board offers is refused, so `n`, `d`, and `r`
+# reach the header rather than the card, and the footer shows the column's
+# actions in place of the board's.
+HEADER_ACTIONS = frozenset(
+    {
+        "nav_left",
+        "nav_right",
+        "step_focus",
+    }
+)
 
 # Commands that need a real terminal — an editor or a confirmation prompt — and
 # so cannot be driven from the command bar while the TUI owns the screen.
@@ -154,9 +171,14 @@ class BoardScreen(Screen[None]):
         Binding("pagedown", "nav_page_down", "Page cards", show=False),
         Binding("ctrl+pageup", "nav_page_left", "Page columns", show=False),
         Binding("ctrl+pagedown", "nav_page_right", "Page columns", show=False),
-        # Only bound during a move; outside one it falls through to Textual's
-        # own tab, which moves focus.
-        Binding("tab", "move_to_column", "Column by name", show=False),
+        # Tab steps between the columns, staying on the half it was pressed on —
+        # headers are out of the focus chain and reached with `c`.  A screen
+        # binding replaces Textual's own tab rather than sitting beside it, so
+        # the board has to move the focus itself, and so no header can be tabbed
+        # into.  Mid-move it means something else again: the destination column,
+        # by name.
+        Binding("tab", "step_focus(1)", "Next", show=False),
+        Binding("shift+tab", "step_focus(-1)", "Previous", show=False),
         Binding("enter", "activate", "Open", show=False),
         # An alias for Enter on the selected card.  Hidden from the footer,
         # where the column's own Enter binding already offers "Open".
@@ -169,7 +191,8 @@ class BoardScreen(Screen[None]):
         Binding("slash", "command", "Command", show=True, key_display="/"),
         Binding("colon", "filter", "Filter", show=True, key_display=":"),
         Binding("s", "toggle_sidebar", "Sidebar", show=True),
-        Binding("c", "toggle_density", "Collapse", show=True),
+        Binding("c", "focus_header", "Column", show=True),
+        Binding("x", "toggle_density", "Collapse", show=True),
         Binding("r", "reload_board", "Refresh", show=True),
         Binding("escape", "cancel", "Cancel", show=False),
     ]
@@ -191,6 +214,8 @@ class BoardScreen(Screen[None]):
         self._tasks: dict[Slug, list[Task]] = {}
         self._filter = FilterQuery()
         self._move: MoveState | None = None
+        # The panel standing in for a column being named, before it exists.
+        self._draft: ColumnPanel | None = None
         # Column and position the moving card is currently drawn at, or None
         # when no column is showing a staged position.
         self._preview: tuple[Slug, int] | None = None
@@ -250,13 +275,35 @@ class BoardScreen(Screen[None]):
         return list(self.query(ColumnView))
 
     @property
+    def column_panels(self) -> list[ColumnPanel]:
+        """Return the mounted columns, left to right, headers included."""
+        return list(self.query(ColumnPanel))
+
+    @property
     def focused_column(self) -> ColumnView | None:
-        """Return the focused column, falling back to the leftmost one."""
+        """
+        Return the focused column, falling back to the leftmost one.
+
+        A column is two focus targets — its header and its cards — and either
+        means the same column.
+        """
         focused = self.app.focused
         if isinstance(focused, ColumnView):
             return focused
+        # Textual defers focus, so a header can be focused after the board it
+        # was on has been rebuilt out from under it — the prune that removed it
+        # had nothing to reset, since the focus had not been set yet.  A header
+        # with no panel left is such a leftover, and names no column.
+        if isinstance(focused, ColumnHeader) and isinstance(focused.parent, ColumnPanel):
+            return focused.panel.view
         views = self.column_views
         return views[0] if views else None
+
+    @property
+    def focused_header(self) -> ColumnHeader | None:
+        """Return the column header holding focus, if one does."""
+        focused = self.app.focused
+        return focused if isinstance(focused, ColumnHeader) else None
 
     @property
     def selected_task(self) -> Task | None:
@@ -281,22 +328,28 @@ class BoardScreen(Screen[None]):
 
     # ── Loading and rendering ─────────────────────────────────────────────────
 
-    async def reload(self, select: Slug | None = None) -> None:
+    async def reload(
+        self, select: Slug | None = None, *, focus_header: Slug | None = None
+    ) -> None:
         """
         Re-query the service and rebuild the board.
 
         `select` highlights a task by slug once the rebuild is done; when it is
         omitted the current selection and focused column are preserved.
+        `focus_header` lands on a column's header instead, which is where a
+        change made from the header strip should leave the user.
         """
         column = self.focused_column
         focus_column = column.column.slug if column is not None else None
-        if select is None:
+        if select is None and focus_header is None:
             selected = self.selected_task
             select = selected.slug if selected is not None else None
 
         self._fetch()
         async with self._redraw:
-            await self._render_board(select=select, focus_column=focus_column)
+            await self._render_board(
+                select=select, focus_column=focus_column, focus_header=focus_header
+            )
 
         self._sync_subtitle()
         self._reload_sidebar()
@@ -377,9 +430,17 @@ class BoardScreen(Screen[None]):
             return tasks
         return [task for task in tasks if self._filter.matches(task)]
 
-    async def _render_board(self, *, select: Slug | None = None, focus_column: Slug | None = None) -> None:
-        """Rebuild the column views from the fetched data and restore focus."""
+    async def _render_board(
+        self,
+        *,
+        select: Slug | None = None,
+        focus_column: Slug | None = None,
+        focus_header: Slug | None = None,
+    ) -> None:
+        """Rebuild the column panels from the fetched data and restore focus."""
         container = self.query_one("#columns", Horizontal)
+        # A rebuild takes the whole strip with it, draft column and all.
+        self._draft = None
         await container.remove_children()
 
         if not self._columns:
@@ -391,31 +452,42 @@ class BoardScreen(Screen[None]):
             await container.mount(Static(message, classes="-empty"))
             return
 
-        views = [
-            ColumnView(column, id=f"column-{column.slug}") for column in self._columns
+        panels = [
+            ColumnPanel(column, id=f"column-{column.slug}") for column in self._columns
         ]
-        await container.mount_all(views)
+        await container.mount_all(panels)
 
-        for view in views:
-            await view.set_tasks(self._visible(view.column.slug), dense=self.dense)
+        for panel in panels:
+            await panel.view.set_tasks(self._visible(panel.column.slug), dense=self.dense)
 
-        self._restore_focus(views, select=select, focus_column=focus_column)
+        self._restore_focus(
+            panels, select=select, focus_column=focus_column, focus_header=focus_header
+        )
 
     def _restore_focus(
         self,
-        views: list[ColumnView],
+        panels: list[ColumnPanel],
         *,
         select: Slug | None,
         focus_column: Slug | None,
+        focus_header: Slug | None = None,
     ) -> None:
         """Focus the column that held focus and re-highlight the selected task."""
+        if focus_header is not None:
+            panel = next(
+                (panel for panel in panels if panel.column.slug == focus_header), None
+            )
+            if panel is not None:
+                panel.header.focus()
+                return
+
         if self._select_task(select):
             return
 
         target = next(
-            (view for view in views if view.column.slug == focus_column), views[0]
+            (panel for panel in panels if panel.column.slug == focus_column), panels[0]
         )
-        target.focus()
+        target.view.focus()
 
     def _select_task(self, slug: Slug | None) -> bool:
         """Highlight and focus the task with `slug`.  Returns False when it is not shown."""
@@ -446,9 +518,13 @@ class BoardScreen(Screen[None]):
             if select is not None:
                 self._select_task(select)
 
-    def _reload_soon(self, select: Slug | None = None) -> None:
+    def _reload_soon(
+        self, select: Slug | None = None, *, focus_header: Slug | None = None
+    ) -> None:
         """Schedule a reload from a synchronous context, such as a modal callback."""
-        self.run_worker(self.reload(select), exclusive=False)
+        self.run_worker(
+            self.reload(select, focus_header=focus_header), exclusive=False
+        )
 
     def _render_soon(self, select: Slug | None = None) -> None:
         """Schedule a re-render from a synchronous context."""
@@ -597,12 +673,60 @@ class BoardScreen(Screen[None]):
         self._focus_column_at(current + delta)
 
     def _focus_column_at(self, index: int) -> None:
-        """Focus the column at `index`, clamped to the ends of the board."""
-        views = self.column_views
-        if not views:
+        """
+        Focus the column at `index`, clamped to the ends of the board.
+
+        Focus stays on the half of the column it is already on: moving along the
+        header strip keeps to the headers, moving between card lists to the
+        cards.
+        """
+        panels = self.column_panels
+        if not panels:
             return
 
-        views[max(0, min(index, len(views) - 1))].focus()
+        panel = panels[max(0, min(index, len(panels) - 1))]
+        if self.focused_header is not None:
+            panel.header.focus()
+        else:
+            panel.view.focus()
+
+    def action_step_focus(self, direction: int) -> None:
+        """
+        Step focus to the next column, wrapping at the ends of the board.
+
+        Headers are out of the chain: a header is reached with `c`, never by
+        tabbing into one, and tab stays on the half of the column it was pressed
+        on — cards to cards, and along the header strip while a header is the
+        mode.  Mid-move tab means something else again: the destination column,
+        by name.
+        """
+        if self.move_mode:
+            if direction > 0:
+                self.action_move_to_column()
+            return
+
+        panels = self.column_panels
+        if not panels:
+            return
+
+        column = self.focused_column
+        index = (
+            panels.index(column.panel)
+            if column is not None and column.panel in panels
+            else 0
+        )
+
+        target = panels[(index + direction) % len(panels)]
+        if self.focused_header is not None:
+            target.header.focus()
+        else:
+            target.view.focus()
+
+    def action_focus_header(self) -> None:
+        """Focus the header of the column in focus, which is the way into it."""
+        column = self.focused_column
+        if column is not None and isinstance(column.parent, ColumnPanel):
+            column.panel.header.focus()
 
     def action_activate(self) -> None:
         """Commit the staged move, or open the focused card."""
@@ -787,6 +911,265 @@ class BoardScreen(Screen[None]):
             self._announce(f"Deleted {_task_name(deleted.title)}")
             # A deleted task only leaves a gap in the column it was in.
             self._refresh_columns_soon([deleted.column])
+
+    # ── Column actions ────────────────────────────────────────────────────────
+    #
+    # The headers post what they were asked for; the service calls all happen
+    # here, as they do for every other widget on the board.  A column arriving,
+    # leaving, or changing its name is not confined to columns the screen
+    # already knows, so each of these ends in a full reload rather than a
+    # targeted refresh — landing on the header, which is where the user is.
+
+    def on_column_header_new_requested(
+        self, event: ColumnHeader.NewRequested
+    ) -> None:
+        """Draw a column to the right of the one asking, and name it there."""
+        event.stop()
+        self.run_worker(self._begin_draft(event.header), exclusive=False)
+
+    def on_column_header_named(self, event: ColumnHeader.Named) -> None:
+        """Create the column a draft header was naming, or rename an existing one."""
+        event.stop()
+        if event.header.draft:
+            self._create_column(event.header, event.name)
+        else:
+            self._rename_column(event.header, event.name)
+
+    def on_column_header_naming_changed(
+        self, event: ColumnHeader.NamingChanged
+    ) -> None:
+        """Swap the footer for the field's own hints while a column is named."""
+        event.stop()
+        if event.naming:
+            self._show_hints(format_hints(NAME_KEYS))
+        else:
+            self._hide_hints()
+
+    def on_column_header_naming_cancelled(
+        self, event: ColumnHeader.NamingCancelled
+    ) -> None:
+        """Drop a draft column that was never named."""
+        event.stop()
+        if event.header.draft:
+            self.run_worker(self._discard_draft(event.header.panel), exclusive=False)
+
+    def on_column_header_delete_requested(
+        self, event: ColumnHeader.DeleteRequested
+    ) -> None:
+        """Ask whether to delete the column, then delete it."""
+        event.stop()
+        column = event.column
+        count = len(self._tasks.get(column.slug, []))
+        tasks = f"{count} task" + ("" if count == 1 else "s")
+        # Named the way the board names it: the column in the colour its header
+        # carries, and the path on a line of its own beneath the question, muted
+        # the way a task's path reads, so it addresses what is being deleted
+        # rather than joining in the asking.
+        prompt = (
+            f"Delete column {_place_name(column.name)} and its {tasks}?\n"
+            f"{_path_name(column.path)}"
+        )
+
+        self.app.push_screen(
+            ConfirmScreen(prompt), lambda ok: self._delete_column(column, bool(ok))
+        )
+
+    def on_column_header_reorder_requested(
+        self, event: ColumnHeader.ReorderRequested
+    ) -> None:
+        """Move the column along the board."""
+        event.stop()
+        self._reorder_column(event.column, event.delta)
+
+    async def _begin_draft(self, header: ColumnHeader) -> None:
+        """
+        Draw an empty column to the right of `header`'s and open its name field.
+
+        The draft stands where the column will stand, so where it is drawn is
+        the position the column is created at.
+        """
+        board = self._board
+        if board is None or self._draft is not None:
+            return
+
+        draft = Column(
+            id=uuid4(),
+            name="",
+            slug=Slug(""),
+            board=board.slug,
+            position=header.column.position + 1,
+        )
+        panel = ColumnPanel(draft, draft=True)
+
+        async with self._redraw:
+            await self.query_one("#columns", Horizontal).mount(
+                panel, after=header.panel
+            )
+
+        self._draft = panel
+        panel.scroll_visible()
+        panel.header.begin_naming()
+
+    async def _discard_draft(self, panel: ColumnPanel) -> None:
+        """
+        Remove a draft column, handing focus to the header it was drawn beside.
+
+        Only when the draft was holding focus, or nothing is: a field closed
+        because the user clicked elsewhere has already given focus away, and
+        taking it back would undo the click.
+        """
+        panels = self.column_panels
+        index = panels.index(panel) if panel in panels else 0
+
+        focused = self.app.focused
+        held_focus = (
+            focused is None or focused is panel or panel in focused.ancestors
+        )
+
+        self._draft = None
+        async with self._redraw:
+            await panel.remove()
+
+        remaining = self.column_panels
+        if held_focus and remaining:
+            remaining[max(0, min(index - 1, len(remaining) - 1))].header.focus()
+
+    def _create_column(self, header: ColumnHeader, name: str) -> None:
+        """Create the column the draft header names, where the draft was drawn."""
+        board = self._board
+        if board is None:
+            return
+
+        # Where the draft stands is where the column belongs; a new column is
+        # created at the end of the board, so it has to be moved back to it.
+        panels = self.column_panels
+        position = panels.index(header.panel) if header.panel in panels else None
+
+        created: Column | None = None
+        with self._service_errors("create column"):
+            created = self.svc.create_column(Path(f"/{board.slug}"), name)
+            if position is not None:
+                self.svc.reorder_column(created.path, position)
+
+        # A name the service refused leaves the field open on it, so it can be
+        # corrected rather than typed again.
+        if created is None:
+            return
+
+        # The draft goes when the board is rebuilt, so it is not focused: the
+        # reload lands on the header of the column that was created.
+        header.end_naming(focus=False)
+        self._draft = None
+        self._announce(f"Created {_place_name(created.name)}")
+        self._reload_soon(focus_header=created.slug)
+
+    def _rename_column(self, header: ColumnHeader, name: str) -> None:
+        """Rename the column the header names, staying on it under its new slug."""
+        column = header.column
+        if name == column.name:
+            header.end_naming()
+            return
+
+        renamed: Column | None = None
+        with self._service_errors("rename column"):
+            renamed = self.svc.rename_column(column.path, name)
+
+        if renamed is None:
+            return
+
+        # As with a create: this header is replaced by the reload, which lands
+        # on the one drawn for the column under its new name.
+        header.end_naming(focus=False)
+        self._announce(f"Renamed to {_place_name(renamed.name)}")
+        self._reload_soon(focus_header=renamed.slug)
+
+    def _delete_column(self, column: Column, confirmed: bool) -> None:
+        """Delete `column` once the confirmation modal comes back positive."""
+        if not confirmed:
+            return
+
+        # Read before the delete, while the column is still on the board.
+        neighbour = self._neighbour(column)
+
+        deleted: Column | None = None
+        with self._service_errors("delete column"):
+            deleted = self.svc.delete_column(column.path)
+
+        if deleted is None:
+            return
+
+        self._announce(f"Deleted {_place_name(deleted.name)}")
+        self._reload_soon(focus_header=neighbour)
+
+    def _reorder_column(self, column: Column, delta: int) -> None:
+        """Move `column` `delta` places along the board, staying on its header."""
+        slugs = [candidate.slug for candidate in self._columns]
+        if column.slug not in slugs:
+            return
+
+        index = slugs.index(column.slug)
+        target = index + delta
+        if not 0 <= target < len(slugs):
+            return
+
+        columns: list[Column] | None = None
+        with self._service_errors("reorder column"):
+            # The service answers with the whole new order, which is what the
+            # screen has to agree with once the panels have moved.
+            columns = self.svc.reorder_column(column.path, target)
+
+        if columns is None:
+            return
+
+        self._columns = columns
+        self.run_worker(self._move_column(index, target), exclusive=False)
+
+    async def _move_column(self, index: int, target: int) -> None:
+        """
+        Move the panel at `index` to `target`, leaving the rest of the board alone.
+
+        A reorder changes where two columns sit and nothing else — not their
+        cards, not their counts — so the panels are moved within the container
+        rather than rebuilt.  Nothing is redrawn, which is what keeps the cards,
+        the scroll positions, and the focused header exactly as they were.
+
+        Falls back to a full reload when the panels on screen do not answer to
+        the indices the reorder was worked out from.
+        """
+        async with self._redraw:
+            panels = self.column_panels
+            if not (0 <= index < len(panels) and 0 <= target < len(panels)):
+                await self.reload()
+                return
+
+            moving, beside = panels[index], panels[target]
+            container = self.query_one("#columns", Horizontal)
+            if target > index:
+                container.move_child(moving, after=beside)
+            else:
+                container.move_child(moving, before=beside)
+
+            # Both have a new position; the two panels are the only ones whose
+            # record of themselves the reorder changed.
+            for panel in self.column_panels:
+                fresh = next(
+                    (c for c in self._columns if c.slug == panel.column.slug), None
+                )
+                if fresh is not None and fresh.position != panel.column.position:
+                    panel.set_column(fresh)
+
+    def _neighbour(self, column: Column) -> Slug | None:
+        """Return the column that will stand where `column` stands once it is gone."""
+        slugs = [candidate.slug for candidate in self._columns]
+        if column.slug not in slugs:
+            return None
+
+        index = slugs.index(column.slug)
+        remaining = slugs[:index] + slugs[index + 1 :]
+        if not remaining:
+            return None
+
+        return remaining[min(index, len(remaining) - 1)]
 
     # ── Move mode ─────────────────────────────────────────────────────────────
 
@@ -1391,16 +1774,29 @@ class BoardScreen(Screen[None]):
 
     def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
         """
-        Disable the board's other actions while a card is staged for a move.
+        Disable the board's actions that the focused thing has no use for.
+
+        A card staged for a move keeps the staging keys; a focused column header
+        keeps only what moves between columns and back to the cards, so that the
+        column's own actions are all it answers to; a column being named gives up
+        everything to the field.
 
         A disabled binding is not matched, so the key bubbles past the board
-        rather than doing something the move did not ask for.
+        rather than doing something that was not asked for — and the footer
+        drops it, so the hints follow focus.
         """
         _ = parameters
 
         if self.move_mode:
             return action in MOVE_MODE_ACTIONS
-        return action not in MOVE_ONLY_ACTIONS
+
+        focused = self.app.focused
+        if isinstance(focused, ColumnHeader):
+            return action in HEADER_ACTIONS
+        if focused is not None and isinstance(focused.parent, ColumnHeader):
+            return False
+
+        return True
 
     @contextmanager
     def _service_errors(self, action: str) -> Iterator[None]:
@@ -1446,5 +1842,10 @@ def _task_name(title: str) -> str:
 def _place_name(name: str) -> str:
     """Return a column or board name in the primary colour."""
     return _styled(name, "$primary")
+
+
+def _path_name(path: Path) -> str:
+    """Return a path muted, the way `TaskHeading` renders the path of a task."""
+    return _styled(str(path), "$text-muted")
 
 

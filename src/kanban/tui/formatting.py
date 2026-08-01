@@ -70,8 +70,8 @@ def format_timestamp(value: datetime | None) -> str:
 
 
 def column_title(column: Column, task_count: int) -> str:
-    """Return the column's border title, e.g. `BACKLOG (4)`."""
-    return f" {column.name.upper()} ({task_count}) "
+    """Return the label on a column's header, e.g. `BACKLOG (4)`."""
+    return f"{column.name.upper()} ({task_count})"
 
 
 def board_subtitle(board: Board | None, task_count: int) -> str:

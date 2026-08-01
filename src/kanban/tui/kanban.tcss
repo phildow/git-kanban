@@ -27,33 +27,102 @@ Screen {
 }
 
 /* Columns keep a fixed width so cards stay a consistent size; the container
-   scrolls horizontally once the board outgrows the terminal. */
-ColumnView {
+   scrolls horizontally once the board outgrows the terminal.  The panel carries
+   the border, so it wraps the header and the cards together. */
+ColumnPanel {
     width: 34;
     height: 1fr;
     margin: 0 1 0 0;
-    padding: 0 1;
     background: $surface;
     border: round $panel;
-    border-title-align: center;
-    border-title-color: $text-muted;
-    border-title-style: bold;
 }
 
 /* Focus is blue and a move is amber.  They have to be different hues: the
    theme resolves $accent and $warning to the same colour, and the staged
-   column is always the focused one. */
-ColumnView:focus {
+   column is always the focused one.  The header and the cards are separate
+   focus targets within one column, so the border answers to either. */
+ColumnPanel:focus-within {
     border: round $primary;
-    border-title-color: $primary;
 }
 
 /* During a move only the column the card would land in is marked, so the eye
    follows the card across the board.  Written to beat the :focus rule above. */
-ColumnView.-staging,
-ColumnView:focus.-staging {
+ColumnPanel.-staging,
+ColumnPanel:focus-within.-staging {
     border: dashed $warning;
-    border-title-color: $warning;
+}
+
+ColumnView {
+    width: 1fr;
+    height: 1fr;
+    padding: 0 1;
+    background: transparent;
+    border: none;
+}
+
+/* ── Column headers ───────────────────────────────────────────────────── */
+
+/* One line, holding the label or — while a column is being named — the field
+   that replaces it. */
+ColumnHeader {
+    width: 1fr;
+    height: 1;
+    align-horizontal: center;
+    color: $text-muted;
+    text-style: bold;
+}
+
+ColumnHeader > .-title {
+    width: 1fr;
+    height: 1;
+    text-align: center;
+}
+
+ColumnPanel:focus-within > ColumnHeader {
+    color: $primary;
+}
+
+ColumnPanel.-staging > ColumnHeader {
+    color: $warning;
+}
+
+/* A focused header is inverted, the way a highlighted row is elsewhere: the
+   panel's border says which column, this says which half of it.
+
+   Both selectors are needed.  The rules above colour the header of a focused or
+   staged column, and they are the more specific of the two, so an inverted
+   header would keep their foreground and lose its text against the background
+   this sets — the block cursor's colours only work as a pair. */
+ColumnHeader:focus,
+ColumnPanel:focus-within > ColumnHeader:focus,
+ColumnPanel.-staging > ColumnHeader:focus {
+    color: $block-cursor-foreground;
+    background: $block-cursor-background;
+    text-style: $block-cursor-text-style;
+}
+
+/* The name is typed where it is read: the field covers the label rather than
+   sitting beside it, so the header stays one line either way.
+
+   It is only as wide as what has been typed — plus the cell the cursor sits in
+   — and the header centres it, so a name grows from the middle exactly where
+   the label sat rather than jumping to the left edge to be edited.  No
+   `min-width`: a floor would hold the text against the left of the field until
+   it grew past it, which is the jump this avoids.  `max-width` hands a name too
+   long for the column back to the field's own scrolling. */
+ColumnHeader > .-name {
+    display: none;
+    width: auto;
+    max-width: 100%;
+    background: $boost;
+}
+
+ColumnHeader.-naming > .-title {
+    display: none;
+}
+
+ColumnHeader.-naming > .-name {
+    display: block;
 }
 
 ColumnView > ListItem {

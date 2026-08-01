@@ -90,6 +90,7 @@ I've learned a number of lessons from this project:
 - My loop is Design with Claude -> Claude Code | CoPilot -> Refactor & Test -> Repeat
 - Review the diffs and tests, write your own commits
 - Refactor often, the battle against entropy is real
+- Trust, but verify
 - Garbage in, garbage out
 
 ## Installation

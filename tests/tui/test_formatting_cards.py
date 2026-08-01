@@ -66,11 +66,11 @@ class TestDenseCardText(unittest.TestCase):
 
 
 class TestColumnTitle(unittest.TestCase):
-    """column_title renders the column's border title."""
+    """column_title renders the label on a column's header."""
 
     def test_upper_cases_name_with_count(self) -> None:
-        """The title is the upper-cased column name followed by its task count."""
-        self.assertEqual(column_title(make_column(), 4), " TO DO (4) ")
+        """The label is the upper-cased column name followed by its task count."""
+        self.assertEqual(column_title(make_column(), 4), "TO DO (4)")
 
 
 class TestBoardSubtitle(unittest.TestCase):

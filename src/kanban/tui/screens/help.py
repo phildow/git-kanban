@@ -12,10 +12,11 @@ from textual.widgets import Static
 NORMAL_BINDINGS: list[tuple[str, str]] = [
     ("←/→ or h/l", "move focus between columns"),
     ("↑/↓ or j/k", "move focus between cards"),
+    ("c", "focus this column's header"),
     ("shift + any of those", "jump to the end of the column or board"),
     ("page up/down", "page through the cards in a column"),
     ("ctrl + page up/down", "page across the columns"),
-    ("tab", "cycle between columns"),
+    ("tab", "step through the columns"),
     ("enter or v", "view the focused card"),
     ("n", "new task in the focused column"),
     ("e", "edit the focused card"),
@@ -26,7 +27,7 @@ NORMAL_BINDINGS: list[tuple[str, str]] = [
     (":", "filter cards as you type — text or flags"),
     ("tab", "tab complete in filter and command bar"),
     ("s", "collapse or expand the sidebar"),
-    ("c", "collapse or expand the cards"),
+    ("x", "collapse or expand the cards"),
     ("r", "refresh from the filesystem"),
     ("ctrl+p", "command palette — app actions and config"),
     ("?", "this help"),
@@ -41,6 +42,17 @@ BOARD_BINDINGS: list[tuple[str, str]] = [
     ("R", "rename the highlighted board, on its row"),
     ("D", "delete the highlighted board (confirm first)"),
     ("esc", "close, or cancel the name being typed"),
+]
+
+HEADER_BINDINGS: list[tuple[str, str]] = [
+    ("r", "rename this column, on its header"),
+    ("n", "new column, named to the right of this one"),
+    ("d", "delete this column (confirm first)"),
+    ("shift + ←/→", "move this column along the board"),
+    ("←/→ or h/l", "move along the header strip"),
+    ("↓ or j, esc", "return to the cards below"),
+    ("tab", "on to the next column's header"),
+    ("the board's keys", "inactive — a header answers to columns only"),
 ]
 
 MOVE_BINDINGS: list[tuple[str, str]] = [
@@ -63,11 +75,12 @@ class HelpScreen(ModalScreen[None]):
     ]
 
     def compose(self) -> ComposeResult:
-        """Lay out the normal-mode, move-mode, and board-switcher binding tables."""
+        """Lay out the board, column header, move-mode, and board-switcher tables."""
         with Vertical(id="dialog"):
             yield Static("Key bindings", id="form-heading")
             with VerticalScroll(id="help-body"):
                 yield Static(_section("Board", NORMAL_BINDINGS))
+                yield Static(_section("Column header (c)", HEADER_BINDINGS))
                 yield Static(_section("Move mode", MOVE_BINDINGS))
                 yield Static(_section("Boards (b)", BOARD_BINDINGS))
 

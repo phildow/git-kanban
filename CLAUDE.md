@@ -821,9 +821,13 @@ KanbanApp(App)
 │   ├── Header (board name, active column count)
 │   │
 │   ├── Horizontal
-│   │   ├── ColumnView(ListView) × N        — main board area
-│   │   │   └── CardWidget(Static) × N      — one per task in that column
-│   │   │       states: default | focused | move-mode (dashed amber border)
+│   │   ├── ColumnPanel(Vertical) × N       — main board area; carries the
+│   │   │   │                                 column's border and focus colours
+│   │   │   ├── ColumnHeader(Vertical)      — focusable strip: name and count,
+│   │   │   │                                 or the field a column is named in
+│   │   │   └── ColumnView(ListView)        — the cards, a focus target of its own
+│   │   │       └── CardWidget(Static) × N  — one per task in that column
+│   │   │           states: default | focused | move-mode (dashed amber border)
 │   │   │
 │   │   └── SidebarPanel (collapsible, right side)
 │   │       ├── StatusView                  — renders KanbanService.status()
@@ -892,6 +896,8 @@ a preference: a failed config read or write is logged, never fatal.
 ```
 ←/→ or h/l = move focus between columns
 ↑/↓ or j/k = move focus between cards within a column
+         c = focus the header of the column in focus
+       Tab = step through the columns — headers are skipped
      Enter = open TaskDetailScreen for focused card
          n = open TaskFormScreen (create)
          e = open TaskFormScreen (edit, pre-filled)
@@ -901,10 +907,63 @@ a preference: a failed config read or write is logged, never fatal.
          / = open CommandBar — full REPL-syntax command line
          : = inline filter — live-filters visible cards as typed
          s = toggle SidebarPanel collapse
+         x = collapse cards to one-line summaries, or expand them again
     Ctrl+P = command palette — app-level actions, including configuration
 q / Ctrl+Q = quit
          ? = help screen — bindings reference
 ```
+
+#### Key bindings (column header, once `c` reaches it)
+
+```
+         r = rename this column, in a field that replaces its label
+         n = new column, named in a draft drawn to the right of this one
+         d = delete this column (confirm modal)
+     ⇧←/→ = move this column along the board
+←/→ or h/l = move along the header strip
+    c, Esc = return focus to the cards below — `c` both enters and leaves
+       Tab = on to the next column's header
+```
+
+A column is two focus targets — its header and its cards — inside one
+`ColumnPanel`, which carries the border so they read as one thing. The header
+posts what it was asked for; every service call still happens on the board
+screen.
+
+A focused header is a mode, as a staged move is. It answers to the keys above
+and to nothing else the board offers: `HEADER_ACTIONS` is what `check_action`
+leaves enabled, and it holds only the moves between columns and back to the
+cards — the column's own actions are the header's own bindings, which sit closer
+to focus than the board's, so `n`, `d`, and `r` reach the column rather than the
+card. A refused binding is dropped from the hints, so the footer becomes the
+column's without a bar of its own. The app's keys (`q`, `?`, `ctrl+p`) are not
+the board's and stay live throughout.
+
+A column arriving, leaving, or changing its name is not confined to columns the
+screen knows, so each of these ends in a full reload, landing on the header.
+Reordering is not one of them: it moves the panel and leaves the board standing.
+
+Nothing focuses a header the reload is about to replace — `end_naming(focus=…)`
+is what says so. Textual defers `focus()` to a later callback, so a header
+focused on its way out is focused *after* the prune that removed it, and the
+prune had no focus to reset: the screen is left pointing at a header with no
+panel, and the next `ListView.Highlighted` reads a column off it.
+`BoardScreen.focused_column` also refuses to name a column from a header with no
+panel, so a focus left anywhere else cannot crash the board either.
+
+Headers are out of the focus chain: a header is reached with `c` and never by
+tabbing. A screen binding replaces Textual's own `tab` rather than sitting beside
+it, so `BoardScreen.action_step_focus` is what moves focus — on to the next
+column, wrapping at the ends, and staying on the half the tab was pressed on, as
+`←/→` does. Cards hand over to the next column's cards; a focused header is the
+mode, so it hands over to the next column's header.
+
+A name is typed where it is read. The field claims every printable key while it
+is open, so the header's keys are unreachable and the footer would have nothing
+to say: `ColumnHeader.NamingChanged` is what swaps it for the field's own hints
+and back. A draft header stands in for a column that does not exist yet, drawn
+where the column will stand — which is the position it is created at — and is
+discarded if it is never named.
 
 #### Key bindings (move mode, once `m` pressed)
 
@@ -956,6 +1015,8 @@ For the board this means **column refreshes are limited to the columns an operat
 - moving a task, only the source and destination columns — and only one when the task is reordered within a column
 
 While a move is being staged the same rule applies to the preview: only the column the card is leaving and the column it is joining are redrawn as it travels, never the intervening ones.
+
+Reordering a column redraws nothing at all: where two columns sit is the only thing that changed, so the panel is moved within its container with `move_child` and the two are handed their new `Column` records. Every card, scroll position, and the focused header survive because none of them is built again.
 
 Rebuilding the entire board is reserved for changes whose effects are not confined to known columns — switching boards, a column being added, renamed, or removed — and for the manual refresh key, which exists precisely to re-read everything. A targeted refresh should fall back to a full reload when it cannot establish that its assumption holds, such as when a named column is not on screen.
 

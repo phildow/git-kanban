@@ -474,7 +474,7 @@ class KanbanService(CompletionDataSource):
 
     def reorder_column(self, path: Path | Slug, position: int) -> list[Column]:
         """
-        Move a column to the given 1-based position in the board's .metadata
+        Move a column to the given zero-based position in the board's .metadata
         file.  Raises BoardNotFound or ColumnNotFound if either does not
         exist.  Position is clamped to the valid range rather than raising on
         out-of-bounds values.  Returns the full updated column list so the
