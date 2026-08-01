@@ -12,7 +12,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
-from kanban.models import Board, Column, Slug, Task
+from kanban.models import Board, Column, Selection, Slug, Task
 from kanban.repl import commands
 from kanban.services.kanban import TaskCreateParams, TaskUnsetParams, TaskUpdateParams
 
@@ -23,6 +23,9 @@ class TestReplCommandHandlers(unittest.TestCase):
     def setUp(self) -> None:
         self.svc = MagicMock()
         self.renderer = MagicMock()
+        # The REPL selects nothing, so the create handler passes no task to
+        # position the new one against.
+        self.svc.selection = Selection()
 
     def _args(self, **kwargs) -> Namespace:
         return Namespace(**kwargs)
@@ -193,6 +196,7 @@ class TestReplCommandHandlers(unittest.TestCase):
                 due_date=None,
                 created_by=None,
             ),
+            None,
         )
         self.renderer.render_task_create.assert_called_once_with(args, result)
 
@@ -252,6 +256,7 @@ class TestReplCommandHandlers(unittest.TestCase):
                 due_date="2026-06-17",
                 created_by="philip",
             ),
+            None,
         )
         self.renderer.render_task_create.assert_called_once_with(args, result)
 
@@ -294,6 +299,7 @@ class TestReplCommandHandlers(unittest.TestCase):
                 created_by=None,
                 description="Login is broken",
             ),
+            None,
         )
         self.renderer.render_task_create.assert_called_once_with(args, result)
 

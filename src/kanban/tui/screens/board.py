@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Iterable, Iterator, cast
 from uuid import uuid4
 
+from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal
@@ -353,6 +354,11 @@ class BoardScreen(Screen[None]):
             selected = self.selected_task
             select = selected.slug if selected is not None else None
 
+        # Dropped before the rebuild rather than after it: the board being built
+        # may not be the board the selection named, and nothing focuses a column
+        # on a board with none to focus.  Landing on one sets it again.
+        self.svc.clear_selection()
+
         self._fetch()
         async with self._redraw:
             await self._render_board(
@@ -361,6 +367,7 @@ class BoardScreen(Screen[None]):
 
         self._sync_subtitle()
         self._reload_sidebar()
+        self._sync_selection()
 
     async def refresh_columns(
         self, columns: Iterable[Slug], select: Slug | None = None
@@ -395,6 +402,7 @@ class BoardScreen(Screen[None]):
 
         self._sync_subtitle()
         self._reload_sidebar()
+        self._sync_selection()
 
     def _sync_subtitle(self) -> None:
         """Update the header to match the tasks currently held."""
@@ -750,9 +758,39 @@ class BoardScreen(Screen[None]):
             self.action_view_task()
 
     def on_list_view_highlighted(self, event: ListView.Highlighted) -> None:
-        """Scope the sidebar log to the highlighted task, or to the board when none."""
+        """Point the sidebar log and the service's selection at the highlighted task."""
         _ = event
         self._scope_sidebar()
+        self._sync_selection()
+
+    def on_descendant_focus(self, event: events.DescendantFocus) -> None:
+        """Follow the focus from one column to another, so the selection tracks it."""
+        _ = event
+        self._sync_selection()
+
+    def _sync_selection(self) -> None:
+        """
+        Tell the service what the board has selected, for commands to act on.
+
+        Only a column of the board's is a selection.  Focus moving anywhere else
+        — the command bar, a bar's completions, a modal over the board — leaves
+        the last one standing, which is the card the user was on when they
+        started typing and the one a command from the bar is meant for.
+        """
+        focused = self.app.focused
+        if self._detail_view is None and not isinstance(focused, (ColumnView, ColumnHeader)):
+            return
+
+        column = self.focused_column
+        if column is None:
+            return
+
+        task = column.selected_task
+        self.svc.set_selection(
+            board=column.column.board,
+            column=column.column.slug,
+            task=task.slug if task is not None else None,
+        )
 
     def _scope_sidebar(self) -> None:
         """Point the sidebar log at the selected task, or at the board when there is none."""
@@ -819,8 +857,9 @@ class BoardScreen(Screen[None]):
             target.panel.scroll_visible()
             view = target
             # Changing column leaves the highlight where it was, so nothing
-            # else tells the sidebar the selection moved.
+            # else tells the sidebar or the service the selection moved.
             self._scope_sidebar()
+            self._sync_selection()
         elif cards and view.tasks:
             view.index = max(0, min((view.index or 0) + cards, len(view.tasks) - 1))
 

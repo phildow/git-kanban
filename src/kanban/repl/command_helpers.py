@@ -165,7 +165,10 @@ def handle_create_helper(args: argparse.Namespace, svc: KanbanService) -> Board 
             created_by=args.created_by,
             description=args.description,
         )
-        result = svc.create_task(Slug(args.column), params)
+        # The selected task is what `new-task.insert` places the new one against
+        # when set to above/below.  It is empty in the REPL, which has no
+        # selection, and set by the TUI when the command comes from its bar.
+        result = svc.create_task(Slug(args.column), params, svc.selection.task)
         if args.edit:
             result = svc.edit_task(Path(result.path))
         return result

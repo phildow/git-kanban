@@ -11,7 +11,7 @@ from uuid import uuid4
 from warnings import deprecated
 
 from ..index.query import SearchQuery, SortField
-from ..models import Board, Column, Priority, Slug, Task, TaskFilter, UserContext
+from ..models import Board, Column, Priority, Selection, Slug, Task, TaskFilter, UserContext
 # Imported rather than defined here so both this layer and the repository — which
 # seeds a new config file with the defaults — work from the same definitions.
 # Callers keep reaching them through the facade they already talk to.
@@ -107,6 +107,9 @@ class KanbanService(CompletionDataSource):
         self.index_service = index_service
         self.git_service = git_service
         self._user_context = UserContext()
+        # Live screen state, not a setting: it starts empty every session and
+        # stays empty for the consumers that have no cursor.
+        self._selection = Selection()
 
         if self.is_initialized:
             # The store may exist without local data, e.g. on a fresh clone or after
@@ -235,6 +238,40 @@ class KanbanService(CompletionDataSource):
         """Clear the user context with initial default values."""
         self.update_user_context(board=None)
         return self.user_context
+
+    # ------------------------------------------------------------------
+    # Selection
+    # ------------------------------------------------------------------
+
+    @property
+    def selection(self) -> Selection:
+        """
+        Return what the consumer has selected on screen, empty when nothing is.
+
+        Only a consumer with a cursor sets this — the TUI — and it is held for
+        the session rather than written to userdata, unlike the working board.
+        A command that can act on the selection reads it here; one that cannot
+        resolve it carries on without it, since a selection may name a task the
+        store no longer holds.
+        """
+        return self._selection
+
+    def set_selection(
+        self,
+        board:  Slug | None = None,
+        column: Slug | None = None,
+        task:   Slug | None = None,
+    ) -> Selection:
+        """
+        Record what is selected on screen.  Every part is given at once: a task
+        is only meaningful alongside the column and board holding it.
+        """
+        self._selection = Selection(board=board, column=column, task=task)
+        return self._selection
+
+    def clear_selection(self) -> Selection:
+        """Forget what was selected, leaving commands to work from paths alone."""
+        return self.set_selection()
 
     # ------------------------------------------------------------------
     # Path Resolution and Completions

@@ -684,7 +684,7 @@ kanban (/board) >
 
 ### The User Context
 
-The user context is a service level model of user settings and preferences. It includes for example the active board. The REPL takes advantage of the user contex in the kanban service. If there is an active board the REPL shows it in the prompt:
+The user context is a service level model of user settings and preferences. It includes for example the active board, and it is persisted to userdata. The REPL takes advantage of the user contex in the kanban service. If there is an active board the REPL shows it in the prompt:
 
 ```
 kanban (/my-project) >
@@ -714,6 +714,14 @@ kanban (/my-project)> history
 
 kanban (/my-project)> quit
 ```
+
+### The Selection
+
+Beside the user context the service holds a `Selection` — the board, column, and task a consumer has selected on screen. Only a consumer with a cursor sets it, which is the TUI; the CLI runs once and the REPL has a prompt, so there it stands empty and every command behaves as it always has.
+
+It is live screen state, not a setting: held for the session, never written to userdata, and cleared whenever the board screen rebuilds. It may name a task the store no longer holds, so a command resolves it and carries on without it when it does not resolve — a selection is a convenience, never a requirement. `create` is the first command to use one: `new-task.insert` set to `above` or `below` places the new task against `selection.task`.
+
+The board screen syncs the selection on every card highlight and every focus change, but only while a column of its own holds the focus. Focus moving to the command bar or a modal leaves the last selection standing, which is the card the user was on when they started typing and the one a command from the bar is meant for.
 
 ### Tab Completion
 
@@ -880,7 +888,9 @@ KanbanApp(App)
 │       on save ConfigScreen writes it with set_config and redraws the row
 │
 └── CommandBar (overlay, toggled by `/`)
-    └── Input — free text, parsed with the same parser as the REPL
+    └── Input — free text, parsed with the same parser as the REPL, and run
+        against the service's Selection, which the bar taking focus leaves
+        standing on the card the user was on
 ```
 
 #### The Command Palette

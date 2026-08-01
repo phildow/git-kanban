@@ -101,5 +101,64 @@ class TestBoardNewTaskInsert(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(_stored(svc), ["fourth", "first", "second", "third"])
 
 
+class TestBoardSelection(unittest.IsolatedAsyncioTestCase):
+    """The board tells the service what it has selected, for commands to act on."""
+
+    async def test_selection_follows_the_highlighted_card(self) -> None:
+        """Moving down the column moves the selection with it."""
+        svc = _make_service(INSERT_BELOW)
+        async with KanbanApp(svc).run_test() as pilot:
+            await pilot.pause()
+            await pilot.press("down")
+            await pilot.pause()
+
+            self.assertEqual(svc.selection.board, "alpha")
+            self.assertEqual(svc.selection.column, "todo")
+            self.assertEqual(svc.selection.task, "second")
+
+    async def test_opening_the_command_bar_leaves_the_selection_standing(self) -> None:
+        """The bar takes the focus, not the selection: a command still has one."""
+        svc = _make_service(INSERT_BELOW)
+        async with KanbanApp(svc).run_test() as pilot:
+            await pilot.pause()
+            await pilot.press("down")
+            await pilot.press("slash")
+            await pilot.pause()
+
+            self.assertEqual(svc.selection.task, "second")
+
+
+class TestCommandBarNewTaskInsert(unittest.IsolatedAsyncioTestCase):
+    """A task created from the command bar is placed against the selected card."""
+
+    async def test_below_places_the_task_under_the_selected_card(self) -> None:
+        """`create todo <title>` typed into the bar reads the board's selection."""
+        svc = _make_service(INSERT_BELOW)
+        async with KanbanApp(svc).run_test() as pilot:
+            await pilot.pause()
+            await pilot.press("down")  # select "second"
+            await pilot.press("slash")
+            await pilot.pause()
+            await pilot.press(*"create todo fourth")
+            await pilot.press("enter")
+            await pilot.pause()
+
+            self.assertEqual(_stored(svc), ["first", "second", "fourth", "third"])
+
+    async def test_above_places_the_task_over_the_selected_card(self) -> None:
+        """Set to above, the task typed into the bar takes the selected card's place."""
+        svc = _make_service(INSERT_ABOVE)
+        async with KanbanApp(svc).run_test() as pilot:
+            await pilot.pause()
+            await pilot.press("down")  # select "second"
+            await pilot.press("slash")
+            await pilot.pause()
+            await pilot.press(*"create todo fourth")
+            await pilot.press("enter")
+            await pilot.pause()
+
+            self.assertEqual(_stored(svc), ["first", "fourth", "second", "third"])
+
+
 if __name__ == "__main__":
     unittest.main()
