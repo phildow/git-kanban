@@ -126,6 +126,15 @@ Run:
 (.venv) $ kanban repl
 ```
 
+## Changelog
+
+### v0.7
+
+- The TUI
+- Configuration
+- Default configuration
+- Comment headings
+
 ### TODO
 
 CONFIG

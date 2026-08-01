@@ -12,7 +12,8 @@ Be succinct.
 
 ## Documentation
 
-Update CLAUDE.md when making structural or system design changes. Be even more succinct. CLAUDE.md is a README for humans and machines.
+Update CLAUDE.md when making structural or system design changes. Be even more succinct. CLAUDE.md is a README for humans and machines. Reserve updates to CLAUDE.md for structural changes. Do not include implementation details.
+
 
 ## Python
 
@@ -139,6 +140,8 @@ root-directory
 ├── .kanban
 │   ├── config
 │   ├── history
+│   ├── tui-history
+│   ├── tui-filter-history
 │   └── index.db
 │   └── userdata
 ├── .kanban-store
@@ -893,12 +896,26 @@ KanbanApp(App)
         standing on the card the user was on
 ```
 
-An open bar takes the navigation keys off the board: it binds ↑/↓ itself —
-reserved, doing nothing yet — and the board refuses the rest of the family
-(`BAR_REFUSED_ACTIONS`: the shifted arrows and the paging keys) while a bar
-holds the focus. Otherwise the cards move under a user who is typing, and the
-selection a command is meant for is no longer the card they started on. Escape
-still reaches the board, which is what closes the bar.
+An open bar takes the navigation keys off the board: it binds ↑/↓ for its
+history, and the board refuses the rest of the family (`BAR_REFUSED_ACTIONS`:
+the shifted arrows and the paging keys) while a bar holds the focus. Otherwise
+the cards move under a user who is typing, and the selection a command is meant
+for is no longer the card they started on. Escape still reaches the board,
+which is what closes the bar.
+
+Each bar keeps a history of the lines submitted to it (`CommandHistory`),
+cycled with ↑/↓ — back through the entries, forward again to the draft the user
+was typing when they first pressed ↑. Blank lines and immediate repeats are not
+recorded, and a bar opens at the newest end. The board loads both on mount and
+writes them on unmount, from references it holds itself: a screen unmounts after
+its children, so the bars are gone by then.
+
+The files are the TUI's own — `.kanban/tui-history` and
+`.kanban/tui-filter-history`, plain text, one entry per line, oldest first,
+capped at `HISTORY_LIMIT`. The REPL's `.kanban/history` is not shared: readline
+rewrites it wholesale from its own buffer when a REPL session ends, which would
+drop anything the TUI had added. A repository with no `.kanban/` directory (the
+in-memory one) still gets histories; they just do not outlive the session.
 
 #### The Command Palette
 

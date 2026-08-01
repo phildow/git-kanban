@@ -39,6 +39,7 @@ from ...repl.completion_engine import CompletionEngine
 from ...repl.parser import build_parser as build_repl_parser
 from ..filter_query import FilterQuery, build_filter_parser, parse_filter
 from ..formatting import board_subtitle
+from ..history import CommandHistory
 from ..widgets import (
     ColumnHeader,
     ColumnPanel,
@@ -72,11 +73,13 @@ MOVE_KEYS: list[tuple[str, str]] = [
 ]
 FILTER_KEYS: list[tuple[str, str]] = [
     ("tab", "Complete"),
+    ("↑/↓", "History"),
     ("↵", "Keep filter"),
     ("esc", "Clear"),
 ]
 COMMAND_KEYS: list[tuple[str, str]] = [
     ("tab", "Complete"),
+    ("↑/↓", "History"),
     ("↵", "Run"),
     ("esc", "Cancel"),
 ]
@@ -87,6 +90,12 @@ NAME_KEYS: list[tuple[str, str]] = [
 
 # How many completion candidates the hint bar will list before giving up.
 COMPLETION_HINTS = 12
+
+# Where each bar's history is kept, under `.kanban/` beside the REPL's own.
+# The TUI writes these files itself rather than sharing the REPL's, which
+# readline rewrites wholesale from its own buffer whenever a REPL session ends.
+COMMAND_HISTORY_FILE = "tui-history"
+FILTER_HISTORY_FILE = "tui-filter-history"
 
 # What the board still answers to while a card is staged for a move: staging
 # keys, and the two ways out.  A move is a mode — editing the card being moved,
@@ -236,6 +245,9 @@ class BoardScreen(Screen[None]):
         self._tasks: dict[Slug, list[Task]] = {}
         self._filter = FilterQuery()
         self._move: MoveState | None = None
+        # The bars' histories, kept here as well as on the bars so they can be
+        # written out when the screen — and its bars with it — has gone.
+        self._histories: list[CommandHistory] = []
         # The column the detail screen is reading from, while one is open.  The
         # modal holds focus, so the board's current column cannot be read off it.
         self._detail_view: ColumnView | None = None
@@ -267,8 +279,9 @@ class BoardScreen(Screen[None]):
         yield Footer(compact=True)
 
     async def on_mount(self) -> None:
-        """Attach the completers, load the board, and ask which board to show if none is active."""
+        """Attach the completers and histories, load the board, and ask which board to show if none is active."""
         self._install_completers()
+        self._install_histories()
         await self.reload()
 
         # Without a working board the screen falls back to the first one, which
@@ -291,6 +304,41 @@ class BoardScreen(Screen[None]):
         self.query_one(CommandBar).completer = CompletionEngine(
             self.svc, build_repl_parser()
         )
+
+    def _install_histories(self) -> None:
+        """
+        Give each bar the lines typed into it before, this session and the last.
+
+        Commands and filters are different languages and get a file each, both
+        under `.kanban/` — local machine state, like the REPL's own history.  A
+        repository with no such directory behind it (the in-memory one) still
+        gets a history; it just does not outlive the session.
+        """
+        kanban_dir = self.svc.kanban_dir
+
+        for bar, filename in (
+            (self.query_one(FilterBar), FILTER_HISTORY_FILE),
+            (self.query_one(CommandBar), COMMAND_HISTORY_FILE),
+        ):
+            history = CommandHistory(kanban_dir / filename if kanban_dir else None)
+            history.load()
+            bar.history = history
+            self._histories.append(history)
+
+    def on_unmount(self) -> None:
+        """Write both bars' histories out as the app closes."""
+        self._save_histories()
+
+    def _save_histories(self) -> None:
+        """
+        Persist what was typed into the bars, for the next run of the TUI.
+
+        The histories are held here rather than read back off the bars: a screen
+        unmounts after its children are gone, so by the time this runs there is
+        no bar left to ask.
+        """
+        for history in self._histories:
+            history.save()
 
     # ── Accessors ─────────────────────────────────────────────────────────────
 
@@ -1742,14 +1790,17 @@ class BoardScreen(Screen[None]):
 
     def action_filter(self) -> None:
         """Open the inline filter bar."""
-        bar = self.query_one(FilterBar)
-        bar.add_class("-visible")
-        bar.focus()
-        self._show_hints(self._bar_hints(bar))
+        self._open_bar(self.query_one(FilterBar))
 
     def action_command(self) -> None:
         """Open the command bar."""
-        bar = self.query_one(CommandBar)
+        self._open_bar(self.query_one(CommandBar))
+
+    def _open_bar(self, bar: CompletingInput) -> None:
+        """Show `bar`, focus it, and start its history at the newest end."""
+        if bar.history is not None:
+            bar.history.reset()
+
         bar.add_class("-visible")
         bar.focus()
         self._show_hints(self._bar_hints(bar))
@@ -1825,6 +1876,11 @@ class BoardScreen(Screen[None]):
 
     def on_input_submitted(self, event: FilterBar.Submitted) -> None:
         """Keep the filter and return to the board, or run the typed command."""
+        # A submitted line is a line the user meant, whatever came of it: a
+        # command that failed is one worth recalling to correct.
+        if isinstance(event.input, CompletingInput) and event.input.history is not None:
+            event.input.history.append(event.value)
+
         if isinstance(event.input, FilterBar):
             self._close_bar(event.input)
             return
