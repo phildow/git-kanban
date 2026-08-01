@@ -771,9 +771,9 @@ The TUI is entirely keyboard driven with the following input properties:
 
 - **Actions on the selected card** — single-key commands trigger instantly: `m` to move a card to another column, `e` to open an edit panel, `d` to delete (with a confirmation prompt), `Enter` to expand card details.
 
-- **Command palette** — The addition of a `/` or `:` prompt for power users to type commands like `:move 14 done` or `:assign 11 sara`.
+- **Command palette** — The addition of a `/` prompt for power users to type commands like `/move 14 done` or `/assign 11 sara`.
 
-- **Search/filter** — `/` or `f` opens an inline search bar that live-filters visible cards as you type.
+- **Search/filter** — `:` opens an inline search bar that live-filters visible cards as you type.
 
 The TUI has the following output properties and formatting conventions:
 
@@ -863,7 +863,7 @@ KanbanApp(App)
 │   └── Button row: Save / Cancel
 │       on save ConfigScreen writes it with set_config and redraws the row
 │
-└── CommandBar (overlay, toggled by `:`)
+└── CommandBar (overlay, toggled by `/`)
     └── Input — free text, parsed with the same parser as the REPL
 ```
 
@@ -895,8 +895,8 @@ a preference: a failed config read or write is logged, never fatal.
          d = delete focused card (confirm modal)
          m = enter move mode for focused card
          b = open BoardSwitcherScreen
-         / = inline filter — live-filters visible cards as typed
-         : = open CommandBar — full REPL-syntax command line
+         / = open CommandBar — full REPL-syntax command line
+         : = inline filter — live-filters visible cards as typed
          s = toggle SidebarPanel collapse
     Ctrl+P = command palette — app-level actions, including configuration
 q / Ctrl+Q = quit
