@@ -6,6 +6,7 @@ import time
 import unittest
 
 from rich.text import Text
+from textual import events
 
 from kanban.tui.widgets.prefix_list import SEARCH_TIMEOUT, PrefixList
 
@@ -131,3 +132,111 @@ class TestSearchTimeout(unittest.TestCase):
         columns._searched_at = time.monotonic() - SEARCH_TIMEOUT - 1
 
         self.assertEqual(columns._expired_search(), "")
+
+
+class TestReservedCharacters(unittest.TestCase):
+    """Characters a screen keeps for itself are not taken for the search."""
+
+    def _list(self) -> PrefixList:
+        """Return a list that leaves `d` to whatever binds it."""
+        return PrefixList([(slug, Text(slug)) for slug in COLUMNS], reserved=["d"])
+
+    def test_reserved_character_starts_no_search(self) -> None:
+        """A reserved character does not become the prefix."""
+        columns = self._list()
+        columns.on_key(_key_event("d"))
+
+        self.assertEqual(columns.search, "")
+
+    def test_reserved_character_is_left_to_bubble(self) -> None:
+        """The event is not stopped, so a binding elsewhere can answer it."""
+        columns = self._list()
+        event = _key_event("d")
+        columns.on_key(event)
+
+        self.assertFalse(event._stop_propagation)
+
+    def test_searched_character_is_consumed(self) -> None:
+        """A character the search takes does not go on to anything else."""
+        columns = self._list()
+        event = _key_event("t")
+        columns.on_key(event)
+
+        self.assertTrue(event._stop_propagation)
+
+    def test_other_characters_still_search(self) -> None:
+        """Everything not reserved goes on jumping as before."""
+        columns = self._list()
+        columns.on_key(_key_event("t"))
+
+        self.assertEqual(columns.selected_key, "todo")
+
+
+def _key_event(character: str) -> events.Key:
+    """Return a key event for `character`, as the terminal would deliver it."""
+    return events.Key(key=character, character=character)
+
+
+def make_grouped_list() -> PrefixList:
+    """Return a list whose entries are grouped under headings."""
+    return PrefixList(
+        [
+            (None, Text("open")),
+            ("todo", Text("todo")),
+            ("in-progress", Text("in-progress")),
+            (None, Text("closed")),
+            ("done", Text("done")),
+        ]
+    )
+
+
+class TestHeadings(unittest.TestCase):
+    """An entry with no key is a heading: shown, but not one of the choices."""
+
+    def test_headings_are_disabled(self) -> None:
+        """A keyless row cannot be chosen."""
+        rows = make_grouped_list()
+
+        self.assertTrue(rows.get_option_at_index(0).disabled)
+
+    def test_entries_are_not_disabled(self) -> None:
+        """A row with a key stays selectable."""
+        rows = make_grouped_list()
+
+        self.assertFalse(rows.get_option_at_index(1).disabled)
+
+    def test_heading_rows_have_no_key(self) -> None:
+        """The key at a heading's index is None."""
+        self.assertIsNone(make_grouped_list().key_at(0))
+
+    def test_typing_skips_headings(self) -> None:
+        """A prefix matching a heading's text lands on nothing."""
+        rows = make_grouped_list()
+        type_text(rows, "op")
+
+        self.assertNotEqual(rows.highlighted, 0)
+
+    def test_typing_still_reaches_entries(self) -> None:
+        """Grouping does not stop typing from jumping to an entry."""
+        rows = make_grouped_list()
+        type_text(rows, "d")
+
+        self.assertEqual(rows.highlighted, 4)
+
+    def test_first_key_index_skips_headings(self) -> None:
+        """The first selectable row is the one below the first heading."""
+        self.assertEqual(make_grouped_list().first_key_index, 1)
+
+    def test_first_key_index_without_entries(self) -> None:
+        """A list of headings alone has nothing to select."""
+        rows = PrefixList([(None, Text("open"))])
+
+        self.assertIsNone(rows.first_key_index)
+
+    def test_set_entries_keeps_headings_disabled(self) -> None:
+        """Rebuilding the rows preserves which of them are headings."""
+        rows = make_grouped_list()
+        rows.set_entries([(None, Text("open")), ("todo", Text("todo"))])
+
+        self.assertTrue(rows.get_option_at_index(0).disabled)
+        self.assertFalse(rows.get_option_at_index(1).disabled)

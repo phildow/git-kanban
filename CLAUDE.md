@@ -855,8 +855,8 @@ KanbanApp(App)
 │
 ├── ConfigScreen (modal, pushed from the command palette's "Configuration")
 │   └── PrefixList of KanbanService.list_config() — every supported keypath and
-│       its value, unset keys included; typing jumps to a key, Enter pushes
-│       ConfigValueScreen for it
+│       its value, unset keys included, grouped under a heading per keypath
+│       section; typing jumps to a name, Enter or `e` pushes ConfigValueScreen
 │
 ├── ConfigValueScreen (modal, pushed from the configuration screen)
 │   ├── Input: value (pre-filled with the current one)

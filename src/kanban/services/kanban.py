@@ -650,8 +650,6 @@ class KanbanService(CompletionDataSource):
         priority = params.priority
         tags = params.tags or []
         due_date = params.due_date
-        # An explicit creator wins; otherwise fall back to the configured user
-        # name so tasks record who made them without repeating --created-by.
         created_by = params.created_by or self.get_config(CONFIG_USER_NAME)
 
         if isinstance(due_date, str):
@@ -673,9 +671,6 @@ class KanbanService(CompletionDataSource):
         filename = task.slug
         created_task = self.repository.create_task(task, filename)
 
-        # The repository appends; placing the task is the facade's to sequence.
-        # Only `top` moves it — every other state, including an unset setting,
-        # leaves it where the repository put it.
         if self.get_config(CONFIG_NEW_TASK_INSERT) == INSERT_TOP:
             created_task = self.repository.reorder_task(created_task, "top")
 

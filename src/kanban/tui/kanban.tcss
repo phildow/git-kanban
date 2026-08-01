@@ -343,6 +343,14 @@ TaskHeading .-task-path {
     border-subtitle-color: $accent;
 }
 
+/* A section heading in the configuration list.  Disabled is how the list marks
+   a row that cannot be chosen, so it needs saying that this one is a heading
+   rather than a setting that has been turned off. */
+#config-list > .option-list--option-disabled {
+    color: $primary;
+    text-opacity: 100%;
+}
+
 /* The configuration keys, listed the same way, and the hints under them. */
 #config-list {
     height: auto;

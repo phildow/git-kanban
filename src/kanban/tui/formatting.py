@@ -123,17 +123,28 @@ def column_label(column: Column, slug_width: int = 0) -> Text:
     return text
 
 
-def config_label(key: str, value: str | None, key_width: int = 0) -> Text:
+def config_group_label(section: str) -> Text:
     """
-    Return a configuration key's row: the keypath, then its value.
+    Return the heading a group of configuration keys sits under: its section.
 
-    The keypath leads because that is what typing matches against; `key_width`
-    pads it so the values line up down the list.  A key that has never been set
-    says so rather than showing an empty column, which would read as a blank
-    value the user had typed.
+    A keypath is `section.name`, so the section is the group — the same grouping
+    the config file itself has, where these are the `[section]` headings.
     """
-    text = Text()
-    text.append(key.ljust(key_width))
+    return Text(section, style="bold")
+
+
+def config_label(name: str, value: str | None, name_width: int = 0) -> Text:
+    """
+    Return a configuration key's row: its name within its section, then its value.
+
+    The section is carried by the heading above, so the row shows the rest of
+    the keypath — which is also what typing matches against.  `name_width` pads
+    it so the values line up down the list.  A key that has never been set says
+    so rather than showing an empty column, which would read as a blank value
+    the user had typed.
+    """
+    text = Text("  ")
+    text.append(name.ljust(name_width))
     text.append("  ")
     if value is None:
         text.append(UNSET_VALUE, style="dim italic")
