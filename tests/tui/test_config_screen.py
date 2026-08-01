@@ -13,7 +13,13 @@ from textual.widgets import Input
 
 from kanban.models import Slug
 from kanban.services.git import GitService
-from kanban.services.kanban import CONFIG_KEYS, CONFIG_USER_NAME, KanbanService
+from kanban.services.kanban import (
+    CONFIG_KEYS,
+    CONFIG_NEW_TASK_INSERT,
+    CONFIG_USER_NAME,
+    INSERT_TOP,
+    KanbanService,
+)
 from kanban.storage.memory import InMemoryRepository
 from kanban.tui.app import KanbanApp
 from kanban.tui.formatting import UNSET_VALUE
@@ -51,6 +57,11 @@ async def _open_config(pilot: Pilot[None]) -> ConfigScreen:
 def _rows(screen: ConfigScreen) -> PrefixList:
     """Return the screen's list of configuration keys."""
     return screen.query_one("#config-list", PrefixList)
+
+
+def _row_index(key: str) -> int:
+    """Return the row `key` is listed at: the screen lists the keys in sorted order."""
+    return sorted(CONFIG_KEYS).index(key)
 
 
 def _prompts(screen: ConfigScreen) -> list[str]:
@@ -99,9 +110,12 @@ class TestConfigScreenEditing(unittest.IsolatedAsyncioTestCase):
         self.svc = _make_service()
         self.app = KanbanApp(self.svc)
 
-    async def _edit(self, pilot: Pilot[None], value: str) -> ConfigScreen:
-        """Open the screen, edit the first key, and type `value` into the prompt."""
+    async def _edit(
+        self, pilot: Pilot[None], value: str, key: str = CONFIG_USER_NAME
+    ) -> ConfigScreen:
+        """Open the screen, start editing `key`, and type `value` into the prompt."""
         screen = await _open_config(pilot)
+        _rows(screen).highlighted = _row_index(key)
         await pilot.press("enter")
         await pilot.pause()
 
@@ -125,7 +139,8 @@ class TestConfigScreenEditing(unittest.IsolatedAsyncioTestCase):
         self.svc.set_config(CONFIG_USER_NAME, "philip")
 
         async with self.app.run_test() as pilot:
-            await _open_config(pilot)
+            screen = await _open_config(pilot)
+            _rows(screen).highlighted = _row_index(CONFIG_USER_NAME)
             await pilot.press("enter")
             await pilot.pause()
 
@@ -149,7 +164,25 @@ class TestConfigScreenEditing(unittest.IsolatedAsyncioTestCase):
             await pilot.press("enter")
             await pilot.pause()
 
-            self.assertIn("philip", _prompts(screen)[0])
+            self.assertIn("philip", _prompts(screen)[_row_index(CONFIG_USER_NAME)])
+
+    async def test_value_outside_the_permitted_set_is_refused(self) -> None:
+        """A key with fixed values keeps its own when told something else."""
+        async with self.app.run_test() as pilot:
+            await self._edit(pilot, "sideways", key=CONFIG_NEW_TASK_INSERT)
+            await pilot.press("enter")
+            await pilot.pause()
+
+            self.assertIsNone(self.svc.get_config(CONFIG_NEW_TASK_INSERT))
+
+    async def test_permitted_value_is_stored(self) -> None:
+        """A key with fixed values takes one of them."""
+        async with self.app.run_test() as pilot:
+            await self._edit(pilot, INSERT_TOP, key=CONFIG_NEW_TASK_INSERT)
+            await pilot.press("enter")
+            await pilot.pause()
+
+            self.assertEqual(self.svc.get_config(CONFIG_NEW_TASK_INSERT), INSERT_TOP)
 
     async def test_cancelling_leaves_the_value_alone(self) -> None:
         """Escaping the prompt writes nothing."""

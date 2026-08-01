@@ -12,6 +12,20 @@ from warnings import deprecated
 
 from ..index.query import SearchQuery, SortField
 from ..models import Board, Column, Priority, Slug, Task, TaskFilter, UserContext
+# Imported rather than defined here so both this layer and the repository — which
+# seeds a new config file with the defaults — work from the same definitions.
+# Callers keep reaching them through the facade they already talk to.
+from ..models.config import (
+    CONFIG_DEFAULTS,
+    CONFIG_KEYS,
+    CONFIG_NEW_TASK_INSERT,
+    CONFIG_USER_NAME,
+    CONFIG_VALUES,
+    INSERT_BOTTOM,
+    INSERT_TOP,
+    InvalidConfigKey,
+    InvalidConfigValue,
+)
 from ..models.priority import PRIORITY_ORDER
 from ..protocols.completion_data_source import CompletionDataSource
 from ..storage.base import KanbanRepository, ColumnNotFound, BoardNotFound, TaskNotFound, TaskAlreadyExists
@@ -56,26 +70,6 @@ class TaskUnsetParams:
     due_date:    bool = False
     created_by:  bool = False
     description: bool = False
-
-
-# ── Config ────────────────────────────────────────────────────────────────────
-
-CONFIG_USER_NAME = "user.name"
-
-# The complete set of configuration keypaths the application supports. Config is
-# structured application settings, so unknown keys are rejected rather than
-# stored; arbitrary values belong in userdata.
-CONFIG_KEYS: frozenset[str] = frozenset({
-    CONFIG_USER_NAME,
-})
-
-
-class InvalidConfigKey(ValueError):
-    """Raised when a config keypath is not one of the supported CONFIG_KEYS."""
-    def __init__(self, keypath: str):
-        supported = ", ".join(sorted(CONFIG_KEYS))
-        super().__init__(f"Invalid config key: {keypath}. Supported keys: {supported}")
-        self.keypath = keypath
 
 
 # ── Return types ──────────────────────────────────────────────────────────────
@@ -624,7 +618,8 @@ class KanbanService(CompletionDataSource):
         """
         Write a new .md file into board/column/ with a generated UUID and the
         provided metadata as frontmatter.  When params.created_by is not given the
-        configured `user.name` is used.  Raises BoardNotFound or ColumnNotFound
+        configured `user.name` is used.  The task lands at the end of its column
+        unless `new-task.insert` is set to `top`.  Raises BoardNotFound or ColumnNotFound
         if the target location does not exist, and TaskAlreadyExists if a file
         with the same title slug is already present in that column.  Updates the
         index and commits.
@@ -675,6 +670,13 @@ class KanbanService(CompletionDataSource):
         task.set_description(params.description or "")
         filename = task.slug
         created_task = self.repository.create_task(task, filename)
+
+        # The repository appends; placing the task is the facade's to sequence.
+        # Only `top` moves it — every other state, including an unset setting,
+        # leaves it where the repository put it.
+        if self.get_config(CONFIG_NEW_TASK_INSERT) == INSERT_TOP:
+            created_task = self.repository.reorder_task(created_task, "top")
+
         self.index_service.upsert_task(created_task)
         return created_task
 
@@ -1051,11 +1053,17 @@ class KanbanService(CompletionDataSource):
     def set_config(self, keypath: str, value: str) -> str | None:
         """
         Persist a configuration value to .kanban/config under the given key.
-        Raises InvalidConfigKey if the key is not in the supported set.  No
-        git commit — config is local working state, like current context.
+        Raises InvalidConfigKey if the key is not in the supported set, and
+        InvalidConfigValue if the key draws its values from a fixed set and this
+        is not one of them.  No git commit — config is local working state, like
+        current context.
         """
         if keypath not in CONFIG_KEYS:
             raise InvalidConfigKey(keypath)
+
+        permitted = CONFIG_VALUES.get(keypath)
+        if permitted is not None and value not in permitted:
+            raise InvalidConfigValue(keypath, value)
 
         self.repository.set_config(keypath, value)
         return self.get_config(keypath)

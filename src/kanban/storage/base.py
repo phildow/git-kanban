@@ -169,10 +169,13 @@ class KanbanRepository(ABC):
         """
         Initialize local data storage: config, user data, history, and the index cache.
 
+        Config is written with the default value of every setting that has one
+        (see `models.config.CONFIG_DEFAULTS`); a setting already carrying a value
+        keeps it.
+
         Local data is machine-local, disposable, and not required for kanban to
         operate, so implementations are idempotent and never raise when the local
-        data already exists. Repositories without local data implement this as a
-        no-op.
+        data already exists.
         """
 
     # ------------------------------------------------------------------

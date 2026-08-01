@@ -3,18 +3,26 @@
 
 Kanban for engineers. Git-backed, Markdown-based kanban for your terminal.
 
-Run it as a first class CLI, REPL, or TUI:
-
-```
-$ kanban
-$ kanban repl
-$ kanban tui
-```
+Run it as a first class CLI, REPL, or TUI.
 
 Requirements:
 
+- Modern terminal emulator
+- Python 3.13
+
+## Install From Source
+
+From the repository's root directory run:
+
 ```
-Python 3.13
+$ pip install -e .
+```
+
+I recommend creating a virtual enviornment first and installing into it:
+
+```
+$ python -m venv .venv
+$ pip install -e .
 ```
 
 ## Version Map
@@ -27,17 +35,27 @@ Python 3.13
 
 ## Motivation
 
-After some initial success with LLMs at work I wanted to see how far I could get building an application from scratch with the help of a coding agent. I settled on a kanban applicaton for the terminal involving a CLI, REPL, and TUI. I thought it was both small enough in scope to be approachable and large enough in scope to be a challenge. I liked the idea of building a terminal application, being a tool I use daily in my work, and I love the idea of replacing Jira boards.
+After some initial success with coding agents at work I wanted to see how far I could get building an application from scratch. I settled on a kanban applicaton for the terminal involving a CLI, REPL, and TUI. I thought it was both small enough in scope to be approachable and large enough in scope to be a challenge. I liked the idea of building a terminal application, being a tool I use daily in my work, and I love the idea of replacing Jira boards.
 
-Some 80% or more of the actual coding is done by an agent. I sometimes hand code features or make changes across components to make sure that I understand the system.
+Agents do 90% or more of the coding. I switch between Copilot with Anthropic models and Claude Code.
+
+ I occasionally hand code features or make changes across components to ensure I continue to understand the system. I hand-coded most of the initial typing with `mypy` for v0.6, which further clarirfied the use of the `Path` and `Slug` types and significantly improved the design of the services layer, CLI, and REPL.
+
+ Typing is good.
 
 ## Dogfooding
 
-With v0.5 I started dogfooding the project. I moved most of the TODOs out of the README where I was tracking them and into a kanban board saved in this repository. That work is on the `kanban` branch, which per dicussions with Claude is set up as a git worktree. See CLAUDE.md for more information about git worktrees and how this project uses them.
+With v0.5 I began dogfooding the project. I moved most of the TODOs out of the README where I was tracking them and into a kanban board saved in this repository. That work is on the `kanban` branch, which per dicussions with Claude is set up as a git worktree. See CLAUDE.md for more information about git worktrees and how this project uses them.
 
 **Try it yourself:**
 
-Git integration is not set up yet, so after cloning the repo run the following commands from the project's root directory:
+Having already installed from source, and from the project's root directory, check out the `tui` branch:
+
+```
+$ git checkout tui
+```
+
+Git integration is not set up yet, so run the following commands to associate the .kanban-store directory with the kanban worktree:
 
 ```
 $ git checkout kanban
@@ -45,12 +63,9 @@ $ git checkout main
 $ git worktree add .kanban-store kanban
 ```
 
-To run the TUI, check out the `tui` branch, set up your python environment, and start the application:
+Run the TUI:
 
 ```
-$ git checkout tui
-$ python -m venv .venv
-$ pip install -e .
 $ kanban tui
 ```
 

@@ -39,7 +39,7 @@ from unittest.mock import MagicMock, patch
 from kanban.cli.parser import parse_args
 from kanban.cli.renderer import Renderer
 from kanban.cli.json_renderer import JsonRenderer
-from kanban.services.kanban import KanbanService
+from kanban.services.kanban import InvalidConfigValue, KanbanService
 from kanban.storage.filesystem import FilesystemRepository
 from kanban.storage.seeds import BOOTSTRAP_CONFIG
 from kanban.services.render_service import RenderService
@@ -1171,7 +1171,25 @@ class TestConfigCLI(_InitializedBase):
         """`config list --format json` emits the key/value mapping."""
         self.run_cli("config", "set", "user.name", "philip")
         self.assertEqual(self.run_json("config", "list", "--format", "json"),
-                         {"user.name": "philip"})
+                         {"new-task.insert": "bottom", "user.name": "philip"})
+
+    def test_defaults_are_in_place_after_init(self) -> None:
+        """A freshly initialized repository reports the default settings."""
+        self.assertEqual(self.run_json("config", "list", "--format", "json")["new-task.insert"],
+                         "bottom")
+
+    def test_set_accepts_a_permitted_value(self) -> None:
+        """A key with fixed values takes one of them."""
+        self.run_cli("config", "set", "new-task.insert", "top")
+        self.assertEqual(self.run_json("config", "get", "new-task.insert",
+                                       "--format", "json")["value"], "top")
+
+    def test_set_refuses_a_value_outside_the_permitted_set(self) -> None:
+        """A key with fixed values refuses anything else, and keeps what it had."""
+        with self.assertRaises(InvalidConfigValue):
+            self.run_cli("config", "set", "new-task.insert", "sideways")
+
+        self.assertEqual(self.svc.get_config("new-task.insert"), "bottom")
 
     def test_task_create_uses_configured_user_name(self) -> None:
         """A task created after setting user.name records it as created_by."""
@@ -1181,6 +1199,41 @@ class TestConfigCLI(_InitializedBase):
 
         fm = self._read_frontmatter("proj", "todo", "fix-login-bug")
         self.assertEqual(fm["created_by"], "philip")
+
+
+class TestNewTaskInsertCLI(_InitializedBase):
+    """new-task.insert decides which end of a column `task create` writes to."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.repo.init_local_data()
+        self.run_cli("board", "create", "Proj")
+
+    def _create(self, *titles: str) -> None:
+        """Create a task per title in the todo column, in order."""
+        for title in titles:
+            self.run_cli("task", "create", "/proj/todo", title)
+
+    def test_default_appends_to_the_bottom(self) -> None:
+        """Out of the box tasks are written to the end of the column's order."""
+        self._create("first", "second", "third")
+
+        self.assertEqual(self._read_task_order("proj", "todo"), ["first", "second", "third"])
+
+    def test_top_inserts_at_the_head_of_the_metadata_order(self) -> None:
+        """Set to top, each task is written to the head of the column's order."""
+        self.run_cli("config", "set", "new-task.insert", "top")
+        self._create("first", "second", "third")
+
+        self.assertEqual(self._read_task_order("proj", "todo"), ["third", "second", "first"])
+
+    def test_top_is_reflected_in_task_list(self) -> None:
+        """The listed order matches the metadata order."""
+        self.run_cli("config", "set", "new-task.insert", "top")
+        self._create("first", "second")
+
+        listed = self.run_json("task", "list", "/proj/todo", "--format", "json")
+        self.assertEqual([task["slug"] for task in listed], ["second", "first"])
 
 
 if __name__ == "__main__":

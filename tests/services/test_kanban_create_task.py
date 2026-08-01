@@ -12,7 +12,14 @@ from uuid import uuid4
 
 from kanban.models import Priority, Task
 from kanban.services.git import GitService
-from kanban.services.kanban import CONFIG_USER_NAME, KanbanService, TaskCreateParams
+from kanban.services.kanban import (
+    CONFIG_NEW_TASK_INSERT,
+    CONFIG_USER_NAME,
+    INSERT_BOTTOM,
+    INSERT_TOP,
+    KanbanService,
+    TaskCreateParams,
+)
 from kanban.storage.base import BoardNotFound, ColumnNotFound, TaskAlreadyExists
 from kanban.storage.memory import InMemoryRepository
 
@@ -313,6 +320,82 @@ class TestKanbanServiceCreateTaskErrors(unittest.TestCase):
 
         with self.assertRaises(TaskAlreadyExists):
             self.svc.create_task("alpha/done", TaskCreateParams(title="fix-login"))
+
+
+class TestKanbanServiceCreateTaskInsert(unittest.TestCase):
+    """Where a new task lands in its column follows the new-task.insert setting."""
+
+    def setUp(self) -> None:
+        self.svc, self.repo = _make_service()
+
+    def _slugs(self) -> list[str]:
+        """Return the slugs of the todo column, in the order the column holds them."""
+        return [task.slug for task in self.svc.get_tasks("/alpha/todo", sort=None)]
+
+    def _create(self, *titles: str) -> None:
+        """Create a task per title, in order."""
+        for title in titles:
+            self.svc.create_task("alpha/todo", TaskCreateParams(title=title))
+
+    def test_unset_appends_to_the_bottom(self) -> None:
+        """With the setting unset a new task lands at the end of its column."""
+        self._create("first", "second", "third")
+
+        self.assertEqual(self._slugs(), ["first", "second", "third"])
+
+    def test_bottom_appends_to_the_bottom(self) -> None:
+        """Set to bottom, a new task lands at the end of its column."""
+        self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_BOTTOM)
+        self._create("first", "second", "third")
+
+        self.assertEqual(self._slugs(), ["first", "second", "third"])
+
+    def test_top_inserts_at_the_top(self) -> None:
+        """Set to top, each new task lands at the head of its column."""
+        self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_TOP)
+        self._create("first", "second", "third")
+
+        self.assertEqual(self._slugs(), ["third", "second", "first"])
+
+    def test_top_into_an_empty_column(self) -> None:
+        """The first task of a column lands there whichever end is configured."""
+        self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_TOP)
+        self._create("first")
+
+        self.assertEqual(self._slugs(), ["first"])
+
+    def test_top_leaves_the_other_columns_alone(self) -> None:
+        """Inserting at the top of one column does not reorder another."""
+        self._create("first", "second")
+        self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_TOP)
+        self.svc.create_task("alpha/done", TaskCreateParams(title="done-task"))
+
+        self.assertEqual(self._slugs(), ["first", "second"])
+
+    def test_setting_is_read_per_creation(self) -> None:
+        """Changing the setting takes effect on the next task, not on a restart."""
+        self._create("first")
+        self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_TOP)
+        self._create("second")
+        self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_BOTTOM)
+        self._create("third")
+
+        self.assertEqual(self._slugs(), ["second", "first", "third"])
+
+    def test_created_task_is_returned_whichever_end(self) -> None:
+        """The task returned is the one that was created, wherever it was placed."""
+        self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_TOP)
+        self._create("first")
+        task = self.svc.create_task("alpha/todo", TaskCreateParams(title="second"))
+
+        self.assertEqual(task.slug, "second")
+
+    def test_index_records_the_placed_task(self) -> None:
+        """The index is updated with the task as it stands after placement."""
+        self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_TOP)
+        task = self.svc.create_task("alpha/todo", TaskCreateParams(title="first"))
+
+        self.svc.index_service.upsert_task.assert_called_with(task)
 
 
 if __name__ == "__main__":

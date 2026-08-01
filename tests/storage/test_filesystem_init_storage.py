@@ -11,6 +11,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from kanban.models.config import (
+    CONFIG_DEFAULTS,
+    CONFIG_NEW_TASK_INSERT,
+    CONFIG_USER_NAME,
+    INSERT_BOTTOM,
+    INSERT_TOP,
+)
 from kanban.storage.filesystem import FilesystemRepository
 from kanban.storage.base import RepositoryAlreadyInitialized
 
@@ -113,6 +120,53 @@ class TestFilesystemInitLocalData(unittest.TestCase):
         self.repo.set_config("app.name", "kanban")
         self.repo.init_local_data()
         self.assertEqual(self.repo.get_config("app.name"), "kanban")
+
+
+class TestFilesystemInitLocalDataDefaults(unittest.TestCase):
+    """init_local_data writes the default value of every setting that has one."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        self.repo = FilesystemRepository(root=self.root)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_defaults_are_written(self) -> None:
+        """Every default is readable from the new config file."""
+        self.repo.init_local_data()
+
+        for keypath, value in CONFIG_DEFAULTS.items():
+            self.assertEqual(self.repo.get_config(keypath), value)
+
+    def test_new_task_insert_defaults_to_bottom(self) -> None:
+        """New tasks are configured to go to the bottom of their column."""
+        self.repo.init_local_data()
+
+        self.assertEqual(self.repo.get_config(CONFIG_NEW_TASK_INSERT), INSERT_BOTTOM)
+
+    def test_defaults_are_written_to_the_file(self) -> None:
+        """The values are in the config file itself, not only in memory."""
+        self.repo.init_local_data()
+        config = (self.root / ".kanban" / "config").read_text(encoding="utf-8")
+
+        self.assertIn("new-task", config)
+        self.assertIn(INSERT_BOTTOM, config)
+
+    def test_a_changed_setting_is_not_overwritten(self) -> None:
+        """A setting the user has changed survives a later init_local_data."""
+        self.repo.init_local_data()
+        self.repo.set_config(CONFIG_NEW_TASK_INSERT, INSERT_TOP)
+        self.repo.init_local_data()
+
+        self.assertEqual(self.repo.get_config(CONFIG_NEW_TASK_INSERT), INSERT_TOP)
+
+    def test_keys_without_a_default_stay_unset(self) -> None:
+        """A setting with no default is left for the user to set."""
+        self.repo.init_local_data()
+
+        self.assertIsNone(self.repo.get_config(CONFIG_USER_NAME))
 
 
 if __name__ == "__main__":

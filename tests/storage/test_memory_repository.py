@@ -13,6 +13,7 @@ import unittest
 from pathlib import Path
 from uuid import uuid4
 
+from kanban.models.config import CONFIG_DEFAULTS, CONFIG_NEW_TASK_INSERT, INSERT_TOP
 from kanban.storage.base import KanbanRepository
 from kanban.storage.memory import InMemoryRepository
 
@@ -48,6 +49,34 @@ class TestInMemoryRepositoryInterface(unittest.TestCase):
             set(),
             f"Abstract methods not overridden in InMemoryRepository: {still_abstract}",
         )
+
+
+class TestInMemoryRepositoryLocalData(unittest.TestCase):
+    """init_local_data seeds the same defaults the filesystem repository writes."""
+
+    def setUp(self) -> None:
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+        temp_dir.mkdir()
+        self.repo = InMemoryRepository(root=temp_dir)
+
+    def test_config_starts_empty(self) -> None:
+        """Nothing is configured before local data is initialized."""
+        self.assertIsNone(self.repo.get_config(CONFIG_NEW_TASK_INSERT))
+
+    def test_defaults_are_seeded(self) -> None:
+        """Every default is readable once local data is initialized."""
+        self.repo.init_local_data()
+
+        for keypath, value in CONFIG_DEFAULTS.items():
+            self.assertEqual(self.repo.get_config(keypath), value)
+
+    def test_a_changed_setting_is_not_overwritten(self) -> None:
+        """A setting already carrying a value survives a later call."""
+        self.repo.init_local_data()
+        self.repo.set_config(CONFIG_NEW_TASK_INSERT, INSERT_TOP)
+        self.repo.init_local_data()
+
+        self.assertEqual(self.repo.get_config(CONFIG_NEW_TASK_INSERT), INSERT_TOP)
 
 
 if __name__ == "__main__":

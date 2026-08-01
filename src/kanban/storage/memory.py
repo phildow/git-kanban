@@ -7,6 +7,7 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 from ..models import Slug, Task, Board, Column
+from ..models.config import CONFIG_DEFAULTS
 from ..storage.base import (
     KanbanRepository,
     BoardNotFound,
@@ -64,7 +65,16 @@ class InMemoryRepository(KanbanRepository):
             self._is_initialized = True
 
     def init_local_data(self) -> None:
-        """No-op: the in-memory repository keeps no local data on disk."""
+        """
+        Seed the default configuration values; there is nothing else to create.
+
+        The in-memory repository keeps no local data on disk, but it does hold
+        config, so it starts from the same stated settings the filesystem
+        repository writes into a new config file.  A setting already carrying a
+        value keeps it.
+        """
+        for keypath, value in CONFIG_DEFAULTS.items():
+            self._config.setdefault(keypath, value)
 
     @property
     def is_initialized(self) -> bool:

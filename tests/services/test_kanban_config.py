@@ -9,7 +9,17 @@ from unittest.mock import MagicMock
 from uuid import uuid4
 
 from kanban.services.git import GitService
-from kanban.services.kanban import CONFIG_KEYS, CONFIG_USER_NAME, InvalidConfigKey, KanbanService
+from kanban.services.kanban import (
+    CONFIG_DEFAULTS,
+    CONFIG_KEYS,
+    CONFIG_NEW_TASK_INSERT,
+    CONFIG_USER_NAME,
+    INSERT_BOTTOM,
+    INSERT_TOP,
+    InvalidConfigKey,
+    InvalidConfigValue,
+    KanbanService,
+)
 from kanban.storage.memory import InMemoryRepository
 
 
@@ -117,6 +127,57 @@ class TestKanbanServiceConfigKeys(unittest.TestCase):
             self.svc.set_config("user.nickname", "Phil")
 
         self.assertIsNone(self.repo.get_config("user.nickname"))
+
+    def test_new_task_insert_is_a_supported_key(self) -> None:
+        """new-task.insert is one of the supported config keys."""
+        self.assertIn(CONFIG_NEW_TASK_INSERT, CONFIG_KEYS)
+
+
+class TestKanbanServiceConfigValues(unittest.TestCase):
+    """A key drawing its values from a fixed set only accepts one of them."""
+
+    def setUp(self) -> None:
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+        temp_dir.mkdir()
+        self.repo = InMemoryRepository(root=temp_dir)
+        self.svc = KanbanService(
+            repository=self.repo,
+            index_service=MagicMock(),
+            git_service=GitService(),
+        )
+
+    def test_top_is_accepted(self) -> None:
+        """new-task.insert accepts top."""
+        self.assertEqual(self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_TOP), INSERT_TOP)
+
+    def test_bottom_is_accepted(self) -> None:
+        """new-task.insert accepts bottom."""
+        self.assertEqual(
+            self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_BOTTOM), INSERT_BOTTOM
+        )
+
+    def test_other_values_are_refused(self) -> None:
+        """Anything else raises InvalidConfigValue."""
+        with self.assertRaises(InvalidConfigValue):
+            self.svc.set_config(CONFIG_NEW_TASK_INSERT, "sideways")
+
+    def test_refused_value_is_not_written(self) -> None:
+        """A rejected value leaves the setting as it was."""
+        self.svc.set_config(CONFIG_NEW_TASK_INSERT, INSERT_TOP)
+        with self.assertRaises(InvalidConfigValue):
+            self.svc.set_config(CONFIG_NEW_TASK_INSERT, "sideways")
+
+        self.assertEqual(self.svc.get_config(CONFIG_NEW_TASK_INSERT), INSERT_TOP)
+
+    def test_free_text_keys_are_unconstrained(self) -> None:
+        """A key with no fixed value set takes whatever it is given."""
+        self.assertEqual(self.svc.set_config(CONFIG_USER_NAME, "anything at all"),
+                         "anything at all")
+
+    def test_every_default_is_a_permitted_value(self) -> None:
+        """The shipped defaults satisfy their own keys' constraints."""
+        for keypath, value in CONFIG_DEFAULTS.items():
+            self.assertEqual(self.svc.set_config(keypath, value), value)
 
 
 class TestKanbanServiceUserdata(unittest.TestCase):

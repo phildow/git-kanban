@@ -10,6 +10,7 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 from ..models import Priority, Slug, Task, Board, Column
+from ..models.config import CONFIG_DEFAULTS
 from ..storage.base import (
     KanbanRepository, 
     BoardNotFound, 
@@ -94,8 +95,13 @@ class FilesystemRepository(KanbanRepository):
     def init_local_data(self) -> None:
         """Create the .kanban directory holding config, user data, history, and the index.
 
+        The config file is written with the default value of every setting that
+        has one, so a new repository starts from stated settings rather than
+        from an empty file the user has to guess the shape of.
+
         Local data is machine-local and disposable, so this is idempotent: existing
-        directories and files are left as they are.
+        directories and files are left as they are, and a setting already carrying
+        a value keeps it.
         """
         kanban_dir = cast(Path, self.kanban_dir)
         kanban_dir.mkdir(exist_ok=True)
@@ -104,6 +110,14 @@ class FilesystemRepository(KanbanRepository):
         self.config_file.touch()
         self.userdata_file.touch()
         self.index_file.touch()
+
+        self._seed_config_defaults()
+
+    def _seed_config_defaults(self) -> None:
+        """Write the default of every setting the config file does not already carry."""
+        for keypath, value in CONFIG_DEFAULTS.items():
+            if self.get_config(keypath) is None:
+                self.set_config(keypath, value)
 
     # ------------------------------------------------------------------
     # Board operations

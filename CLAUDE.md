@@ -936,7 +936,9 @@ The same principle governs everything else the TUI draws: a widget is handed new
 
 ## Config and Userdata
 
-Configuration values are addressed by a `section.key` keypath. The supported set is defined by `CONFIG_KEYS` in the service layer, and `KanbanService.get_config`/`set_config` raise `InvalidConfigKey` for anything outside it. `KanbanService.list_config` returns every supported keypath with its value (None when unset), which is what `kanban config list`, the bare REPL `config` command, and REPL tab completion of keys report. 
+Configuration values are addressed by a `section.key` keypath. The keys, the values they permit, and their defaults are defined in `kanban.models.config`, which sits below both the service and the repository because both need them — the service to validate, the repository to seed a new config file. `KanbanService.get_config`/`set_config` raise `InvalidConfigKey` for a key outside `CONFIG_KEYS`, and `set_config` raises `InvalidConfigValue` for a value outside the set a key draws from (`CONFIG_VALUES`; a key with no entry there takes free text). `KanbanService.list_config` returns every supported keypath with its value (None when unset), which is what `kanban config list`, the bare REPL `config` command, and REPL tab completion of keys report.
+
+`init_local_data` writes `CONFIG_DEFAULTS` into the config file, so a new repository starts from stated settings rather than an empty file. It is idempotent: a setting that already carries a value keeps it, and a key with no default (a name has no sensible stand-in) is left unset.
 
 Config and user data contain different kinds of data.
 
@@ -949,7 +951,14 @@ User data contains settings that cannot be changed by the user and which are gen
 ```INI
 [user]
     # the name of the user, used when creating a task or comment
+    # no default: unset until the user sets it
     name = "philip"
+
+[new-task]
+    # which end of its column a newly created task is inserted at
+    # read by KanbanService.create_task on every creation
+    # values: top | bottom, default: bottom
+    insert = bottom
 
 [repository]
     # the folder in the repository that contains the kanban store
