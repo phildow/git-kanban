@@ -10,6 +10,10 @@ Do not praise or patronize. Avoid comments like “great idea” or “good sugg
 
 Be succinct.
 
+## Documentation
+
+Update CLAUDE.md when making structural or system design changes. Be even more succinct. CLAUDE.md is a README for humans and machines.
+
 ## Python
 
 - Use python as the programming language
@@ -24,22 +28,17 @@ Be succinct.
 - Run tests from the current working directory with the bash command `python -m unittest discover -s tests`
 - Tab indent key-value pairs in INI files
 
-## Documentation
-
-- When you make changes to CLI subcommands, update the the command line structure in CLAUDE.md if necessary
-- When you make changes to REPL commands, update the REPL structure if necessary
-
 ## Project
 
 We are building a kanban style task manager in python that uses the filesystem for storage and git for change tracking. Tasks are stored as markdown documents in directories that correspond to boards with subdirectories for columns. The task's filename is the slug conversion of its title.
 
 Metadata is stored as frontmatter in the markdown documents and includes a UUID to uniquely identify a task. A tasks's title (and so filename) may change but its UUID will not. The application uses a caching index for faster searching and for discovering when files have changed on disk outside of the application. The initial interface to the application is a CLI, but we also have a REPL and a TUI.
 
-The filesystem is the source of truth
+The filesystem is the source of truth.
 
 You could just use the shell and your text editor of choice, but we’re adding metadata, automatic commits, an index for fast searching, a REPL, and a TUI.
 
-A description of the architecture follows. Each layer interacts only with the layer below it.
+A broad outline of the architecture follows. Each layer interacts only with the layer below it.
 
 ```
 CLI | REPL | TUI
@@ -268,7 +267,7 @@ There are three ways of identifying a board, column, or task: by id, path, or sl
 
 The `id` is the unique identifier. It is the only identifier that is immutable. The id is created when the object is created. It is used when checking for changes made directly to the filesystem outside of the kanban application.
 
-The `slug` is derived from the object's name. The name is is the display name given to the object by the user. The name maybe changed, in which case the slug also changes.
+The `slug` is derived from the object's name. The name is is the display name given to the object by the user. The name may changed, in which case the slug changes.
 
 The slug identifies the associated file or folder on disk and is used to construct filepaths. It is unique in its context. Slugging is owned by the service layer, and a slug is only created or updated when the object is created or updated. No other layer creates slugs, but consumers of the kanban service may provide a custom slug when creating or updating an object. Repository methods take slugs as parameters but do not create slugs themselves.
 
@@ -870,11 +869,20 @@ KanbanApp(App)
 
 #### The Command Palette
 
-Textual's own palette (`ctrl+p`) carries the app-level actions — the ones that
-belong to the application rather than to the board in front of the user, and so
-have no key of their own. `KanbanCommands` is the provider that supplies them,
-registered on `KanbanApp.COMMANDS` alongside Textual's system commands. It
-currently offers **Configuration**, which opens `ConfigScreen`.
+The palette (`ctrl+p`) carries app-level actions, the ones with no key of their
+own. **Configuration** opens `ConfigScreen`; **Theme** opens `ThemePalette`.
+
+`KanbanCommands` is the only provider registered on `KanbanApp.COMMANDS` and
+supplies the whole list, subclassing Textual's `SystemCommandsProvider` rather
+than sitting beside it: hits from separate providers arrive on a queue in no
+fixed order, so one provider is what gives the list an order. That order is
+Textual's commands by name, then the app's, then **Quit** last — matched by its
+action, not its name.
+
+`KanbanApp.watch_theme` writes every theme change to `tui.theme` and `on_mount`
+restores it, falling back to `DEFAULT_THEME` when the configured theme is not
+registered. Watching the reactive catches every route to a new theme. A theme is
+a preference: a failed config read or write is logged, never fatal.
 
 #### Key Bindings (Board Screen, normal mode)
 
@@ -956,9 +964,13 @@ User data contains settings that cannot be changed by the user and which are gen
 
 [new-task]
     # which end of its column a newly created task is inserted at
-    # read by KanbanService.create_task on every creation
     # values: top | bottom, default: bottom
     insert = bottom
+
+[tui]
+    # the theme the TUI opens in, rewritten whenever the theme changes
+    # default: textual-dark
+    theme = textual-dark
 
 [repository]
     # the folder in the repository that contains the kanban store

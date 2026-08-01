@@ -14,7 +14,9 @@ from pathlib import Path
 from kanban.models.config import (
     CONFIG_DEFAULTS,
     CONFIG_NEW_TASK_INSERT,
+    CONFIG_TUI_THEME,
     CONFIG_USER_NAME,
+    DEFAULT_THEME,
     INSERT_BOTTOM,
     INSERT_TOP,
 )
@@ -145,6 +147,12 @@ class TestFilesystemInitLocalDataDefaults(unittest.TestCase):
         self.repo.init_local_data()
 
         self.assertEqual(self.repo.get_config(CONFIG_NEW_TASK_INSERT), INSERT_BOTTOM)
+
+    def test_tui_theme_defaults_to_the_default_theme(self) -> None:
+        """The TUI is configured to open in the default theme."""
+        self.repo.init_local_data()
+
+        self.assertEqual(self.repo.get_config(CONFIG_TUI_THEME), DEFAULT_THEME)
 
     def test_defaults_are_written_to_the_file(self) -> None:
         """The values are in the config file itself, not only in memory."""

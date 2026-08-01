@@ -8,8 +8,10 @@ from kanban.models.config import (
     CONFIG_DEFAULTS,
     CONFIG_KEYS,
     CONFIG_NEW_TASK_INSERT,
+    CONFIG_TUI_THEME,
     CONFIG_USER_NAME,
     CONFIG_VALUES,
+    DEFAULT_THEME,
     INSERT_BOTTOM,
     INSERT_TOP,
     InvalidConfigKey,
@@ -27,6 +29,10 @@ class TestConfigKeys(unittest.TestCase):
     def test_new_task_insert_is_supported(self) -> None:
         """new-task.insert is a supported key."""
         self.assertIn(CONFIG_NEW_TASK_INSERT, CONFIG_KEYS)
+
+    def test_tui_theme_is_supported(self) -> None:
+        """tui.theme is a supported key."""
+        self.assertIn(CONFIG_TUI_THEME, CONFIG_KEYS)
 
     def test_constrained_keys_are_supported_keys(self) -> None:
         """Every key with a fixed value set is a key the application accepts."""
@@ -58,6 +64,14 @@ class TestConfigValues(unittest.TestCase):
     def test_user_name_is_free_text(self) -> None:
         """A name is not drawn from a fixed set."""
         self.assertNotIn(CONFIG_USER_NAME, CONFIG_VALUES)
+
+    def test_tui_theme_defaults_to_the_default_theme(self) -> None:
+        """The TUI opens in the default theme unless told otherwise."""
+        self.assertEqual(CONFIG_DEFAULTS[CONFIG_TUI_THEME], DEFAULT_THEME)
+
+    def test_tui_theme_is_free_text(self) -> None:
+        """Which themes exist is the TUI's to know, so the value is unconstrained."""
+        self.assertNotIn(CONFIG_TUI_THEME, CONFIG_VALUES)
 
 
 class TestConfigErrors(unittest.TestCase):

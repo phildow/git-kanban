@@ -1170,8 +1170,14 @@ class TestConfigCLI(_InitializedBase):
     def test_list_json_reports_values(self) -> None:
         """`config list --format json` emits the key/value mapping."""
         self.run_cli("config", "set", "user.name", "philip")
-        self.assertEqual(self.run_json("config", "list", "--format", "json"),
-                         {"new-task.insert": "bottom", "user.name": "philip"})
+        self.assertEqual(
+            self.run_json("config", "list", "--format", "json"),
+            {
+                "new-task.insert": "bottom",
+                "tui.theme": "textual-dark",
+                "user.name": "philip",
+            },
+        )
 
     def test_defaults_are_in_place_after_init(self) -> None:
         """A freshly initialized repository reports the default settings."""

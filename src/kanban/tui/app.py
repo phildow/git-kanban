@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import logging
+from contextlib import contextmanager
+from typing import Iterator
 
 from textual.app import App
 from textual.binding import Binding
 
-from ..services.kanban import KanbanService
+from ..services.kanban import CONFIG_TUI_THEME, DEFAULT_THEME, KanbanService
 from ..services.render_service import RenderService
 from .commands import KanbanCommands, ThemeCommands, ThemePalette
 from .renderer import TUIRenderer
@@ -46,8 +48,57 @@ class KanbanApp(App[None]):
         self.command_renderer = TUIRenderer(render_service=RenderService(service=svc))
 
     def on_mount(self) -> None:
-        """Show the board screen."""
+        """Restore the configured theme, then show the board screen."""
+        self.theme = self._configured_theme()
         self.push_screen(BoardScreen(self.svc))
+
+    # ── Theme ─────────────────────────────────────────────────────────────────
+
+    def _configured_theme(self) -> str:
+        """
+        Return the theme named by `tui.theme`, or the default when it cannot be used.
+
+        Which themes exist is the app's to know, not the service's, so an
+        unknown name — a theme removed since it was chosen, or a typo written
+        into the config file by hand — falls back here rather than being
+        refused when it was stored.
+        """
+        name: str | None = None
+        with self._config_errors("read the theme"):
+            name = self.svc.get_config(CONFIG_TUI_THEME)
+
+        if name is not None and name in self.available_themes:
+            return name
+
+        if name:
+            logging.warning("Configured theme %r is not available; using %s", name, DEFAULT_THEME)
+        return DEFAULT_THEME
+
+    def watch_theme(self, theme: str) -> None:
+        """
+        Remember the theme, whichever way it was changed.
+
+        Watching the reactive rather than the theme palette catches every route
+        to a new theme — the palette, a keybinding, anything added later — and
+        keeps the writing in one place.  Textual's own `_watch_theme` still runs
+        alongside this one and does the applying.
+        """
+        with self._config_errors("save the theme"):
+            self.svc.set_config(CONFIG_TUI_THEME, theme)
+
+    @contextmanager
+    def _config_errors(self, action: str) -> Iterator[None]:
+        """
+        Log a failed config call instead of tearing the app down.
+
+        A theme is a preference: failing to read or write one is worth a line in
+        the log, but never worth interrupting the person using the board.
+        """
+        try:
+            yield
+        except Exception as exc:
+            description = str(exc) or exc.__class__.__name__
+            logging.warning("TUI could not %s: %s", action, description)
 
     def action_help(self) -> None:
         """Open the bindings reference."""

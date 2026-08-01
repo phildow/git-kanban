@@ -24,13 +24,21 @@ CONFIG_NEW_TASK_INSERT = "new-task.insert"
 INSERT_TOP = "top"
 INSERT_BOTTOM = "bottom"
 
+CONFIG_TUI_THEME = "tui.theme"
+"""The theme the TUI opens in, by name."""
+
+DEFAULT_THEME = "textual-dark"
+
 CONFIG_KEYS: frozenset[str] = frozenset({
     CONFIG_USER_NAME,
     CONFIG_NEW_TASK_INSERT,
+    CONFIG_TUI_THEME,
 })
 
 # Keys whose value is drawn from a fixed set.  A key with no entry here takes
-# free text, as a name does.
+# free text, as a name does — and as a theme name does: which themes exist is
+# the TUI's to know, so it is the TUI that falls back to the default when it is
+# asked for one it cannot find.
 CONFIG_VALUES: dict[str, frozenset[str]] = {
     CONFIG_NEW_TASK_INSERT: frozenset({INSERT_TOP, INSERT_BOTTOM}),
 }
@@ -39,6 +47,7 @@ CONFIG_VALUES: dict[str, frozenset[str]] = {
 # left unset until the user sets it: there is no sensible stand-in for a name.
 CONFIG_DEFAULTS: dict[str, str] = {
     CONFIG_NEW_TASK_INSERT: INSERT_BOTTOM,
+    CONFIG_TUI_THEME: DEFAULT_THEME,
 }
 
 
