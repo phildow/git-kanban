@@ -11,6 +11,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Markdown, Static
 
 from ...models import Task
+from ...models.task import DESCRIPTION_HEADING_RE
 from ..formatting import metadata_text
 from ..widgets import TaskHeading
 
@@ -21,6 +22,17 @@ Moves the board's selection by (columns, cards) and returns the task now selecte
 Returns None when the selection did not move — the end of the board, or a
 column with no card to show.
 """
+
+
+def _is_body_empty(body: str) -> bool:
+    """
+    Report whether `body` says nothing about the task.
+
+    A task is created with a `# Description` heading and nothing under it, so a
+    body holding only that heading is as empty as one holding no text at all.
+    """
+    stripped = (body or "").strip()
+    return not stripped or DESCRIPTION_HEADING_RE.fullmatch(stripped) is not None
 
 
 class DetailBody(VerticalScroll):
@@ -98,7 +110,10 @@ class TaskDetailScreen(ModalScreen[Task | None]):
             yield TaskHeading(self.detail_task)
             yield Static(metadata_text(self.detail_task), classes="-task-meta")
             with DetailBody(id="task-detail-body"):
-                yield Markdown(self._body(self.detail_task))
+                yield Markdown(self.detail_task.body)
+                placeholder = Static("-", id="task-detail-empty")
+                placeholder.display = _is_body_empty(self.detail_task.body)
+                yield placeholder
 
     def action_dismiss_screen(self) -> None:
         """Close the modal."""
@@ -131,10 +146,7 @@ class TaskDetailScreen(ModalScreen[Task | None]):
 
         self.query_one(TaskHeading).set_task(task)
         self.query_one(".-task-meta", Static).update(metadata_text(task))
-        self.query_one(Markdown).update(self._body(task))
+        self.query_one(Markdown).update(task.body)
+        self.query_one("#task-detail-empty", Static).display = _is_body_empty(task.body)
         # A new task is read from its start, wherever the last one was scrolled to.
         self.query_one(DetailBody).scroll_home(animate=False)
-
-    def _body(self, task: Task) -> str:
-        """Return what to render for `task`, standing in for an empty body."""
-        return task.body or "*(no description)*"

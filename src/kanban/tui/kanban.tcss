@@ -395,6 +395,15 @@ TaskHeading .-task-path {
     max-height: 24;
 }
 
+/* Stands under the Description heading of a task with nothing written in it,
+   dimmed so it reads as an absence rather than as body text. */
+#task-detail-empty {
+    width: 1fr;
+    height: auto;
+    color: $text-muted;
+    text-align: center;
+}
+
 /* The board switcher.  A board is named on its own row, and the list is an
    OptionList, whose rows are drawn rather than mounted — so the field goes on
    a layer of its own, where it can cover a row without taking one. */
