@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TypedDict
 
-from ..models import Slug
+from ..models import ARCHIVE_COLUMN_NAME, ARCHIVE_COLUMN_SLUG, ROLE_ARCHIVE, Slug
 
 class BootstrapSeed(TypedDict, total=False):
     """A single task entry in a bootstrap column. title and slug are required."""
@@ -19,6 +19,7 @@ class BootstrapColumn(TypedDict, total=False):
     """A column entry in a bootstrap board. name and slug are required."""
     name:   str         # required
     slug:   Slug        # required
+    role:   str
     tasks:  list[BootstrapSeed]
 
 
@@ -41,6 +42,11 @@ DEFAULT_COLUMNS: list[tuple[str, Slug]] = [
     ("In Review", Slug("in-review")),
     ("Done", Slug("done")),
 ]
+
+# Every board ends with an archive column.  It is not one of the default
+# columns because it is not a step in the workflow and is created whatever
+# columns a board is asked for.
+ARCHIVE_COLUMN: tuple[str, Slug] = (ARCHIVE_COLUMN_NAME, ARCHIVE_COLUMN_SLUG)
 
 BOOTSTRAP_CONFIG: BootstrapConfig = {
     "usercontext": {
@@ -118,6 +124,12 @@ BOOTSTRAP_CONFIG: BootstrapConfig = {
                             "slug": Slug("go-for-a-bike-ride"),
                         },
                     ],
+                },
+                {
+                    "name": ARCHIVE_COLUMN_NAME,
+                    "slug": ARCHIVE_COLUMN_SLUG,
+                    "role": ROLE_ARCHIVE,
+                    "tasks": [],
                 },
             ],
         },

@@ -308,13 +308,14 @@ class FilesystemRepository(KanbanRepository):
             name = self.get_column_metadata(board, slug, "fields.name")
             column_slug = self.get_column_metadata(board, slug, "fields.slug")
             uuid = self.get_column_metadata(board, slug, "fields.id")
-           
+            role = self.get_column_metadata(board, slug, "fields.role")
+
             if not name or not column_slug or not uuid:
                 # TODO: handle contests between directory name and metadata fields, and raise error if missing
                 raise ValueError(f"Missing metadata for column {slug} in board {board}: name={name}, slug={column_slug}, id={uuid}")
 
-            columns.append(Column(id=UUID(uuid), name=name, slug=Slug(column_slug), board=board, position=i, task_count=task_count))
-            
+            columns.append(Column(id=UUID(uuid), name=name, slug=Slug(column_slug), board=board, position=i, task_count=task_count, role=role or None))
+
         return columns
 
     def get_column(self, board: Slug, slug: Slug) -> Column:
@@ -333,11 +334,12 @@ class FilesystemRepository(KanbanRepository):
         name = self.get_column_metadata(board, slug, "fields.name") or slug
         column_slug = self.get_column_metadata(board, slug, "fields.slug") or slug
         uuid = self.get_column_metadata(board, slug, "fields.id")
+        role = self.get_column_metadata(board, slug, "fields.role")
         # TODO: error if missing fields
 
-        return Column(id=UUID(uuid), name=name, slug=Slug(column_slug), board=board, position=position, task_count=task_count)
+        return Column(id=UUID(uuid), name=name, slug=Slug(column_slug), board=board, position=position, task_count=task_count, role=role or None)
 
-    def create_column(self, board: Slug, name: str, slug: Slug) -> Column:
+    def create_column(self, board: Slug, name: str, slug: Slug, role: str | None = None) -> Column:
         uuid = str(uuid4())
 
         if not self.board_exists(board):
@@ -356,9 +358,11 @@ class FilesystemRepository(KanbanRepository):
         self.set_column_metadata(board, slug, "fields.name", name)
         self.set_column_metadata(board, slug, "fields.slug", str(slug))
         self.set_column_metadata(board, slug, "fields.id", uuid)
+        if role is not None:
+            self.set_column_metadata(board, slug, "fields.role", role)
         self._set_column_order(board, order)
 
-        return Column(id=UUID(uuid), name=name, slug=slug, board=board, position=len(order) - 1)
+        return Column(id=UUID(uuid), name=name, slug=slug, board=board, position=len(order) - 1, role=role)
 
     def rename_column(self, board: Slug, slug: Slug, new_name: str, new_slug: Slug) -> Column:
         if not self.board_exists(board):
@@ -492,7 +496,6 @@ class FilesystemRepository(KanbanRepository):
             fm_lines.append(f"due_date: {task.due_date.isoformat()}")
         if task.created_by:
             fm_lines.append(f"created_by: {task.created_by}")
-        
         fm_lines.append("---")
         content = "\n".join(fm_lines) + "\n"
         

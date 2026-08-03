@@ -17,6 +17,7 @@ import logging
 from ..models import Board, Column, Slug, Task
 from ..protocols.command_renderer import CommandRenderer
 from ..repl.command_helpers import (
+    build_task_filter,
     parse_priority,
     handle_task_list_helper,
     handle_create_helper,
@@ -254,7 +255,7 @@ def handle_task_comment(args: argparse.Namespace, svc: KanbanService, renderer: 
 # ---------------------------------------------------------------------------
 
 def handle_search(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	result = svc.search(args.query, board=args.board, sort=args.sort, reverse=args.reverse)
+	result = svc.search(args.query, filter=build_task_filter(args), board=args.board, sort=args.sort, reverse=args.reverse)
 	renderer.render_search(args, result)
 
 

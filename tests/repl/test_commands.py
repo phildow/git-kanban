@@ -12,7 +12,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
-from kanban.models import Board, Column, Selection, Slug, Task
+from kanban.models import Board, Column, Selection, Slug, Task, TaskFilter
 from kanban.repl import commands
 from kanban.services.kanban import TaskCreateParams, TaskUnsetParams, TaskUpdateParams
 
@@ -641,14 +641,55 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.renderer.render_task_comment.assert_called_once_with(args, edit_result)
 
     def test_handle_search(self):
-        args = self._args(query="fix", board="alpha", sort="title", reverse=True)
+        args = self._args(
+            query="fix",
+            board="alpha",
+            sort="title",
+            reverse=True,
+            assigned_to=None,
+            priority=None,
+            tags=None,
+            due_before=None,
+            due_after=None,
+            created_by=None,
+            exclude_columns=None,
+        )
         result = object()
         self.svc.search.return_value = result
 
         commands.handle_search(args, self.svc, self.renderer)
 
-        self.svc.search.assert_called_once_with("fix", board="alpha", sort="title", reverse=True)
+        self.svc.search.assert_called_once_with(
+            "fix", filter=TaskFilter(), board="alpha", sort="title", reverse=True
+        )
         self.renderer.render_search.assert_called_once_with(args, result)
+
+    def test_handle_search_excludes_named_columns(self):
+        """`search -x/--exclude` maps to TaskFilter.exclude_columns."""
+        args = self._args(
+            query="fix",
+            board=None,
+            sort=None,
+            reverse=False,
+            assigned_to=None,
+            priority=None,
+            tags=None,
+            due_before=None,
+            due_after=None,
+            created_by=None,
+            exclude_columns=["archive"],
+        )
+        self.svc.search.return_value = object()
+
+        commands.handle_search(args, self.svc, self.renderer)
+
+        self.svc.search.assert_called_once_with(
+            "fix",
+            filter=TaskFilter(exclude_columns=["archive"]),
+            board=None,
+            sort=None,
+            reverse=False,
+        )
 
     def test_handle_log(self):
         args = self._args(path="fix-parser", limit=5)

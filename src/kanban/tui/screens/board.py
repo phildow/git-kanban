@@ -218,6 +218,10 @@ class BoardScreen(Screen[None]):
         Binding("e", "edit_task", "Edit", show=True),
         Binding("d", "delete_task", "Delete", show=True),
         Binding("m", "move_task", "Move", show=True),
+        Binding("a", "archive_task", "Archive", show=True),
+        # The archive column is off the board until it is asked for, so the
+        # workflow is what the board shows.
+        Binding("A", "toggle_archive", "Archive column", show=False),
         Binding("slash", "command", "Command", show=True, key_display="/"),
         Binding("colon", "filter", "Filter", show=True, key_display=":"),
         Binding("s", "toggle_sidebar", "Sidebar", show=True),
@@ -234,6 +238,7 @@ class BoardScreen(Screen[None]):
     dense: reactive[bool] = reactive(False)
     """True when cards are collapsed to single-line summaries."""
 
+
     def __init__(self, svc: KanbanService) -> None:
         """Create a board screen backed by `svc`."""
         super().__init__()
@@ -243,6 +248,12 @@ class BoardScreen(Screen[None]):
         self._board: Board | None = None
         self._columns: list[Column] = []
         self._tasks: dict[Slug, list[Task]] = {}
+        # The archive column is left off the board until `A` asks for it, and
+        # asked for again every session: it is what the workflow is finished
+        # with, not part of it.  Its slug is held whether it is drawn or not,
+        # since sitting in it is what makes a task archived.
+        self._show_archive = False
+        self._archive: Slug | None = None
         self._filter = FilterQuery()
         self._move: MoveState | None = None
         # The bars' histories, kept here as well as on the bars so they can be
@@ -488,7 +499,12 @@ class BoardScreen(Screen[None]):
             sidebar.reload()
 
     def _fetch(self) -> None:
-        """Pull boards, columns, and tasks for the active board from the service."""
+        """
+        Pull boards, columns, and tasks for the active board from the service.
+
+        The archive column is left out, cards and all, unless the board has been
+        asked to show it — so what the board draws is the workflow.
+        """
         with self._service_errors("load"):
             self._boards = self.svc.get_boards()
 
@@ -500,12 +516,22 @@ class BoardScreen(Screen[None]):
                 self._board = None
                 self._columns = []
                 self._tasks = {}
+                self._archive = None
                 return
 
             self._board = self.svc.get_board(slug)
-            self._columns = self.svc.get_columns(slug)
+            columns = self.svc.get_columns(slug)
 
-            tasks = self.svc.get_tasks(Path(f"/{slug}"))
+            archive = next((column for column in columns if column.is_archive), None)
+            self._archive = archive.slug if archive is not None else None
+
+            self._columns = [
+                column for column in columns if self._show_archive or not column.is_archive
+            ]
+
+            tasks = self.svc.get_tasks(
+                Path(f"/{slug}"), include_archived=self._show_archive
+            )
             self._tasks = {
                 column.slug: [task for task in tasks if task.column == column.slug]
                 for column in self._columns
@@ -1092,6 +1118,178 @@ class BoardScreen(Screen[None]):
             self._announce(f"Updated {_task_name(updated.title)}")
             # The form cannot move a task, so an edit stays in one column.
             self._refresh_columns_soon([updated.column], updated.slug)
+
+    def action_archive_task(self) -> None:
+        """Ask for confirmation, then archive the focused card — or bring it back."""
+        task = self.selected_task
+        if task is None:
+            self.notify("No task selected", severity="warning")
+            return
+
+        archived = self._is_archived(task)
+        prompt = "Bring Task Back?" if archived else "Archive Task?"
+        label = "Unarchive" if archived else "Archive"
+
+        self.app.push_screen(
+            ConfirmScreen(prompt, task=task, confirm_label=label),
+            lambda confirmed: self._archive_task(task, bool(confirmed)),
+        )
+
+    def _is_archived(self, task: Task) -> bool:
+        """
+        Return True when `task` sits in the board's archive column.
+
+        Where the task is, is the whole of it: nothing on the task itself says
+        it has been archived.
+        """
+        return self._archive is not None and task.column == self._archive
+
+    def _archive_task(self, task: Task, confirmed: bool) -> None:
+        """
+        Move `task` into the archive, or back out of it, once confirmed.
+
+        Both columns are refreshed — but only the ones on screen: with the
+        archive hidden the card simply leaves the column it was in.
+        """
+        if not confirmed:
+            return
+
+        archived = self._is_archived(task)
+        moved: Task | None = None
+        with self._service_errors("archive"):
+            if archived:
+                moved = self.svc.unarchive_task(task.path)
+            else:
+                moved = self.svc.archive_task(task.path)
+
+        if moved is None:
+            return
+
+        self._announce(
+            f"Brought back {_task_name(moved.title)}"
+            if archived
+            else f"Archived {_task_name(moved.title)}"
+        )
+
+        # Archiving on a board that had no archive column made one, and a column
+        # arriving is not confined to the columns the screen knows.
+        if self._archive is None:
+            self._reload_soon(moved.slug)
+            return
+
+        drawn = {view.column.slug for view in self.column_views}
+        self._refresh_columns_soon(
+            [slug for slug in (task.column, moved.column) if slug in drawn],
+            moved.slug,
+        )
+
+    def action_toggle_archive(self) -> None:
+        """Show the archive column alongside the workflow, or hide it again."""
+        self.run_worker(self._toggle_archive(), exclusive=False)
+
+    async def _toggle_archive(self) -> None:
+        """
+        Mount or unmount the archive column, leaving the rest of the board standing.
+
+        One column is arriving or leaving and nothing else changes — not the
+        other columns' cards, not their scroll positions, not the focus — so the
+        panel is mounted or removed on its own rather than the board being
+        rebuilt around it.
+        """
+        if self._show_archive:
+            await self._hide_archive()
+        else:
+            await self._reveal_archive()
+
+    async def _reveal_archive(self) -> None:
+        """Draw the archive column where it belongs on the board, and fill it."""
+        board = self._board
+        panels = self.column_panels
+
+        # Nothing is on screen to mount beside — an empty board is showing its
+        # message instead — so the board is built rather than added to.
+        if board is None or not panels:
+            self._show_archive = True
+            await self.reload()
+            return
+
+        columns: list[Column] = []
+        archive: Column | None = None
+        tasks: list[Task] = []
+        loaded = False
+
+        with self._service_errors("archive"):
+            columns = self.svc.get_columns(Path(f"/{board.slug}"))
+            archive = next((column for column in columns if column.is_archive), None)
+            tasks = self.svc.get_tasks(archive.path) if archive is not None else []
+            loaded = True
+
+        # A failed call has already said so; only a board that genuinely has no
+        # archive column needs telling.
+        if not loaded:
+            return
+        if archive is None:
+            self.notify("This board has no archive column", severity="warning")
+            return
+
+        self._show_archive = True
+        self._archive = archive.slug
+        self._columns = columns
+        self._tasks[archive.slug] = tasks
+
+        panel = ColumnPanel(archive, id=f"column-{archive.slug}")
+        index = columns.index(archive)
+
+        async with self._redraw:
+            container = self.query_one("#columns", Horizontal)
+            # The archive sits wherever the board orders it, which is the end
+            # unless it has been moved: the panel that follows it is the one
+            # standing at its index now that it is not among them.
+            if index < len(panels):
+                await container.mount(panel, before=panels[index])
+            else:
+                await container.mount(panel)
+
+            await panel.view.set_tasks(self._visible(archive.slug), dense=self.dense)
+
+        panel.scroll_visible()
+        self._sync_subtitle()
+        self.notify("Archive shown")
+
+    async def _hide_archive(self) -> None:
+        """Take the archive column off the board, without disturbing the rest."""
+        self._show_archive = False
+        slug = self._archive
+
+        panel = next(
+            (p for p in self.column_panels if p.column.slug == slug), None
+        ) if slug is not None else None
+
+        if slug is not None:
+            self._columns = [c for c in self._columns if c.slug != slug]
+            self._tasks.pop(slug, None)
+
+        if panel is None:
+            self.notify("Archive hidden")
+            return
+
+        # The focus cannot stay on a column that is going: it lands on the one
+        # that ends up rightmost, which is where the archive was.
+        focused = self.app.focused
+        held_focus = focused is not None and (
+            focused is panel or panel in focused.ancestors
+        )
+
+        async with self._redraw:
+            await panel.remove()
+
+        remaining = self.column_panels
+        if held_focus and remaining:
+            remaining[-1].view.focus()
+
+        self._sync_subtitle()
+        self._sync_selection()
+        self.notify("Archive hidden")
 
     def _delete_task(self, task: Task, confirmed: bool) -> None:
         """Delete `task` once the confirmation modal comes back positive."""

@@ -48,13 +48,13 @@ class TestKanbanServiceEnglishNames(unittest.TestCase):
         """Default columns carry their full display names, not slugs."""
         self.svc.create_board("My Project")
         names = [c.name for c in self.repo.get_columns("my-project")]
-        self.assertEqual(names, ["To Do", "In Progress", "In Review", "Done"])
+        self.assertEqual(names, ["To Do", "In Progress", "In Review", "Done", "Archive"])
 
     def test_create_board_default_columns_have_slugs(self) -> None:
         """Default column slugs are the kebab-case form of their display names."""
         self.svc.create_board("My Project")
         slugs = [c.slug for c in self.repo.get_columns("my-project")]
-        self.assertEqual(slugs, ["todo", "in-progress", "in-review", "done"])
+        self.assertEqual(slugs, ["todo", "in-progress", "in-review", "done", "archive"])
 
     def test_rename_board_preserves_new_display_name(self) -> None:
         """Renaming a board to a multi-word name stores it exactly."""

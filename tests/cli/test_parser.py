@@ -331,6 +331,11 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         self.assertEqual(args.board, "board-a")
         self.assertEqual(args.sort, "title")
         self.assertIs(args.func, handle_search)
+        self.assertIsNone(args.column)
+
+        # Search reaches the archive; `--exclude` is how it is left out.
+        args = cli_parser.parse_args(["search", "query", "-x", "archive", "--exclude", "done"])
+        self.assertEqual(args.column, ["archive", "done"])
 
         args = cli_parser.parse_args(["log", "board-a/todo/task-1", "--limit", "5"])
         self.assertEqual(args.path, "board-a/todo/task-1")

@@ -144,6 +144,16 @@ class TestParserAliases(unittest.TestCase):
         self.assertFalse(args.slugs)
         self.assertIs(args.func, handle_search)
 
+    def test_search_exclude_flag_is_repeatable(self):
+        """`search ... -x <column> --exclude <column>` accumulates into a list."""
+        args = repl_parser.parse_args(["search", "fix", "-x", "archive", "--exclude", "done"])
+        self.assertEqual(args.exclude_columns, ["archive", "done"])
+
+    def test_search_excludes_nothing_by_default(self):
+        """Search reaches every column, the archive included, unless told otherwise."""
+        args = repl_parser.parse_args(["search", "fix"])
+        self.assertIsNone(args.exclude_columns)
+
     def test_search_slugs_flag(self):
         """`search ... --slugs` sets slugs to True."""
         args = repl_parser.parse_args(["search", "fix", "--slugs"])

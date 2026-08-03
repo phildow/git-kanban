@@ -292,7 +292,7 @@ def handle_task_comment(args: argparse.Namespace, svc: KanbanService, renderer: 
 # ---------------------------------------------------------------------------
 
 def handle_search(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
-	result = svc.search(args.query, board=args.board, sort=args.sort, reverse=args.reverse)
+	result = svc.search(args.query, filter=build_task_filter(args), board=args.board, sort=args.sort, reverse=args.reverse)
 	_pick(args, renderer, json_renderer).render_search(args, result)
 
 

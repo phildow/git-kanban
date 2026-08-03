@@ -19,7 +19,7 @@ class CompletionDataSource(Protocol):
     def get_columns(self, board: Path | Slug | None) -> list[Column]:
         ...
 
-    def get_tasks(self, path: Path | None = None) -> list[Task]:
+    def get_tasks(self, path: Path | None = None, *, include_archived: bool = False) -> list[Task]:
         ...
 
     def path_components(self, path: str | Path | Slug | None = None) -> tuple[Slug | None, Slug | None, Slug | None]:

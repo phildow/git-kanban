@@ -13,7 +13,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from kanban.cli import commands
-from kanban.models import Slug
+from kanban.models import Slug, TaskFilter
 from kanban.storage.seeds import BOOTSTRAP_CONFIG
 from kanban.services.kanban import TaskCreateParams, TaskUnsetParams, TaskUpdateParams
 
@@ -666,14 +666,55 @@ class TestCommandHandlers(unittest.TestCase):
 
     def test_search_handler(self):
         """`search` handler forwards query and filter/sort options to service."""
-        args = self._args(query="query", board="board-a", sort="title", reverse=False)
+        args = self._args(
+            query="query",
+            board="board-a",
+            sort="title",
+            reverse=False,
+            assigned_to=None,
+            priority=None,
+            tags=None,
+            due_before=None,
+            due_after=None,
+            created_by=None,
+            column=None,
+        )
         result = object()
         self.svc.search.return_value = result
 
         commands.handle_search(args, self.svc, self.renderer, self.json_renderer)
 
-        self.svc.search.assert_called_once_with("query", board="board-a", sort="title", reverse=False)
+        self.svc.search.assert_called_once_with(
+            "query", filter=TaskFilter(), board="board-a", sort="title", reverse=False
+        )
         self.renderer.render_search.assert_called_once_with(args, result)
+
+    def test_search_handler_excludes_named_columns(self):
+        """`search -x/--exclude` maps to TaskFilter.exclude_columns."""
+        args = self._args(
+            query="query",
+            board=None,
+            sort=None,
+            reverse=False,
+            assigned_to=None,
+            priority=None,
+            tags=None,
+            due_before=None,
+            due_after=None,
+            created_by=None,
+            column=["archive"],
+        )
+        self.svc.search.return_value = object()
+
+        commands.handle_search(args, self.svc, self.renderer, self.json_renderer)
+
+        self.svc.search.assert_called_once_with(
+            "query",
+            filter=TaskFilter(exclude_columns=["archive"]),
+            board=None,
+            sort=None,
+            reverse=False,
+        )
 
     def test_log_handler(self):
         """`log` handler calls `svc.log` and renders the resulting output."""

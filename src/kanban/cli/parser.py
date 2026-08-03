@@ -375,6 +375,10 @@ Use the CLI directly with `kanban board list`, `kanban task create`, etc.
     # search
     p = subparsers.add_parser("search", help="Full-text search across tasks")
     p.add_argument("query", metavar="QUERY", help="Search query")
+    # Search covers every column, the archive included; `--exclude archive`
+    # leaves it out.  Named `column` for the same reason `task list` is: it is
+    # the same filter, built by the same helper.
+    p.add_argument("-x", "--exclude", metavar="COLUMN", action="append", dest="column", help="Exclude tasks in this column, e.g. archive (repeatable)")
     _add_list_format_and_sort_args(p, SORT_TASK_CHOICES)
     _add_task_filter_args(p)
     p.add_argument("--board", metavar="BOARD", help="Restrict search to a specific board")

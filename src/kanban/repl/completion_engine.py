@@ -290,8 +290,13 @@ class CompletionEngine:
             return []
 
         # Task slugs are unique board-wide, but de-dupe defensively so a stale
-        # store never surfaces the same slug twice.
-        slugs = {t.slug for t in self._service.get_tasks(Path(f"/{board}"))}
+        # store never surfaces the same slug twice.  Archived tasks are offered
+        # too: a bare slug is how one is viewed, and how one is moved back out
+        # of the archive.
+        slugs = {
+            t.slug
+            for t in self._service.get_tasks(Path(f"/{board}"), include_archived=True)
+        }
         return self._matching(list(slugs), token)
 
     def _complete_path(self, token: str) -> list[str]:

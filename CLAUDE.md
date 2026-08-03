@@ -324,7 +324,10 @@ class Column:
     position:   int
 
     task_count: int = 0
+    role:       str | None = None
 ```
+
+`role` marks a column the application treats specially rather than as a step in the workflow. Only `archive` is defined. It is assigned when the column is created and survives a rename, so the archive is always found by role, never by slug.
 
 #### The Task
 
@@ -346,6 +349,14 @@ class Task:
     updated_at:     datetime | None = None
     body:           str = ""
 ```
+
+### The Archive
+
+Every board ends with an archive column, created with the board and marked `role = archive`. Archiving a task is moving it into that column and unarchiving it is moving it back out; nothing is written on the task itself, so where it sits is the whole of it. When it was archived will come from the git history later. A board created before archiving existed gets its archive column the first time something is archived on it.
+
+Listings that name no column leave archived tasks out — `kanban task list /board`, the REPL's `tasks`. Naming the archive column lists them. Search reaches everywhere, the archive included, and `--exclude archive` is how it is narrowed. `KanbanService.get_tasks` takes an `include_archived` flag, which is what the service itself works from when it has to see every task there is: resolving a bare slug, checking a slug is free, reindexing a board.
+
+The CLI and REPL treat the archive as one more column. The TUI leaves it off the board until `A` asks for it.
 
 ### Metadata
 
@@ -384,6 +395,15 @@ Columns metadata is stored in a hidden `.metadata` INI file in each column's dir
 [fields]
     name="To Do"
     slug="todo"
+```
+
+The archive column carries a `role` field alongside them:
+
+```
+[fields]
+    name="Archive"
+    slug="archive"
+    role="archive"
 ```
 
 #### Task
@@ -501,6 +521,7 @@ kanban search <query>
     [--board <board>]
     [--sort <title|priority|due-date|created-at|updated-at|created-by>|<column>]
     [--reverse]
+    [--exclude <column>]
     [--assigned-to <name>]
     [--priority <low|medium|high>]
     [--tag <tag>]
@@ -623,6 +644,7 @@ config get <key>
 search <query>
     [--slugs]
     [--board <board>]
+    [--exclude <column>]
     [--sort <title|priority|due-date|created-at|updated-at|created-by|column>]
     [--reverse]
     [--assigned-to <name>]
@@ -779,7 +801,7 @@ The TUI is entirely keyboard driven with the following input properties:
 
 - **Navigation** — Arrow keys or vim-style `h/j/k/l` move focus between columns and cards. `Tab` cycles between columns.
 
-- **Actions on the selected card** — single-key commands trigger instantly: `m` to move a card to another column, `e` to open an edit panel, `d` to delete (with a confirmation prompt), `Enter` to expand card details.
+- **Actions on the selected card** — single-key commands trigger instantly: `m` to move a card to another column, `e` to open an edit panel, `d` to delete (with a confirmation prompt), `a` to archive (likewise), `Enter` to expand card details.
 
 - **Command palette** — The addition of a `/` prompt for power users to type commands like `/move 14 done` or `/assign 11 sara`.
 
@@ -902,6 +924,8 @@ own. **Configuration** opens `ConfigScreen`; **Theme** opens `ThemePalette`.
          e = open TaskFormScreen (edit, pre-filled)
          d = delete focused card (confirm modal)
          m = enter move mode for focused card
+         a = archive focused card, or bring it back (confirm modal)
+         A = show or hide the archive column — hidden every session
          b = open BoardSwitcherScreen
          / = open CommandBar — full REPL-syntax command line
          : = inline filter — live-filters visible cards as typed
@@ -978,10 +1002,13 @@ For the board this means **column refreshes are limited to the columns an operat
 - deleting a task, only the column it was deleted from
 - editing a task, only the column it is in
 - moving a task, only the source and destination columns — and only one when the task is reordered within a column
+- archiving a task, only the columns on screen it left and joined — with the archive hidden, only the one it left
 
 While a move is being staged the same rule applies to the preview: only the column the card is leaving and the column it is joining are redrawn as it travels, never the intervening ones.
 
 Reordering a column redraws nothing at all: where two columns sit is the only thing that changed, so the panel is moved within its container with `move_child` and the two are handed their new `Column` records. Every card, scroll position, and the focused header survive because none of them is built again.
+
+Showing or hiding the archive column follows the same rule from the other direction: one panel is mounted at the column's place on the board, or removed from it, and the columns beside it are never rebuilt. Focus only moves when the column it was on is the one leaving.
 
 Rebuilding the entire board is reserved for changes whose effects are not confined to known columns — switching boards, a column being added, renamed, or removed — and for the manual refresh key, which exists precisely to re-read everything. A targeted refresh should fall back to a full reload when it cannot establish that its assumption holds, such as when a named column is not on screen.
 

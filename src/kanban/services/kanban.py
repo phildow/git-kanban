@@ -11,7 +11,19 @@ from uuid import uuid4
 from warnings import deprecated
 
 from ..index.query import SearchQuery, SortField
-from ..models import Board, Column, Priority, Selection, Slug, Task, TaskFilter, UserContext
+from ..models import (
+    ARCHIVE_COLUMN_NAME,
+    ARCHIVE_COLUMN_SLUG,
+    Board,
+    Column,
+    Priority,
+    ROLE_ARCHIVE,
+    Selection,
+    Slug,
+    Task,
+    TaskFilter,
+    UserContext,
+)
 # Imported rather than defined here so both this layer and the repository — which
 # seeds a new config file with the defaults — work from the same definitions.
 # Callers keep reaching them through the facade they already talk to.
@@ -33,7 +45,7 @@ from ..models.config import (
 from ..models.priority import PRIORITY_ORDER
 from ..protocols.completion_data_source import CompletionDataSource
 from ..storage.base import KanbanRepository, ColumnNotFound, BoardNotFound, TaskNotFound, TaskAlreadyExists
-from ..storage.seeds import BootstrapConfig, DEFAULT_COLUMNS
+from ..storage.seeds import ARCHIVE_COLUMN, BootstrapConfig, DEFAULT_COLUMNS
 from ..services.git import GitService
 from ..services.index import IndexService
 from ..utils.str import slug_it
@@ -186,7 +198,7 @@ class KanbanService(CompletionDataSource):
             for col_config in board_config["columns"]:
                 col_name = col_config["name"]
                 col_slug = col_config["slug"]
-                self.repository.create_column(board_slug, col_name, col_slug)
+                self.repository.create_column(board_slug, col_name, col_slug, col_config.get("role"))
                 for task_config in col_config.get("tasks", []):
                     task = Task(
                         id=uuid4(),
@@ -367,14 +379,26 @@ class KanbanService(CompletionDataSource):
         Create a new board directory under .kanban/boards/.  Raises
         BoardAlreadyExists if a board with that name is already present.
         Appends the new board to .kanban-store/boards/.metadata and commits.
+
+        Every board ends with an archive column, whatever columns it is asked
+        for: archiving a task is moving it there, so a board without one has no
+        archive to move into.  A caller that names the archive itself gets that
+        column marked rather than a second one beside it.
         """
         slug = slug_it(name)
         board = self.repository.create_board(name, slug)
-    
+
         for col in columns:
-            self.repository.create_column(board.slug, col[0], col[1])
-            
+            role = ROLE_ARCHIVE if col[1] == ARCHIVE_COLUMN_SLUG else None
+            self.repository.create_column(board.slug, col[0], col[1], role)
+
         board.column_count = len(columns)
+
+        if not any(col[1] == ARCHIVE_COLUMN_SLUG for col in columns):
+            self.repository.create_column(
+                board.slug, ARCHIVE_COLUMN[0], ARCHIVE_COLUMN[1], ROLE_ARCHIVE
+            )
+            board.column_count += 1
 
         return board
 
@@ -403,7 +427,7 @@ class KanbanService(CompletionDataSource):
             self.working_board = board.slug
 
         # Update index entries for tasks in the renamed board.
-        for task in self.get_tasks(Path(f"/{board.slug}")):
+        for task in self.get_tasks(Path(f"/{board.slug}"), include_archived=True):
             self.index_service.upsert_task(task)
 
         return board
@@ -425,7 +449,7 @@ class KanbanService(CompletionDataSource):
             raise ValueError("No board specified and no board in context")
 
         deleted_board = self.repository.get_board(board)
-        tasks = self.get_tasks(path)
+        tasks = self.get_tasks(path, include_archived=True)
         self.repository.delete_board(board)
 
         # Clear current context if it points to the deleted board.
@@ -471,12 +495,16 @@ class KanbanService(CompletionDataSource):
 
         return self.repository.get_column(board, column)
 
-    def create_column(self, path: Path | None, title: str) -> Column:
+    def create_column(self, path: Path | None, title: str, role: str | None = None) -> Column:
         """
         Create a new column subdirectory for the provided board path and title.  Raises
         BoardNotFound if the board does not exist and ColumnAlreadyExists if
         the column name is already taken within that board.  Appends the new
         column to the board's .metadata file and commits.
+
+        `role` marks a column the application treats specially and is not part
+        of the CLI or REPL surface: only kanban itself assigns one, when it
+        creates a board's archive column.
         """
         if path is None:
             board = self.working_board
@@ -487,7 +515,7 @@ class KanbanService(CompletionDataSource):
             raise ValueError("No board specified and no board in context")
 
         slug = slug_it(title)
-        return self.repository.create_column(board, title, slug)
+        return self.repository.create_column(board, title, slug, role)
 
     def rename_column(self, path: Path | Slug, new_name: str) -> Column:
         """
@@ -550,6 +578,118 @@ class KanbanService(CompletionDataSource):
         return deleted_column
 
 
+    # ── Archive ───────────────────────────────────────────────────────────────
+    #
+    # Archiving is moving a task into the board's archive column, and
+    # unarchiving is moving it back out; the column is found by its role, so it
+    # is still the archive after a rename.
+
+    def archive_column(self, board: Slug) -> Column | None:
+        """
+        Return the board's archive column, or None when it has none.
+
+        The board is named absolutely: a bare slug is resolved against the
+        working board, which is not necessarily the board being asked about.
+        """
+        return next(
+            (
+                column
+                for column in self.get_columns(Path(f"/{board}"))
+                if column.is_archive
+            ),
+            None,
+        )
+
+    def ensure_archive_column(self, board: Slug) -> Column:
+        """
+        Return the board's archive column, creating it when there is none.
+
+        Boards created before archiving existed have no such column, and one
+        appears the first time something is archived on them rather than the
+        user being asked to make it themselves.
+
+        Raises ValueError when the board carries an ordinary column already
+        occupying the archive's slug: it is a column of the user's holding
+        tasks of their own, so it is not quietly taken over.
+        """
+        column = self.archive_column(board)
+        if column is not None:
+            return column
+
+        if self._column_exists(board, ARCHIVE_COLUMN_SLUG):
+            raise ValueError(
+                f"/{board}/{ARCHIVE_COLUMN_SLUG} is an ordinary column; "
+                "rename it before archiving a task"
+            )
+
+        return self.create_column(
+            Path(f"/{board}"), ARCHIVE_COLUMN_NAME, ROLE_ARCHIVE
+        )
+
+    def _without_archived(self, tasks: list[Task]) -> list[Task]:
+        """
+        Return `tasks` without the ones sitting in an archive column.
+
+        Membership of the column is what makes a task archived, so a task moved
+        into the archive on disk — where the source of truth is — is left out
+        just the same.  The columns are read once per board rather than once per
+        task.
+        """
+        archives = {
+            (board, column.slug)
+            for board in {task.board for task in tasks}
+            for column in self.get_columns(Path(f"/{board}"))
+            if column.is_archive
+        }
+
+        if not archives:
+            return tasks
+
+        return [task for task in tasks if (task.board, task.column) not in archives]
+
+    def _first_open_column(self, board: Slug) -> Column | None:
+        """Return the board's first column that is not the archive."""
+        return next(
+            (
+                column
+                for column in self.get_columns(Path(f"/{board}"))
+                if not column.is_archive
+            ),
+            None,
+        )
+
+    def archive_task(self, path: Path | Slug) -> Task:
+        """
+        Move a task into its board's archive column, which is what archives it.
+
+        Accepts a fully-qualified Path (from the CLI) or a bare task Slug (from
+        the REPL).  The archive column is created if the board has none.  Raises
+        TaskNotFound if the task cannot be resolved.
+        """
+        task = self.get_task(path)
+        column = self.ensure_archive_column(task.board)
+        return self.move_task(task.path, column.slug)
+
+    def unarchive_task(self, path: Path | Slug, column: Slug | None = None) -> Task:
+        """
+        Move an archived task back out of the archive, which is what unarchives it.
+
+        Lands in `column` when one is named, and otherwise in the first column
+        of the board, which is where the workflow starts.  Raises TaskNotFound
+        if the task cannot be resolved, and ValueError when the board has no
+        column to return it to.
+        """
+        task = self.get_task(path)
+
+        if column is None:
+            destination = self._first_open_column(task.board)
+            if destination is None:
+                raise ValueError(f"Board /{task.board} has no column to unarchive into")
+            column = destination.slug
+
+        return self.move_task(task.path, column)
+
+
     # ── Tasks ─────────────────────────────────────────────────────────────────
 
     def _resolve_task_path(self, path: Path | Slug) -> Path:
@@ -577,7 +717,9 @@ class KanbanService(CompletionDataSource):
         if board is None:
             raise ValueError(f"No active board; cannot resolve task '{path}' by slug alone")
 
-        for task in self.get_tasks(Path(f"/{board}")):
+        # Archived tasks answer to their slug as any other does: unarchiving one
+        # from the REPL is naming it and a column to move it to.
+        for task in self.get_tasks(Path(f"/{board}"), include_archived=True):
             if task.slug == path:
                 return Path(f"/{board}/{task.column}/{task.slug}")
 
@@ -610,6 +752,8 @@ class KanbanService(CompletionDataSource):
         filter:  TaskFilter = TaskFilter(),
         sort:    str | None = "column",
         reverse: bool = False,
+        *,
+        include_archived: bool = False,
     ) -> list[Task]:
         """
         Return tasks for the given board/column, applying filters and sort in
@@ -620,12 +764,21 @@ class KanbanService(CompletionDataSource):
         "created-at", "updated-at", or "created-by".  The default "column"
         sort orders tasks by their column's position and then by each task's
         position within its column.
+
+        A listing that names no column leaves out the archived tasks: the
+        archive is somewhere to put what is finished with, not something every
+        listing should carry.  Naming the archive column returns them, and
+        `include_archived` returns them wherever they are — which is what the
+        service itself works from when it has to see every task there is.
         """
         if path is None and self.working_board is not None:
             path = Path(f"/{self.working_board}")
 
         board, column, _ = self.path_components(path)
         tasks = self.repository.get_tasks(board=board, column=column)
+
+        if column is None and not include_archived:
+            tasks = self._without_archived(tasks)
 
         if filter:
             tasks = [t for t in tasks if filter.matches(t)]
@@ -676,7 +829,8 @@ class KanbanService(CompletionDataSource):
         if board is None or column is None:
             raise ValueError(f"No working board/column and no explicit path provided: {path}")
 
-        board_tasks = self.get_tasks(Path(f"/{board}"))
+        # Archived tasks included: a slug is taken wherever it sits.
+        board_tasks = self.get_tasks(Path(f"/{board}"), include_archived=True)
 
         # Task slugs are unique board-wide, not merely within a column, so the
         # slug can address a task from any column of the board.
@@ -918,6 +1072,9 @@ class KanbanService(CompletionDataSource):
         fully-qualified Path (from the CLI) or a bare task Slug (from the REPL).
         Validates that the destination column exists before moving.
         Raises TaskNotFound, BoardNotFound, or ColumnNotFound as appropriate.
+
+        Moving into the archive column is what archives a task, and moving it
+        back out is what unarchives it: where the task sits is the whole of it.
         Updates the index and commits.
         """
         task = self.get_task(path)
@@ -1054,12 +1211,17 @@ class KanbanService(CompletionDataSource):
         to guarantee fresh results, then delegates to the index service.
         When sort is omitted, results are ordered by column position then by
         each task's position within its column.
+
+        Search reaches everywhere, the archive included — looking for a task is
+        the one time the archive is worth reading.  A caller that wants it left
+        out excludes the column, as it would any other.
         """
         self.index_service.rebuild()
 
         search_query = SearchQuery(
             text=query,
             board=board,
+            exclude_columns=tuple(filter.exclude_columns),
             assigned_to=filter.assigned_to,
             priority=filter.priority,
             tags=tuple(filter.tags),

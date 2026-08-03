@@ -194,14 +194,14 @@ class InMemoryRepository(KanbanRepository):
         self.get_board(board)
         return any(column.slug == slug for column in self._columns.get(board, []))
 
-    def create_column(self, board: Slug, name: str, slug: Slug) -> Column:
+    def create_column(self, board: Slug, name: str, slug: Slug, role: str | None = None) -> Column:
         self.get_board(board)
         columns = self._columns.setdefault(board, [])
-        
+
         if any(column.name == name for column in columns):
             raise ColumnAlreadyExists(board, name)
 
-        column = Column(id=uuid4(), name=name, slug=slug, board=board, position=len(columns))
+        column = Column(id=uuid4(), name=name, slug=slug, board=board, position=len(columns), role=role)
         columns.append(column)
         
         return column

@@ -36,7 +36,7 @@ class Task(Sluggable):
     created_at:     datetime | None = None
     updated_at:     datetime | None = None
     body:           str = ""
-    
+
     @property
     def path(self) -> Path:
         return Path(f"/{self.board}/{self.column}/{self.slug}")

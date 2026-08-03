@@ -106,10 +106,12 @@ class TestKanbanServiceCreateBoard(unittest.TestCase):
         )
 
     def test_default_columns_are_created_when_none_passed(self) -> None:
-        """Omitting columns creates the four standard columns."""
+        """Omitting columns creates the four standard columns, and the archive."""
         self.svc.create_board("alpha")
         column_names = [c.name for c in self.repo.get_columns("alpha")]
-        self.assertEqual(column_names, ["To Do", "In Progress", "In Review", "Done"])
+        self.assertEqual(
+            column_names, ["To Do", "In Progress", "In Review", "Done", "Archive"]
+        )
 
     # TODO: Update to call service for columns
     def test_returned_board_has_default_columns_when_none_passed(self) -> None:
@@ -119,21 +121,35 @@ class TestKanbanServiceCreateBoard(unittest.TestCase):
         # self.assertEqual(column_names, ["To Do", "In Progress", "In Review", "Done"])
 
     def test_explicit_columns_are_created(self) -> None:
-        """Columns passed explicitly are the ones created."""
+        """Columns passed explicitly are the ones created, the archive after them."""
         self.svc.create_board("alpha", columns=[("backlog", "backlog"), ("wip", "wip"), ("done", "done")])
         column_names = [c.name for c in self.repo.get_columns("alpha")]
-        self.assertEqual(column_names, ["backlog", "wip", "done"])
+        self.assertEqual(column_names, ["backlog", "wip", "done", "Archive"])
 
-    def test_empty_columns_creates_no_columns(self) -> None:
-        """Passing an empty list creates no columns."""
+    def test_empty_columns_creates_only_the_archive(self) -> None:
+        """Passing an empty list creates no workflow columns, only the archive."""
         self.svc.create_board("alpha", columns=[])
         column_names = [c.name for c in self.repo.get_columns("alpha")]
-        self.assertEqual(column_names, [])
+        self.assertEqual(column_names, ["Archive"])
+
+    def test_archive_column_carries_the_archive_role(self) -> None:
+        """The column created alongside the requested ones is marked as the archive."""
+        self.svc.create_board("alpha")
+        archive = self.repo.get_column("alpha", "archive")
+        self.assertEqual(archive.role, "archive")
+        self.assertTrue(archive.is_archive)
+
+    def test_requested_archive_column_is_not_duplicated(self) -> None:
+        """A caller naming the archive itself gets that column marked, not a second one."""
+        self.svc.create_board("alpha", columns=[("To Do", "todo"), ("Archive", "archive")])
+        columns = self.repo.get_columns("alpha")
+        self.assertEqual([c.slug for c in columns], ["todo", "archive"])
+        self.assertTrue(columns[1].is_archive)
 
     def test_returned_board_has_correct_columns_count(self) -> None:
-        """The returned Board carries the correct number of Column objects."""
+        """The returned Board counts the requested columns and the archive."""
         board = self.svc.create_board("alpha", columns=[("To Do", "todo"), ("Done", "done")])
-        self.assertEqual(board.column_count, 2)
+        self.assertEqual(board.column_count, 3)
 
 
 class TestKanbanServiceRenameBoard(unittest.TestCase):

@@ -35,6 +35,19 @@ class TestInMemoryRepositoryColumnOps(unittest.TestCase):
         self.assertEqual(created, Column(id=created.id, name="todo", slug="todo", board="alpha", position=0))
         self.assertEqual(self.repo.get_columns("alpha"), [created])
 
+    def test_create_column_carries_its_role(self):
+        """A column created with a role keeps it, and reports itself the archive."""
+        created = self.repo.create_column("alpha", "Archive", slug="archive", role="archive")
+
+        self.assertEqual(created.role, "archive")
+        self.assertTrue(self.repo.get_column("alpha", "archive").is_archive)
+
+    def test_create_column_has_no_role_by_default(self):
+        """An ordinary column carries no role."""
+        created = self.repo.create_column("alpha", "todo", slug="todo")
+
+        self.assertIsNone(created.role)
+
     def test_column_methods_raise_when_board_missing(self):
         """Column APIs raise `BoardNotFound` when the board does not exist."""
         with self.assertRaises(BoardNotFound):

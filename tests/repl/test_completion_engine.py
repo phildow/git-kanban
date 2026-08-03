@@ -211,7 +211,7 @@ class FakeKanbanService:
     def get_columns(self, board: str) -> list[_Slugged]:
         return [_Slugged(slug) for slug in self._BOARDS[board]]
 
-    def get_tasks(self, path: Path | None = None) -> list[_Task]:
+    def get_tasks(self, path: Path | None = None, *, include_archived: bool = False) -> list[_Task]:
         board, column, _ = self.path_components(path)
         if board is None:
             return []

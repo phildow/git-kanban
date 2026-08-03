@@ -22,6 +22,8 @@ NORMAL_BINDINGS: list[tuple[str, str]] = [
     ("e", "edit the focused card"),
     ("d", "delete the focused card"),
     ("m", "enter move mode"),
+    ("a", "archive the focused card, or bring it back"),
+    ("A", "show or hide the archive column"),
     ("b", "switch or manage boards"),
     ("/", "command bar (REPL syntax)"),
     (":", "filter cards as you type — text or flags"),

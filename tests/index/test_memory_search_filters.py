@@ -67,6 +67,25 @@ class TestSearchFilters(unittest.TestCase):
         """column= restricts results to that column within the board."""
         self.assertEqual(self._ids(SearchQuery(board="proj", column="todo")), {self.t1.id})
 
+    def test_exclude_columns_drops_that_column(self) -> None:
+        """exclude_columns= leaves out the tasks in the named columns."""
+        self.assertEqual(
+            self._ids(SearchQuery(exclude_columns=("todo",))), {self.t2.id}
+        )
+
+    def test_exclude_columns_takes_several(self) -> None:
+        """Every named column is left out."""
+        self.assertEqual(
+            self._ids(SearchQuery(exclude_columns=("todo", "in-progress"))), set()
+        )
+
+    def test_empty_exclude_columns_filters_nothing(self) -> None:
+        """The default excludes nothing: search reaches every column."""
+        self.assertEqual(
+            self._ids(SearchQuery(exclude_columns=())),
+            {self.t1.id, self.t2.id, self.t3.id},
+        )
+
     def test_filter_by_assigned_to(self) -> None:
         """assigned_to= returns only tasks assigned to that person."""
         self.assertEqual(self._ids(SearchQuery(assigned_to="alice")), {self.t1.id, self.t3.id})

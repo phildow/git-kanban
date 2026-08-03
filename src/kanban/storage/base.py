@@ -300,10 +300,13 @@ class KanbanRepository(ABC):
         """
 
     @abstractmethod
-    def create_column(self, board: Slug, name: str, slug: Slug) -> Column:
+    def create_column(self, board: Slug, name: str, slug: Slug, role: str | None = None) -> Column:
         """
         Append a column to the end of the board's column list and return it.
-    
+
+        `role` marks a column the application treats specially — currently only
+        `archive` — and is stored with the column, so it survives a rename.
+
         Raises BoardNotFound if the board does not exist.
         Raises ColumnAlreadyExists if the name is taken on that board.
         """

@@ -397,6 +397,9 @@ Slugs:
     p = subparsers.add_parser("search", help="Full-text search across tasks")
     p.add_argument("query", metavar="QUERY", help="Search query")
     p.add_argument("--slugs", action="store_true", default=False, help="Render a compact list of slugs only, like filenames")
+    # Search covers every column, the archive included; `--exclude archive`
+    # leaves it out.
+    p.add_argument("-x", "--exclude", metavar="COLUMN", action="append", dest="exclude_columns", help="Exclude tasks in this column, e.g. archive (repeatable)")
     add_task_filter_args(p)
     p.add_argument("--board", metavar="BOARD", help="Restrict search to a specific board")
     _add_list_args(p, SORT_TASK_CHOICES)

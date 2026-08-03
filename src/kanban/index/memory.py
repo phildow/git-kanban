@@ -124,6 +124,8 @@ def _matches(task: Task, query: SearchQuery) -> bool:
     """Return True if task satisfies every non-None filter on query."""
     if not _in_scope(task, query.board, query.column):
         return False
+    if query.exclude_columns and task.column in query.exclude_columns:
+        return False
     if query.assigned_to is not None and task.assigned_to != query.assigned_to:
         return False
     if query.priority is not None and task.priority != query.priority:

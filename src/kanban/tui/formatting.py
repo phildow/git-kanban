@@ -215,7 +215,7 @@ def metadata_text(task: Task) -> Text:
     Return a task's metadata as aligned label/value rows.
 
     The title and path are not repeated here; screens lead with a `TaskHeading`
-    for those.
+    for those.  An unset field shows an em dash.
     """
     text = Text()
 
