@@ -17,7 +17,7 @@ from textual.widgets import Input, OptionList, Static
 from ...models import Board, Slug
 from ...services.kanban import KanbanService
 from ..formatting import board_label
-from ..widgets import PrefixList, TextInput, format_hints
+from ..widgets import PrefixList, RowField, format_hints
 from .confirm import ConfirmScreen
 
 T = TypeVar("T")
@@ -84,10 +84,8 @@ class BoardSwitcherScreen(ModalScreen[BoardChoice | None]):
     the highlighted board; `N`, `R`, and `D` create, rename, and delete one
     without leaving the list.
 
-    Creating and renaming happen on the row itself: a one-line field is laid
-    over it, prefilled with the name being changed or empty for a new board.
-    The list beneath is an `OptionList`, whose rows are drawn rather than
-    mounted, so the field sits on a layer of its own rather than in the list.
+    Creating and renaming happen on the row itself, in a `RowField` laid over
+    it, prefilled with the name being changed or empty for a new board.
 
     Boards are read and written through the kanban service, as the
     configuration screen does with settings: the modal stays open across a
@@ -126,13 +124,14 @@ class BoardSwitcherScreen(ModalScreen[BoardChoice | None]):
         self._load()
 
         # Full width rather than `-narrow`: rows carry a name, a path, and counts.
-        with Vertical(id="dialog", classes="-boards"):
+        with Vertical(id="dialog"):
             yield Static("Boards", id="form-heading")
-            yield PrefixList(
+            rows = PrefixList(
                 self._entries(), show_search=False, reserved=MANAGE_KEYS, id="board-list"
             )
+            yield rows
             yield Static(format_hints(MANAGE_HINTS), id="board-hint")
-            yield TextInput(compact=True, id="board-name")
+            yield RowField(rows, id="board-name")
 
     def on_mount(self) -> None:
         """Start on the active board, and take focus so the arrow keys work."""
@@ -149,9 +148,9 @@ class BoardSwitcherScreen(ModalScreen[BoardChoice | None]):
         return self.query_one("#board-list", PrefixList)
 
     @property
-    def field(self) -> Input:
+    def field(self) -> RowField:
         """Return the field a board is named in."""
-        return self.query_one("#board-name", Input)
+        return self.query_one("#board-name", RowField)
 
     def _entries(self, *, draft: bool = False) -> list[tuple[str | None, Text]]:
         """
@@ -261,41 +260,13 @@ class BoardSwitcherScreen(ModalScreen[BoardChoice | None]):
 
     def _open_field(self, value: str) -> None:
         """Open the naming field over the highlighted row, holding `value`."""
-        field = self.field
-        field.value = value
-        field.add_class("-visible")
-
         self._editing = True
         self._show_hints()
-
-        # The list may still have to scroll the row into view, and the field is
-        # placed against where the row ends up rather than where it is now.
-        self.call_after_refresh(self._place_field)
-        field.focus()
-
-    def _place_field(self) -> None:
-        """Lay the field over the highlighted row, matching its position and width."""
-        rows = self.rows
-        row = rows.highlighted
-        if row is None:
-            return
-
-        # Both regions are in screen coordinates, and the field's offset is
-        # measured from the dialog it sits in — hence the difference.  Every row
-        # is one line tall, so the row index is the line the row is drawn on.
-        region = rows.scrollable_content_region
-        origin = self.query_one("#dialog", Vertical).content_region
-
-        field = self.field
-        field.styles.offset = (
-            region.x - origin.x,
-            region.y - origin.y + row - rows.scroll_offset.y,
-        )
-        field.styles.width = region.width
+        self.field.open(value)
 
     def _close_field(self) -> None:
         """Hide the naming field and hand focus back to the list."""
-        self.field.remove_class("-visible")
+        self.field.close()
         self._editing = False
         self._show_hints()
 

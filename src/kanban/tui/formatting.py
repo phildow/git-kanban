@@ -29,6 +29,15 @@ PRIORITY_STYLES: dict[Priority, str] = {
 # What a configuration key with no value shows instead of an empty column.
 UNSET_VALUE = "not set"
 
+# The gutter mark on a configuration row whose value is edited but not yet saved.
+STAGED_MARKER = "• "
+
+# What separates a configuration key's name from its value on the row.
+CONFIG_VALUE_GAP = "  "
+
+# What a configuration key that is not drawn from a fixed set will take.
+FREE_TEXT_VALUES = "any text"
+
 # The spec's card sigils abbreviate medium so every priority fits the same width.
 PRIORITY_LABELS: dict[Priority, str] = {
     Priority.HIGH: "HIGH",
@@ -134,7 +143,9 @@ def config_group_label(section: str) -> Text:
     return Text(section, style="bold")
 
 
-def config_label(name: str, value: str | None, name_width: int = 0) -> Text:
+def config_label(
+    name: str, value: str | None, name_width: int = 0, *, staged: bool = False
+) -> Text:
     """
     Return a configuration key's row: its name within its section, then its value.
 
@@ -143,15 +154,30 @@ def config_label(name: str, value: str | None, name_width: int = 0) -> Text:
     it so the values line up down the list.  A key that has never been set says
     so rather than showing an empty column, which would read as a blank value
     the user had typed.
+
+    A `staged` value is one edited but not yet written: it is marked in the
+    gutter the other rows leave empty, so a change waiting to be saved is
+    visible without the row moving out of line with the rest.
     """
-    text = Text("  ")
+    text = Text(STAGED_MARKER if staged else " " * len(STAGED_MARKER))
     text.append(name.ljust(name_width))
-    text.append("  ")
+    text.append(CONFIG_VALUE_GAP)
     if value is None:
         text.append(UNSET_VALUE, style="dim italic")
     else:
-        text.append(value)
+        text.append(value, style="bold" if staged else "")
     return text
+
+
+def config_value_column(name_width: int) -> int:
+    """
+    Return how far into a configuration row its value starts, in cells.
+
+    A field editing a value in place is laid over that part of the row alone,
+    so it has to begin where `config_label` puts the value: past the gutter the
+    staged mark sits in, the name padded to its width, and the gap after it.
+    """
+    return len(STAGED_MARKER) + name_width + len(CONFIG_VALUE_GAP)
 
 
 def config_values_hint(values: Iterable[str]) -> str:

@@ -7,6 +7,7 @@ from .column import ColumnPanel, ColumnView, item_task
 from .column_header import ColumnHeader
 from .output_panel import OutputPanel
 from .prefix_list import PrefixList
+from .row_field import RowField
 from .sidebar import LogView, SidebarPanel, StatusView
 from .task_heading import TaskHeading
 from .text import MarkdownArea, TextInput
@@ -25,6 +26,7 @@ __all__ = [
     "ModeBar",
     "OutputPanel",
     "PrefixList",
+    "RowField",
     "SidebarPanel",
     "StatusView",
     "SuggestionInput",

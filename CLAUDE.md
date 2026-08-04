@@ -909,22 +909,29 @@ KanbanApp(App)
 ├── BoardSwitcherScreen (modal, pushed on `b`, and on startup when no board is active)
 │   ├── PrefixList of board names — typing jumps to a board by slug, Enter
 │   │   switches BoardScreen's active board; plus a "+ New board…" row
-│   ├── Input — a board named in place, laid over the row it belongs to on a
-│   │   layer of its own (an OptionList draws its rows, it cannot mount one)
+│   ├── RowField — a board named in place, laid over the row it belongs to
 │   └── Static — the key hints, swapped for the field's while naming
 │       `N` appends a row and names a new board in it, as "+ New board…" does;
 │       `R` renames the highlighted board on its row; `D` deletes it after a
 │       ConfirmScreen.
 │
 ├── ConfigScreen (modal, pushed from the command palette's "Configuration")
-│   └── PrefixList of KanbanService.list_config() — every supported keypath and
-│       its value, unset keys included, grouped under a heading per keypath
-│       section; typing jumps to a name, Enter or `e` pushes ConfigValueScreen
-│
-├── ConfigValueScreen (modal, pushed from the configuration screen)
-│   ├── Input: value (pre-filled with the current one)
+│   ├── PrefixList of KanbanService.list_config() — every supported keypath and
+│   │   its value, unset keys included, grouped under a heading per keypath
+│   │   section; typing jumps to a name
+│   ├── Static — what the highlighted setting accepts, following the highlight
+│   │   down the list: its fixed set of values, or free text
+│   ├── RowField — a value typed on its own row, laid over the value alone so
+│   │   the name beside it stays legible
 │   └── Button row: Save / Cancel
-│       on save ConfigScreen writes it with set_config and redraws the row
+│       Enter or `e` edits the highlighted setting, on the row either way: a key
+│       drawn from a fixed set steps to the next value it permits, so nothing
+│       out of the set can be entered; anything else opens the field.  Edits are
+│       staged, marked in the row's gutter, and written only on save, one
+│       set_config per staged key; Shift+Enter saves as the button does, taking
+│       an open field with it, and Esc closes the field if one is open and
+│       otherwise discards the lot.  A write the service refuses leaves the
+│       screen up with the change still staged.
 │
 └── CommandBar (overlay, toggled by `/`)
     ├── Input — free text, parsed with the same parser as the REPL, and run

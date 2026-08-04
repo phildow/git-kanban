@@ -311,7 +311,11 @@ ModalScreen {
     background: $background 60%;
 }
 
+/* A dialog carries an `editor` layer for the field a screen lays over a row of
+   an option list: the rows are drawn rather than mounted, so a field can cover
+   one only from above.  See RowField. */
 #dialog {
+    layers: base editor;
     width: 78;
     max-width: 90%;
     height: auto;
@@ -481,13 +485,6 @@ TaskHeading .-task-path {
     text-align: center;
 }
 
-/* The board switcher.  A board is named on its own row, and the list is an
-   OptionList, whose rows are drawn rather than mounted — so the field goes on
-   a layer of its own, where it can cover a row without taking one. */
-#dialog.-boards {
-    layers: base editor;
-}
-
 #board-list {
     height: auto;
     max-height: 16;
@@ -500,16 +497,17 @@ TaskHeading .-task-path {
     margin: 1 0 0 0;
 }
 
-/* Placed over the highlighted row from the screen, which is the only place the
-   row's position is known.  Compact already makes it one line with no border,
-   so it occupies exactly the row it covers. */
-#board-name {
+/* A value edited on the row it belongs to.  The widget places itself over the
+   highlighted row; compact already makes it one line with no border, so it
+   occupies exactly the row it covers, and it is out of the layout entirely
+   until it is opened. */
+RowField {
     layer: editor;
     display: none;
     background: $boost;
 }
 
-#board-name.-visible {
+RowField.-visible {
     display: block;
 }
 
@@ -542,8 +540,14 @@ TaskHeading .-task-path {
     border-subtitle-color: $accent;
 }
 
+/* What the setting in focus will take: said the way the value prompt says it,
+   quietly and directly under what it belongs to.  It starts at the dialog's own
+   left edge, with the heading and the list box, rather than at the rows' text.
+   The row is held even when there is nothing to say, so the list and the
+   buttons do not shift as the highlight passes a heading. */
 #config-hint {
     width: 1fr;
     height: auto;
-    margin: 1 0 0 0;
+    min-height: 1;
+    color: $text-muted;
 }
