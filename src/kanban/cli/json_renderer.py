@@ -45,6 +45,7 @@ def _board_dict(board: Board) -> dict:
         "slug": board.slug,
         "column_count": board.column_count,
         "task_count": board.task_count,
+        "archived_task_count": board.archived_task_count,
     }
 
 

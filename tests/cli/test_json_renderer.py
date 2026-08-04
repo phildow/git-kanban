@@ -62,8 +62,8 @@ def _task(**kwargs) -> Task:
     return Task(**defaults)
 
 
-def _board(name: str = "main", slug: str = "main", column_count: int = 4, task_count: int = 0, id: UUID | None = None) -> Board:
-    return Board(id=id or uuid4(), name=name, slug=slug, column_count=column_count, task_count=task_count)
+def _board(name: str = "main", slug: str = "main", column_count: int = 4, task_count: int = 0, archived_task_count: int = 0, id: UUID | None = None) -> Board:
+    return Board(id=id or uuid4(), name=name, slug=slug, column_count=column_count, task_count=task_count, archived_task_count=archived_task_count)
 
 
 def _column(name: str = "todo", board: str = "main", position: int = 0, slug: str = "", id: UUID | None = None) -> Column:
@@ -105,6 +105,14 @@ class TestJsonRendererBoards(unittest.TestCase):
         """Each board entry contains the correct column_count."""
         out = _capture(lambda: self.r.render_board_list(_args(), [_board("alpha", "alpha", 4)]))
         self.assertEqual(json.loads(out)[0]["column_count"], 4)
+
+    def test_board_list_task_count_fields(self) -> None:
+        """Each board entry reports its task_count and archived_task_count apart."""
+        board = _board("alpha", "alpha", 4, task_count=7, archived_task_count=3)
+        out = _capture(lambda: self.r.render_board_list(_args(), [board]))
+        obj = json.loads(out)[0]
+        self.assertEqual(obj["task_count"], 7)
+        self.assertEqual(obj["archived_task_count"], 3)
 
     def test_board_list_empty_array(self) -> None:
         """render_board_list emits an empty JSON array for an empty list."""

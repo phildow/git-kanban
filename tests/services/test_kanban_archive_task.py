@@ -206,10 +206,48 @@ class TestArchivedTasksInListings(unittest.TestCase):
         self.assertEqual(self._slugs(tasks), ["old-news"])
 
     def test_include_archived_returns_them_board_wide(self) -> None:
-        """include_archived is how the service itself sees every task."""
-        tasks = self.svc.get_tasks(Path("/alpha"), include_archived=True)
+        """The filter's include_archived is how every task there is comes back."""
+        tasks = self.svc.get_tasks(Path("/alpha"), TaskFilter(include_archived=True))
 
         self.assertEqual(sorted(self._slugs(tasks)), ["fix-login", "old-news"])
+
+    def test_include_archived_with_a_column_raises(self) -> None:
+        """A column listing is already the whole of one column; widening it is an error."""
+        with self.assertRaises(ValueError):
+            self.svc.get_tasks(Path("/alpha/todo"), TaskFilter(include_archived=True))
+
+    def test_include_archived_with_the_archive_excluded_raises(self) -> None:
+        """Including and excluding the archive are opposite requests."""
+        with self.assertRaises(ValueError):
+            self.svc.get_tasks(
+                Path("/alpha"),
+                TaskFilter(exclude_columns=["archive"], include_archived=True),
+            )
+
+    def test_include_archived_with_the_archive_renamed_and_excluded_raises(self) -> None:
+        """The archive is recognised by role, so its new slug is refused too."""
+        self.svc.rename_column(Path("/alpha/archive"), "Cold Storage")
+
+        with self.assertRaises(ValueError):
+            self.svc.get_tasks(
+                Path("/alpha"),
+                TaskFilter(exclude_columns=["cold-storage"], include_archived=True),
+            )
+
+    def test_include_archived_with_another_column_excluded_is_allowed(self) -> None:
+        """Excluding an ordinary column says nothing about the archive."""
+        tasks = self.svc.get_tasks(
+            Path("/alpha"),
+            TaskFilter(exclude_columns=["done"], include_archived=True),
+        )
+
+        self.assertEqual(sorted(self._slugs(tasks)), ["fix-login", "old-news"])
+
+    def test_a_default_filter_leaves_the_archive_out(self) -> None:
+        """The filter a caller builds without a thought for the archive omits it."""
+        tasks = self.svc.get_tasks(Path("/alpha"), TaskFilter())
+
+        self.assertEqual(self._slugs(tasks), ["fix-login"])
 
     def test_unscoped_listing_omits_archived_tasks(self) -> None:
         """A listing across every board leaves the archives out too."""
@@ -236,7 +274,7 @@ class TestArchivedTasksInListings(unittest.TestCase):
 
 
 class TestArchivedTasksInSearch(unittest.TestCase):
-    """Search reaches the archive; `--exclude archive` is how it is left out."""
+    """Search leaves the archive out, as a listing does, until asked for it."""
 
     def setUp(self) -> None:
         self.svc, self.repo = _make_service()
@@ -247,19 +285,31 @@ class TestArchivedTasksInSearch(unittest.TestCase):
             ).path
         )
 
-    def test_search_includes_archived_tasks(self) -> None:
-        """An archived task is still found by searching for it."""
+    def test_search_omits_archived_tasks(self) -> None:
+        """An archived task is not among the results of an ordinary search."""
         results = self.svc.search("login")
+
+        self.assertEqual([task.slug for task in results], ["login-form"])
+
+    def test_search_includes_archived_tasks_when_asked(self) -> None:
+        """include_archived is how a search reaches the archive."""
+        results = self.svc.search("login", filter=TaskFilter(include_archived=True))
 
         self.assertEqual(
             sorted(task.slug for task in results), ["login-form", "login-page"]
         )
 
-    def test_search_excludes_the_archive_when_asked(self) -> None:
-        """exclude_columns drops the archive from the results."""
-        results = self.svc.search(
-            "login", filter=TaskFilter(exclude_columns=["archive"])
-        )
+    def test_search_including_and_excluding_the_archive_raises(self) -> None:
+        """The two are opposite requests here as they are in a listing."""
+        with self.assertRaises(ValueError):
+            self.svc.search(
+                "login",
+                filter=TaskFilter(exclude_columns=["archive"], include_archived=True),
+            )
+
+    def test_search_scoped_to_a_board_omits_its_archive(self) -> None:
+        """Scoping to a board does not change what the archive means."""
+        results = self.svc.search("login", board=Slug("alpha"))
 
         self.assertEqual([task.slug for task in results], ["login-form"])
 

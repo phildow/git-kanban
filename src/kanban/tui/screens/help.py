@@ -79,6 +79,15 @@ MOVE_BINDINGS: list[tuple[str, str]] = [
 ]
 
 
+SECTIONS: list[tuple[str, list[tuple[str, str]]]] = [
+    ("Board", NORMAL_BINDINGS),
+    ("Column header (c)", HEADER_BINDINGS),
+    ("Task detail (enter)", DETAIL_BINDINGS),
+    ("Move mode", MOVE_BINDINGS),
+    ("Boards (b)", BOARD_BINDINGS),
+]
+
+
 class HelpScreen(ModalScreen[None]):
     """A bindings reference, pushed on `?`."""
 
@@ -88,26 +97,28 @@ class HelpScreen(ModalScreen[None]):
 
     def compose(self) -> ComposeResult:
         """Lay out the board, column header, task detail, move-mode, and board-switcher tables."""
+        width = _key_width(SECTIONS)
         with Vertical(id="dialog"):
             yield Static("Key bindings", id="form-heading")
             with VerticalScroll(id="help-body"):
-                yield Static(_section("Board", NORMAL_BINDINGS))
-                yield Static(_section("Column header (c)", HEADER_BINDINGS))
-                yield Static(_section("Task detail (enter)", DETAIL_BINDINGS))
-                yield Static(_section("Move mode", MOVE_BINDINGS))
-                yield Static(_section("Boards (b)", BOARD_BINDINGS))
+                for heading, bindings in SECTIONS:
+                    yield Static(_section(heading, bindings, width))
 
     def action_dismiss_screen(self) -> None:
         """Close the modal."""
         self.dismiss(None)
 
 
-def _section(heading: str, bindings: list[tuple[str, str]]) -> Text:
-    """Return a titled, aligned table of key/description pairs."""
+def _key_width(sections: list[tuple[str, list[tuple[str, str]]]]) -> int:
+    """Return the width the longest key needs, so every section aligns to the same column."""
+    return max(len(key) for _, bindings in sections for key, _ in bindings)
+
+
+def _section(heading: str, bindings: list[tuple[str, str]], width: int) -> Text:
+    """Return a titled table of key/description pairs, keys right justified to `width`."""
     text = Text()
     text.append(f"{heading}\n", style="bold")
 
-    width = max(len(key) for key, _ in bindings)
     for key, description in bindings:
         text.append(f"  {key.rjust(width)}  ", style="cyan")
         text.append(f"{description}\n")

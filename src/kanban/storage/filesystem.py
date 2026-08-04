@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import UUID, uuid4
 
-from ..models import Priority, Slug, Task, Board, Column
+from ..models import Priority, ROLE_ARCHIVE, Slug, Task, Board, Column
 from ..models.config import CONFIG_DEFAULTS
 from ..storage.base import (
     KanbanRepository,
@@ -130,6 +130,31 @@ class FilesystemRepository(KanbanRepository):
 
     # TODO: SYNC - metadata must match the name and slug of the board directory
 
+    def _board_task_counts(self, board: Slug) -> tuple[int, int]:
+        """Return the board's task count and its archived task count.
+
+        The archive column is counted apart from the rest: a board's task_count
+        is the work still on the board, and what has been archived is reported
+        on its own.
+        """
+        task_count = 0
+        archived_task_count = 0
+
+        for col in (self.boards_dir / board).iterdir():
+            if not col.is_dir() or col.name.startswith("."):
+                continue
+            count = sum(
+                1 for f in col.iterdir()
+                if f.is_file() and not f.name.startswith(".")
+            )
+            role = self.get_column_metadata(board, Slug(col.name), "fields.role")
+            if role == ROLE_ARCHIVE:
+                archived_task_count += count
+            else:
+                task_count += count
+
+        return task_count, archived_task_count
+
     def get_boards(self) -> list[Board]:
         boards = []
         for entry in sorted(self.boards_dir.iterdir()):
@@ -139,14 +164,8 @@ class FilesystemRepository(KanbanRepository):
                 1 for e in entry.iterdir()
                 if e.is_dir() and not e.name.startswith(".")
             )
-            task_count = sum(
-                1
-                for col in entry.iterdir()
-                if col.is_dir() and not col.name.startswith(".")
-                for f in col.iterdir()
-                if f.is_file() and not f.name.startswith(".")
-            )
             board_slug = Slug(entry.name)
+            task_count, archived_task_count = self._board_task_counts(board_slug)
             meta_name = self.get_board_metadata(board_slug, "fields.name")
             meta_slug = self.get_board_metadata(board_slug, "fields.slug")
             meta_uuid = self.get_board_metadata(board_slug, "fields.id")
@@ -155,7 +174,7 @@ class FilesystemRepository(KanbanRepository):
                 # TODO: handle contests between directory name and metadata fields, and raise error if missing
                 raise ValueError(f"Missing metadata for board {entry.name}: name={meta_name}, slug={meta_slug}, id={meta_uuid}")
 
-            boards.append(Board(id=UUID(meta_uuid), name=meta_name, slug=Slug(meta_slug), column_count=column_count, task_count=task_count))
+            boards.append(Board(id=UUID(meta_uuid), name=meta_name, slug=Slug(meta_slug), column_count=column_count, task_count=task_count, archived_task_count=archived_task_count))
         return boards
 
     # TODO: SYNC - metadata must match the name and slug of the board directory
@@ -170,14 +189,8 @@ class FilesystemRepository(KanbanRepository):
             1 for e in board_path.iterdir()
             if e.is_dir() and not e.name.startswith(".")
         )
-        task_count = sum(
-            1
-            for col in board_path.iterdir()
-            if col.is_dir() and not col.name.startswith(".")
-            for f in col.iterdir()
-            if f.is_file() and not f.name.startswith(".")
-        )
-        
+        task_count, archived_task_count = self._board_task_counts(slug)
+
         # board_slug = Slug(board_path.name)
         meta_name = self.get_board_metadata(slug, "fields.name")
         meta_slug = self.get_board_metadata(slug, "fields.slug")
@@ -187,7 +200,7 @@ class FilesystemRepository(KanbanRepository):
             # TODO: handle contests between directory name and metadata fields, and raise error if missing
             raise ValueError(f"Missing metadata for board {board_path.name}: name={meta_name}, slug={meta_slug}, id={meta_uuid}")
 
-        return Board(id=UUID(meta_uuid), name=meta_name, slug=Slug(meta_slug), column_count=column_count, task_count=task_count)
+        return Board(id=UUID(meta_uuid), name=meta_name, slug=Slug(meta_slug), column_count=column_count, task_count=task_count, archived_task_count=archived_task_count)
 
     def create_board(self, name: str, slug: Slug) -> Board:
         uuid = str(uuid4())

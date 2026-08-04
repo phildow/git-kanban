@@ -7,7 +7,7 @@ from typing import Protocol
 
 from kanban.models.slug import Slug
 
-from ..models import Board, Column, Task
+from ..models import Board, Column, Task, TaskFilter
 
 
 class CompletionDataSource(Protocol):
@@ -19,7 +19,7 @@ class CompletionDataSource(Protocol):
     def get_columns(self, board: Path | Slug | None) -> list[Column]:
         ...
 
-    def get_tasks(self, path: Path | None = None, *, include_archived: bool = False) -> list[Task]:
+    def get_tasks(self, path: Path | None = None, filter: TaskFilter = TaskFilter()) -> list[Task]:
         ...
 
     def path_components(self, path: str | Path | Slug | None = None) -> tuple[Slug | None, Slug | None, Slug | None]:

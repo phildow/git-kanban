@@ -43,8 +43,9 @@ class SearchQuery:
     text: str | None = None          # case-insensitive substring of title or body
     board: str | None = None         # None = all boards
     column: str | None = None        # None = all columns; only used with board
-    # Columns to leave out, by slug.  Search reaches everywhere by default, the
-    # archive included, so this is how a caller narrows it — `--exclude archive`.
+    # Columns to leave out, by slug.  The archive is not among them: the index
+    # holds every task and the service is what leaves the archived ones out,
+    # knowing which column holds each board's archive.
     exclude_columns: tuple[str, ...] = field(default_factory=tuple)
     assigned_to: str | None = None
     priority: Priority | None = None

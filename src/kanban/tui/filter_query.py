@@ -98,6 +98,10 @@ def build_filter_parser() -> argparse.ArgumentParser:
         help="Hide tasks in this column (repeatable)",
     )
     add_task_filter_args(parser)
+    # The bar narrows the cards already on the board, and `A` is what puts the
+    # archive among them, so this is not a flag the bar offers — only a value
+    # `build_task_filter` needs to find.
+    parser.set_defaults(include_archived=False)
     return parser
 
 

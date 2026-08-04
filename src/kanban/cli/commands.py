@@ -158,7 +158,8 @@ def build_task_filter(args: argparse.Namespace) -> TaskFilter:
 		due_before=_parse_date(args.due_before),
 		due_after=_parse_date(args.due_after),
 		created_by=args.created_by,
-		exclude_columns=args.column or [],
+		exclude_columns=[Slug(column) for column in args.column or []],
+		include_archived=args.include_archived,
 	)
 
 

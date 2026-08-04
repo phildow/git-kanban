@@ -354,7 +354,7 @@ class Task:
 
 Every board ends with an archive column, created with the board and marked `role = archive`. Archiving a task is moving it into that column and unarchiving it is moving it back out; nothing is written on the task itself, so where it sits is the whole of it. When it was archived will come from the git history later. A board created before archiving existed gets its archive column the first time something is archived on it.
 
-Listings that name no column leave archived tasks out — `kanban task list /board`, the REPL's `tasks`. Naming the archive column lists them. Search reaches everywhere, the archive included, and `--exclude archive` is how it is narrowed. `KanbanService.get_tasks` takes an `include_archived` flag, which is what the service itself works from when it has to see every task there is: resolving a bare slug, checking a slug is free, reindexing a board.
+Archived tasks are left out of listings and out of search. The `--include-archived` flag includes them. Naming the archive column lists them too — a column named is a column returned. An error is raised if a command has both `--include-archived --exclude <archive>`.
 
 The CLI and REPL treat the archive as one more column. The TUI leaves it off the board until `A` asks for it.
 
@@ -386,15 +386,15 @@ Board (singular) metadata is stored in a hidden `.metadata` extendend INI file i
 Columns metadata is stored in a hidden `.metadata` INI file in each column's directory. It contains settings that apply to the column, for example its name, slug, and the task order:
 
 ```
+[fields]
+    name="To Do"
+    slug="todo"
+
 [tasks]
     order =
         finish-git-kanban
         go-for-a-bike-ride
         have-a-cup-of-tea
-
-[fields]
-    name="To Do"
-    slug="todo"
 ```
 
 The archive column carries a `role` field alongside them:
@@ -466,6 +466,7 @@ kanban task list <board>[/<column>]
     [--sort <title|priority|due-date|created-at|updated-at|created-by|<column>]
     [--reverse]
     [--exclude <column>]
+    [--include-archived]
     [--assigned-to <name>]
     [--priority <low|medium|high>]
     [--tag <tag>]
@@ -522,6 +523,7 @@ kanban search <query>
     [--sort <title|priority|due-date|created-at|updated-at|created-by>|<column>]
     [--reverse]
     [--exclude <column>]
+    [--include-archived]
     [--assigned-to <name>]
     [--priority <low|medium|high>]
     [--tag <tag>]
@@ -538,6 +540,13 @@ kanban config list
 ```
 
 Most commands take a `--format` argument with options `plain|json` (default: `plain`).
+
+Note the following default behaviors:
+
+```
+kanban task list <board>  # does not include archived tasks
+kanban search <query>     # does not include archived tasks
+```
 
 ### Object Paths
 
@@ -581,6 +590,7 @@ columns [--slugs]
 tasks [<column>]
     [--slugs]
     [--exclude <column>]
+    [--include-archived]
     [--sort <title|priority|due-date|created-at|updated-at|created-by|column>]
     [--reverse]
     [--assigned-to <name>]
@@ -645,6 +655,7 @@ search <query>
     [--slugs]
     [--board <board>]
     [--exclude <column>]
+    [--include-archived]
     [--sort <title|priority|due-date|created-at|updated-at|created-by|column>]
     [--reverse]
     [--assigned-to <name>]

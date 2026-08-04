@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from uuid import uuid4
 
-from kanban.models import Board
+from kanban.models import ARCHIVE_COLUMN_SLUG, Board, ROLE_ARCHIVE
 from kanban.storage.filesystem import FilesystemRepository
 from kanban.storage.base import BoardNotFound
 
@@ -80,6 +80,66 @@ class TestFilesystemGetBoard(unittest.TestCase):
 
         self.assertEqual(board.column_count, 2)
         self.assertEqual(board.task_count, 2)
+
+    def _make_archive(self, board: str) -> Path:
+        """Create an archive column on a board and return its directory."""
+        archive = self.repo.boards_dir / board / ARCHIVE_COLUMN_SLUG
+        archive.mkdir()
+        self.repo.set_column_metadata(board, ARCHIVE_COLUMN_SLUG, "fields.role", ROLE_ARCHIVE)
+        return archive
+
+    def test_task_count_excludes_archived_tasks(self) -> None:
+        """Tasks in the archive column are left out of task_count."""
+        self._make_board("alpha")
+
+        todo = self.repo.boards_dir / "alpha" / "todo"
+        todo.mkdir()
+        (todo / "first.md").touch()
+
+        archive = self._make_archive("alpha")
+        (archive / "second.md").touch()
+
+        board = self.repo.get_board("alpha")
+
+        self.assertEqual(board.task_count, 1)
+
+    def test_archived_task_count_counts_the_archive_column(self) -> None:
+        """archived_task_count is the number of tasks in the archive column."""
+        self._make_board("alpha")
+
+        archive = self._make_archive("alpha")
+        (archive / "first.md").touch()
+        (archive / "second.md").touch()
+
+        board = self.repo.get_board("alpha")
+
+        self.assertEqual(board.archived_task_count, 2)
+
+    def test_archived_task_count_is_zero_without_an_archive(self) -> None:
+        """A board with no archive column reports no archived tasks."""
+        self._make_board("alpha")
+
+        todo = self.repo.boards_dir / "alpha" / "todo"
+        todo.mkdir()
+        (todo / "first.md").touch()
+
+        board = self.repo.get_board("alpha")
+
+        self.assertEqual(board.archived_task_count, 0)
+
+    def test_archive_is_found_by_role_not_slug(self) -> None:
+        """A renamed archive column is still counted as the archive."""
+        self._make_board("alpha")
+
+        archive = self.repo.boards_dir / "alpha" / "cold-storage"
+        archive.mkdir()
+        self.repo.set_column_metadata("alpha", "cold-storage", "fields.role", ROLE_ARCHIVE)
+        (archive / "first.md").touch()
+
+        board = self.repo.get_board("alpha")
+
+        self.assertEqual(board.task_count, 0)
+        self.assertEqual(board.archived_task_count, 1)
 
 
 if __name__ == "__main__":

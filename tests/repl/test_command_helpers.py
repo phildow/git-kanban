@@ -49,6 +49,7 @@ class TestHandleTaskListHelper(unittest.TestCase):
             "due_before": None,
             "due_after": None,
             "created_by": None,
+            "include_archived": False,
         }
         defaults.update(kwargs)
         return Namespace(**defaults)
@@ -78,6 +79,29 @@ class TestHandleTaskListHelper(unittest.TestCase):
         """exclude_columns=[name] drops tasks in that column."""
         result = handle_task_list_helper(self._args(column="alpha", exclude_columns=["done"]), self.svc)
         self.assertEqual([t.id for t in result], [self.t1.id])
+
+    def test_include_archived_returns_archived_tasks(self) -> None:
+        """The flag rides on the filter and widens the board listing to the archive."""
+        archived = self.svc.archive_task(self.t2.path)
+
+        result = handle_task_list_helper(self._args(column="alpha", include_archived=True), self.svc)
+
+        self.assertEqual({t.id for t in result}, {self.t1.id, archived.id})
+
+    def test_include_archived_with_a_column_raises(self) -> None:
+        """The flag lists a whole board; naming a column is an error."""
+        with self.assertRaises(ValueError):
+            handle_task_list_helper(self._args(column="alpha/done", include_archived=True), self.svc)
+
+    def test_include_archived_with_archive_excluded_raises(self) -> None:
+        """Including and excluding the archive at once is an error."""
+        self.svc.archive_task(self.t2.path)
+
+        with self.assertRaises(ValueError):
+            handle_task_list_helper(
+                self._args(column="alpha", exclude_columns=["archive"], include_archived=True),
+                self.svc,
+            )
 
 
 class TestHandleCreateHelperSelection(unittest.TestCase):

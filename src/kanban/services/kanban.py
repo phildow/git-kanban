@@ -427,7 +427,7 @@ class KanbanService(CompletionDataSource):
             self.working_board = board.slug
 
         # Update index entries for tasks in the renamed board.
-        for task in self.get_tasks(Path(f"/{board.slug}"), include_archived=True):
+        for task in self.get_tasks(Path(f"/{board.slug}"), filter=TaskFilter(include_archived=True)):
             self.index_service.upsert_task(task)
 
         return board
@@ -449,7 +449,7 @@ class KanbanService(CompletionDataSource):
             raise ValueError("No board specified and no board in context")
 
         deleted_board = self.repository.get_board(board)
-        tasks = self.get_tasks(path, include_archived=True)
+        tasks = self.get_tasks(path, filter=TaskFilter(include_archived=True))
         self.repository.delete_board(board)
 
         # Clear current context if it points to the deleted board.
@@ -626,6 +626,39 @@ class KanbanService(CompletionDataSource):
             Path(f"/{board}"), ARCHIVE_COLUMN_NAME, ROLE_ARCHIVE
         )
 
+    def _archive_slugs(self, board: Slug | None) -> set[Slug]:
+        """
+        Return the slugs the archive column goes by across the boards in scope,
+        or the name it is created under when no board in scope has one.
+
+        The archive is found by role, so a board that renamed it is answered
+        with the new slug.  A scope of every board can hold several.
+        """
+        boards = [board] if board is not None else [b.slug for b in self.get_boards()]
+        slugs = {
+            column.slug
+            for b in boards
+            for column in self.get_columns(Path(f"/{b}"))
+            if column.is_archive
+        }
+        return slugs or {ARCHIVE_COLUMN_SLUG}
+
+    def _check_archive_not_excluded(self, board: Slug | None, filter: TaskFilter) -> None:
+        """
+        Raise ValueError when a filter asks for the archived tasks and excludes
+        the archive column: the two are opposite requests, and honouring either
+        one silently would be answering a question that was not asked.
+        """
+        if not filter.exclude_columns:
+            return
+
+        excluded = self._archive_slugs(board).intersection(filter.exclude_columns)
+
+        if excluded:
+            raise ValueError(
+                f"Archived tasks cannot be both included and excluded ({', '.join(sorted(excluded))})"
+            )
+
     def _without_archived(self, tasks: list[Task]) -> list[Task]:
         """
         Return `tasks` without the ones sitting in an archive column.
@@ -719,7 +752,7 @@ class KanbanService(CompletionDataSource):
 
         # Archived tasks answer to their slug as any other does: unarchiving one
         # from the REPL is naming it and a column to move it to.
-        for task in self.get_tasks(Path(f"/{board}"), include_archived=True):
+        for task in self.get_tasks(Path(f"/{board}"), filter=TaskFilter(include_archived=True)):
             if task.slug == path:
                 return Path(f"/{board}/{task.column}/{task.slug}")
 
@@ -752,8 +785,6 @@ class KanbanService(CompletionDataSource):
         filter:  TaskFilter = TaskFilter(),
         sort:    str | None = "column",
         reverse: bool = False,
-        *,
-        include_archived: bool = False,
     ) -> list[Task]:
         """
         Return tasks for the given board/column, applying filters and sort in
@@ -768,16 +799,28 @@ class KanbanService(CompletionDataSource):
         A listing that names no column leaves out the archived tasks: the
         archive is somewhere to put what is finished with, not something every
         listing should carry.  Naming the archive column returns them, and
-        `include_archived` returns them wherever they are — which is what the
-        service itself works from when it has to see every task there is.
+        `filter.include_archived` returns them wherever they are — which is
+        what the service itself works from when it has to see every task there
+        is.
+
+        `include_archived` widens a board listing, so it is an error alongside
+        anything that has already settled the question: a named column, which
+        is one column's tasks and no others, or a filter excluding the archive,
+        which asks for the opposite.
         """
         if path is None and self.working_board is not None:
             path = Path(f"/{self.working_board}")
 
         board, column, _ = self.path_components(path)
+
+        if filter.include_archived:
+            if column is not None:
+                raise ValueError("Archived tasks cannot be included when listing a single column")
+            self._check_archive_not_excluded(board, filter)
+
         tasks = self.repository.get_tasks(board=board, column=column)
 
-        if column is None and not include_archived:
+        if column is None and not filter.include_archived:
             tasks = self._without_archived(tasks)
 
         if filter:
@@ -830,7 +873,7 @@ class KanbanService(CompletionDataSource):
             raise ValueError(f"No working board/column and no explicit path provided: {path}")
 
         # Archived tasks included: a slug is taken wherever it sits.
-        board_tasks = self.get_tasks(Path(f"/{board}"), include_archived=True)
+        board_tasks = self.get_tasks(Path(f"/{board}"), filter=TaskFilter(include_archived=True))
 
         # Task slugs are unique board-wide, not merely within a column, so the
         # slug can address a task from any column of the board.
@@ -1212,10 +1255,13 @@ class KanbanService(CompletionDataSource):
         When sort is omitted, results are ordered by column position then by
         each task's position within its column.
 
-        Search reaches everywhere, the archive included — looking for a task is
-        the one time the archive is worth reading.  A caller that wants it left
-        out excludes the column, as it would any other.
+        Archived tasks are left out, as they are from a listing, and
+        `filter.include_archived` is how a search reaches them — which is an
+        error alongside a filter excluding the archive, the opposite request.
         """
+        if filter.include_archived:
+            self._check_archive_not_excluded(board, filter)
+
         self.index_service.rebuild()
 
         search_query = SearchQuery(
@@ -1234,6 +1280,9 @@ class KanbanService(CompletionDataSource):
 
         results = self.index_service.search(search_query)
         tasks = [result.task for result in results]
+
+        if not filter.include_archived:
+            tasks = self._without_archived(tasks)
 
         if sort is None:
             positions = self._column_task_positions(tasks)

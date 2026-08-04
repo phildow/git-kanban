@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from uuid import uuid4
 
-from kanban.models import Board
+from kanban.models import ARCHIVE_COLUMN_SLUG, Board, ROLE_ARCHIVE
 from kanban.storage.filesystem import FilesystemRepository
 
 
@@ -69,6 +69,25 @@ class TestFilesystemListBoards(unittest.TestCase):
         boards = self.repo.get_boards()
         self.assertIsInstance(boards[0], Board)
         self.assertEqual(boards[0].column_count, 0)
+
+    def test_task_counts_separate_the_archive(self) -> None:
+        """Archived tasks are reported apart from the board's task_count."""
+        self._make_board("alpha")
+
+        todo = self.repo.boards_dir / "alpha" / "todo"
+        todo.mkdir()
+        (todo / "first.md").touch()
+
+        archive = self.repo.boards_dir / "alpha" / ARCHIVE_COLUMN_SLUG
+        archive.mkdir()
+        self.repo.set_column_metadata("alpha", ARCHIVE_COLUMN_SLUG, "fields.role", ROLE_ARCHIVE)
+        (archive / "second.md").touch()
+        (archive / "third.md").touch()
+
+        board = self.repo.get_boards()[0]
+
+        self.assertEqual(board.task_count, 1)
+        self.assertEqual(board.archived_task_count, 2)
 
 
 if __name__ == "__main__":

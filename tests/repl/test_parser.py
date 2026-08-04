@@ -64,6 +64,7 @@ class TestParserAliases(unittest.TestCase):
         self.assertFalse(args.reverse)
         self.assertFalse(args.slugs)
         self.assertIsNone(args.exclude_columns)
+        self.assertFalse(args.include_archived)
         self.assertIs(args.func, handle_task_list)
 
         args = repl_parser.parse_args(["tasks", "todo"])
@@ -81,6 +82,19 @@ class TestParserAliases(unittest.TestCase):
         """`tasks ... -x <column> --exclude <column>` accumulates into a list."""
         args = repl_parser.parse_args(["tasks", "-x", "done", "--exclude", "archive"])
         self.assertEqual(args.exclude_columns, ["done", "archive"])
+
+    def test_tasks_include_archived_flag(self):
+        """`tasks --include-archived` asks the board listing for archived tasks too."""
+        args = repl_parser.parse_args(["tasks", "--include-archived"])
+        self.assertTrue(args.include_archived)
+
+    def test_search_include_archived_flag(self):
+        """`search --include-archived` is how a search reaches the archive."""
+        args = repl_parser.parse_args(["search", "login"])
+        self.assertFalse(args.include_archived)
+
+        args = repl_parser.parse_args(["search", "login", "--include-archived"])
+        self.assertTrue(args.include_archived)
 
     def test_create_aliases_map_to_create_handlers(self):
         args = repl_parser.parse_args(["new", "--board", "main"])

@@ -653,6 +653,7 @@ class TestReplCommandHandlers(unittest.TestCase):
             due_after=None,
             created_by=None,
             exclude_columns=None,
+            include_archived=False,
         )
         result = object()
         self.svc.search.return_value = result
@@ -678,6 +679,7 @@ class TestReplCommandHandlers(unittest.TestCase):
             due_after=None,
             created_by=None,
             exclude_columns=["archive"],
+            include_archived=False,
         )
         self.svc.search.return_value = object()
 

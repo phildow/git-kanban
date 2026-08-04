@@ -34,7 +34,7 @@ import argparse
 from pathlib import Path
 import shlex
 
-from ..models import Slug
+from ..models import Slug, TaskFilter
 from ..protocols.sluggable import Sluggable
 from ..protocols.completion_data_source import CompletionDataSource
 from ..services.kanban import CONFIG_KEYS
@@ -295,7 +295,7 @@ class CompletionEngine:
         # of the archive.
         slugs = {
             t.slug
-            for t in self._service.get_tasks(Path(f"/{board}"), include_archived=True)
+            for t in self._service.get_tasks(Path(f"/{board}"), TaskFilter(include_archived=True))
         }
         return self._matching(list(slugs), token)
 

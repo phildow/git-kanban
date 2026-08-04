@@ -22,6 +22,7 @@ import unittest
 from dataclasses import dataclass
 from pathlib import Path
 
+from kanban.models import TaskFilter
 from kanban.repl.completion_engine import CompletionEngine
 from kanban.services.kanban import CONFIG_KEYS
 
@@ -211,7 +212,7 @@ class FakeKanbanService:
     def get_columns(self, board: str) -> list[_Slugged]:
         return [_Slugged(slug) for slug in self._BOARDS[board]]
 
-    def get_tasks(self, path: Path | None = None, *, include_archived: bool = False) -> list[_Task]:
+    def get_tasks(self, path: Path | None = None, filter: TaskFilter = TaskFilter()) -> list[_Task]:
         board, column, _ = self.path_components(path)
         if board is None:
             return []

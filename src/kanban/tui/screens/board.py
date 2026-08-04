@@ -28,7 +28,7 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.widgets import Footer, Header, Input, ListView, Static
 
-from ...models import Board, Column, Slug, Task
+from ...models import Board, Column, Slug, Task, TaskFilter
 from ...services.kanban import (
     KanbanService,
     TaskCreateParams,
@@ -488,8 +488,14 @@ class BoardScreen(Screen[None]):
         self._sync_selection()
 
     def _sync_subtitle(self) -> None:
-        """Update the header to match the tasks currently held."""
-        task_count = sum(len(tasks) for tasks in self._tasks.values())
+        """Update the header to match the tasks currently held.
+
+        Archived tasks are left out of the count even while the archive column
+        is on screen: the count is the work on the board.
+        """
+        task_count = sum(
+            len(tasks) for slug, tasks in self._tasks.items() if slug != self._archive
+        )
         self.sub_title = board_subtitle(self._board, task_count)
 
     def _reload_sidebar(self) -> None:
@@ -530,7 +536,7 @@ class BoardScreen(Screen[None]):
             ]
 
             tasks = self.svc.get_tasks(
-                Path(f"/{slug}"), include_archived=self._show_archive
+                Path(f"/{slug}"), TaskFilter(include_archived=self._show_archive)
             )
             self._tasks = {
                 column.slug: [task for task in tasks if task.column == column.slug]

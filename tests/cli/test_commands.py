@@ -154,7 +154,7 @@ class TestCommandHandlers(unittest.TestCase):
 
     def test_handle_task_list(self):
         """`task list` handler forwards path/sort options and renders output."""
-        args = self._args(path="board-a/todo", sort="title", reverse=True, priority=None, assigned_to=None, tags=None, due_before=None, due_after=None, created_by=None, column=None)
+        args = self._args(path="board-a/todo", sort="title", reverse=True, priority=None, assigned_to=None, tags=None, due_before=None, due_after=None, created_by=None, column=None, include_archived=False)
         result = object()
         self.svc.get_tasks.return_value = result
 
@@ -166,7 +166,7 @@ class TestCommandHandlers(unittest.TestCase):
 
     def test_handle_task_list_with_exclude_columns(self):
         """`task list -x/--exclude` maps to TaskFilter.exclude_columns."""
-        args = self._args(path="board-a/todo", sort=None, reverse=False, priority=None, assigned_to=None, tags=None, due_before=None, due_after=None, created_by=None, column=["done", "archive"])
+        args = self._args(path="board-a/todo", sort=None, reverse=False, priority=None, assigned_to=None, tags=None, due_before=None, due_after=None, created_by=None, column=["done", "archive"], include_archived=False)
         result = object()
         self.svc.get_tasks.return_value = result
 
@@ -180,6 +180,38 @@ class TestCommandHandlers(unittest.TestCase):
             reverse=False,
         )
         self.renderer.render_task_list.assert_called_once_with(args, result)
+
+    def test_handle_task_list_with_include_archived(self):
+        """`task list --include-archived` maps to TaskFilter.include_archived."""
+        args = self._args(path="board-a", sort=None, reverse=False, priority=None, assigned_to=None, tags=None, due_before=None, due_after=None, created_by=None, column=None, include_archived=True)
+        result = object()
+        self.svc.get_tasks.return_value = result
+
+        commands.handle_task_list(args, self.svc, self.renderer, self.json_renderer)
+
+        from kanban.models import TaskFilter
+        self.svc.get_tasks.assert_called_once_with(
+            Path("/board-a"),
+            filter=TaskFilter(include_archived=True),
+            sort=None,
+            reverse=False,
+        )
+        self.renderer.render_task_list.assert_called_once_with(args, result)
+
+    def test_handle_search_with_include_archived(self):
+        """`search --include-archived` maps to TaskFilter.include_archived."""
+        args = self._args(query="query", board=None, sort=None, reverse=False, priority=None, assigned_to=None, tags=None, due_before=None, due_after=None, created_by=None, column=None, include_archived=True)
+        self.svc.search.return_value = object()
+
+        commands.handle_search(args, self.svc, self.renderer, self.json_renderer)
+
+        self.svc.search.assert_called_once_with(
+            "query",
+            filter=TaskFilter(include_archived=True),
+            board=None,
+            sort=None,
+            reverse=False,
+        )
 
     def test_handle_task_create_with_all_optional_fields(self):
         """`task create` maps all optional CLI fields into `TaskCreateParams`."""
@@ -678,6 +710,7 @@ class TestCommandHandlers(unittest.TestCase):
             due_after=None,
             created_by=None,
             column=None,
+            include_archived=False,
         )
         result = object()
         self.svc.search.return_value = result
@@ -703,6 +736,7 @@ class TestCommandHandlers(unittest.TestCase):
             due_after=None,
             created_by=None,
             column=["archive"],
+            include_archived=False,
         )
         self.svc.search.return_value = object()
 

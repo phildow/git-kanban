@@ -38,7 +38,8 @@ def build_task_filter(args: argparse.Namespace) -> TaskFilter:
         due_before=_parse_date(args.due_before),
         due_after=_parse_date(args.due_after),
         created_by=args.created_by,
-        exclude_columns=args.exclude_columns or [],
+        exclude_columns=[Slug(column) for column in args.exclude_columns or []],
+        include_archived=args.include_archived,
     )
 
 
@@ -48,6 +49,10 @@ def handle_task_list_helper(args: argparse.Namespace, svc: KanbanService) -> lis
     the main entry point for the `tasks` command in the REPL.  When path is
     omitted, falls back to every task in the active board (all columns),
     raising if no board is active.
+
+    `--include-archived` rides on the filter and widens a board listing to the
+    archived tasks; the service is what refuses it alongside a column or an
+    excluded archive.
     """
     path = args.column
     filter = build_task_filter(args)
