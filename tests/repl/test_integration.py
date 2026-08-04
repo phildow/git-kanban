@@ -16,7 +16,7 @@ Layout
 ------
 _ReplBase               setUp/tearDown, run_repl helper, boards_dir
 _InitializedReplBase    Adds repo.init_storage()/init_local_data() so commands run immediately
-TestReplInit            `init` and `init --bootstrap` on a fresh repo
+TestReplInit            `init` (main board, no tasks) and `init --bootstrap` on a fresh repo
 TestReplContext         `board` context command
 TestReplCreate          `create`/`new`/`n` for boards, columns, and tasks
 TestReplList            `list`/`ls` with paths, filters, sort, and -l flag
@@ -54,7 +54,7 @@ from kanban.repl.rich_renderer import RichRenderer as REPLRenderer
 from kanban.models import Slug
 from kanban.services.kanban import KanbanService, TaskCreateParams
 from kanban.storage.filesystem import FilesystemRepository
-from kanban.storage.seeds import BOOTSTRAP_CONFIG
+from kanban.storage.seeds import ARCHIVE_COLUMN, BOOTSTRAP_CONFIG, DEFAULT_COLUMNS, MAIN_BOARD_SLUG
 
 def _iso(dt: str) -> datetime:
     """Convert a datetime string to an ISO 8601 string with UTC timezone."""
@@ -145,12 +145,25 @@ class TestReplInit(_ReplBase):
         out = self.run_repl("init")
         self.assertTrue(out.strip())
 
-    def test_init_no_boards_without_bootstrap(self) -> None:
-        """init without --bootstrap creates no boards."""
+    def test_init_creates_main_board_without_bootstrap(self) -> None:
+        """init creates the main board even without --bootstrap."""
         self.run_repl("init")
         board_dirs = [d for d in self.boards_dir.iterdir()
                       if d.is_dir() and not d.name.startswith(".")]
-        self.assertEqual(len(board_dirs), 0)
+        self.assertEqual([d.name for d in board_dirs], [MAIN_BOARD_SLUG])
+
+    def test_init_creates_default_columns_without_bootstrap(self) -> None:
+        """init creates the default columns and the archive in the main board."""
+        self.run_repl("init")
+        col_dirs = [d.name for d in sorted((self.boards_dir / MAIN_BOARD_SLUG).iterdir())
+                    if d.is_dir() and not d.name.startswith(".")]
+        expected = sorted([slug for _, slug in DEFAULT_COLUMNS] + [ARCHIVE_COLUMN[1]])
+        self.assertEqual(col_dirs, expected)
+
+    def test_init_no_tasks_without_bootstrap(self) -> None:
+        """init without --bootstrap creates no tasks."""
+        self.run_repl("init")
+        self.assertEqual(list(self.boards_dir.rglob("*.md")), [])
 
     def test_init_bootstrap_creates_board_directory(self) -> None:
         """init --bootstrap creates at least one board directory."""

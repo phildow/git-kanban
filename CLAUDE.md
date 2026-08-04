@@ -568,6 +568,8 @@ kanban task list <board>  # does not include archived tasks
 kanban search <query>     # does not include archived tasks
 ```
 
+`kanban init` always seeds the main board with the default columns and makes it the active board. `--bootstrap` adds the example tasks on top.
+
 ### Object Paths
 
 Objects are identified by their absolute path consisting of `/board/column/task` components as available.

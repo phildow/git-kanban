@@ -52,6 +52,41 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
 
         self.assertEqual(svc.user_context.board, "main")
 
+    def test_init_without_config_creates_main_board(self):
+        """init without a config seeds the main board and its default columns."""
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+        temp_dir.mkdir()
+        repo = InMemoryRepository(root=temp_dir)
+        svc = KanbanService(
+            repository=repo,
+            index_service=IndexService(index_base=InMemoryIndex(), repository=repo),
+            git_service=GitService(),
+        )
+
+        svc.initialize_kanban(Path("."))
+
+        self.assertTrue(repo.board_exists("main"))
+        self.assertEqual(
+            [c.slug for c in repo.get_columns("main")],
+            ["todo", "in-progress", "in-review", "done", "archive"],
+        )
+        self.assertEqual(svc.user_context.board, "main")
+
+    def test_init_without_config_creates_no_tasks(self):
+        """The example tasks are reserved for --bootstrap, so a plain init has none."""
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+        temp_dir.mkdir()
+        repo = InMemoryRepository(root=temp_dir)
+        svc = KanbanService(
+            repository=repo,
+            index_service=IndexService(index_base=InMemoryIndex(), repository=repo),
+            git_service=GitService(),
+        )
+
+        svc.initialize_kanban(Path("."))
+
+        self.assertEqual(repo.get_tasks(board="main"), [])
+
     def test_init_raises_when_called_twice(self):
         """Second init call raises because repository is already initialized."""
         temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"

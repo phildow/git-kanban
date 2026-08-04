@@ -17,7 +17,7 @@ Layout
 ------
 _CLIBase            setUp/tearDown, run_cli/run_json helpers, boards_dir
 _InitializedBase    Adds repo.init_storage() so commands run immediately
-TestInitCommand     `init` and `init --bootstrap` on a fresh repo
+TestInitCommand     `init` (main board, no tasks) and `init --bootstrap` on a fresh repo
 TestBoardCLI        All board subcommands + format and sort flags
 TestColumnCLI       All column subcommands (board "proj" pre-created)
 TestTaskCLI         All task subcommands (proj/todo + proj/done pre-created)
@@ -42,7 +42,7 @@ from kanban.cli.renderer import Renderer
 from kanban.cli.json_renderer import JsonRenderer
 from kanban.services.kanban import InvalidConfigValue, KanbanService
 from kanban.storage.filesystem import FilesystemRepository
-from kanban.storage.seeds import BOOTSTRAP_CONFIG
+from kanban.storage.seeds import ARCHIVE_COLUMN, BOOTSTRAP_CONFIG, DEFAULT_COLUMNS, MAIN_BOARD_SLUG
 from kanban.services.render_service import RenderService
 
 def _iso(dt: str) -> datetime:
@@ -133,12 +133,25 @@ class TestInitCommand(_CLIBase):
         self.run_cli("init")
         self.assertTrue(self.boards_dir.is_dir())
 
-    def test_init_no_boards_created_without_bootstrap(self) -> None:
-        """init without --bootstrap creates storage but no boards."""
+    def test_init_creates_main_board_without_bootstrap(self) -> None:
+        """init creates the main board even without --bootstrap."""
         self.run_cli("init")
         board_dirs = [d for d in self.boards_dir.iterdir()
                       if d.is_dir() and not d.name.startswith(".")]
-        self.assertEqual(len(board_dirs), 0)
+        self.assertEqual([d.name for d in board_dirs], [MAIN_BOARD_SLUG])
+
+    def test_init_creates_default_columns_without_bootstrap(self) -> None:
+        """init creates the default columns and the archive in the main board."""
+        self.run_cli("init")
+        col_dirs = [d.name for d in sorted((self.boards_dir / MAIN_BOARD_SLUG).iterdir())
+                    if d.is_dir() and not d.name.startswith(".")]
+        expected = sorted([slug for _, slug in DEFAULT_COLUMNS] + [ARCHIVE_COLUMN[1]])
+        self.assertEqual(col_dirs, expected)
+
+    def test_init_no_tasks_created_without_bootstrap(self) -> None:
+        """init without --bootstrap creates no tasks."""
+        self.run_cli("init")
+        self.assertEqual(list(self.boards_dir.rglob("*.md")), [])
 
     def test_init_bootstrap_creates_board_directory(self) -> None:
         """init --bootstrap creates at least one board directory."""

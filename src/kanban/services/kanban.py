@@ -46,7 +46,7 @@ from ..models.priority import PRIORITY_ORDER
 from ..protocols.completion_data_source import CompletionDataSource
 from ..protocols.interaction import Interaction
 from ..storage.base import KanbanRepository, ColumnNotFound, BoardNotFound, TaskNotFound, TaskAlreadyExists
-from ..storage.seeds import ARCHIVE_COLUMN, BootstrapConfig, DEFAULT_COLUMNS
+from ..storage.seeds import ARCHIVE_COLUMN, BootstrapConfig, DEFAULT_COLUMNS, DEFAULT_CONFIG
 from ..services.git import GitService
 from ..services.index import IndexService
 from ..utils.interaction import TerminalInteraction
@@ -186,23 +186,25 @@ class KanbanService(CompletionDataSource):
         at path.  This is the only method that runs before the services are fully
         operational, so it orchestrates creation order directly: filesystem
         first, index second, git last.
+
+        Without a config the repository is seeded with DEFAULT_CONFIG: the main
+        board and its default columns, no tasks.  `kanban init --bootstrap`
+        passes BOOTSTRAP_CONFIG, which adds the example tasks.
         """
+
+        seed = config if config is not None else DEFAULT_CONFIG
 
         self.repository.init_storage()
         self.repository.init_local_data()
-        self._bootstrap(config)
+        self._bootstrap(seed)
 
-        if config is not None:
-            default_board = config.get("usercontext", {}).get("board")
-            self.update_user_context(board=Slug(default_board) if default_board else None)
+        default_board = seed.get("usercontext", {}).get("board")
+        self.update_user_context(board=Slug(default_board) if default_board else None)
 
         return True
 
-    def _bootstrap(self, config: BootstrapConfig | None = None) -> None:
-        """Create the default boards, columns, and tasks for a new repository."""
-        if config is None:
-            return
-        
+    def _bootstrap(self, config: BootstrapConfig) -> None:
+        """Create the boards, columns, and tasks a new repository is seeded with."""
         now = datetime.now(timezone.utc)
         
         for board_config in config["boards"]:
