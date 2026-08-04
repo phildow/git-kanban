@@ -120,7 +120,7 @@ $ ./run.sh tests
 ```
 Or:
 ```
-$ python -m unittest discover -s tests
+$ python -m pytest -n auto
 ```
 
 Run static typechecking:
