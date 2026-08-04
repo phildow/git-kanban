@@ -669,6 +669,36 @@ class BoardScreen(Screen[None]):
                 return True
         return False
 
+    def _neighbor_slug(self, task: Task) -> Slug | None:
+        """
+        Return the card that should take the highlight when `task` leaves its column.
+
+        The card below it, so the selection stays where the eye already is, and
+        the one above it when the task was last in the column.  None when it was
+        the only card there, or when the column is not on screen — then there is
+        nothing to hand the highlight to and the caller has nothing to pass on.
+
+        Read off what the columns are displaying rather than what the board
+        holds, so a filter in force is accounted for: a card the user cannot see
+        is not a card the selection should land on.  The column is found by
+        looking for the card rather than by reading `task.column`, since the
+        task may be a record the service has already moved.
+        """
+        for view in self.column_views:
+            shown = view.tasks
+            index = next(
+                (i for i, other in enumerate(shown) if other.id == task.id), None
+            )
+            if index is None:
+                continue
+            if index + 1 < len(shown):
+                return shown[index + 1].slug
+            if index > 0:
+                return shown[index - 1].slug
+            return None
+
+        return None
+
     async def _render_current(self, select: Slug | None = None) -> None:
         """
         Repopulate the columns from data already fetched, without touching the service.
@@ -1254,10 +1284,19 @@ class BoardScreen(Screen[None]):
         Move `task` into the archive, or back out of it, once confirmed.
 
         Both columns are refreshed — but only the ones on screen: with the
-        archive hidden the card simply leaves the column it was in.
+        archive hidden the card simply leaves the column it was in.  Either way
+        the user stays where they were: the highlight goes to the card that
+        closes the gap, never off to the archive after the card that left.
         """
         if not confirmed:
             return
+
+        # Both read off before the card moves: the neighbour for the reason
+        # `_delete_task` gives, and the column it is leaving because a repository
+        # is free to hand back the record the board is holding, in which case the
+        # move has already rewritten the column named on it.
+        neighbor = self._neighbor_slug(task)
+        source = task.column
 
         archived = self._is_archived(task)
         moved: Task | None = None
@@ -1277,15 +1316,16 @@ class BoardScreen(Screen[None]):
         )
 
         # Archiving on a board that had no archive column made one, and a column
-        # arriving is not confined to the columns the screen knows.
+        # arriving is not confined to the columns the screen knows.  The archive
+        # is still hidden, so the card is gone from view and the neighbour it
+        # left behind is what the highlight lands on.
         if self._archive is None:
-            self._reload_soon(moved.slug)
+            self._reload_soon(neighbor)
             return
 
         drawn = {view.column.slug for view in self.column_views}
         self._refresh_columns_soon(
-            [slug for slug in (task.column, moved.column) if slug in drawn],
-            moved.slug,
+            [slug for slug in (source, moved.column) if slug in drawn], neighbor
         )
 
     def action_toggle_archive(self) -> None:
@@ -1401,14 +1441,19 @@ class BoardScreen(Screen[None]):
         if not confirmed:
             return
 
+        # Read off the board before the card goes, while it is still in the
+        # column and the neighbour it hands the highlight to can be found.
+        neighbor = self._neighbor_slug(task)
+
         deleted: Task | None = None
         with self._service_errors("delete"):
             deleted = self.svc.delete_task(task.path)
 
         if deleted is not None:
             self._announce(f"Deleted {_task_name(deleted.title)}")
-            # A deleted task only leaves a gap in the column it was in.
-            self._refresh_columns_soon([deleted.column])
+            # A deleted task only leaves a gap in the column it was in, and the
+            # card that closes the gap takes the highlight.
+            self._refresh_columns_soon([deleted.column], neighbor)
 
     # ── Column actions ────────────────────────────────────────────────────────
     #
@@ -2455,6 +2500,10 @@ class BoardScreen(Screen[None]):
         new slug when the command is what renamed it.  With nothing selected the
         task the command wrote takes the highlight, which is where the board's
         own create and edit leave the user.
+
+        A command that took that card off the board — deleted it, or archived it
+        while the archive is hidden — leaves the highlight to the card below it,
+        or the one above when it was last, rather than to the top of the column.
         """
         selected = self.svc.selection.task
         if selected is None:
@@ -2470,8 +2519,11 @@ class BoardScreen(Screen[None]):
             None,
         )
         if held is not None:
+            drawn = {view.column.slug for view in self.column_views}
             for task in tasks:
                 if task.id == held.id:
+                    if task.deleted or task.column not in drawn:
+                        return self._neighbor_slug(held)
                     return task.slug
 
         return selected
