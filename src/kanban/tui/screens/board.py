@@ -74,7 +74,7 @@ MOVE_KEYS: list[tuple[str, str]] = [
 FILTER_KEYS: list[tuple[str, str]] = [
     ("tab", "Complete"),
     ("↑/↓", "History"),
-    ("↵", "Keep filter"),
+    ("↵", "Apply filter"),
     ("esc", "Clear"),
 ]
 COMMAND_KEYS: list[tuple[str, str]] = [
@@ -2100,6 +2100,17 @@ class BoardScreen(Screen[None]):
             bar.history.reset()
 
         self._remember_focus()
+
+        if isinstance(bar, CommandBar):
+            # Both bars take the same strip above the hint row, so a filter
+            # left running gives it up while a command is being typed and
+            # comes back when the command bar closes, still in force.
+            self.query_one(FilterBar).remove_class("-visible")
+        else:
+            # Being typed into again, the bar is no longer just a reminder of
+            # what is filtering: the focused styling takes it over.
+            self._mark_filter_active(self.query_one(FilterBar), False)
+
         bar.add_class("-visible")
         bar.focus()
         self._show_hints(self._bar_hints(bar))
@@ -2136,7 +2147,7 @@ class BoardScreen(Screen[None]):
         if filter_bar.has_class("-visible") or not self._filter.is_empty:
             filter_bar.value = ""
             self._filter = FilterQuery()
-            filter_bar.remove_class("-invalid")
+            filter_bar.remove_class("-unparsed")
             self._close_bar(filter_bar)
             self._render_soon()
             return
@@ -2144,14 +2155,51 @@ class BoardScreen(Screen[None]):
         if self.move_mode:
             self._cancel_move()
 
+    def _park_filter_bar(self, bar: FilterBar) -> None:
+        """
+        Leave the filter running and hand the focus back to the board.
+
+        The bar stays where it is, so the query narrowing the board stays in
+        view, and takes the colour that says it is in force rather than being
+        typed.  Escape clears it and takes the bar down, as it always has.
+        """
+        self._mark_filter_active(bar, True)
+        self._hide_hints()
+        self._return_focus_to_board()
+
+    def _mark_filter_active(self, bar: FilterBar, active: bool) -> None:
+        """Show or drop the standing-filter styling on the filter bar."""
+        bar.set_class(active, "-active")
+        bar.border_title = "filter" if active else ""
+
     def _close_bar(self, bar: FilterBar | CommandBar) -> None:
         """Hide an input bar and hand focus back to the column it was opened from."""
         bar.remove_class("-visible")
         self._hide_hints()
 
-        # The output belongs to the bar that produced it; it goes with it.
-        if isinstance(bar, CommandBar):
+        if isinstance(bar, FilterBar):
+            self._mark_filter_active(bar, False)
+        else:
+            # The output belongs to the bar that produced it; it goes with it.
             self._hide_output()
+            # A filter that gave up the strip to this bar takes it back.
+            filter_bar = self.query_one(FilterBar)
+            if filter_bar.has_class("-active"):
+                filter_bar.add_class("-visible")
+
+        self._return_focus_to_board()
+
+    def _return_focus_to_board(self) -> None:
+        """
+        Hand the focus back to the column a bar was opened from.
+
+        A bar that no longer holds the focus has nothing to hand back: escape
+        clearing a standing filter is pressed on the board, and the card the
+        user is on stays the card they are on.
+        """
+        if not isinstance(self.app.focused, (CompletingInput, OutputPanel)):
+            self._bar_focus = None
+            return
 
         remembered = self._bar_focus
         self._bar_focus = None
@@ -2197,8 +2245,11 @@ class BoardScreen(Screen[None]):
         parsed = parse_filter(event.value)
 
         # A half-typed flag is not an empty filter: keep the last query that
-        # parsed so the board holds still until the user finishes typing.
-        event.input.set_class(parsed is None, "-invalid")
+        # parsed so the board holds still until the user finishes typing.  The
+        # state has a class of its own rather than `Input`'s `-invalid`, which
+        # belongs to the widget's validators and is rewritten on every change
+        # and every submission.
+        event.input.set_class(parsed is None, "-unparsed")
         if parsed is None:
             return
 
@@ -2207,13 +2258,24 @@ class BoardScreen(Screen[None]):
 
     def on_input_submitted(self, event: FilterBar.Submitted) -> None:
         """Keep the filter and return to the board, or run the typed command."""
+        # A query that does not parse is not the query filtering the board, and
+        # leaving it standing over a filter it does not describe would be a lie:
+        # the bar keeps the focus so the user can finish what they were typing.
+        if isinstance(event.input, FilterBar) and event.input.has_class("-unparsed"):
+            return
+
         # A submitted line is a line the user meant, whatever came of it: a
         # command that failed is one worth recalling to correct.
         if isinstance(event.input, CompletingInput) and event.input.history is not None:
             event.input.history.append(event.value)
 
         if isinstance(event.input, FilterBar):
-            self._close_bar(event.input)
+            # A filter still narrowing the board stays on screen to say so;
+            # nothing typed leaves nothing to show, so the bar goes.
+            if self._filter.is_empty:
+                self._close_bar(event.input)
+            else:
+                self._park_filter_bar(event.input)
             return
 
         if isinstance(event.input, CommandBar):

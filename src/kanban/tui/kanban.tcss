@@ -207,19 +207,32 @@ CardWidget.-dense {
     display: block;
 }
 
+/* A filter still narrowing the board with the focus back on the cards.  The
+   bar stays open showing the query in force, and the border says it is in
+   force rather than being typed. */
+#filter-bar.-active {
+    border: solid $success;
+    border-title-color: $success;
+    color: $success;
+}
+
 /* The command bar shares the focus with the output panel, and the thick edge
    down the left is what says which of the two holds it.  It thickens in place:
-   same cell, same centre line, so no character moves as the focus does. */
+   same cell, same centre line, so no character moves as the focus does.  The
+   whole border is restated so a standing filter typed into again reads as a
+   bar being typed into, whichever way the focus arrived. */
 #filter-bar:focus, #command-bar:focus {
+    border: solid $accent;
     border-left: thick $accent;
+    color: $foreground;
 }
 
 /* A half-typed flag: the board holds still until the query parses again. */
-#filter-bar.-invalid {
+#filter-bar.-unparsed {
     border: solid $error;
 }
 
-#filter-bar.-invalid:focus {
+#filter-bar.-unparsed:focus {
     border-left: thick $error;
 }
 

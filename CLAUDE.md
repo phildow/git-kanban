@@ -953,7 +953,9 @@ own. **Configuration** opens `ConfigScreen`; **Theme** opens `ThemePalette`.
          A = show or hide the archive column — hidden every session
          b = open BoardSwitcherScreen
          / = open CommandBar — full REPL-syntax command line
-         : = inline filter — live-filters visible cards as typed
+         : = inline filter — live-filters visible cards as typed; ↵ hands the
+             focus back to the board and leaves the bar up, coloured, while the
+             filter is in force, and esc clears it and takes it down
          s = toggle SidebarPanel collapse
          x = collapse cards to one-line summaries, or expand them again
     Ctrl+P = command palette — app-level actions, including configuration
