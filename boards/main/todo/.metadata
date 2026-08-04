@@ -5,16 +5,15 @@
 
 [tasks]
 	order = 
-		add-a-comment-delimter-to-the-markdown-body.md
-		add-path-flag-to-cli-commands-to-output-only-paths.md
-		delete-field-true-that-shows-up-in-json.md
-		archived-column-that-is-normally-hidden.md
+		base-class-for-change-tracking.md
+		url-handlers.md
+		bulk-and-cross-board-operations.md
+		archiving-boards.md
 		slug-to-do-todo.md
 		remove-default-columns-from-service-layer.md
 		migrate-to-python-frontmatter.md
 		use-slugs-in-memory-repository-for-private-indexing.md
 		csv-export.md
-		add-closed-at-metadata-to-a-task.md
 		config-default-boards-that-auto-set-the-closed-at-date.md
 		option-to-bootstrap-from-the-repl.md
 		user-sort-order-for-columns.md

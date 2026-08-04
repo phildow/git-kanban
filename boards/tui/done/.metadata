@@ -5,7 +5,24 @@
 
 [tasks]
 	order = 
+		line-up-key-bindings-across-modes-in-help-panel.md
+		maintain-commmand-and-filter-histories.md
+		tabbing-should-not-focus-on-the-column-headers.md
+		indicate-there-is-no-description.md
+		ensure-command-completion-works.md
+		arrow-keys-change-selected-task-even-when-viewing.md
+		disable-board-key-bindings-during-move.md
+		tab-to-move-a-task-to-a-column-with-text-input.md
+		config-option-in-palette.md
+		show-comments-when-editing-a-task.md
+		option-arrow-keys-in-text-fields-to-move-word-boundaries.md
+		some-way-to-delete-a-column-in-a-board.md
+		some-way-of-adding-a-new-column-to-a-board.md
+		save-the-selected-theme-to-the-user-context.md
+		use-a-default-theme-of-textual-dark.md
+		slash-triggers-command-color-triggers-search.md
 		shit-enter-from-any-field-to-save-a-task.md
+		handle-missing-default-board.md
 		description-field-when-creating-and-editing-a-task.md
 		pimary-color-for-the-column-name-in-the-new-task-dialog.md
 		ctrl-c-clears-command-and-filter-input.md

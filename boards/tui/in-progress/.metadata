@@ -5,7 +5,5 @@
 
 [tasks]
 	order = 
-		visually-indicate-that-a-filter-has-been-kept.md
-		show-comments-when-editing-a-task.md
-		indicate-there-is-no-description.md
+	
 

@@ -5,9 +5,14 @@
 
 [tasks]
 	order = 
+		test-with-pytest.md
 		reconsider-cli-output-on-all-commands-to-show-slugs.md
 		remove-support-for-absoulte-paths-from-repl.md
+		config-option-for-creating-task-at-top-or-bottom-of-column.md
+		add-remaining-claude-conversations.md
 		repl-help-shows-path-and-explains-what-it-contains.md
+		move-title-and-slug-back-out-of-details-table.md
+		add-a-comment-delimiter-to-the-markdown-body.md
 		update-kanban-service-to-use-slugs-and-paths.md
 		move-path-typing-to-with-absolute-path.md
 		remove-fully-qualified-paths-from-the-repl.md

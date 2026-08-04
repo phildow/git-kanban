@@ -6,11 +6,7 @@
 [tasks]
 	order = 
 		ensure-memory-store-supports-same-features-as-filesystem.md
-		change-due-date-flag-to-due.md
-		rename-exlcude-column-dest.md
 		make-the-working-path-methods-in-kanban-service-private.md
 		autocomplete-tabs-via-index.md
-		cli-task-set-description-command.md
 		add-utility-to-filter-for-invisible-files.md
-		should-the-description-support-newlines.md
 

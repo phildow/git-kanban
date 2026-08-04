@@ -5,8 +5,8 @@
 
 [tasks]
 	order = 
-		option-arrow-keys-in-text-fields-to-move-word-boundaries.md
-		disable-board-key-bindings-during-move.md
-		ensure-command-completion-works.md
-		tab-to-move-a-task-to-a-column-with-text-input.md
+		change-how-repl-output-is-shown.md
+		ensure-that-repl-command-result-in-card-and-column-updates.md
+		visually-indicate-that-a-filter-has-been-kept.md
+		only-refresh-affected-objects-after-executing-command.md
 
