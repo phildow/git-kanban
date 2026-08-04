@@ -27,20 +27,21 @@ machine-local and disposable; it is not shared.
 
 ## Change Data Through Kanban
 
-The filesystem is the source of truth, and markdown is a format you can read.
-You should nevertheless use the application to make changes rather than editing 
+The filesystem is the source of truth, and markdown is a format you can read. 
+Still, use the application to make changes rather than editing 
 files directly:
 
 - Every task carries a UUID and timestamps that kanban maintains
-- A task's filename is the slug of its title — renaming the file is not renaming the task
+- A task's filename is a slug of its title — renaming the file does not rename the task
 - Column and task order is recorded in `.metadata`, not by the filesystem
 - Kanban keeps a search index in sync with each write, and commits changes to git
+- Markdown is formatted for metadata and to distinguish content
 
 Reading files, grepping them, and viewing them in your editor are all fine.
 
 ## Three Ways to Use It
 
-### TUI — the board
+### TUI — Kanban in the terminal
 
 ```
 $ kanban tui
@@ -51,7 +52,7 @@ Keyboard driven. `←/→` and `↑/↓` (or `h/j/k/l`) move between columns and
 it, `b` switches boards, `/` opens a command line, `:` filters as you type,
 `?` lists every binding.
 
-### REPL — an interactive shell
+### REPL — An interactive shell
 
 ```
 $ kanban repl
@@ -64,9 +65,9 @@ kanban (/main) > view add-rate-limiting
 ```
 
 The active board is your working directory, so paths are relative to it and
-tasks are named by slug alone. `Tab` completes commands, flags, and slugs, tags, etc
+tasks are named by slug alone. `Tab` completes commands, flags, slugs, tags, etc.
 
-### CLI — one command per invocation
+### CLI — One command per invocation
 
 ```
 $ kanban task list /main/todo
@@ -86,7 +87,7 @@ $ kanban config list
 $ kanban config set user.name alice
 ```
 
-`user.name` is recorded as the author of the tasks and comments you create.
+For example `user.name` is recorded as the author of the tasks and comments you create.
 
 ## Onboarding Someone Else
 
@@ -97,5 +98,7 @@ $ git checkout kanban
 $ git checkout main
 $ git worktree add .kanban-store kanban
 ```
+
+This will be automated in the future.
 
 Run `kanban --help`, or `?` in the TUI, for everything else.
