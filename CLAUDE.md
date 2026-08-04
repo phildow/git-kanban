@@ -767,14 +767,6 @@ kanban (/my-project)> history
 kanban (/my-project)> quit
 ```
 
-### The Selection
-
-Beside the user context the service holds a `Selection` — the board, column, and task a consumer has selected on screen. Only a consumer with a cursor sets it, which is the TUI; the CLI runs once and the REPL has a prompt, so there it stands empty and every command behaves as it always has.
-
-It is live screen state, not a setting: held for the session, never written to userdata, and cleared whenever the board screen rebuilds. It may name a task the store no longer holds, so a command resolves it and carries on without it when it does not resolve — a selection is a convenience, never a requirement. `create` is the first command to use one: `new-task.insert` set to `above` or `below` places the new task against `selection.task`.
-
-The board screen syncs the selection on every card highlight and every focus change, but only while a column of its own holds the focus. Focus moving to the command bar or a modal leaves the last selection standing, which is the card the user was on when they started typing and the one a command from the bar is meant for.
-
 ### Tab Completion
 
 The REPL supports tab completion for commands, positional arguments, and paths.
@@ -819,11 +811,11 @@ kanban (/my-project) > tasks to<TAB>
 kanban (/my-project) > tasks todo
 ```
 
-As with commands and other argumenbts, if there is more than one option for a slug previx tabbing quickly in succession cycles through them.
+As with commands and other arguments, if there is more than one option for a slug prefix tabbing quickly in succession cycles through them.
 
 ## The TUI
 
-The Text User Interface (TUI) provides a visual but still text based user interface to the underlying kanban service. Kanban means "signboard" or "visual card" in Japanese, so providing a visual, card based system is a requisite part of this application.
+The Text User Interface (TUI) provides a visual but still text based user interface to the underlying kanban service. Kanban means "signboard" or "visual card" in Japanese, so providing a visual, card based system is requisite.
 
 The TUI is entirely keyboard driven with the following input properties:
 
@@ -841,13 +833,13 @@ The TUI has the following output properties and formatting conventions:
 
 - **Color carries semantic meaning** — red for critical priority, yellow for high, green for done, dim/grey for archived items. Active focus gets a highlighted border or inverted colors.
 
-- **Density toggles** — a keypress like `c` might collapse cards to single-line summaries when you have many, expanding them on focus.
+- **Density toggles** — a keypress like `x` might collapse cards to single-line summaries when you have many, expanding them on focus.
 
 - **Status bar at the bottom** always shows contextual key hints for the current mode, so the user is never guessing what's available.
 
 - **Inline metadata** uses compact sigils: `!HIGH` for priority, `@name` for assigned to, `#id` for card number, so cards stay readable at a glance without taking up too much vertical space.
 
-We will be using the `textual` python library to build the TUI
+We will be using the `textual` python library to build the TUI.
 
 ### The Visual Layout
 
@@ -1018,6 +1010,14 @@ any letter = jump to the board whose slug starts with it
          D = delete the highlighted board (confirm modal)
        Esc = close, or cancel the name being typed
 ```
+
+### The Selection
+
+In addition to the user context the service holds a `Selection` — the board, column, and task a consumer has selected on screen. Only a consumer with a cursor sets it, so only the TUI.
+
+The selection is live screen state, not a setting. It is held for the session, never written to userdata, and cleared whenever the board screen rebuilds. The selection is never a requirement, and if it fails to resolve commands degrade gracefully. `create` is the first command to use one: `new-task.insert` set to `above` or `below` places the new task against `selection.task`.
+
+The board screen syncs the selection on every card highlight and every focus change, but only while a column of its own holds the focus. Focus moving to the command bar or a modal leaves the last selection standing, which is the card the user was on when they started typing and the one a command from the bar is meant for.
 
 ### Refresh Strategy
 
