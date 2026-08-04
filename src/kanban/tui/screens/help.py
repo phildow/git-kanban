@@ -83,7 +83,7 @@ SECTIONS: list[tuple[str, list[tuple[str, str]]]] = [
     ("Board", NORMAL_BINDINGS),
     ("Column header (c)", HEADER_BINDINGS),
     ("Task detail (enter)", DETAIL_BINDINGS),
-    ("Move mode", MOVE_BINDINGS),
+    ("Move mode (m)", MOVE_BINDINGS),
     ("Boards (b)", BOARD_BINDINGS),
 ]
 
