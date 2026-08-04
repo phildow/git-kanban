@@ -256,13 +256,17 @@ class RichRenderer(CommandRenderer):
 		board = self.board_for_slug(task.board)
 		column = self.column_for_slug(task.column)
 
+		self._emit(args, Text(task.title, style="bold"))
+		self._emit(args, str(task.slug))
+		self._emit(args, "")
+
 		table = Table(box=box.ASCII2, show_header=False, header_style="bold", title_justify="left")
 
 		table.add_column("", width=12, justify="right", no_wrap=True)
 		table.add_column("", width=60, justify="left", no_wrap=False)
 
-		table.add_row("Title", Text(task.title, style="bold"))
-		table.add_row("Slug", str(task.slug), end_section=True)
+		# table.add_row("Title", Text(task.title, style="bold"))
+		# table.add_row("Slug", str(task.slug), end_section=True)
 		
 		table.add_row("Board", board.name)
 		table.add_row("Column", column.name)
