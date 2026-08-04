@@ -40,6 +40,7 @@ from ...repl.parser import build_parser as build_repl_parser
 from ..filter_query import FilterQuery, build_filter_parser, parse_filter
 from ..formatting import board_subtitle
 from ..history import CommandHistory
+from ..renderer import CommandEffect
 from ..widgets import (
     ColumnHeader,
     ColumnPanel,
@@ -2334,8 +2335,103 @@ class BoardScreen(Screen[None]):
                 args.func(args, self.svc, renderer)
 
         output = f"{buffer.getvalue()}{renderer.take_output()}".strip()
-        self._reload_soon()
+        self._refresh_after_command(renderer.take_effect())
         self._show_output(line, output)
+
+    def _refresh_after_command(self, effect: CommandEffect) -> None:
+        """
+        Redraw what a command run from the bar changed, and nothing else.
+
+        A command that only read — a listing, a search, the log — leaves the
+        board as it is.  One that wrote a task redraws the columns that task
+        left and joined, and no others.  A change the renderer could not scope
+        that way rebuilds the board, as does one arriving with no board on
+        screen to scope it against.
+        """
+        if effect.structural:
+            self._reload_soon()
+            return
+
+        if effect.is_empty:
+            return
+
+        board = self._board
+        if board is None:
+            self._reload_soon()
+            return
+
+        columns = self._touched_columns(effect.tasks, board.slug)
+        if not columns:
+            # Written to a board, or a column, that is not on screen — the
+            # archive while it is hidden, say.  Nothing drawn changed, but the
+            # sidebar's status and log did.
+            self._reload_sidebar()
+            return
+
+        self._refresh_columns_soon(columns, self._selection_after(effect.tasks))
+
+    def _touched_columns(self, tasks: Iterable[Task], board: Slug) -> list[Slug]:
+        """
+        Return the drawn columns `tasks` were written to or moved out of.
+
+        Where each task ended up the task itself says; where it came from the
+        board already knows, since it is the one that has been drawing it.
+        Columns not on screen are left out rather than forcing a rebuild: a card
+        arriving in the hidden archive changes only the column it left.
+        """
+        drawn = {view.column.slug for view in self.column_views}
+        columns: list[Slug] = []
+
+        for task in tasks:
+            if task.board != board:
+                continue
+            for slug in (task.column, self._column_showing(task)):
+                if slug is not None and slug in drawn and slug not in columns:
+                    columns.append(slug)
+
+        return columns
+
+    def _column_showing(self, task: Task) -> Slug | None:
+        """
+        Return the drawn column currently holding `task`, or None when none is.
+
+        Matched on id: a command may have renamed the task, and the column is
+        still drawing it under the slug it had when the board last fetched.
+        """
+        for slug, held in self._tasks.items():
+            if any(other.id == task.id for other in held):
+                return slug
+        return None
+
+    def _selection_after(self, tasks: tuple[Task, ...]) -> Slug | None:
+        """
+        Return the task to highlight once the redrawn columns have been refilled.
+
+        Refilling a column takes the highlight off whatever card held it, so the
+        card the user was on when they opened the bar is named again — under its
+        new slug when the command is what renamed it.  With nothing selected the
+        task the command wrote takes the highlight, which is where the board's
+        own create and edit leave the user.
+        """
+        selected = self.svc.selection.task
+        if selected is None:
+            return tasks[-1].slug
+
+        held = next(
+            (
+                task
+                for column in self._tasks.values()
+                for task in column
+                if task.slug == selected
+            ),
+            None,
+        )
+        if held is not None:
+            for task in tasks:
+                if task.id == held.id:
+                    return task.slug
+
+        return selected
 
     def _show_output(self, line: str, output: str) -> None:
         """

@@ -1037,6 +1037,8 @@ Reordering a column redraws nothing at all: where two columns sit is the only th
 
 Showing or hiding the archive column follows the same rule from the other direction: one panel is mounted at the column's place on the board, or removed from it, and the columns beside it are never rebuilt. Focus only moves when the column it was on is the one leaving.
 
+A command run from the command bar is scoped the same way, which means the board must be told what the command did: a line of text and a parsed command line do not say which column a task ended up in. The renderer is where the two are still together — every handler hands it the object the service returned — so `TUIRenderer` records a `CommandEffect` alongside the output it captures, and the board drains both. A command that only read leaves the board alone; one that wrote a task redraws the columns it left and joined; a board or column created, renamed, reordered, or removed rebuilds. Every renderer call is classified one way or the other, and a test holds the two halves together so a command cannot be added to one without the other.
+
 Rebuilding the entire board is reserved for changes whose effects are not confined to known columns — switching boards, a column being added, renamed, or removed — and for the manual refresh key, which exists precisely to re-read everything. A targeted refresh should fall back to a full reload when it cannot establish that its assumption holds, such as when a named column is not on screen.
 
 The same principle governs everything else the TUI draws: a widget is handed new data only when its own data changed, and a redraw is skipped altogether when the new data matches what is already displayed.
