@@ -410,6 +410,13 @@ AutoCompleteInput > OptionList.-suggestions > .option-list--option-highlighted {
     text-style: $block-cursor-text-style;
 }
 
+/* The values a field will take, under the field itself: said quietly, since it
+   is a reminder rather than something to be read every time. */
+#form-hint {
+    height: auto;
+    color: $text-muted;
+}
+
 #form-error {
     height: auto;
     margin: 1 0 0 0;

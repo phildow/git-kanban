@@ -13,6 +13,7 @@ space: `!HIGH` for priority, `@name` for the assignee, `#id` for the task, and
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Iterable
 
 from rich.text import Text
 
@@ -151,6 +152,17 @@ def config_label(name: str, value: str | None, name_width: int = 0) -> Text:
     else:
         text.append(value)
     return text
+
+
+def config_values_hint(values: Iterable[str]) -> str:
+    """
+    Return the values a configuration key permits, as a single hint line.
+
+    Only a key drawn from a fixed set has any, and they are listed in the same
+    order the service reports them in when it refuses one, so the hint and the
+    error agree.
+    """
+    return " | ".join(sorted(values))
 
 
 def card_text(task: Task, *, dense: bool = False) -> Text:

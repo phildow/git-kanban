@@ -9,9 +9,10 @@ from unittest.mock import MagicMock
 from uuid import uuid4
 
 from textual.pilot import Pilot
-from textual.widgets import Input
+from textual.widgets import Input, Static
 
 from kanban.models import Slug
+from kanban.models.config import CONFIG_VALUES
 from kanban.services.git import GitService
 from kanban.services.kanban import (
     CONFIG_KEYS,
@@ -22,7 +23,7 @@ from kanban.services.kanban import (
 )
 from kanban.storage.memory import InMemoryRepository
 from kanban.tui.app import KanbanApp
-from kanban.tui.formatting import UNSET_VALUE
+from kanban.tui.formatting import UNSET_VALUE, config_values_hint
 from kanban.tui.screens.config import ConfigScreen
 from kanban.tui.screens.config_value import ConfigValueScreen
 from kanban.tui.widgets import PrefixList
@@ -57,6 +58,22 @@ async def _open_config(pilot: Pilot[None]) -> ConfigScreen:
 def _rows(screen: ConfigScreen) -> PrefixList:
     """Return the screen's list of configuration keys."""
     return screen.query_one("#config-list", PrefixList)
+
+
+async def _open_prompt(pilot: Pilot[None], key: str) -> ConfigValueScreen:
+    """Open the value prompt for `key`, reusing a configuration screen already up."""
+    screen = next(
+        (s for s in pilot.app.screen_stack if isinstance(s, ConfigScreen)),
+        None,
+    ) or await _open_config(pilot)
+
+    _rows(screen).highlighted = _row_index(screen, key)
+    await pilot.press("enter")
+    await pilot.pause()
+
+    prompt = pilot.app.screen
+    assert isinstance(prompt, ConfigValueScreen)
+    return prompt
 
 
 def _row_index(screen: ConfigScreen, key: str) -> int:
@@ -339,6 +356,44 @@ class TestConfigScreenEditing(unittest.IsolatedAsyncioTestCase):
 
             self.assertIsInstance(pilot.app.screen, ConfigValueScreen)
             self.assertIsNone(self.svc.get_config(CONFIG_USER_NAME))
+
+    async def test_value_prompt_hints_the_permitted_values(self) -> None:
+        """A key drawn from a fixed set lists that set under the field."""
+        async with self.app.run_test() as pilot:
+            prompt = await _open_prompt(pilot, CONFIG_NEW_TASK_INSERT)
+            hint = str(prompt.query_one("#form-hint", Static).render())
+
+            for value in CONFIG_VALUES[CONFIG_NEW_TASK_INSERT]:
+                self.assertIn(value, hint)
+
+    async def test_value_prompt_hints_every_fixed_value_key(self) -> None:
+        """Every key with a fixed set shows it, not only the one tested above."""
+        async with self.app.run_test() as pilot:
+            for keypath, values in CONFIG_VALUES.items():
+                prompt = await _open_prompt(pilot, keypath)
+                hint = str(prompt.query_one("#form-hint", Static).render())
+
+                self.assertEqual(hint, config_values_hint(values))
+
+                await pilot.press("escape")
+                await pilot.pause()
+
+    async def test_free_text_key_has_no_hint(self) -> None:
+        """A key that takes free text has no values to name."""
+        async with self.app.run_test() as pilot:
+            prompt = await _open_prompt(pilot, CONFIG_USER_NAME)
+
+            self.assertEqual(len(prompt.query("#form-hint")), 0)
+
+    async def test_empty_field_holds_the_values_too(self) -> None:
+        """The placeholder names the permitted values, so an empty field says them."""
+        async with self.app.run_test() as pilot:
+            prompt = await _open_prompt(pilot, CONFIG_NEW_TASK_INSERT)
+            field = prompt.query_one("#field-config-value", Input)
+
+            self.assertEqual(
+                field.placeholder, config_values_hint(CONFIG_VALUES[CONFIG_NEW_TASK_INSERT])
+            )
 
     async def test_escape_closes_the_screen(self) -> None:
         """Escape on the list closes the configuration screen."""
