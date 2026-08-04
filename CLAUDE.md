@@ -25,7 +25,7 @@ Update CLAUDE.md when making structural or system design changes. Be even more s
 - When a python dependency is required add it to pyproject.toml
 - Add documentation when creating types and methods, including for tests
 - Break up tests, keep unit tests small
-- Run tests from the current working directory with the bash command `python -m unittest discover -s tests`
+- Run tests from the current working directory with the bash command `python -m pytest -n auto`
 - Tab indent key-value pairs in INI files
 
 ## Project
