@@ -364,7 +364,7 @@ class TestReplCreate(_InitializedReplBase):
         self.repo.create_board("proj", slug="proj")
         self.repo.create_column("proj", "todo", slug="todo")
         self.svc.set_board(Slug("proj"))
-        with patch("kanban.services.kanban.subprocess.run") as mock_run:
+        with patch("kanban.utils.interaction.subprocess.run") as mock_run:
             def _write(cmd, *args, **kwargs):
                 with open(cmd[-1], "w", encoding="utf-8") as f:
                     f.write("Edited via mock editor.")
@@ -938,7 +938,7 @@ class TestReplEdit(_InitializedReplBase):
 
     def test_edit_writes_body_via_editor(self) -> None:
         """edit <task-slug> persists whatever the editor writes to the task body."""
-        with patch("kanban.services.kanban.subprocess.run") as mock_run:
+        with patch("kanban.utils.interaction.subprocess.run") as mock_run:
             def _write(cmd, *args, **kwargs):
                 with open(cmd[-1], "w", encoding="utf-8") as f:
                     f.write("Investigate the login flow.")

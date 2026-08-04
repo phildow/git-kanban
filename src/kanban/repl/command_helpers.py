@@ -13,7 +13,6 @@ from pathlib import Path
 
 from ..models import Board, Column, Priority, Slug, Task, TaskFilter
 from ..services.kanban import KanbanService, TaskCreateParams
-from ..utils.shell import prompt_for_confirmation
 
 
 # ---------------------------------------------------------------------------
@@ -84,7 +83,10 @@ def handle_delete_helper(args: argparse.Namespace, svc: KanbanService) -> Board 
     # args.path | args.board (flag to delete active board) | args.column (flag to delete a column)
 
     def _confirm(message: str) -> bool:
-        return args.force or prompt_for_confirmation(message)
+        # Put to the consumer's own Interaction rather than to the terminal:
+        # the REPL prompts on it, and a consumer drawing its own screen asks
+        # the way it can.
+        return args.force or svc.interaction.confirm(message)
 
     if svc.working_board is None:
         raise ValueError("No active board; set one with `board` before deleting an board, column, or task")

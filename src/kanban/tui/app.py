@@ -12,6 +12,7 @@ from textual.binding import Binding
 from ..services.kanban import CONFIG_TUI_THEME, DEFAULT_THEME, KanbanService
 from ..services.render_service import RenderService
 from .commands import KanbanCommands, ThemeCommands, ThemePalette
+from .interaction import DeferredInteraction
 from .renderer import TUIRenderer
 from .screens.board import BoardScreen
 from .screens.config import ConfigScreen
@@ -42,10 +43,20 @@ class KanbanApp(App[None]):
     ]
 
     def __init__(self, svc: KanbanService) -> None:
-        """Create the app around an already-configured kanban service."""
+        """
+        Create the app around an already-configured kanban service.
+
+        The service is handed the app's own way of asking the user a question,
+        in place of the terminal prompt it was built with: the terminal belongs
+        to the TUI for as long as it runs, and a command that reached it would
+        block the loop drawing the screen.  The board is what puts the question
+        up instead.
+        """
         super().__init__()
         self.svc = svc
         self.command_renderer = TUIRenderer(render_service=RenderService(service=svc))
+        self.interaction = DeferredInteraction()
+        svc.interaction = self.interaction
 
     def on_mount(self) -> None:
         """Restore the configured theme, then show the board screen."""

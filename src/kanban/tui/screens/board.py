@@ -29,6 +29,11 @@ from textual.screen import Screen
 from textual.widgets import Footer, Header, Input, ListView, Static
 
 from ...models import Board, Column, Slug, Task, TaskFilter
+from ...protocols.interaction import (
+    ConfirmationRequired,
+    EditRequired,
+    InteractionRequired,
+)
 from ...services.kanban import (
     KanbanService,
     TaskCreateParams,
@@ -172,10 +177,6 @@ OUTPUT_ACTIONS = frozenset(
         "cancel",
     }
 )
-
-# Commands that need a real terminal — an editor or a confirmation prompt — and
-# so cannot be driven from the command bar while the TUI owns the screen.
-UNSUPPORTED_COMMANDS = {"edit"}
 
 
 @dataclass
@@ -2290,14 +2291,15 @@ class BoardScreen(Screen[None]):
             else:
                 self._close_bar(event.input)
 
-    def _run_command(self, line: str) -> None:
+    def _run_command(self, line: str, *, granted: str | None = None) -> None:
         """
         Parse `line` with the REPL parser and run it against the kanban service.
 
         Output is captured rather than printed, since the terminal belongs to
-        the TUI, and shown in the panel above the bar.  Commands that need a
-        terminal of their own — an editor or a confirmation prompt — are refused
-        rather than left to hang.
+        the TUI, and shown in the panel above the bar.  A command that needs the
+        user — a confirmation, an editor — cannot be answered from here, so it
+        raises and the board asks in its own way; `granted` carries an answer
+        the user has already given back into the run that needs it.
         """
         from ...repl.parser import build_parser
 
@@ -2307,16 +2309,9 @@ class BoardScreen(Screen[None]):
             self.notify(str(exc), title="command", severity="error")
             return
 
-        if tokens and tokens[0] in UNSUPPORTED_COMMANDS:
-            self.notify(
-                f"`{tokens[0]}` needs its own terminal; run it from the REPL",
-                title="command",
-                severity="warning",
-            )
-            return
-
         buffer = StringIO()
         renderer = self.kanban_app.command_renderer
+        interaction = self.kanban_app.interaction
 
         try:
             with redirect_stdout(buffer), redirect_stderr(buffer):
@@ -2330,13 +2325,55 @@ class BoardScreen(Screen[None]):
             self.notify("No command handler registered", title="command", severity="error")
             return
 
+        request: InteractionRequired | None = None
+
         with self._service_errors("command"):
-            with redirect_stdout(buffer), redirect_stderr(buffer):
-                args.func(args, self.svc, renderer)
+            interaction.granted = granted
+            try:
+                with redirect_stdout(buffer), redirect_stderr(buffer):
+                    args.func(args, self.svc, renderer)
+            except InteractionRequired as exc:
+                # Held rather than handled here: the modal it needs cannot go up
+                # inside the `redirect_stdout` this is running in.
+                request = exc
+            finally:
+                interaction.granted = None
 
         output = f"{buffer.getvalue()}{renderer.take_output()}".strip()
-        self._refresh_after_command(renderer.take_effect())
+
+        if request is None:
+            self._refresh_after_command(renderer.take_effect())
+        else:
+            self._ask(line, request)
+
         self._show_output(line, output)
+
+    def _ask(self, line: str, request: InteractionRequired) -> None:
+        """
+        Put the question a command could not ask itself, and act on the answer.
+
+        A confirmation is put up and the command run again with the answer in
+        hand, which is safe because a command asks before it writes.  An edit is
+        not run again: the task form is the TUI's editor, and by the time one is
+        asked for the command has already done whatever preceded it — the task a
+        `create --edit` created is on the board before its form opens.
+        """
+        if isinstance(request, ConfirmationRequired):
+            message = request.message
+            self.app.push_screen(
+                ConfirmScreen(message),
+                lambda confirmed: (
+                    self._run_command(line, granted=message) if confirmed else None
+                ),
+            )
+            return
+
+        if isinstance(request, EditRequired):
+            self._refresh_after_command(CommandEffect(tasks=(request.task,)))
+            self._edit_form(request.task)
+            return
+
+        self.notify(str(request), title="command", severity="warning")
 
     def _refresh_after_command(self, effect: CommandEffect) -> None:
         """

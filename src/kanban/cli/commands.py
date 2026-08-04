@@ -19,7 +19,6 @@ from ..storage.seeds import BOOTSTRAP_CONFIG
 from ..models import Priority, Slug, TaskFilter
 from ..protocols.command_renderer import CommandRenderer
 from ..services.kanban import KanbanService, TaskCreateParams, TaskUnsetParams, TaskUpdateParams
-from ..utils.shell import prompt_for_confirmation
 
 
 # ---------------------------------------------------------------------------
@@ -95,7 +94,7 @@ def handle_board_rename(args: argparse.Namespace, svc: KanbanService, renderer: 
 
 @with_absolute_path
 def handle_board_delete(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
-	if not args.force and not prompt_for_confirmation(f"Delete board {args.path}?"):
+	if not args.force and not svc.interaction.confirm(f"Delete board {args.path}?"):
 		return
 	result = svc.delete_board(args.path)
 	_pick(args, renderer, json_renderer).render_board_delete(args, result)
@@ -136,7 +135,7 @@ def handle_column_reorder(args: argparse.Namespace, svc: KanbanService, renderer
 
 @with_absolute_path
 def handle_column_delete(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
-	if not args.force and not prompt_for_confirmation(f"Delete column '{args.path}'?"):
+	if not args.force and not svc.interaction.confirm(f"Delete column '{args.path}'?"):
 		return
 	result = svc.delete_column(args.path)
 	_pick(args, renderer, json_renderer).render_column_delete(args, result)
@@ -257,7 +256,7 @@ def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: Com
 
 @with_absolute_path
 def handle_task_delete(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
-	if not args.force and not prompt_for_confirmation(f"Delete task '{args.path}'?"):
+	if not args.force and not svc.interaction.confirm(f"Delete task '{args.path}'?"):
 		return
 	result = svc.delete_task(args.path)
 	_pick(args, renderer, json_renderer).render_task_delete(args, result)

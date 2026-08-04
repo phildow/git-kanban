@@ -638,7 +638,7 @@ class TestTaskCLI(_InitializedBase):
         """task view (plain) prints the task body after the metadata."""
         self.run_cli("task", "create", "/proj/todo", "fix-login")
         # Populate the body via the edit command with a no-op editor that writes body text.
-        with patch("kanban.services.kanban.subprocess.run") as mock_run:
+        with patch("kanban.utils.interaction.subprocess.run") as mock_run:
             def _write(cmd, *args, **kwargs):
                 with open(cmd[-1], "w", encoding="utf-8") as f:
                     f.write("Investigate the login flow.")

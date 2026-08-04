@@ -2,11 +2,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from datetime import datetime, timezone
 import logging
-import os
 import re
-import shlex
-import subprocess
-import tempfile
 from uuid import uuid4
 from warnings import deprecated
 
@@ -44,10 +40,12 @@ from ..models.config import (
 )
 from ..models.priority import PRIORITY_ORDER
 from ..protocols.completion_data_source import CompletionDataSource
+from ..protocols.interaction import Interaction
 from ..storage.base import KanbanRepository, ColumnNotFound, BoardNotFound, TaskNotFound, TaskAlreadyExists
 from ..storage.seeds import ARCHIVE_COLUMN, BootstrapConfig, DEFAULT_COLUMNS
 from ..services.git import GitService
 from ..services.index import IndexService
+from ..utils.interaction import TerminalInteraction
 from ..utils.str import slug_it
 
 
@@ -109,15 +107,27 @@ class KanbanStatus:
 
 class KanbanService(CompletionDataSource):
 
-    def __init__(self, repository: KanbanRepository, index_service: IndexService, git_service: GitService) -> None:
+    def __init__(
+        self,
+        repository:    KanbanRepository,
+        index_service: IndexService,
+        git_service:   GitService,
+        interaction:   Interaction | None = None,
+    ) -> None:
         """
         Assemble the facade from its domain services.  All services are
         injected rather than instantiated here so that the InMemoryRepository
         can be swapped in for tests without any other changes.
+
+        `interaction` is how anything below the consumer layer asks the user a
+        question, and the terminal is what answers when a consumer installs
+        nothing of its own.  A consumer that draws its own screen replaces it
+        with one that asks the way it can.
         """
         self.repository = repository
         self.index_service = index_service
         self.git_service = git_service
+        self.interaction = interaction or TerminalInteraction()
         self._user_context = UserContext()
         # Live screen state, not a setting: it starts empty every session and
         # stays empty for the consumers that have no cursor.
@@ -1003,38 +1013,19 @@ class KanbanService(CompletionDataSource):
         updated_at) are preserved unchanged.  Accepts a fully-qualified Path
         (from the CLI) or a bare task Slug (from the REPL).  Raises TaskNotFound
         if the task cannot be resolved.  Updates the index and commits.
+
+        Which editor, and whether there is one at all, belongs to the consumer:
+        the edit is put to its `Interaction`, which raises rather than answer
+        when the consumer must open an editor of its own.  Nothing is written
+        until the edited text comes back.
         """
         task = self.get_task(path)
 
-        tmp_path: str | None = None
-        try:
-            with tempfile.NamedTemporaryFile(
-                mode="w",
-                encoding="utf-8",
-                suffix=".md",
-                prefix="kanban-task-",
-                delete=False,
-            ) as tmp:
-                tmp.write(task.body or "")
-                tmp.flush()
-                tmp_path = tmp.name
+        task.body = self.interaction.edit(task.body or "", task)
 
-            editor = os.environ.get("EDITOR") or os.environ.get("VISUAL") or "vi"
-            editor_cmd = shlex.split(editor)
-            subprocess.run([*editor_cmd, tmp_path], check=True)
-
-            with open(tmp_path, "r", encoding="utf-8") as f:
-                task.body = f.read()
-
-            updated = self.repository.update_task(task, slug=task.slug)
-            self.index_service.upsert_task(updated)
-            return updated
-        finally:
-            if tmp_path:
-                try:
-                    os.unlink(tmp_path)
-                except FileNotFoundError:
-                    pass
+        updated = self.repository.update_task(task, slug=task.slug)
+        self.index_service.upsert_task(updated)
+        return updated
 
     def update_task(
         self,

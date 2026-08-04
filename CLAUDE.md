@@ -92,6 +92,15 @@ The index does cache data from the filesystem for search and to ensure consisten
 - Only orchestrates — never contains domain logic
 - Raises exceptions if conditions required to call into domain services or repository layer are missing
 
+**Interaction**
+
+- How anything below the consumer layer asks the user a question: a confirmation, or an edit
+- An abstract base class injected into the `KanbanService` at startup, like every other service
+- `TerminalInteraction` prompts and launches `$EDITOR`; the CLI and REPL use it, and it is the default
+- The TUI installs a `DeferredInteraction` instead, which raises `InteractionRequired` — the board puts the question up as a modal and runs the command again with the answer
+- A command therefore abandons whatever it was doing at the point it asked, so nothing may be written before a question
+- Nothing below the consumer layer reads stdin or launches a program by any other route
+
 **Domain Services**
 
 - One class per domain: `BoardService`, `TaskService`, `SearchService`, `GitService`, `IndexService`. 
@@ -924,7 +933,10 @@ KanbanApp(App)
     ├── Input — free text, parsed with the same parser as the REPL, and run
     │   against the service's Selection, which the bar taking focus leaves
     │   standing on the card the user was on.  Running a command leaves the bar
-    │   open and focused for the next one; Esc closes it and the panel with it
+    │   open and focused for the next one; Esc closes it and the panel with it.
+    │   A command that asks the user something asks it here: a confirmation
+    │   opens ConfirmScreen and re-runs on the answer, an edit opens
+    │   TaskFormScreen — see Interaction
     └── OutputPanel — what the last command printed, docked directly above the
         bar, scrolling in both directions and never narrower than 80 columns.
         ⇧⇥ moves the focus between the bar and the panel, and nowhere else

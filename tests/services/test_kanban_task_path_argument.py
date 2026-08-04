@@ -122,7 +122,7 @@ class TestKanbanServiceTaskPathArgument(unittest.TestCase):
 
         self.assertEqual(self.svc.get_tasks("alpha/todo"), [])
 
-    @patch("kanban.services.kanban.subprocess.run")
+    @patch("kanban.utils.interaction.subprocess.run")
     def test_edit_task_accepts_path(self, mock_run: MagicMock) -> None:
         """edit_task resolves the correct task when path is a Path (editor is a no-op)."""
         mock_run.return_value = None
