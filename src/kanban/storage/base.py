@@ -199,7 +199,7 @@ class KanbanRepository(ABC):
 
         Do not create the default board/column structure here; the service handles that.
         This method is for storage-specific initialization, such as creating necessary
-        directories or files.
+        directories or files, including any documentation the storage leaves for the user.
 
         Raises RepositoryAlreadyInitialized when the store already exists.
         """

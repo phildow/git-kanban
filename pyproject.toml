@@ -30,7 +30,7 @@ addopts = ["--import-mode=importlib"]
 package-dir = {"" = "src"}
 
 [tool.setuptools.package-data]
-kanban = ["tui/*.tcss"]
+kanban = ["tui/*.tcss", "KANBAN.md"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

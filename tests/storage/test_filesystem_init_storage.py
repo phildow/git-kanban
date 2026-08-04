@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+from importlib import resources
 from pathlib import Path
 
 from kanban.models.config import (
@@ -64,6 +65,37 @@ class TestFilesystemInitStorage(unittest.TestCase):
         self.repo.init_storage()
         with self.assertRaises(RepositoryAlreadyInitialized):
             self.repo.init_storage()
+
+
+class TestFilesystemInitStorageReadme(unittest.TestCase):
+    """init_storage leaves the packaged KANBAN.md in the project root."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        self.repo = FilesystemRepository(root=self.root)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_readme_is_written(self) -> None:
+        """`KANBAN.md` is created at the root."""
+        self.repo.init_storage()
+        self.assertTrue((self.root / "KANBAN.md").is_file())
+
+    def test_readme_carries_the_packaged_content(self) -> None:
+        """The file written is the one shipped with the package."""
+        self.repo.init_storage()
+        packaged = resources.files("kanban").joinpath("KANBAN.md").read_text(encoding="utf-8")
+
+        self.assertEqual((self.root / "KANBAN.md").read_text(encoding="utf-8"), packaged)
+
+    def test_an_existing_readme_is_not_overwritten(self) -> None:
+        """A KANBAN.md the user already has is left as it is."""
+        (self.root / "KANBAN.md").write_text("mine", encoding="utf-8")
+        self.repo.init_storage()
+
+        self.assertEqual((self.root / "KANBAN.md").read_text(encoding="utf-8"), "mine")
 
 
 class TestFilesystemInitLocalData(unittest.TestCase):

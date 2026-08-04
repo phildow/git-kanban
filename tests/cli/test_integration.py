@@ -33,6 +33,7 @@ import tempfile
 import unittest
 from contextlib import redirect_stdout
 from datetime import datetime
+from importlib import resources
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -177,6 +178,35 @@ class TestInitCommand(_CLIBase):
         """init --bootstrap emits a success message."""
         out = self.run_cli("init", "--bootstrap")
         self.assertIn("initialized", out)
+
+    def test_init_writes_kanban_document(self) -> None:
+        """init writes KANBAN.md to the project root."""
+        self.run_cli("init")
+        self.assertTrue((self.root / "KANBAN.md").is_file())
+
+    def test_init_bootstrap_writes_kanban_document(self) -> None:
+        """init --bootstrap writes KANBAN.md to the project root."""
+        self.run_cli("init", "--bootstrap")
+        self.assertTrue((self.root / "KANBAN.md").is_file())
+
+    def test_init_kanban_document_is_the_packaged_one(self) -> None:
+        """The document written is the one shipped with the package."""
+        self.run_cli("init")
+        packaged = resources.files("kanban").joinpath("KANBAN.md").read_text(encoding="utf-8")
+
+        self.assertEqual((self.root / "KANBAN.md").read_text(encoding="utf-8"), packaged)
+
+    def test_init_does_not_write_kanban_document_into_the_store(self) -> None:
+        """The document belongs to the project root, not the kanban store."""
+        self.run_cli("init")
+        self.assertFalse((self.repo.kanban_store_dir / "KANBAN.md").exists())
+
+    def test_init_leaves_an_existing_kanban_document_alone(self) -> None:
+        """A KANBAN.md already in the project root is not overwritten."""
+        (self.root / "KANBAN.md").write_text("mine", encoding="utf-8")
+        self.run_cli("init")
+
+        self.assertEqual((self.root / "KANBAN.md").read_text(encoding="utf-8"), "mine")
 
 
 # ---------------------------------------------------------------------------

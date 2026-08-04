@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import configparser
+import logging
 from os import name
 import shutil
+from importlib import resources
 from typing import cast
 
 from datetime import datetime, timezone
@@ -68,6 +70,10 @@ class FilesystemRepository(KanbanRepository):
     def boards_dir(self) -> Path:
         return self.kanban_store_dir / "boards"
 
+    @property
+    def readme_file(self) -> Path:
+        return self.root / "KANBAN.md"
+
     # ------------------------------------------------------------------
     # Initialization (setup)
     # ------------------------------------------------------------------
@@ -92,6 +98,24 @@ class FilesystemRepository(KanbanRepository):
         boards_dir = self.boards_dir
         boards_dir.mkdir()
         (boards_dir / ".metadata").touch()
+
+        self._write_readme()
+
+    def _write_readme(self) -> None:
+        """Copy the packaged KANBAN.md into the project root.
+
+        The file explains where the data lives and how to work with it.  It
+        belongs to the user once written, so an existing one is never replaced,
+        and failing to write it never fails the initialization.
+        """
+        if self.readme_file.exists():
+            return
+
+        try:
+            source = resources.files("kanban").joinpath("KANBAN.md")
+            self.readme_file.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+        except OSError as exc:
+            logging.warning("Failed to write %s: %s", self.readme_file, exc)
 
     def init_local_data(self) -> None:
         """Create the .kanban directory holding config, user data, history, and the index.

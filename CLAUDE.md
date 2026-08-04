@@ -169,11 +169,14 @@ root-directory
 │       │       └── .metadata.metadata
 │       └── another-board
 │           ...
+├── KANBAN.md
 └── project-files
     ...
 ```
 
 `.kanban/` contains local machine state (config, cache) that should not be commited to git, while  `.kanban-store/` contains the shared board state that git is tracking. Information about boards and columns that is not stored in the files themselves, such as their original names and sort order, is kept in a `.metadata` INI file local to each folder.
+
+`KANBAN.md` explains where the data lives and how to work with it. It ships with the package and `init_storage` copies it into the project root, leaving an existing one alone. It belongs to the user once written and nothing reads it back.
 
 ### Git
 
