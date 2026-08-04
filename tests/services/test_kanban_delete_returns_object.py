@@ -76,5 +76,59 @@ class TestKanbanServiceDeleteReturnsObject(unittest.TestCase):
         self.assertFalse(self.repo.board_exists("my-project"))
 
 
+class TestKanbanServiceDeleteFlag(unittest.TestCase):
+    """A deleted object is returned with its `deleted` flag set."""
+
+    def setUp(self) -> None:
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+        temp_dir.mkdir()
+        self.repo = InMemoryRepository(root=temp_dir)
+        self.svc = KanbanService(
+            repository=self.repo,
+            index_service=MagicMock(),
+            git_service=GitService(),
+        )
+        self.repo.create_board("My Project", slug="my-project")
+        self.repo.create_column("my-project", "To Do", slug="todo")
+        self.repo.create_column("my-project", "Done", slug="done")
+
+    def test_task_is_not_deleted_when_fetched(self) -> None:
+        """A task that is still there reports deleted as False."""
+        task = self.svc.create_task("my-project/todo", TaskCreateParams(title="Fix login"))
+
+        self.assertFalse(task.deleted)
+
+    def test_delete_task_sets_deleted(self) -> None:
+        """delete_task flags the Task it returns."""
+        self.svc.create_task("my-project/todo", TaskCreateParams(title="Fix login"))
+        deleted = self.svc.delete_task(Path("my-project/todo/fix-login"))
+
+        self.assertTrue(deleted.deleted)
+
+    def test_column_is_not_deleted_when_fetched(self) -> None:
+        """A column that is still there reports deleted as False."""
+        columns = self.svc.get_columns("my-project")
+
+        self.assertFalse(any(column.deleted for column in columns))
+
+    def test_delete_column_sets_deleted(self) -> None:
+        """delete_column flags the Column it returns."""
+        deleted = self.svc.delete_column(Path("my-project/done"))
+
+        self.assertTrue(deleted.deleted)
+
+    def test_board_is_not_deleted_when_fetched(self) -> None:
+        """A board that is still there reports deleted as False."""
+        boards = self.svc.get_boards()
+
+        self.assertFalse(any(board.deleted for board in boards))
+
+    def test_delete_board_sets_deleted(self) -> None:
+        """delete_board flags the Board it returns."""
+        deleted = self.svc.delete_board(Path("my-project"))
+
+        self.assertTrue(deleted.deleted)
+
+
 if __name__ == "__main__":
     unittest.main()

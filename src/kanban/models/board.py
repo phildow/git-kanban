@@ -19,6 +19,9 @@ class Board(Sluggable):
     task_count: int = 0
     archived_task_count: int = 0
 
+    deleted: bool = False
+    """Set on the record returned by a delete; never read from storage."""
+
     # created_at: datetime | None = None
     # created_by: str | None = None
 

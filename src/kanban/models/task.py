@@ -37,6 +37,9 @@ class Task(Sluggable):
     updated_at:     datetime | None = None
     body:           str = ""
 
+    deleted:        bool = False
+    """Set on the record returned by a delete; never read from storage."""
+
     @property
     def path(self) -> Path:
         return Path(f"/{self.board}/{self.column}/{self.slug}")

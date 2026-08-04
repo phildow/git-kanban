@@ -437,7 +437,8 @@ class KanbanService(CompletionDataSource):
         Recursively delete a board directory and remove it from .kanban-store/boards/.metadata.
         Raises BoardNotFound if the board does not exist.  Also removes all
         index entries for tasks that belonged to the board and clears the current
-        context if it pointed at the deleted board.  Returns the deleted Board.
+        context if it pointed at the deleted board.  Returns the deleted Board,
+        flagged `deleted` so a renderer can tell it apart from a live one.
         """
 
         if path is None:
@@ -460,6 +461,7 @@ class KanbanService(CompletionDataSource):
         for task in tasks:
             self.index_service.remove_task(task)
 
+        deleted_board.deleted = True
         return deleted_board
 
 
@@ -559,8 +561,9 @@ class KanbanService(CompletionDataSource):
         Delete a column subdirectory and all tasks it contains.  Raises
         BoardNotFound or ColumnNotFound if either does not exist.  Removes
         all index entries for tasks in the column, updates the board's .metadata
-        file, and clears the current context column if it pointed here.
-        Returns the deleted Column.
+        file, and clears the current context column if it pointed here.  Returns
+        the deleted Column, flagged `deleted` so a renderer can tell it apart
+        from a live one.
         """
         board, column, _ = self.path_components(path)
 
@@ -575,6 +578,7 @@ class KanbanService(CompletionDataSource):
         for task in tasks:
             self.index_service.remove_task(task)
 
+        deleted_column.deleted = True
         return deleted_column
 
 
@@ -1151,11 +1155,13 @@ class KanbanService(CompletionDataSource):
         Delete a task's .md file from disk.  Accepts a fully-qualified Path (from
         the CLI) or a bare task Slug (from the REPL).  Raises TaskNotFound if the
         task cannot be resolved.  Removes the task's index entry and commits.
-        Returns the deleted Task.
+        Returns the deleted Task, flagged `deleted` so a renderer can tell it
+        apart from a live one.
         """
         task = self.get_task(path)
         self.repository.delete_task(task)
         self.index_service.remove_task(task)
+        task.deleted = True
         return task
 
     def assign_task(

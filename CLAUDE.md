@@ -310,6 +310,8 @@ class Board:
 
     column_count: int = 0
     task_count: int = 0
+
+    deleted: bool = False
 ```
 
 #### The Column
@@ -325,6 +327,8 @@ class Column:
 
     task_count: int = 0
     role:       str | None = None
+
+    deleted:    bool = False
 ```
 
 `role` marks a column the application treats specially rather than as a step in the workflow. Only `archive` is defined. It is assigned when the column is created and survives a rename, so the archive is always found by role, never by slug.
@@ -348,7 +352,11 @@ class Task:
     created_at:     datetime | None = None
     updated_at:     datetime | None = None
     body:           str = ""
+
+    deleted:        bool = False
 ```
+
+`deleted` is never read from storage. The service sets it on the record it returns from a delete, so a renderer handed that record can tell it apart from a live one.
 
 ### The Archive
 

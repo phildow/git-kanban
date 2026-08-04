@@ -154,10 +154,24 @@ class TestJsonRendererBoards(unittest.TestCase):
         out = _capture(lambda: self.r.render_board_rename(_args(), _board("New Name", "new-name")))
         self.assertEqual(json.loads(out)["slug"], "new-name")
 
+    def test_board_delete_emits_the_board(self) -> None:
+        """render_board_delete emits the deleted board's own representation."""
+        out = _capture(lambda: self.r.render_board_delete(_args(board="proj"), _board("proj", "proj")))
+        obj = json.loads(out)
+        self.assertEqual(obj["name"], "proj")
+        self.assertEqual(obj["path"], "/proj")
+
     def test_board_delete_deleted_field(self) -> None:
-        """render_board_delete emits a JSON object with the deleted board name."""
-        out = _capture(lambda: self.r.render_board_delete(_args(board="proj"), _board("proj")))
-        self.assertEqual(json.loads(out)["deleted"], "proj")
+        """render_board_delete carries the board's deleted flag."""
+        board = _board("proj", "proj")
+        board.deleted = True
+        out = _capture(lambda: self.r.render_board_delete(_args(board="proj"), board))
+        self.assertTrue(json.loads(out)["deleted"])
+
+    def test_board_list_deleted_field_is_false(self) -> None:
+        """A board that was not deleted reports deleted as false."""
+        out = _capture(lambda: self.r.render_board_list(_args(), [_board()]))
+        self.assertFalse(json.loads(out)[0]["deleted"])
 
 
 class TestJsonRendererColumns(unittest.TestCase):
@@ -226,10 +240,24 @@ class TestJsonRendererColumns(unittest.TestCase):
         out = _capture(lambda: self.r.render_column_create(_args(), _column("In Review", "proj", 1, "in-review")))
         self.assertEqual(json.loads(out)["slug"], "in-review")
 
+    def test_column_delete_emits_the_column(self) -> None:
+        """render_column_delete emits the deleted column's own representation."""
+        out = _capture(lambda: self.r.render_column_delete(_args(path="main/todo"), _column("To Do", "main", 0, "todo")))
+        obj = json.loads(out)
+        self.assertEqual(obj["name"], "To Do")
+        self.assertEqual(obj["path"], "/main/todo")
+
     def test_column_delete_deleted_field(self) -> None:
-        """render_column_delete emits a JSON object with the deleted path."""
-        out = _capture(lambda: self.r.render_column_delete(_args(path="main/todo"), None))
-        self.assertEqual(json.loads(out)["deleted"], "main/todo")
+        """render_column_delete carries the column's deleted flag."""
+        column = _column("To Do", "main", 0, "todo")
+        column.deleted = True
+        out = _capture(lambda: self.r.render_column_delete(_args(path="main/todo"), column))
+        self.assertTrue(json.loads(out)["deleted"])
+
+    def test_column_list_deleted_field_is_false(self) -> None:
+        """A column that was not deleted reports deleted as false."""
+        out = _capture(lambda: self.r.render_column_list(_args(), [_column()]))
+        self.assertFalse(json.loads(out)[0]["deleted"])
 
 
 class TestJsonRendererTasks(unittest.TestCase):
@@ -426,10 +454,22 @@ class TestJsonRendererTasks(unittest.TestCase):
         self.assertEqual(obj["created_at"], _CREATED_AT.isoformat())
         self.assertEqual(obj["updated_at"], _UPDATED_AT.isoformat())
 
+    def test_task_delete_emits_the_task(self) -> None:
+        """render_task_delete emits the deleted task's own representation."""
+        out = _capture(lambda: self.r.render_task_delete(_args(path="main/todo/fix-login-bug"), _task()))
+        obj = json.loads(out)
+        self.assertEqual(obj["title"], "Fix login bug")
+        self.assertEqual(obj["path"], "/main/todo/fix-login-bug")
+
     def test_task_delete_deleted_field(self) -> None:
-        """render_task_delete emits the path in the deleted field."""
-        out = _capture(lambda: self.r.render_task_delete(_args(path="main/todo/fix"), None))
-        self.assertEqual(json.loads(out)["deleted"], "main/todo/fix")
+        """render_task_delete carries the task's deleted flag."""
+        out = _capture(lambda: self.r.render_task_delete(_args(path="main/todo/fix-login-bug"), _task(deleted=True)))
+        self.assertTrue(json.loads(out)["deleted"])
+
+    def test_task_list_deleted_field_is_false(self) -> None:
+        """A task that was not deleted reports deleted as false."""
+        out = _capture(lambda: self.r.render_task_list(_args(), [_task()]))
+        self.assertFalse(json.loads(out)[0]["deleted"])
 
 
 class TestJsonRendererSearch(unittest.TestCase):

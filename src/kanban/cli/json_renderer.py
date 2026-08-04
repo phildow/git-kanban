@@ -25,6 +25,7 @@ def _task_dict(task: Task, board: dict, column: dict) -> dict:
         "due_date": task.due_date.isoformat() if task.due_date else None,
         "tags": task.tags,
         "created_by": task.created_by,
+        "deleted": task.deleted,
     }
 
 
@@ -46,6 +47,7 @@ def _board_dict(board: Board) -> dict:
         "column_count": board.column_count,
         "task_count": board.task_count,
         "archived_task_count": board.archived_task_count,
+        "deleted": board.deleted,
     }
 
 
@@ -57,6 +59,7 @@ def _column_dict(column: Column, board: dict) -> dict:
         "board": board,
         "position": column.position,
         "task_count": column.task_count,
+        "deleted": column.deleted,
     }
 
 
@@ -75,15 +78,6 @@ class JsonRenderer(CommandRenderer):
 
     def __init__(self, render_service: RenderService) -> None:
         self.render_service = render_service
-
-    def _path_str(self, args: argparse.Namespace) -> str:
-        """Return args.path serialized as a string path."""
-        path = args.path
-        if isinstance(path, Path):
-            return str(path)
-        if path is None:
-            return ""
-        return str(Path(str(path)))
 
     def _emit(self, args: argparse.Namespace, value: object) -> None:
         if value is None:
@@ -136,7 +130,7 @@ class JsonRenderer(CommandRenderer):
         self._emit(args, json.dumps(_board_dict(result), indent=2))
 
     def render_board_delete(self, args: argparse.Namespace, result: Board) -> None:
-        self._emit(args, json.dumps({"deleted": result.name}, indent=2))
+        self._emit(args, json.dumps(_board_dict(result), indent=2))
 
     # ── Columns ───────────────────────────────────────────────────────────────
 
@@ -156,8 +150,7 @@ class JsonRenderer(CommandRenderer):
         self._emit(args, json.dumps([self._column_dict(c) for c in result], indent=2))
 
     def render_column_delete(self, args: argparse.Namespace, result: Column) -> None:
-        _ = result
-        self._emit(args, json.dumps({"deleted": self._path_str(args)}, indent=2))
+        self._emit(args, json.dumps(self._column_dict(result), indent=2))
 
     # ── Tasks ─────────────────────────────────────────────────────────────────
 
@@ -199,8 +192,7 @@ class JsonRenderer(CommandRenderer):
         self._emit(args, json.dumps(self._task_detail_dict(result), indent=2))
 
     def render_task_delete(self, args: argparse.Namespace, result: Task) -> None:
-        _ = result
-        self._emit(args, json.dumps({"deleted": self._path_str(args)}, indent=2))
+        self._emit(args, json.dumps(self._task_detail_dict(result), indent=2))
 
     # ── Search, log, status, config ───────────────────────────────────────────
 

@@ -35,6 +35,9 @@ class Column(Sluggable):
     task_count: int = 0
     role:       str | None = None
 
+    deleted:    bool = False
+    """Set on the record returned by a delete; never read from storage."""
+
     @property
     def path(self) -> Path:
         return Path(f"/{self.board}/{self.slug}")
