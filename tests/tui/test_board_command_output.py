@@ -156,6 +156,19 @@ class TestOutputPanelFocus(unittest.IsolatedAsyncioTestCase):
 
             self.assertIsInstance(pilot.app.focused, CommandBar)
 
+    async def test_tab_does_not_leave_the_panel(self) -> None:
+        """Tab is not the way back to the bar; the focus stays on the output."""
+        async with KanbanApp(_make_service()).run_test() as pilot:
+            await pilot.pause()
+            await _run(pilot, "columns")
+            await pilot.press("shift+tab")
+            await pilot.pause()
+
+            await pilot.press("tab")
+            await pilot.pause()
+
+            self.assertIsInstance(pilot.app.focused, OutputPanel)
+
     async def test_the_board_keys_are_refused_while_the_panel_has_focus(self) -> None:
         """A card is not moved by keys pressed while the output is being read."""
         service = _make_service()

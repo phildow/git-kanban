@@ -876,7 +876,7 @@ class BoardScreen(Screen[None]):
                 self.action_move_to_column()
             return
 
-        if self._step_command_focus():
+        if self._step_command_focus(direction):
             return
 
         panels = self.column_panels
@@ -896,7 +896,7 @@ class BoardScreen(Screen[None]):
         else:
             target.view.focus()
 
-    def _step_command_focus(self) -> bool:
+    def _step_command_focus(self, direction: int) -> bool:
         """
         Step focus between the command bar and its output, while the bar is open.
 
@@ -905,6 +905,11 @@ class BoardScreen(Screen[None]):
         from a command line half typed would leave the user's next keystroke
         acting on a card.  With no output on screen there is nowhere to go and
         the focus stays on the bar.
+
+        Only shift+tab moves between the two.  Tab is the bar's completion key,
+        so it never reaches here from the bar; from the panel it is swallowed,
+        so the pair answers to one key in both directions rather than to one
+        going up and two coming back.
         """
         if not self.query_one(CommandBar).has_class("-visible"):
             return False
@@ -914,7 +919,8 @@ class BoardScreen(Screen[None]):
             return True
 
         if isinstance(self.app.focused, OutputPanel):
-            self.query_one(CommandBar).focus()
+            if direction < 0:
+                self.query_one(CommandBar).focus()
         else:
             panel.focus()
 
