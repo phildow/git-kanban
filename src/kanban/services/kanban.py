@@ -925,6 +925,7 @@ class KanbanService(CompletionDataSource):
         created_task = self.repository.create_task(task, filename)
 
         insert = self.get_config(CONFIG_NEW_TASK_INSERT)
+        op: str | None = None
 
         if insert == INSERT_ABOVE:
             op = INSERT_ABOVE if reference is not None else INSERT_TOP

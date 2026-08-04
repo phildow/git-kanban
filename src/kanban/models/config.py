@@ -15,24 +15,24 @@ from __future__ import annotations
 
 # ── Keys ──────────────────────────────────────────────────────────────────────
 
-CONFIG_USER_NAME = "user.name"
 """The current user's name, used as the author of tasks and comments."""
+CONFIG_USER_NAME = "user.name"
 
-CONFIG_NEW_TASK_INSERT = "new-task.insert"
 """Where in its column a newly created task is inserted."""
+CONFIG_NEW_TASK_INSERT = "new-task.insert"
 
+"""Insert a new task at the top of its column."""
 INSERT_TOP = "top"
+"""Insert a new task at the bottom of its column."""
 INSERT_BOTTOM = "bottom"
-
-# Positions relative to the task selected when the new one is created.  Only a
-# consumer with a selection — the TUI — can supply one; without it `above` falls
-# back to `top` and `below` to `bottom`.
+"""TUI only, falls back to `top` if no selection"""
 INSERT_ABOVE = "above"
+"""TUI only, falls back to `bottom` if no selection"""
 INSERT_BELOW = "below"
 
-CONFIG_TUI_THEME = "tui.theme"
 """The theme the TUI opens in, by name."""
-
+CONFIG_TUI_THEME = "tui.theme"
+"""The default theme the TUI opens in, by name."""
 DEFAULT_THEME = "textual-dark"
 
 CONFIG_KEYS: frozenset[str] = frozenset({
