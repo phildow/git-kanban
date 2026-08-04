@@ -24,10 +24,10 @@ $ pip install -e .
 
 ## Version Map
 
-- 0.6 - CLI and REPL stable
-- 0.7 - Implement the TUI
-- 0.8 - Implement git tracking
-- 0.9 - Implement indexing and search
+- 0.6 - CLI & REPL stable
+- 0.7 - TUI stable
+- 0.8 - Git change tracking
+- 0.9 - Indexing & indexed search
 - 1.0 - Release
 
 ## Motivation

@@ -48,6 +48,7 @@ from ..widgets import (
     CompletingInput,
     FilterBar,
     ModeBar,
+    OutputPanel,
     SidebarPanel,
     format_hints,
 )
@@ -55,7 +56,6 @@ from .board_switcher import BoardChoice, BoardSwitcherScreen, SwitchToBoard
 from .column_prompt import ColumnPromptScreen
 from .confirm import ConfirmScreen
 from .help import HelpScreen
-from .output import OutputScreen
 from .task_detail import TaskDetailScreen
 from .task_form import TaskFormResult, TaskFormScreen
 
@@ -81,7 +81,13 @@ COMMAND_KEYS: list[tuple[str, str]] = [
     ("tab", "Complete"),
     ("↑/↓", "History"),
     ("↵", "Run"),
-    ("esc", "Cancel"),
+    ("⇧⇥", "Output"),
+    ("esc", "Close"),
+]
+OUTPUT_KEYS: list[tuple[str, str]] = [
+    ("↑/↓", "Scroll"),
+    ("⇧⇥", "Command"),
+    ("esc", "Close"),
 ]
 NAME_KEYS: list[tuple[str, str]] = [
     ("↵", "Save"),
@@ -153,6 +159,16 @@ BAR_REFUSED_ACTIONS = frozenset(
         "nav_page_down",
         "nav_page_left",
         "nav_page_right",
+    }
+)
+
+# What the board answers to while the command output holds the focus: the way
+# back to the bar, and the way out.  Scrolling is the panel's own binding, and
+# the board's letters must not reach a card the user is only reading about.
+OUTPUT_ACTIONS = frozenset(
+    {
+        "step_focus",
+        "cancel",
     }
 )
 
@@ -280,13 +296,16 @@ class BoardScreen(Screen[None]):
     # ── Layout ────────────────────────────────────────────────────────────────
 
     def compose(self) -> ComposeResult:
-        """Lay out the header, the columns, the sidebar, the input bars, and the footer."""
+        """Lay out the header, the columns, the sidebar, the bottom bars, and the footer."""
         yield Header()
         with Horizontal(id="board-body"):
             yield Horizontal(id="columns")
             yield SidebarPanel(self.svc, id="sidebar")
         yield FilterBar(id="filter-bar")
         yield CommandBar(id="command-bar")
+        # Docked after the command bar, so it takes the strip directly above it
+        # and the hints stay on the outside of both.
+        yield OutputPanel(id="output-panel")
         yield ModeBar(id="mode-bar")
         # Compact so more board keys fit.  The palette hint stays, docked to
         # the right of the bar where Textual puts it.
@@ -417,6 +436,16 @@ class BoardScreen(Screen[None]):
     def mode_bar(self) -> ModeBar | None:
         """Return the contextual hint bar, or None before it has mounted."""
         return next(iter(self.query(ModeBar)), None)
+
+    @property
+    def output_panel(self) -> OutputPanel | None:
+        """Return the command output panel, or None before it has mounted."""
+        return next(iter(self.query(OutputPanel)), None)
+
+    @property
+    def in_overlay(self) -> bool:
+        """Return whether an input bar or the command output holds the focus."""
+        return isinstance(self.app.focused, (CompletingInput, OutputPanel))
 
     # ── Loading and rendering ─────────────────────────────────────────────────
 
@@ -592,16 +621,28 @@ class BoardScreen(Screen[None]):
         focus_column: Slug | None,
         focus_header: Slug | None = None,
     ) -> None:
-        """Focus the column that held focus and re-highlight the selected task."""
+        """
+        Focus the column that held focus and re-highlight the selected task.
+
+        A rebuild that lands while a bar or the command output holds the focus
+        leaves it where it is: a command run from the bar reloads the board it
+        was run against, and neither the line being typed nor the output being
+        read should lose the focus to it.  The highlight is still restored, so
+        the card the next command means is the card the user can see.
+        """
         if focus_header is not None:
             panel = next(
                 (panel for panel in panels if panel.column.slug == focus_header), None
             )
             if panel is not None:
-                panel.header.focus()
+                if not self.in_overlay:
+                    panel.header.focus()
                 return
 
         if self._select_task(select):
+            return
+
+        if self.in_overlay:
             return
 
         target = next(
@@ -610,13 +651,19 @@ class BoardScreen(Screen[None]):
         target.view.focus()
 
     def _select_task(self, slug: Slug | None) -> bool:
-        """Highlight and focus the task with `slug`.  Returns False when it is not shown."""
+        """
+        Highlight the task with `slug`, focusing its column.  Returns False when it is not shown.
+
+        The focus is left alone while a bar or the output has it, for the reason
+        `_restore_focus` gives.
+        """
         if slug is None:
             return False
 
         for view in self.column_views:
             if view.select_task(slug):
-                view.focus()
+                if not self.in_overlay:
+                    view.focus()
                 return True
         return False
 
@@ -818,11 +865,16 @@ class BoardScreen(Screen[None]):
         tabbing into one, and tab stays on the half of the column it was pressed
         on — cards to cards, and along the header strip while a header is the
         mode.  Mid-move tab means something else again: the destination column,
-        by name.
+        by name, and with the command bar open it means the bar and its output,
+        which are the only two places the focus belongs while a command is being
+        typed.
         """
         if self.move_mode:
             if direction > 0:
                 self.action_move_to_column()
+            return
+
+        if self._step_command_focus():
             return
 
         panels = self.column_panels
@@ -841,6 +893,30 @@ class BoardScreen(Screen[None]):
             target.header.focus()
         else:
             target.view.focus()
+
+    def _step_command_focus(self) -> bool:
+        """
+        Step focus between the command bar and its output, while the bar is open.
+
+        Returns whether the step was the bar's to make.  It is, in both
+        directions, for as long as the bar is open: tabbing out to the board
+        from a command line half typed would leave the user's next keystroke
+        acting on a card.  With no output on screen there is nowhere to go and
+        the focus stays on the bar.
+        """
+        if not self.query_one(CommandBar).has_class("-visible"):
+            return False
+
+        panel = self.output_panel
+        if panel is None or not panel.has_class("-visible"):
+            return True
+
+        if isinstance(self.app.focused, OutputPanel):
+            self.query_one(CommandBar).focus()
+        else:
+            panel.focus()
+
+        return True
 
     def action_focus_header(self) -> None:
         """Focus the header of the column in focus, which is the way into it."""
@@ -868,9 +944,24 @@ class BoardScreen(Screen[None]):
         self._sync_selection()
 
     def on_descendant_focus(self, event: events.DescendantFocus) -> None:
-        """Follow the focus from one column to another, so the selection tracks it."""
+        """Follow the focus from one column to another, so the selection and hints track it."""
         _ = event
         self._sync_selection()
+        self._sync_hints()
+
+    def _sync_hints(self) -> None:
+        """
+        Show the hints belonging to whichever half of the command overlay has the focus.
+
+        Only the overlay is answered for.  Everywhere else the hints are put up
+        and taken down by whatever put the mode on — a staged move, a column
+        being named — and a focus change within it means nothing to them.
+        """
+        focused = self.app.focused
+        if isinstance(focused, OutputPanel):
+            self._show_hints(format_hints(OUTPUT_KEYS))
+        elif isinstance(focused, CompletingInput) and focused.has_class("-visible"):
+            self._show_hints(self._bar_hints(focused))
 
     def _sync_selection(self) -> None:
         """
@@ -2058,6 +2149,10 @@ class BoardScreen(Screen[None]):
         bar.remove_class("-visible")
         self._hide_hints()
 
+        # The output belongs to the bar that produced it; it goes with it.
+        if isinstance(bar, CommandBar):
+            self._hide_output()
+
         remembered = self._bar_focus
         self._bar_focus = None
         if remembered is not None:
@@ -2124,17 +2219,22 @@ class BoardScreen(Screen[None]):
         if isinstance(event.input, CommandBar):
             line = event.value.strip()
             event.input.value = ""
-            self._close_bar(event.input)
+            # The bar stays open and focused: commands come in runs, and the
+            # output panel above it is there to be read while the next one is
+            # typed.  Escape is what closes both.
             if line:
                 self._run_command(line)
+            else:
+                self._close_bar(event.input)
 
     def _run_command(self, line: str) -> None:
         """
         Parse `line` with the REPL parser and run it against the kanban service.
 
         Output is captured rather than printed, since the terminal belongs to
-        the TUI.  Commands that need a terminal of their own — an editor or a
-        confirmation prompt — are refused rather than left to hang.
+        the TUI, and shown in the panel above the bar.  Commands that need a
+        terminal of their own — an editor or a confirmation prompt — are refused
+        rather than left to hang.
         """
         from ...repl.parser import build_parser
 
@@ -2160,7 +2260,7 @@ class BoardScreen(Screen[None]):
                 args = build_parser().parse_args(tokens)
         except SystemExit:
             # argparse reports usage errors by exiting; show what it printed.
-            self.app.push_screen(OutputScreen(line, buffer.getvalue()))
+            self._show_output(line, buffer.getvalue())
             return
 
         if not hasattr(args, "func"):
@@ -2173,9 +2273,39 @@ class BoardScreen(Screen[None]):
 
         output = f"{buffer.getvalue()}{renderer.take_output()}".strip()
         self._reload_soon()
+        self._show_output(line, output)
 
-        if output:
-            self.app.push_screen(OutputScreen(line, output))
+    def _show_output(self, line: str, output: str) -> None:
+        """
+        Show what `line` printed in the panel above the command bar.
+
+        A command that printed nothing takes the panel down rather than leaving
+        the last one's output under a new command line, which would read as its
+        answer.  Reporting is left to the toasts in that case.
+        """
+        panel = self.output_panel
+        if panel is None:
+            return
+
+        text = output.strip()
+        if text:
+            panel.show(line, text)
+        else:
+            panel.hide()
+
+    def on_command_bar_scroll_output(self, event: CommandBar.ScrollOutput) -> None:
+        """Scroll the output panel for the bar, which cannot reach it itself."""
+        panel = self.output_panel
+        if panel is None:
+            return
+
+        panel.scroll_relative(y=event.lines, animate=False)
+
+    def _hide_output(self) -> None:
+        """Take the command output panel down, if it has mounted."""
+        panel = self.output_panel
+        if panel is not None:
+            panel.hide()
 
     def _show_hints(self, hints: str, *, muted: bool = False) -> None:
         """Swap the footer for a contextual hint bar."""
@@ -2236,6 +2366,8 @@ class BoardScreen(Screen[None]):
             return False
         if isinstance(focused, CompletingInput):
             return action not in BAR_REFUSED_ACTIONS
+        if isinstance(focused, OutputPanel):
+            return action in OUTPUT_ACTIONS
 
         return True
 

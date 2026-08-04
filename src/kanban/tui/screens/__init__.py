@@ -12,7 +12,6 @@ from .config import ConfigScreen
 from .config_value import ConfigValueScreen
 from .confirm import ConfirmScreen
 from .help import HelpScreen
-from .output import OutputScreen
 from .task_detail import TaskDetailScreen
 from .task_form import TaskFormResult, TaskFormScreen
 
@@ -27,7 +26,6 @@ __all__ = [
     "SwitchToBoard",
     "ConfirmScreen",
     "HelpScreen",
-    "OutputScreen",
     "TaskDetailScreen",
     "TaskFormResult",
     "TaskFormScreen",

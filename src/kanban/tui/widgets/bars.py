@@ -143,9 +143,30 @@ class FilterBar(CompletingInput):
 class CommandBar(CompletingInput):
     """Command line accepting REPL syntax, parsed with the REPL's own parser."""
 
+    # The bar keeps the focus while the output of the last command stands above
+    # it, so the panel has no way to be scrolled but through the bar.  Shifted
+    # arrows scroll a body the focus is not on here as they do on the task
+    # detail screen; the unshifted ones stay with the history.
+    BINDINGS = [
+        Binding("shift+up", "scroll_output(-1)", "Scroll output", show=False),
+        Binding("shift+down", "scroll_output(1)", "Scroll output", show=False),
+    ]
+
+    class ScrollOutput(Message):
+        """Posted when the bar is asked to scroll the output shown above it."""
+
+        def __init__(self, lines: int) -> None:
+            """Ask for a scroll of `lines`, negative for up."""
+            super().__init__()
+            self.lines = lines
+
     def __init__(self, *, id: str | None = None) -> None:
         """Create a hidden command bar; the board screen reveals it on demand."""
         super().__init__(placeholder="command (REPL syntax)", id=id)
+
+    def action_scroll_output(self, lines: int) -> None:
+        """Ask the screen to scroll the output panel; the bar does not hold it."""
+        self.post_message(self.ScrollOutput(lines))
 
 
 def format_hints(hints: Iterable[tuple[str, str]]) -> str:

@@ -921,9 +921,15 @@ KanbanApp(App)
 │       on save ConfigScreen writes it with set_config and redraws the row
 │
 └── CommandBar (overlay, toggled by `/`)
-    └── Input — free text, parsed with the same parser as the REPL, and run
-        against the service's Selection, which the bar taking focus leaves
-        standing on the card the user was on
+    ├── Input — free text, parsed with the same parser as the REPL, and run
+    │   against the service's Selection, which the bar taking focus leaves
+    │   standing on the card the user was on.  Running a command leaves the bar
+    │   open and focused for the next one; Esc closes it and the panel with it
+    └── OutputPanel — what the last command printed, docked directly above the
+        bar, scrolling in both directions and never narrower than 80 columns.
+        ⇧⇥ moves the focus between the bar and the panel, and nowhere else
+        while the bar is open; the panel takes the board's keys while it has
+        the focus, so scrolling never reaches a card
 ```
 
 #### The Command Palette

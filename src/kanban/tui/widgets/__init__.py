@@ -5,6 +5,7 @@ from .bars import CommandBar, CompletingInput, FilterBar, ModeBar, format_hints
 from .card import CardWidget
 from .column import ColumnPanel, ColumnView, item_task
 from .column_header import ColumnHeader
+from .output_panel import OutputPanel
 from .prefix_list import PrefixList
 from .sidebar import LogView, SidebarPanel, StatusView
 from .task_heading import TaskHeading
@@ -22,6 +23,7 @@ __all__ = [
     "LogView",
     "MarkdownArea",
     "ModeBar",
+    "OutputPanel",
     "PrefixList",
     "SidebarPanel",
     "StatusView",

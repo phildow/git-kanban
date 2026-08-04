@@ -190,19 +190,76 @@ CardWidget.-dense {
 
 /* ── Bottom bars ──────────────────────────────────────────────────────── */
 
+/* Square corners that join, with the title sitting on the line, which is what
+   the output panel above the command bar is drawn with too — the two are one
+   overlay in two halves and wear the same border. */
 #filter-bar, #command-bar {
     display: none;
     dock: bottom;
-    border: tall $accent;
+    /* Docked widgets stack against the edge rather than on each other, so the
+       hint bar would otherwise sit on the closing edge of the box.  A row of
+       margin puts it below one that now has corners to close. */
+    margin: 0 0 1 0;
+    border: solid $accent;
 }
 
 #filter-bar.-visible, #command-bar.-visible {
     display: block;
 }
 
+/* The command bar shares the focus with the output panel, and the thick edge
+   down the left is what says which of the two holds it.  It thickens in place:
+   same cell, same centre line, so no character moves as the focus does. */
+#filter-bar:focus, #command-bar:focus {
+    border-left: thick $accent;
+}
+
 /* A half-typed flag: the board holds still until the query parses again. */
 #filter-bar.-invalid {
-    border: tall $error;
+    border: solid $error;
+}
+
+#filter-bar.-invalid:focus {
+    border-left: thick $error;
+}
+
+/* What a command printed, in the strip directly above the command bar, which
+   stays open underneath it.  Docked widgets all sit against the edge rather
+   than stacking, so the bottom margin — the height of the command bar — is what
+   lifts this clear of it.  Tall enough to be worth reading, short enough to
+   leave the board in view; longer output scrolls. */
+#output-panel {
+    display: none;
+    dock: bottom;
+    width: 1fr;
+    height: auto;
+    max-height: 16;
+    /* Clear of the command bar and the hint row under it — see below. */
+    margin: 0 0 4 0;
+    padding: 0 1;
+    background: $surface;
+    border: solid $accent;
+    border-title-color: $accent;
+    overflow-x: auto;
+    overflow-y: auto;
+}
+
+#output-panel.-visible {
+    display: block;
+}
+
+/* The panel takes the thick left edge from the bar while shift+tab has the
+   focus up here, and hands it back on the way down. */
+#output-panel:focus {
+    border-left: thick $accent;
+}
+
+/* Commands render at a fixed width; the body keeps that width rather than
+   folding a table into a narrow terminal, and the panel scrolls to it. */
+#output-panel-body {
+    width: auto;
+    min-width: 80;
+    height: auto;
 }
 
 /* Stands in for the footer while a mode is active, so it wears the footer's
@@ -390,7 +447,7 @@ TaskHeading .-task-path {
     margin: 0 0 1 0;
 }
 
-#task-detail-body, #help-body, #output-body {
+#task-detail-body, #help-body {
     height: auto;
     max-height: 24;
 }

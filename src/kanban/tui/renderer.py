@@ -11,7 +11,7 @@ from rich.console import Console
 from ..repl.rich_renderer import RichRenderer
 from ..services.render_service import RenderService
 
-# Wide enough that tables do not wrap awkwardly in the output modal.
+# Wide enough that tables do not wrap awkwardly in the output panel.
 CAPTURE_WIDTH = 100
 
 
@@ -21,8 +21,8 @@ class TUIRenderer(RichRenderer):
 
     The TUI owns the terminal, so commands run from the command bar cannot
     print.  This renderer reuses every REPL rendering rule and only changes
-    where the output goes; the board screen drains the buffer and shows it in a
-    modal.
+    where the output goes; the board screen drains the buffer and shows it in
+    the panel above the command bar.
     """
 
     def __init__(self, render_service: RenderService) -> None:
