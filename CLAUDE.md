@@ -1086,6 +1086,10 @@ User data contains settings that cannot be changed by the user and which are gen
     # default: textual-dark
     theme = textual-dark
 
+    # which of the TUI's notifications are shown as toasts
+    # values: all | errors | none, default: all
+    notifications = all
+
 [repository]
     # the folder in the repository that contains the kanban store
     worktree = ".kanban-store"

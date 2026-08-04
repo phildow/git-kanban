@@ -27,6 +27,7 @@ from ..models.config import (
     CONFIG_DEFAULTS,
     CONFIG_KEYS,
     CONFIG_NEW_TASK_INSERT,
+    CONFIG_TUI_NOTIFICATIONS,
     CONFIG_TUI_THEME,
     CONFIG_USER_NAME,
     CONFIG_VALUES,
@@ -35,6 +36,9 @@ from ..models.config import (
     INSERT_BELOW,
     INSERT_BOTTOM,
     INSERT_TOP,
+    NOTIFICATIONS_ALL,
+    NOTIFICATIONS_ERRORS,
+    NOTIFICATIONS_NONE,
     InvalidConfigKey,
     InvalidConfigValue,
 )

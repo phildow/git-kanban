@@ -35,10 +35,21 @@ CONFIG_TUI_THEME = "tui.theme"
 """The default theme the TUI opens in, by name."""
 DEFAULT_THEME = "textual-dark"
 
+"""Which of the TUI's notifications are shown as toasts."""
+CONFIG_TUI_NOTIFICATIONS = "tui.notifications"
+
+"""Show every notification."""
+NOTIFICATIONS_ALL = "all"
+"""Show only what went wrong, and pass over the rest."""
+NOTIFICATIONS_ERRORS = "errors"
+"""Show none of them."""
+NOTIFICATIONS_NONE = "none"
+
 CONFIG_KEYS: frozenset[str] = frozenset({
     CONFIG_USER_NAME,
     CONFIG_NEW_TASK_INSERT,
     CONFIG_TUI_THEME,
+    CONFIG_TUI_NOTIFICATIONS,
 })
 
 # Keys whose value is drawn from a fixed set.  A key with no entry here takes
@@ -49,6 +60,9 @@ CONFIG_VALUES: dict[str, frozenset[str]] = {
     CONFIG_NEW_TASK_INSERT: frozenset({
         INSERT_TOP, INSERT_BOTTOM, INSERT_ABOVE, INSERT_BELOW
     }),
+    CONFIG_TUI_NOTIFICATIONS: frozenset({
+        NOTIFICATIONS_ALL, NOTIFICATIONS_ERRORS, NOTIFICATIONS_NONE
+    }),
 }
 
 # What a new configuration file is written with.  A key with no default here is
@@ -56,6 +70,7 @@ CONFIG_VALUES: dict[str, frozenset[str]] = {
 CONFIG_DEFAULTS: dict[str, str] = {
     CONFIG_NEW_TASK_INSERT: INSERT_BOTTOM,
     CONFIG_TUI_THEME: DEFAULT_THEME,
+    CONFIG_TUI_NOTIFICATIONS: NOTIFICATIONS_ALL,
 }
 
 

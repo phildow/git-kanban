@@ -8,8 +8,17 @@ from typing import Iterator
 
 from textual.app import App
 from textual.binding import Binding
+from textual.notifications import SeverityLevel
 
-from ..services.kanban import CONFIG_TUI_THEME, DEFAULT_THEME, KanbanService
+from ..services.kanban import (
+    CONFIG_TUI_NOTIFICATIONS,
+    CONFIG_TUI_THEME,
+    DEFAULT_THEME,
+    KanbanService,
+    NOTIFICATIONS_ALL,
+    NOTIFICATIONS_ERRORS,
+    NOTIFICATIONS_NONE,
+)
 from ..services.render_service import RenderService
 from .commands import KanbanCommands, ThemeCommands, ThemePalette
 from .interaction import DeferredInteraction
@@ -110,6 +119,55 @@ class KanbanApp(App[None]):
         except Exception as exc:
             description = str(exc) or exc.__class__.__name__
             logging.warning("TUI could not %s: %s", action, description)
+
+    # ── Notifications ─────────────────────────────────────────────────────────
+
+    def notify(
+        self,
+        message: str,
+        *,
+        title: str = "",
+        severity: SeverityLevel = "information",
+        timeout: float | None = None,
+        markup: bool = True,
+    ) -> None:
+        """
+        Show a toast, unless `tui.notifications` says this one is not wanted.
+
+        Every screen and widget in the app raises its notifications through
+        `App.notify`, so overriding it here is the one place the setting has to
+        be read: a caller says what happened and this decides whether it is put
+        on screen.  The setting is read on each call rather than kept, so a
+        change made from the configuration screen takes effect at once.
+        """
+        if not self._notification_wanted(severity):
+            return
+
+        super().notify(
+            message, title=title, severity=severity, timeout=timeout, markup=markup
+        )
+
+    def _notification_wanted(self, severity: SeverityLevel) -> bool:
+        """
+        Report whether a notification of this severity is shown.
+
+        An unreadable or unrecognised setting shows the notification: the cost
+        of a toast the user did not want is a great deal lower than the cost of
+        swallowing the one telling them their command failed.
+        """
+        setting: str | None = None
+        with self._config_errors("read the notification setting"):
+            setting = self.svc.get_config(CONFIG_TUI_NOTIFICATIONS)
+
+        if setting == NOTIFICATIONS_NONE:
+            return False
+        if setting == NOTIFICATIONS_ERRORS:
+            return severity == "error"
+        if setting is not None and setting != NOTIFICATIONS_ALL:
+            logging.warning(
+                "Configured notification setting %r is not recognised; showing all", setting
+            )
+        return True
 
     def action_help(self) -> None:
         """Open the bindings reference."""

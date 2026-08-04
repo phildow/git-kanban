@@ -8,6 +8,7 @@ from kanban.models.config import (
     CONFIG_DEFAULTS,
     CONFIG_KEYS,
     CONFIG_NEW_TASK_INSERT,
+    CONFIG_TUI_NOTIFICATIONS,
     CONFIG_TUI_THEME,
     CONFIG_USER_NAME,
     CONFIG_VALUES,
@@ -16,6 +17,9 @@ from kanban.models.config import (
     INSERT_BELOW,
     INSERT_BOTTOM,
     INSERT_TOP,
+    NOTIFICATIONS_ALL,
+    NOTIFICATIONS_ERRORS,
+    NOTIFICATIONS_NONE,
     InvalidConfigKey,
     InvalidConfigValue,
 )
@@ -35,6 +39,10 @@ class TestConfigKeys(unittest.TestCase):
     def test_tui_theme_is_supported(self) -> None:
         """tui.theme is a supported key."""
         self.assertIn(CONFIG_TUI_THEME, CONFIG_KEYS)
+
+    def test_tui_notifications_is_supported(self) -> None:
+        """tui.notifications is a supported key."""
+        self.assertIn(CONFIG_TUI_NOTIFICATIONS, CONFIG_KEYS)
 
     def test_constrained_keys_are_supported_keys(self) -> None:
         """Every key with a fixed value set is a key the application accepts."""
@@ -85,6 +93,17 @@ class TestConfigValues(unittest.TestCase):
     def test_tui_theme_is_free_text(self) -> None:
         """Which themes exist is the TUI's to know, so the value is unconstrained."""
         self.assertNotIn(CONFIG_TUI_THEME, CONFIG_VALUES)
+
+    def test_tui_notifications_permits_three_values(self) -> None:
+        """tui.notifications is all of them, the errors alone, or none."""
+        self.assertEqual(
+            CONFIG_VALUES[CONFIG_TUI_NOTIFICATIONS],
+            {NOTIFICATIONS_ALL, NOTIFICATIONS_ERRORS, NOTIFICATIONS_NONE},
+        )
+
+    def test_tui_notifications_defaults_to_all(self) -> None:
+        """Every notification is shown unless the user asks for fewer."""
+        self.assertEqual(CONFIG_DEFAULTS[CONFIG_TUI_NOTIFICATIONS], NOTIFICATIONS_ALL)
 
 
 class TestConfigErrors(unittest.TestCase):

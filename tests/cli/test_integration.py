@@ -1174,6 +1174,7 @@ class TestConfigCLI(_InitializedBase):
             self.run_json("config", "list", "--format", "json"),
             {
                 "new-task.insert": "bottom",
+                "tui.notifications": "all",
                 "tui.theme": "textual-dark",
                 "user.name": "philip",
             },
