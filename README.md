@@ -3,9 +3,11 @@
 
 Kanban for engineers. Git-backed, Markdown-based kanban for your terminal.
 
-Run it as a first class CLI, REPL, or TUI.
+Run it as a first class CLI, REPL, or TUI:
 
-<img src="screenshots/kanban-board-textual-dark.svg" width=400/> &nbsp; <img src="screenshots/kanban-task-textual-dark.svg" width=400/>
+<img src="screenshots/kanban-board-textual-dark.png" width=200/> &nbsp; <img src="screenshots/kanban-task-textual-dark.png" width=200/> 
+
+<img src="screenshots/kanban-repl.png" width=200/> &nbsp; <img src="screenshots/kanban-cli.png" width=200/> 
 
 Requirements:
 
