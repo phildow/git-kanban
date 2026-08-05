@@ -16,6 +16,7 @@ from ..services.render_service import RenderService
 def _task_dict(task: Task, board: dict, column: dict) -> dict:
     """Minimal task representation used in list and search results."""
     return {
+        "id": str(task.id),
         "title": task.title,
         "path": str(task.path),
         "slug": task.slug,
@@ -42,6 +43,7 @@ def _task_detail_dict(task: Task, board: dict, column: dict) -> dict:
 
 def _board_dict(board: Board) -> dict:
     return {
+        "id": str(board.id),
         "name": board.name,
         "path": str(board.path),
         "slug": board.slug,
@@ -54,6 +56,7 @@ def _board_dict(board: Board) -> dict:
 
 def _column_dict(column: Column, board: dict) -> dict:
     return {
+        "id": str(column.id),
         "name": column.name,
         "path": str(column.path),
         "slug": column.slug,
@@ -71,12 +74,12 @@ def _fields_dict(result: Board | Column | Task, fields: tuple[ObjectField, ...])
 
 def _board_ref_dict(board: Board) -> dict:
     """Nested board reference embedded in task output."""
-    return {"name": board.name, "path": str(board.path), "slug": board.slug}
+    return {"id": str(board.id), "name": board.name, "path": str(board.path), "slug": board.slug}
 
 
 def _column_ref_dict(column: Column) -> dict:
     """Nested column reference embedded in task output."""
-    return {"name": column.name, "path": str(column.path), "slug": column.slug}
+    return {"id": str(column.id), "name": column.name, "path": str(column.path), "slug": column.slug}
 
 
 class JsonRenderer(CommandRenderer):
