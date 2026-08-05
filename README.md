@@ -136,30 +136,3 @@ Or:
 $ pip install -e ".[dev]"
 $ python -m mypy
 ```
-
-## TODO
-
-CONFIG
-
-- ~~Tabcomplete config keys~~ (done)
-- Allow the user to alias repl commands in the config file
-    - eg `c=create`
-- ~~Allow the user to set a name to use for default created_by~~ (done: `config set user.name philip`)
-- Use the configured `user.name` as the default assigned_to as well
-- Allow the user to set their preferred editor?
-- Allow the user to decide what columns are shown for a given terminal size when listing tasks
-    - eg `task-cols:80=title,assigned-to,tags`
-    - eg `task-cols:96=title,assigned-to,tags,due`
-- Allow the user to customize the default column names
-- Allow the user to configure rich layout properties (eg table box style)
-- Allow the user to customize the rich colors (Theme)
-
-VERSION 1.1
-
-- Globbing for path commands
-
-AGENT KANBAN
-
-- Watches your work and manages tasks for you via the `kanban` cli
-- Check out a task it checks out a branch and vice versa
-- Check out a branch it looks for the task to check out
