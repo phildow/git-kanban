@@ -96,6 +96,18 @@ class TestJsonRendererBoards(unittest.TestCase):
         out = _capture(lambda: self.r.render_board_list(_args(), [_board("My Project", "my-project")]))
         self.assertEqual(json.loads(out)[0]["slug"], "my-project")
 
+    def test_board_list_id_field(self) -> None:
+        """Each board entry contains its id as a string."""
+        board_id = uuid4()
+        out = _capture(lambda: self.r.render_board_list(_args(), [_board("alpha", id=board_id)]))
+        self.assertEqual(json.loads(out)[0]["id"], str(board_id))
+
+    def test_board_info_id_field(self) -> None:
+        """render_board_info emits the board id."""
+        board_id = uuid4()
+        out = _capture(lambda: self.r.render_board_info(_args(), _board("proj", id=board_id)))
+        self.assertEqual(json.loads(out)["id"], str(board_id))
+
     def test_board_list_path_field_present(self) -> None:
         """Each board entry contains a path field."""
         out = _capture(lambda: self.r.render_board_list(_args(), [_board("alpha")]))
@@ -205,6 +217,23 @@ class TestJsonRendererColumns(unittest.TestCase):
         out = _capture(lambda: self.r.render_column_list(_args(), [_column("In Progress", "main", 1, "in-progress")]))
         self.assertEqual(json.loads(out)[0]["slug"], "in-progress")
 
+    def test_column_list_id_field(self) -> None:
+        """Each column entry contains its id as a string."""
+        column_id = uuid4()
+        out = _capture(lambda: self.r.render_column_list(_args(), [_column("todo", "main", 0, id=column_id)]))
+        self.assertEqual(json.loads(out)[0]["id"], str(column_id))
+
+    def test_column_list_board_ref_id_field(self) -> None:
+        """The nested board ref of a column entry contains an id."""
+        out = _capture(lambda: self.r.render_column_list(_args(), [_column("todo", "main", 0)]))
+        self.assertIn("id", json.loads(out)[0]["board"])
+
+    def test_column_info_id_field(self) -> None:
+        """render_column_info emits the column id."""
+        column_id = uuid4()
+        out = _capture(lambda: self.r.render_column_info(_args(), _column("todo", "main", 0, id=column_id)))
+        self.assertEqual(json.loads(out)["id"], str(column_id))
+
     def test_column_list_path_field_present(self) -> None:
         """Each column entry contains a path field."""
         out = _capture(lambda: self.r.render_column_list(_args(), [_column("todo", "main", 0)]))
@@ -285,6 +314,26 @@ class TestJsonRendererTasks(unittest.TestCase):
         """Each task entry contains the slug."""
         out = _capture(lambda: self.r.render_task_list(_args(), [_task()]))
         self.assertEqual(json.loads(out)[0]["slug"], "fix-login-bug")
+
+    def test_task_list_id_field(self) -> None:
+        """Each task entry contains its id as a string."""
+        out = _capture(lambda: self.r.render_task_list(_args(), [_task()]))
+        self.assertEqual(json.loads(out)[0]["id"], str(_TASK_ID))
+
+    def test_task_list_board_ref_id_field(self) -> None:
+        """The nested board ref of a task entry contains an id."""
+        out = _capture(lambda: self.r.render_task_list(_args(), [_task()]))
+        self.assertIn("id", json.loads(out)[0]["board"])
+
+    def test_task_list_column_ref_id_field(self) -> None:
+        """The nested column ref of a task entry contains an id."""
+        out = _capture(lambda: self.r.render_task_list(_args(), [_task()]))
+        self.assertIn("id", json.loads(out)[0]["column"])
+
+    def test_task_view_id_field(self) -> None:
+        """render_task_view emits the task id."""
+        out = _capture(lambda: self.r.render_task_view(_args(), _task()))
+        self.assertEqual(json.loads(out)["id"], str(_TASK_ID))
 
     def test_task_list_path_field_present(self) -> None:
         """Each task entry contains a path field."""
