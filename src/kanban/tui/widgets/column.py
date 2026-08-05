@@ -91,14 +91,17 @@ class ColumnView(ListView):
             return None
         return self._tasks[index]
 
-    async def set_tasks(self, tasks: list[Task], *, dense: bool = False) -> None:
+    async def set_tasks(
+        self, tasks: list[Task], *, dense: bool = False, show_id: bool = False
+    ) -> None:
         """Replace the column's contents with `tasks` and update the header count."""
         self._tasks = list(tasks)
         self.header.set_count(len(tasks))
 
         await self.clear()
         await self.extend(
-            ListItem(CardWidget(task, dense=dense)) for task in self._tasks
+            ListItem(CardWidget(task, dense=dense, show_id=show_id))
+            for task in self._tasks
         )
         self.index = 0 if self._tasks else None
 
@@ -106,6 +109,11 @@ class ColumnView(ListView):
         """Propagate a density change to every card in the column."""
         for card in self.cards:
             card.dense = dense
+
+    def set_show_id(self, show_id: bool) -> None:
+        """Propagate a change of the `tui.task-id` setting to every card in the column."""
+        for card in self.cards:
+            card.show_id = show_id
 
     def card_for(self, slug: Slug) -> CardWidget | None:
         """Return the card displaying the task with `slug`, if it is in this column."""

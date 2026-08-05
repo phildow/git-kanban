@@ -191,23 +191,26 @@ def config_values_hint(values: Iterable[str]) -> str:
     return " | ".join(sorted(values))
 
 
-def card_text(task: Task, *, dense: bool = False) -> Text:
+def card_text(task: Task, *, dense: bool = False, show_id: bool = False) -> Text:
     """
     Return the renderable body of a card.
 
     In dense mode the card collapses to a single summary line; otherwise
     metadata is spread over as many lines as the task has fields set.
+
+    `show_id` leads the card with the task's `#id` sigil, as `tui.task-id` asks
+    for.  A dense card never carries it: the one line it has is the title and
+    what is set on the task, and an id ahead of them costs the title the room it
+    needs to be read.
     """
     if dense:
         return _dense_card_text(task)
-    return _full_card_text(task)
+    return _full_card_text(task, show_id=show_id)
 
 
 def _dense_card_text(task: Task) -> Text:
     """Return a single-line summary of a task for dense mode."""
     text = Text(no_wrap=True, overflow="ellipsis")
-    # text.append(short_id(task), style="dim")
-    # text.append(" ")
     text.append(task.title)
 
     if task.priority is not None:
@@ -219,11 +222,17 @@ def _dense_card_text(task: Task) -> Text:
     return text
 
 
-def _full_card_text(task: Task) -> Text:
-    """Return the multi-line body of a task card: title, sigils, due date, and tags."""
+def _full_card_text(task: Task, *, show_id: bool = False) -> Text:
+    """
+    Return the multi-line body of a task card: title, sigils, due date, and tags.
+
+    The id leads the title when it is shown, dimmed so the title still reads
+    first: it is there to be quoted at a command, not to be read.
+    """
     text = Text()
-    # text.append(short_id(task), style="dim")
-    # text.append(" ")
+    if show_id:
+        text.append(short_id(task), style="dim")
+        text.append(" ")
     text.append(task.title, style="bold")
 
     sigils = Text()

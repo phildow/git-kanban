@@ -502,7 +502,8 @@ class TestConfigScreenRowField(unittest.IsolatedAsyncioTestCase):
             await pilot.press("t")
             await pilot.pause()
 
-            self.assertEqual(_rows(screen).selected_key, "theme")
+            # The first setting whose name begins with the letter typed.
+            self.assertEqual(_rows(screen).selected_key, "task-id")
             self.assertFalse(screen.field.is_open)
 
     async def test_escape_closes_the_screen(self) -> None:

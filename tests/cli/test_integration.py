@@ -1258,6 +1258,7 @@ class TestConfigCLI(_InitializedBase):
             {
                 "new-task.insert": "bottom",
                 "tui.notifications": "all",
+                "tui.task-id": "hide",
                 "tui.theme": "textual-dark",
                 "user.name": "philip",
             },

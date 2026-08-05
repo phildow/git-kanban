@@ -9,6 +9,7 @@ from kanban.models.config import (
     CONFIG_KEYS,
     CONFIG_NEW_TASK_INSERT,
     CONFIG_TUI_NOTIFICATIONS,
+    CONFIG_TUI_TASK_ID,
     CONFIG_TUI_THEME,
     CONFIG_USER_NAME,
     CONFIG_VALUES,
@@ -20,6 +21,8 @@ from kanban.models.config import (
     NOTIFICATIONS_ALL,
     NOTIFICATIONS_ERRORS,
     NOTIFICATIONS_NONE,
+    TASK_ID_HIDE,
+    TASK_ID_SHOW,
     InvalidConfigKey,
     InvalidConfigValue,
 )
@@ -43,6 +46,10 @@ class TestConfigKeys(unittest.TestCase):
     def test_tui_notifications_is_supported(self) -> None:
         """tui.notifications is a supported key."""
         self.assertIn(CONFIG_TUI_NOTIFICATIONS, CONFIG_KEYS)
+
+    def test_tui_task_id_is_supported(self) -> None:
+        """tui.task-id is a supported key."""
+        self.assertIn(CONFIG_TUI_TASK_ID, CONFIG_KEYS)
 
     def test_constrained_keys_are_supported_keys(self) -> None:
         """Every key with a fixed value set is a key the application accepts."""
@@ -104,6 +111,16 @@ class TestConfigValues(unittest.TestCase):
     def test_tui_notifications_defaults_to_all(self) -> None:
         """Every notification is shown unless the user asks for fewer."""
         self.assertEqual(CONFIG_DEFAULTS[CONFIG_TUI_NOTIFICATIONS], NOTIFICATIONS_ALL)
+
+    def test_tui_task_id_permits_show_and_hide(self) -> None:
+        """tui.task-id is the id on the card or off it, and nothing else."""
+        self.assertEqual(
+            CONFIG_VALUES[CONFIG_TUI_TASK_ID], {TASK_ID_SHOW, TASK_ID_HIDE}
+        )
+
+    def test_tui_task_id_defaults_to_hide(self) -> None:
+        """A card is the title and what is set on the task until the id is asked for."""
+        self.assertEqual(CONFIG_DEFAULTS[CONFIG_TUI_TASK_ID], TASK_ID_HIDE)
 
 
 class TestConfigErrors(unittest.TestCase):
