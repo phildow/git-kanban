@@ -32,6 +32,8 @@ READ_ONLY_RENDERERS = frozenset(
         "render_task_view",
         "render_task_info",
         "render_search",
+        "render_fields",
+        "render_fields_list",
         "render_log",
         "render_status",
         "render_set_config",
@@ -85,11 +87,11 @@ class TUIRenderer(RichRenderer):
         super().__init__(render_service=render_service)
         self._buffer = StringIO()
         self._effect = CommandEffect()
-        self.console = Console(file=self._buffer, width=CAPTURE_WIDTH, color_system=None)
+        self.console = Console(file=self._buffer, width=CAPTURE_WIDTH, color_system="auto", highlight=False)
 
     def _emit(self, args: argparse.Namespace, value: Any) -> None:
         """Write a renderable into the buffer rather than to the terminal."""
-        if value is None:
+        if value is None or self._silent:
             return
         self.console.print(value)
 

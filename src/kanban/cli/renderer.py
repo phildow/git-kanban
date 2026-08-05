@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from collections.abc import Sequence
 from pathlib import Path
 
 from rich.console import Console, ConsoleOptions, RenderResult
@@ -10,7 +11,7 @@ from rich.markdown import Heading, Markdown
 from rich.text import Text
 
 from ..models import Board, Column, Slug, Task, UserContext
-from ..protocols.command_renderer import CommandRenderer
+from ..protocols.command_renderer import CommandRenderer, ObjectField, field_value
 from ..services.kanban import GitCommit, KanbanStatus
 from ..services.render_service import RenderService
 
@@ -39,7 +40,7 @@ class Renderer(CommandRenderer):
 	def __init__(self, render_service: RenderService) -> None:
 		self.render_service = render_service
 		# rich
-		self.console = Console(color_system="auto")
+		self.console = Console(color_system="auto", highlight=False)
 
 	def _path_from_args(self, args: argparse.Namespace) -> Path:
 		"""Return args.path as a Path for display formatting."""
@@ -51,7 +52,7 @@ class Renderer(CommandRenderer):
 		return Path(str(path))
 
 	def _emit(self, args: argparse.Namespace, value: object) -> None:
-		if value is None:
+		if value is None or self._silent:
 			return
 		# rich
 		self.console.print(value, highlight=False)
@@ -248,6 +249,16 @@ class Renderer(CommandRenderer):
 # ---------------------------------------------------------------------------
 # Additional rendering (search, log, status, config)
 # ---------------------------------------------------------------------------
+
+	def render_fields(self, args: argparse.Namespace, result: Board | Column | Task, fields: tuple[ObjectField, ...]) -> None:
+		"""Print the named fields of a board, column, or task, one to a line."""
+		for field in fields:
+			self._emit(args, field_value(result, field))
+
+	def render_fields_list(self, args: argparse.Namespace, result: Sequence[Board | Column | Task], fields: tuple[ObjectField, ...]) -> None:
+		"""Print the named fields of every object in a list, one to a line."""
+		for obj in result:
+			self.render_fields(args, obj, fields)
 
 	def render_search(self, args: argparse.Namespace, result: list[Task]) -> None:
 		if not result:

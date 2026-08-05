@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from collections.abc import Sequence
 from pathlib import Path
 from functools import wraps
 import logging
@@ -16,7 +17,7 @@ from rich.text import Text
 from rich import box, print
 
 from ..models import UserContext, Board, Column, Slug, Task
-from ..protocols.command_renderer import CommandRenderer
+from ..protocols.command_renderer import CommandRenderer, ObjectField, field_value
 from ..services.render_service import RenderService
 from ..services.kanban import GitCommit, KanbanStatus
 
@@ -44,7 +45,7 @@ class KanbanMarkdown(Markdown):
 # The class responsible for rendering output to the console in a rich format.
 
 class RichRenderer(CommandRenderer):
-	console = Console(color_system="auto")
+	console = Console(color_system="auto", highlight=False)
 
 	def __init__(self, render_service: RenderService):
 		self.render_service = render_service
@@ -59,7 +60,7 @@ class RichRenderer(CommandRenderer):
 		return Path(str(path))
 
 	def _emit(self, args: argparse.Namespace, value: Any) -> None:
-		if value is None:
+		if value is None or self._silent:
 			return
 		self.console.print(value)
 
@@ -461,6 +462,16 @@ class RichRenderer(CommandRenderer):
 # ---------------------------------------------------------------------------
 # Additional rendering (search, log, status, config)
 # ---------------------------------------------------------------------------
+
+	def render_fields(self, args: argparse.Namespace, result: Board | Column | Task, fields: tuple[ObjectField, ...]) -> None:
+		"""Render the named fields of a board, column, or task, each on a line of its own."""
+		for field in fields:
+			self._emit(args, field_value(result, field))
+
+	def render_fields_list(self, args: argparse.Namespace, result: Sequence[Board | Column | Task], fields: tuple[ObjectField, ...]) -> None:
+		"""Render the named fields of every object in a list, each on a line of its own."""
+		for obj in result:
+			self.render_fields(args, obj, fields)
 
 	def render_search(self, args: argparse.Namespace, result: list[Task]) -> None:
 		"""Render search results the same way `render_task_list` renders a task list."""

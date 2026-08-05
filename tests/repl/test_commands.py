@@ -120,6 +120,44 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.rename_task.assert_called_once_with(path=Slug("fix-parser"), new_title="Fixed Parser")
         self.renderer.render_task_rename.assert_called_once_with(args, result)
 
+    def test_handle_info_board(self) -> None:
+        """`info -b` looks the active board up and renders its details."""
+        result = MagicMock(spec=Board)
+        self.svc.get_board.return_value = result
+        self.svc.working_board = Slug("proj")
+        args = self._args(path=None, board=True, column=None, show_path=False, show_id=False)
+
+        commands.handle_info(args, self.svc, self.renderer)
+
+        self.svc.get_board.assert_called_once_with(Slug("proj"))
+        self.renderer.render_board_info.assert_called_once_with(args, result)
+
+    def test_handle_info_column(self) -> None:
+        """`info -c COLUMN` looks the column up and renders its details."""
+        result = MagicMock(spec=Column)
+        self.svc.get_column.return_value = result
+        args = self._args(path=None, board=False, column="todo", show_path=False, show_id=False)
+
+        commands.handle_info(args, self.svc, self.renderer)
+
+        self.svc.get_column.assert_called_once_with(Slug("todo"))
+        self.renderer.render_column_info.assert_called_once_with(args, result)
+
+    def test_handle_info_renders_the_object_whatever_the_field_flags_say(self) -> None:
+        """
+        The handler renders the object it found and nothing more.
+
+        `--path` and `--id` are answered by the FieldRenderer the shell puts in
+        front of the renderer, so the handler makes the same call either way.
+        """
+        result = MagicMock(spec=Task)
+        self.svc.get_task.return_value = result
+        args = self._args(path="fix-parser", board=False, column=None, show_path=True, show_id=True)
+
+        commands.handle_info(args, self.svc, self.renderer)
+
+        self.renderer.render_task_info.assert_called_once_with(args, result)
+
     def test_column_handlers(self):
         args = self._args(new_board=None, new_column="todo", column=None)
         self.svc.working_board = "alpha"
@@ -313,12 +351,12 @@ class TestReplCommandHandlers(unittest.TestCase):
         self.svc.get_task.assert_called_once_with(Slug("fix-parser"))
         self.renderer.render_task_view.assert_called_once_with(args, result)
 
-    def test_handle_task_info(self):
-        args = self._args(path="fix-parser")
-        result = object()
+    def test_handle_info_task(self):
+        args = self._args(path="fix-parser", board=False, column=None, show_path=False, show_id=False)
+        result = MagicMock(spec=Task)
         self.svc.get_task.return_value = result
 
-        commands.handle_task_info(args, self.svc, self.renderer)
+        commands.handle_info(args, self.svc, self.renderer)
 
         self.svc.get_task.assert_called_once_with(Slug("fix-parser"))
         self.renderer.render_task_info.assert_called_once_with(args, result)

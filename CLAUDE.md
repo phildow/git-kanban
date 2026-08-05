@@ -557,9 +557,11 @@ kanban status
 kanban config set <key> <value>
 kanban config get <key>
 kanban config list
-```
 
-Most commands take a `--format` argument with options `plain|json` (default: `plain`).
+# Most commands take a `--format` argument with options `plain|json` (default: `plain`)
+# Subcommands that returns an object also accepts --path and --id.
+# Every subcommand accepts -h/--help.
+```
 
 Note the following default behaviors:
 
@@ -636,7 +638,7 @@ delete <task> | --column <column> | --board
     [--force]
 
 view <task> [-p|--plain]
-info <task>
+info <task> | --column <column> | --board
 edit <task>
 
 update <task>
@@ -693,8 +695,9 @@ status
 
 exit
 
-# Every subcommand also accepts -h/--help.
 # No global flags are currently active for the REPL (see _add_global_flags).
+# Subcommands that returns an object also accepts --path and --id.
+# Every subcommand accepts -h/--help.
 ```
 
 The `[]` brackets indicate optional path components that are inferred from the user context or index search. Path resolution for all commands follows:
@@ -704,7 +707,7 @@ The `[]` brackets indicate optional path components that are inferred from the u
 3. Index search (scoped to active board if set)
 4. Error on ambiguity
 
-Task-target commands (`show`, `edit`, `update`, `move`, `assign`, `rename`, `delete`) identify a task by its bare `<task>` slug: the service locates the column that contains it within the active board and constructs the full path. Because slugs are unique board-wide, the column need not be given. To target a column or the active board, `rename` and `delete` use the `--column <column>` and `---board` flags respectively.
+Task-target commands (`show`, `edit`, `update`, `move`, `assign`, `rename`, `delete`, `info`) identify a task by its bare `<task>` slug: the service locates the column that contains it within the active board and constructs the full path. Because slugs are unique board-wide, the column need not be given. To target a column or the active board, `rename`, `delete`, and `info` use the `--column <column>` and `---board` flags respectively.
 
 The following command aliases are registered by default:
 

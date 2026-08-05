@@ -13,7 +13,11 @@ from uuid import uuid4
 
 from kanban.models import Slug
 from kanban.models.config import CONFIG_NEW_TASK_INSERT, INSERT_BELOW
-from kanban.repl.command_helpers import handle_create_helper, handle_task_list_helper
+from kanban.repl.command_helpers import (
+    handle_create_helper,
+    handle_info_helper,
+    handle_task_list_helper,
+)
 from kanban.services.git import GitService
 from kanban.services.kanban import KanbanService, TaskCreateParams
 from kanban.storage.memory import InMemoryRepository
@@ -102,6 +106,62 @@ class TestHandleTaskListHelper(unittest.TestCase):
                 self._args(column="alpha", exclude_columns=["archive"], include_archived=True),
                 self.svc,
             )
+
+
+class TestHandleInfoHelper(unittest.TestCase):
+    """handle_info_helper returns the object the `info` command names."""
+
+    def setUp(self) -> None:
+        temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+        temp_dir.mkdir()
+        self.repo = InMemoryRepository(root=temp_dir)
+        self.svc = KanbanService(
+            repository=self.repo,
+            index_service=MagicMock(),
+            git_service=GitService(),
+        )
+        self.repo.create_board("alpha", slug="alpha")
+        self.repo.create_column("alpha", "todo", slug="todo")
+        self.svc.set_board(Slug("alpha"))
+        self.task = self.svc.create_task("/alpha/todo", TaskCreateParams(title="Fix login"))
+
+    def _args(self, **kwargs) -> Namespace:
+        defaults = {"path": None, "board": False, "column": None}
+        defaults.update(kwargs)
+        return Namespace(**defaults)
+
+    def test_board_flag_returns_the_active_board(self) -> None:
+        """-b resolves the board the user context holds."""
+        result = handle_info_helper(self._args(board=True), self.svc)
+
+        self.assertEqual(result.slug, "alpha")
+        self.assertEqual(str(result.path), "/alpha")
+
+    def test_board_flag_without_an_active_board_raises(self) -> None:
+        """-b has nothing to resolve when no board is active."""
+        self.svc.clear_user_context()
+
+        with self.assertRaises(ValueError):
+            handle_info_helper(self._args(board=True), self.svc)
+
+    def test_column_flag_returns_the_named_column(self) -> None:
+        """-c COLUMN resolves within the active board."""
+        result = handle_info_helper(self._args(column="todo"), self.svc)
+
+        self.assertEqual(result.slug, "todo")
+        self.assertEqual(str(result.path), "/alpha/todo")
+
+    def test_task_slug_returns_the_task(self) -> None:
+        """A bare slug resolves to its task, column and all."""
+        result = handle_info_helper(self._args(path=Slug("fix-login")), self.svc)
+
+        self.assertEqual(result.id, self.task.id)
+        self.assertEqual(str(result.path), "/alpha/todo/fix-login")
+
+    def test_no_target_raises(self) -> None:
+        """A namespace naming nothing is a command that cannot be answered."""
+        with self.assertRaises(ValueError):
+            handle_info_helper(self._args(), self.svc)
 
 
 class TestHandleCreateHelperSelection(unittest.TestCase):

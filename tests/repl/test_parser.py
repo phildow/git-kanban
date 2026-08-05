@@ -13,6 +13,7 @@ from kanban.repl.commands import (
     handle_board_list,
     handle_column_list,
     handle_create,
+    handle_info,
     handle_set_board,
     handle_rename,
     handle_search,
@@ -23,7 +24,6 @@ from kanban.repl.commands import (
     handle_task_tag,
     handle_task_unset,
     handle_task_view,
-    handle_task_info,
     handle_task_update,
 )
 
@@ -269,7 +269,9 @@ class TestParserAliases(unittest.TestCase):
         args = repl_parser.parse_args(["info", "fix-login"])
         self.assertEqual(args.command, "info")
         self.assertEqual(args.path, "fix-login")
-        self.assertIs(args.func, handle_task_info)
+        self.assertFalse(args.board)
+        self.assertIsNone(args.column)
+        self.assertIs(args.func, handle_info)
 
     def test_show_plain_flag(self):
         """`show ... -p`/`--plain` sets plain to True."""
@@ -524,6 +526,94 @@ class TestParserAliases(unittest.TestCase):
         args = repl_parser.parse_args(["reorder", "column", "proj/done", "2"])
         self.assertEqual(args.column, "proj/done")
         self.assertEqual(args.position, 2)
+
+    def test_info_board_mode(self) -> None:
+        """info -b binds active-board mode with no path or column."""
+        args = repl_parser.parse_args(["info", "-b"])
+        self.assertTrue(args.board)
+        self.assertIsNone(args.path)
+        self.assertIsNone(args.column)
+
+    def test_info_column_mode(self) -> None:
+        """info -c COLUMN binds column mode with a column name and no path."""
+        args = repl_parser.parse_args(["info", "-c", "todo"])
+        self.assertEqual(args.column, "todo")
+        self.assertIsNone(args.path)
+        self.assertFalse(args.board)
+
+    def test_info_requires_a_target(self) -> None:
+        """info requires a TASK, -b/--board, or -c/--column."""
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["info"])
+
+    def test_info_rejects_two_targets_together(self) -> None:
+        """info rejects naming more than one object at a time."""
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["info", "fix-login", "-b"])
+        with self.assertRaises(SystemExit):
+            repl_parser.parse_args(["info", "-b", "-c", "todo"])
+
+    def test_info_path_and_id_flags_default_to_false(self) -> None:
+        """Without --path or --id, info reports the whole object."""
+        args = repl_parser.parse_args(["info", "fix-login"])
+        self.assertFalse(args.show_path)
+        self.assertFalse(args.show_id)
+
+    def test_info_path_flag(self) -> None:
+        """--path sets show_path without disturbing the task it targets."""
+        args = repl_parser.parse_args(["info", "fix-login", "--path"])
+        self.assertEqual(args.path, "fix-login")
+        self.assertTrue(args.show_path)
+        self.assertFalse(args.show_id)
+
+    def test_info_id_flag(self) -> None:
+        """--id sets show_id."""
+        args = repl_parser.parse_args(["info", "-c", "todo", "--id"])
+        self.assertEqual(args.column, "todo")
+        self.assertTrue(args.show_id)
+        self.assertFalse(args.show_path)
+
+    def test_info_path_and_id_flags_together(self) -> None:
+        """--path and --id are not exclusive; both may be asked for at once."""
+        args = repl_parser.parse_args(["info", "-b", "--path", "--id"])
+        self.assertTrue(args.show_path)
+        self.assertTrue(args.show_id)
+
+    def test_field_flags_are_taken_by_commands_that_return_an_object(self) -> None:
+        """Every command that returns an object reports a field on request."""
+        commands = [
+            ["boards"],
+            ["columns"],
+            ["tasks", "todo"],
+            ["create", "todo", "Fix login"],
+            ["rename", "fix-login", "Fix the login page"],
+            ["delete", "fix-login"],
+            ["view", "fix-login"],
+            ["edit", "fix-login"],
+            ["update", "fix-login"],
+            ["unset", "fix-login"],
+            ["move", "fix-login", "done"],
+            ["assign", "fix-login", "alice"],
+            ["tag", "fix-login", "bug"],
+            ["comment", "fix-login", "looking at it"],
+            ["reorder", "column", "todo", "1"],
+            ["search", "login"],
+        ]
+        for command in commands:
+            with self.subTest(command=command):
+                args = repl_parser.parse_args(command + ["--path", "--id"])
+                self.assertTrue(args.show_path)
+                self.assertTrue(args.show_id)
+
+    def test_field_flags_are_refused_by_commands_that_return_no_object(self) -> None:
+        """A command with no path or id to report rejects the flags outright."""
+        commands = [["init"], ["board", "main"], ["status"], ["log"], ["config"]]
+        for command in commands:
+            with self.subTest(command=command):
+                with self.assertRaises(SystemExit):
+                    repl_parser.parse_args(command + ["--path"])
+                with self.assertRaises(SystemExit):
+                    repl_parser.parse_args(command + ["--id"])
 
     def test_board_command_maps_to_set_path_handler(self):
         parser = repl_parser.build_parser()

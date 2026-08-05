@@ -22,6 +22,7 @@ from ..repl.command_helpers import (
     handle_task_list_helper,
     handle_create_helper,
     handle_delete_helper,
+    handle_info_helper,
     handle_rename_helper
 )
 from ..services.kanban import KanbanService, TaskCreateParams, TaskUnsetParams, TaskUpdateParams
@@ -122,6 +123,19 @@ def handle_rename(args: argparse.Namespace, svc: KanbanService, renderer: Comman
 	else:
 		raise ValueError("Unexpected result type from handle_rename")
 
+@with_task_slug
+def handle_info(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
+	result = handle_info_helper(args, svc)
+
+	if isinstance(result, Board):
+		renderer.render_board_info(args, result)
+	elif isinstance(result, Column):
+		renderer.render_column_info(args, result)
+	elif isinstance(result, Task):
+		renderer.render_task_info(args, result)
+	else:
+		raise ValueError("Unexpected result type from handle_info")
+
 # ---------------------------------------------------------------------------
 # Board subcommands
 # ---------------------------------------------------------------------------
@@ -157,12 +171,6 @@ def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: Com
 def handle_task_view(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
 	result = svc.get_task(args.path)
 	renderer.render_task_view(args, result)
-
-
-@with_task_slug
-def handle_task_info(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer) -> None:
-	result = svc.get_task(args.path)
-	renderer.render_task_info(args, result)
 
 
 @with_task_slug

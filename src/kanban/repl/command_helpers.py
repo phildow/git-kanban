@@ -137,6 +137,30 @@ def handle_rename_helper(args: argparse.Namespace, svc: KanbanService) -> Board 
         raise ValueError("Rename expects either --board, --column <column>, or a <task> path")
 
 
+def handle_info_helper(args: argparse.Namespace, svc: KanbanService) -> Board | Column | Task:
+    """
+    Return the board, column, or task the command names.  This is the main
+    entry point for the `info` command in the REPL, which reads an object
+    rather than changing it and which takes the same target arguments as
+    `rename` and `delete`: the active board, a named column, or a task by its
+    bare slug.
+    """
+
+    # args.path | args.board (flag for the active board) | args.column (flag for a column)
+
+    if args.board:
+        board = svc.working_board
+        if board is None:
+            raise ValueError("No active board; set one with `board` first")
+        return svc.get_board(board)
+    elif args.column:
+        return svc.get_column(Slug(args.column))
+    elif args.path:
+        return svc.get_task(args.path)
+    else:
+        raise ValueError("Expects either --board, --column <column>, or a <task>")
+
+
 def handle_create_helper(args: argparse.Namespace, svc: KanbanService) -> Board | Column | Task:
     """
     Create a new board, column, or task. This is the main entry point for

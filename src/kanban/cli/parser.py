@@ -61,6 +61,18 @@ def _add_format_arg(parser: argparse.ArgumentParser) -> None:
                         help="Output format: plain or json (default: plain)")
 
 
+def _add_field_args(parser: argparse.ArgumentParser) -> None:
+    """
+    Add the --path and --id flags, which report one field of an object instead
+    of the object.  Only commands that return a board, column, or task take
+    them; a command that returns anything else rejects them as unrecognized.
+    """
+    parser.add_argument("--path", dest="show_path", action="store_true", default=False,
+                        help="Print the object's path alone")
+    parser.add_argument("--id", dest="show_id", action="store_true", default=False,
+                        help="Print the object's id alone; with --path, the path comes first")
+
+
 def _add_list_format_and_sort_args(parser: argparse.ArgumentParser, sort_choices: list[str]) -> None:
     parser.add_argument("-s", "--sort", choices=sort_choices, metavar="FIELD", help="Field to sort by")
     parser.add_argument("-r", "--reverse", action="store_true", default=False, help="Reverse the sort order")
@@ -118,6 +130,7 @@ def _add_board_parser(subparsers: argparse._SubParsersAction) -> None:
     p = board_sub.add_parser("list", help="List all boards")
     _add_format_arg(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_board_list)
 
     # board create
@@ -125,6 +138,7 @@ def _add_board_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("board", metavar="BOARD", help="Board name")
     _add_format_arg(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_board_create)
 
     # board info
@@ -132,6 +146,7 @@ def _add_board_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("path", metavar="BOARD", help="Fully qualified /board path")
     _add_format_arg(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_board_info)
 
     # board rename
@@ -140,6 +155,7 @@ def _add_board_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("new_name", metavar="NEW-NAME", help="New board name")
     _add_format_arg(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_board_rename)
 
     # board delete
@@ -148,6 +164,7 @@ def _add_board_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("-f", "--force", action="store_true", default=False, help="Skip confirmation prompt")
     _add_format_arg(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_board_delete)
 
 
@@ -166,6 +183,7 @@ def _add_column_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("path", metavar="BOARD", help="Fully qualified /board path")
     _add_format_arg(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_column_list)
 
     # column create
@@ -174,6 +192,7 @@ def _add_column_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("title", metavar="TITLE", help="Column title")
     _add_format_arg(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_column_create)
 
     # column info
@@ -181,6 +200,7 @@ def _add_column_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("path", metavar="BOARD/COLUMN", help="Fully qualified /board/column path")
     _add_format_arg(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_column_info)
 
     # column rename
@@ -189,6 +209,7 @@ def _add_column_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("new_name", metavar="NEW-NAME", help="New column name")
     _add_format_arg(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_column_rename)
 
     # column reorder
@@ -197,6 +218,7 @@ def _add_column_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("position", metavar="POSITION", type=int, help="1-based target position")
     _add_format_arg(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_column_reorder)
 
     # column delete
@@ -205,6 +227,7 @@ def _add_column_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("-f", "--force", action="store_true", default=False, help="Skip confirmation prompt")
     _add_format_arg(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_column_delete)
 
 
@@ -226,6 +249,7 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     _add_list_format_and_sort_args(p, SORT_TASK_CHOICES)
     _add_task_filter_args(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_task_list)
 
     # task create
@@ -235,6 +259,7 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     _add_task_create_args(p)
     _add_format_arg(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_task_create)
 
     # task info
@@ -242,6 +267,7 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified /board/column/task path")
     _add_format_arg(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_task_info)
 
     # task view
@@ -250,6 +276,7 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("-m", "--markdown", action="store_true", default=False, help="Render the task body as Markdown instead of plain text")
     _add_format_arg(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_task_view)
 
     # task edit
@@ -257,6 +284,7 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified /board/column/task path")
     _add_format_arg(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_task_edit)
 
     # task update
@@ -265,6 +293,7 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     _add_task_update_args(p)
     _add_format_arg(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_task_update)
 
     # task unset
@@ -273,6 +302,7 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     _add_task_unset_args(p)
     _add_format_arg(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_task_unset)
 
     # task delete
@@ -281,6 +311,7 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("-f", "--force", action="store_true", default=False, help="Skip confirmation prompt")
     _add_format_arg(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_task_delete)
 
     # task rename
@@ -289,6 +320,7 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("new_name", metavar="NEW-NAME", help="New task name")
     _add_format_arg(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_task_rename)
 
     # task move
@@ -302,6 +334,7 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     group.add_argument("--down", action="store_true", default=False, help="Move the task down within the current column")
     _add_format_arg(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_task_move)
 
     # task assign
@@ -312,6 +345,7 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     group.add_argument("-r", "--remove", action="store_true", default=False, help="Clear the task's assigned user")
     _add_format_arg(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_task_assign)
 
     # task tag
@@ -321,6 +355,7 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("-r", "--remove", action="store_true", default=False, help="Remove the tag instead of adding it")
     _add_format_arg(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_task_tag)
 
     # task comment
@@ -331,6 +366,7 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     group.add_argument("--edit", action="store_true", default=False, help="Open the task body in the editor instead of appending a comment")
     _add_format_arg(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_task_comment)
 
 
@@ -384,6 +420,7 @@ Use the CLI directly with `kanban board list`, `kanban task create`, etc.
     _add_task_filter_args(p)
     p.add_argument("--board", metavar="BOARD", help="Restrict search to a specific board")
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_search)
 
     # log

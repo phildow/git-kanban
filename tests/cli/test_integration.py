@@ -1286,5 +1286,79 @@ class TestNewTaskInsertCLI(_InitializedBase):
         self.assertEqual([task["slug"] for task in listed], ["second", "first"])
 
 
+class TestFieldFlagsCLI(_InitializedBase):
+    """`--path` and `--id` report a field of the object a command returned."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.repo.create_board("proj", slug="proj")
+        self.repo.create_column("proj", "todo", slug="todo")
+        self.repo.create_column("proj", "done", slug="done")
+        self.run_cli("task", "create", "/proj/todo", "Fix login")
+
+    def _id_of(self, board: str, column: str, slug: str) -> str:
+        """Return the id a task carries in its frontmatter."""
+        return self._read_frontmatter(board, column, slug)["id"]
+
+    def test_path_flag_prints_the_path_alone(self) -> None:
+        """The path is the whole of the output, with no other field beside it."""
+        out = self.run_cli("task", "info", "/proj/todo/fix-login", "--path")
+        self.assertEqual(out.strip(), "/proj/todo/fix-login")
+
+    def test_id_flag_prints_the_id_alone(self) -> None:
+        """The id is the whole of the output."""
+        out = self.run_cli("task", "info", "/proj/todo/fix-login", "--id")
+        self.assertEqual(out.strip(), self._id_of("proj", "todo", "fix-login"))
+
+    def test_both_flags_print_the_path_first(self) -> None:
+        """Asking for both prints two lines, the path ahead of the id."""
+        out = self.run_cli("task", "info", "/proj/todo/fix-login", "--path", "--id")
+        self.assertEqual(
+            out.strip().splitlines(),
+            ["/proj/todo/fix-login", self._id_of("proj", "todo", "fix-login")],
+        )
+
+    def test_a_write_still_happens_behind_the_field(self) -> None:
+        """A move reports the path it landed on, and the task moved."""
+        out = self.run_cli("task", "move", "/proj/todo/fix-login", "done", "--path")
+        self.assertEqual(out.strip(), "/proj/done/fix-login")
+        self.assertTrue((self.boards_dir / "proj" / "done" / "fix-login.md").is_file())
+
+    def test_a_created_task_reports_its_new_path(self) -> None:
+        """Creating with --path prints where the task was written and nothing else."""
+        out = self.run_cli("task", "create", "/proj/todo", "Write docs", "--path")
+        self.assertEqual(out.strip(), "/proj/todo/write-docs")
+
+    def test_a_list_prints_a_line_for_each_field_of_each_object(self) -> None:
+        """Every task listed contributes its path and then its id."""
+        self.run_cli("task", "create", "/proj/todo", "Write docs")
+        out = self.run_cli("task", "list", "/proj/todo", "--path", "--id")
+        paths = [line for line in out.strip().splitlines() if line.startswith("/")]
+        self.assertEqual(paths, ["/proj/todo/fix-login", "/proj/todo/write-docs"])
+        self.assertEqual(len(out.strip().splitlines()), 4)
+
+    def test_json_reports_the_fields_as_an_object(self) -> None:
+        """In JSON the fields are an object of their own, the path key first."""
+        data = self.run_json("task", "info", "/proj/todo/fix-login", "--format", "json", "--path", "--id")
+        self.assertEqual(
+            data,
+            {"path": "/proj/todo/fix-login", "id": self._id_of("proj", "todo", "fix-login")},
+        )
+        self.assertEqual(list(data.keys()), ["path", "id"])
+
+    def test_json_reports_a_list_as_an_array(self) -> None:
+        """A listing in JSON is an array of field objects."""
+        data = self.run_json("column", "list", "/proj", "--format", "json", "--path")
+        self.assertEqual(
+            [entry["path"] for entry in data],
+            ["/proj/todo", "/proj/done"],
+        )
+
+    def test_a_board_reports_its_own_path(self) -> None:
+        """A board has a path and an id like anything else."""
+        out = self.run_cli("board", "info", "/proj", "--path")
+        self.assertEqual(out.strip(), "/proj")
+
+
 if __name__ == "__main__":
     unittest.main()

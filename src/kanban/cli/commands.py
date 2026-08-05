@@ -18,6 +18,7 @@ from functools import wraps
 from ..storage.seeds import BOOTSTRAP_CONFIG
 from ..models import Priority, Slug, TaskFilter
 from ..protocols.command_renderer import CommandRenderer
+from ..utils.field_renderer import for_fields
 from ..services.kanban import KanbanService, TaskCreateParams, TaskUnsetParams, TaskUpdateParams
 
 
@@ -44,10 +45,15 @@ def with_absolute_path(method):
 	return _wrapped
 
 def _pick(args: argparse.Namespace, renderer: CommandRenderer, json_renderer: CommandRenderer) -> CommandRenderer:
-    """Return the renderer matching --format (defaults to the plain renderer)."""
-    if args.format == "json":
-        return json_renderer
-    return renderer
+    """
+    Return the renderer the arguments call for.
+
+    --format chooses between the plain and JSON renderers, and --path or --id
+    puts a FieldRenderer in front of whichever was chosen, so the command
+    reports those fields alone in that renderer's own form.
+    """
+    base = json_renderer if args.format == "json" else renderer
+    return for_fields(args, base)
 
 
 # TODO: REMOVE duplicate (in command_helpers.py)

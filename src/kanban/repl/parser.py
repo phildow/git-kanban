@@ -21,6 +21,7 @@ from ..repl.commands import (
     handle_delete,
     handle_column_reorder,
     handle_get_config,
+    handle_info,
     handle_list_config,
     handle_set_config,
     handle_log,
@@ -30,7 +31,6 @@ from ..repl.commands import (
     handle_task_assign,
     handle_task_comment,
     handle_task_edit,
-    handle_task_info,
     handle_task_list,
     handle_task_move,
     handle_task_tag,
@@ -76,6 +76,18 @@ def _add_global_flags(parser: argparse.ArgumentParser) -> None:
     #
     # parser.add_argument("--color", action="store_true", default=False, help="Enable colored output")
     # parser.add_argument("--verbose", action="store_true", default=False, help="Enable verbose output")
+
+
+def _add_field_args(parser: argparse.ArgumentParser) -> None:
+    """
+    Add the --path and --id flags, which report one field of an object instead
+    of the object.  Only commands that return a board, column, or task take
+    them; a command that returns anything else rejects them as unrecognized.
+    """
+    parser.add_argument("--path", dest="show_path", action="store_true", default=False,
+                        help="Print the object's path alone")
+    parser.add_argument("--id", dest="show_id", action="store_true", default=False,
+                        help="Print the object's id alone; with --path, the path comes first")
 
 
 def add_task_filter_args(parser: argparse.ArgumentParser) -> None:
@@ -139,6 +151,7 @@ Examples:
     p.add_argument("title", metavar="TITLE", nargs="?", help="Title of the new task")
     p.add_argument("--edit", action="store_true", default=False, help="Open the new task in the editor after creating it")
     _add_task_update_args(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_create)
 
 
@@ -156,6 +169,7 @@ Examples:
     group.add_argument("-b", "--board", action="store_true", default=False, help="Delete the active board")
     group.add_argument("-c", "--column", dest="column", metavar="COLUMN", help="Delete the named column")
     p.add_argument("-f", "--force", action="store_true", default=False, help="Skip confirmation prompt")
+    _add_field_args(p)
     p.set_defaults(func=handle_delete)
 
 
@@ -173,6 +187,7 @@ Examples:
     group.add_argument("-b", "--board", action="store_true", default=False, help="Rename the active board")
     group.add_argument("-c", "--column", dest="column", metavar="COLUMN", help="Rename the named column")
     rename_parser.add_argument("new_name", metavar="NEW-NAME", help="The new name for the board, column, or task")
+    _add_field_args(rename_parser)
     rename_parser.set_defaults(func=handle_rename)
 
 
@@ -187,6 +202,7 @@ def _add_reorder_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("column", metavar="COLUMN", help="The column to reorder")
     p.add_argument("position", metavar="POSITION", type=int, help="1-based target position")
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_column_reorder)
 
 
@@ -194,19 +210,34 @@ def _add_show_parser(subparsers: argparse._SubParsersAction) -> None:
     show_parser = subparsers.add_parser("view", aliases=["show", "v", "s"], help="View task details and body")
     show_parser.add_argument("path", metavar="TASK", help="The task to show")
     show_parser.add_argument("-p", "--plain", action="store_true", default=False, help="Render the task body as plain text instead of Markdown")
+    _add_field_args(show_parser)
     show_parser.set_defaults(func=handle_task_view)
 
 
 def _add_info_parser(subparsers: argparse._SubParsersAction) -> None:
-    info_parser = subparsers.add_parser("info", aliases=["i"], help="View task details only")
-    info_parser.add_argument("path", metavar="TASK", help="The task to inspect")
-    info_parser.set_defaults(func=handle_task_info)
+    epilog = """
+Examples:
+    info fix-login
+    info -c todo
+    info -b
+    info fix-login --path
+    info -b --id
+    """
+    p = subparsers.add_parser("info", aliases=["i"], help="View the details of a board, column, or task", epilog=epilog, formatter_class=argparse.RawDescriptionHelpFormatter)
+    _add_global_flags(p)
+    group = p.add_mutually_exclusive_group(required=True)
+    group.add_argument("path", metavar="TASK", nargs="?", help="The task to inspect")
+    group.add_argument("-b", "--board", action="store_true", default=False, help="Inspect the active board")
+    group.add_argument("-c", "--column", dest="column", metavar="COLUMN", help="Inspect the named column")
+    _add_field_args(p)
+    p.set_defaults(func=handle_info)
 
 
 def _add_edit_parser(subparsers: argparse._SubParsersAction) -> None:
     edit_parser = subparsers.add_parser("edit", help="Edit a task in the default editor")
     _add_global_flags(edit_parser)
     edit_parser.add_argument("path", metavar="TASK", help="The task to edit")
+    _add_field_args(edit_parser)
     edit_parser.set_defaults(func=handle_task_edit)
 
 
@@ -216,6 +247,7 @@ def _add_update_parser(subparsers: argparse._SubParsersAction) -> None:
     update_parser.add_argument("path", metavar="TASK", help="The task to update")
     update_parser.add_argument("-c", "--column", dest="column", metavar="COLUMN", help="Move the task to this column")
     _add_task_create_args(update_parser)
+    _add_field_args(update_parser)
     update_parser.set_defaults(func=handle_task_update)
 
 
@@ -224,6 +256,7 @@ def _add_unset_parser(subparsers: argparse._SubParsersAction) -> None:
     _add_global_flags(unset_parser)
     unset_parser.add_argument("path", metavar="TASK", help="The task to unset fields on")
     _add_task_unset_args(unset_parser)
+    _add_field_args(unset_parser)
     unset_parser.set_defaults(func=handle_task_unset)
 
 
@@ -237,6 +270,7 @@ def _add_move_parser(subparsers: argparse._SubParsersAction) -> None:
     group.add_argument("--up", action="store_true", default=False, help="Move the task up within the current column")
     group.add_argument("--down", action="store_true", default=False, help="Move the task down within the current column")
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_task_move)
 
 
@@ -271,6 +305,7 @@ def _add_boards_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("boards", help="List all boards in the kanban repository")
     p.add_argument("--slugs", action="store_true", default=False, help="Render a compact list of slugs only, like filenames")
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_board_list)
 
 
@@ -278,6 +313,7 @@ def _add_columns_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("columns", aliases=["cols"], help="List the columns in the active board")
     p.add_argument("--slugs", action="store_true", default=False, help="Render a compact list of slugs only, like filenames")
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_column_list)
 
 
@@ -290,6 +326,7 @@ def _add_tasks_parser(subparsers: argparse._SubParsersAction) -> None:
     _add_list_args(p, SORT_TASK_CHOICES)
     add_task_filter_args(p)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_task_list)
 
 
@@ -300,6 +337,7 @@ def _add_assign_parser(subparsers: argparse._SubParsersAction) -> None:
     group.add_argument("assigned_to", metavar="USER", nargs="?", help="User to assign the task to")
     group.add_argument("-r", "--remove", action="store_true", default=False, help="Clear the task's assigned user")
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_task_assign)
 
 
@@ -309,6 +347,7 @@ def _add_tag_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("tags", metavar="TAG", help="Tag to add to or remove from the task")
     p.add_argument("-r", "--remove", action="store_true", default=False, help="Remove the tag instead of adding it")
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_task_tag)
 
 
@@ -319,6 +358,7 @@ def _add_comment_parser(subparsers: argparse._SubParsersAction) -> None:
     group.add_argument("comment", metavar="COMMENT", nargs="?", help="The comment text to append")
     group.add_argument("--edit", action="store_true", default=False, help="Open the task body in the editor instead of appending a comment")
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_task_comment)
 
 # ---------------------------------------------------------------------------
@@ -404,6 +444,7 @@ Slugs:
     p.add_argument("--board", metavar="BOARD", help="Restrict search to a specific board")
     _add_list_args(p, SORT_TASK_CHOICES)
     _add_global_flags(p)
+    _add_field_args(p)
     p.set_defaults(func=handle_search)
 
     # log

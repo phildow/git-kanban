@@ -25,6 +25,7 @@ from ..storage.base import (
     TaskNotFound,
 )
 from ..protocols.command_renderer import CommandRenderer
+from ..utils.field_renderer import for_fields
 
 class _ReplExit(Exception):
     """Internal sentinel exception used to terminate the REPL loop."""
@@ -261,7 +262,9 @@ def run_repl(*, svc: KanbanService, renderer: CommandRenderer) -> None:
                     continue
 
                 try:
-                    args.func(args, svc, renderer)
+                    # --path and --id report a field of whatever the command
+                    # returned rather than the object itself.
+                    args.func(args, svc, for_fields(args, renderer))
                 except (BoardNotFound, ColumnNotFound, TaskNotFound) as exc:
                     logging.info(str(exc))
                     print(f"{exc}")

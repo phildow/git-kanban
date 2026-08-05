@@ -40,6 +40,7 @@ from ...services.kanban import (
     TaskUnsetParams,
     TaskUpdateParams,
 )
+from ...utils.field_renderer import for_fields
 from ...repl.completion_engine import CompletionEngine
 from ...repl.parser import build_parser as build_repl_parser
 from ..filter_query import FilterQuery, build_filter_parser, parse_filter
@@ -2382,7 +2383,9 @@ class BoardScreen(Screen[None]):
             interaction.granted = granted
             try:
                 with redirect_stdout(buffer), redirect_stderr(buffer):
-                    args.func(args, self.svc, renderer)
+                    # --path and --id report a field of what the command
+                    # returned; the renderer behind still records what changed.
+                    args.func(args, self.svc, for_fields(args, renderer))
             except InteractionRequired as exc:
                 # Held rather than handled here: the modal it needs cannot go up
                 # inside the `redirect_stdout` this is running in.

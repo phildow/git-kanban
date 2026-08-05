@@ -49,6 +49,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from kanban.services.render_service import RenderService
+from kanban.utils.field_renderer import for_fields
 from kanban.repl.parser import parse_args
 from kanban.repl.rich_renderer import RichRenderer as REPLRenderer
 from kanban.models import Slug
@@ -85,11 +86,16 @@ class _ReplBase(unittest.TestCase):
         self._tmp.cleanup()
 
     def run_repl(self, *argv: str) -> str:
-        """Execute a REPL command, assert non-empty output, and return captured stdout."""
+        """
+        Execute a REPL command and return captured stdout.
+
+        The renderer is wrapped the way the shell wraps it, so --path and --id
+        report a field here exactly as they do at the prompt.
+        """
         args = parse_args(list(argv))
         buf = io.StringIO()
         with redirect_stdout(buf):
-            args.func(args, self.svc, self.renderer)
+            args.func(args, self.svc, for_fields(args, self.renderer))
         return buf.getvalue()
 
     @property

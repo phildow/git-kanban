@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections.abc import Sequence
 from pathlib import Path
 
 from ..models import Board, Column, Task, UserContext
-from ..protocols.command_renderer import CommandRenderer
+from ..protocols.command_renderer import CommandRenderer, ObjectField, field_value
 from ..services.kanban import GitCommit, KanbanStatus
 from ..services.render_service import RenderService
 
@@ -63,6 +64,11 @@ def _column_dict(column: Column, board: dict) -> dict:
     }
 
 
+def _fields_dict(result: Board | Column | Task, fields: tuple[ObjectField, ...]) -> dict:
+    """The named fields of an object alone, in the order they were asked for."""
+    return {field.value: field_value(result, field) for field in fields}
+
+
 def _board_ref_dict(board: Board) -> dict:
     """Nested board reference embedded in task output."""
     return {"name": board.name, "path": str(board.path), "slug": board.slug}
@@ -80,7 +86,7 @@ class JsonRenderer(CommandRenderer):
         self.render_service = render_service
 
     def _emit(self, args: argparse.Namespace, value: object) -> None:
-        if value is None:
+        if value is None or self._silent:
             return
         print(value)
 
@@ -195,6 +201,14 @@ class JsonRenderer(CommandRenderer):
         self._emit(args, json.dumps(self._task_detail_dict(result), indent=2))
 
     # ── Search, log, status, config ───────────────────────────────────────────
+
+    def render_fields(self, args: argparse.Namespace, result: Board | Column | Task, fields: tuple[ObjectField, ...]) -> None:
+        """Emit the named fields of an object as a JSON object of its own."""
+        self._emit(args, json.dumps(_fields_dict(result, fields), indent=2))
+
+    def render_fields_list(self, args: argparse.Namespace, result: Sequence[Board | Column | Task], fields: tuple[ObjectField, ...]) -> None:
+        """Emit the named fields of a list of objects as a JSON array."""
+        self._emit(args, json.dumps([_fields_dict(obj, fields) for obj in result], indent=2))
 
     def render_search(self, args: argparse.Namespace, result: list[Task]) -> None:
         self._emit(args, json.dumps([self._task_dict(t) for t in result], indent=2))

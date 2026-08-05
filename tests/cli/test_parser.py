@@ -480,6 +480,56 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         self.assertEqual(args.command, "tui")
         self.assertIs(args.func, handle_tui)
 
+    def test_field_flags_default_to_false(self) -> None:
+        """Without --path or --id a command reports the whole object."""
+        args = cli_parser.parse_args(["task", "info", "/board-a/todo/fix-parser"])
+        self.assertFalse(args.show_path)
+        self.assertFalse(args.show_id)
+
+    def test_field_flags_are_taken_by_commands_that_return_an_object(self) -> None:
+        """Every board, column, and task command reports a field on request."""
+        commands = [
+            ["board", "list"],
+            ["board", "info", "/board-a"],
+            ["board", "rename", "/board-a", "Board A"],
+            ["board", "delete", "/board-a"],
+            ["column", "list", "/board-a"],
+            ["column", "reorder", "/board-a/todo", "1"],
+            ["task", "list", "/board-a"],
+            ["task", "create", "/board-a/todo", "Fix parser"],
+            ["task", "view", "/board-a/todo/fix-parser"],
+            ["task", "move", "/board-a/todo/fix-parser", "done"],
+            ["task", "comment", "/board-a/todo/fix-parser", "looking at it"],
+            ["search", "parser"],
+        ]
+        for command in commands:
+            with self.subTest(command=command):
+                args = cli_parser.parse_args(command + ["--path", "--id"])
+                self.assertTrue(args.show_path)
+                self.assertTrue(args.show_id)
+
+    def test_field_flags_are_refused_by_commands_that_return_no_object(self) -> None:
+        """A command with no path or id to report rejects the flags outright."""
+        commands = [
+            ["init"],
+            ["status"],
+            ["log", "/board-a/todo/fix-parser"],
+            ["config", "list"],
+            ["config", "get", "user.name"],
+        ]
+        for command in commands:
+            with self.subTest(command=command):
+                with self.assertRaises(SystemExit):
+                    cli_parser.parse_args(command + ["--path"])
+                with self.assertRaises(SystemExit):
+                    cli_parser.parse_args(command + ["--id"])
+
+    def test_field_flags_leave_the_object_path_alone(self) -> None:
+        """--path reports a field; the path argument still names the object."""
+        args = cli_parser.parse_args(["task", "info", "/board-a/todo/fix-parser", "--path"])
+        self.assertEqual(args.path, "/board-a/todo/fix-parser")
+        self.assertTrue(args.show_path)
+
     def test_required_subparsers_raise(self):
         """Missing required subcommands trigger parser exit errors."""
         with self.assertRaises(SystemExit):
