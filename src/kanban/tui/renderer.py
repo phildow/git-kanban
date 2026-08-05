@@ -17,8 +17,9 @@ from ..services.render_service import RenderService
 CAPTURE_WIDTH = 100
 
 # The render calls that report a command which changed nothing the board draws:
-# every listing and lookup, and the config, whose values are read the next time
-# a command needs them rather than drawn on the board.  Named here so a test can
+# every listing and lookup, and the config, whose values are not board data —
+# the board re-reads the settings it draws from after every command instead, so
+# a display setting takes effect without a rebuild.  Named here so a test can
 # hold the two halves of the interface together — every render call is either
 # one of these or one of the overrides below, and a command added to the one
 # without the other is a command the board would draw stale.

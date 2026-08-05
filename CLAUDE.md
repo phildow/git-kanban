@@ -1122,6 +1122,10 @@ User data contains settings that cannot be changed by the user and which are gen
     # values: all | errors | none, default: all
     notifications = all
 
+    # whether a card shows the task's id; a collapsed card never does
+    # values: show | hide, default: hide
+    task-id = hide
+
 [repository]
     # the folder in the repository that contains the kanban store
     worktree = ".kanban-store"

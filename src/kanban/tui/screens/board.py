@@ -35,7 +35,10 @@ from ...protocols.interaction import (
     InteractionRequired,
 )
 from ...services.kanban import (
+    CONFIG_TUI_TASK_ID,
     KanbanService,
+    TASK_ID_HIDE,
+    TASK_ID_SHOW,
     TaskCreateParams,
     TaskUnsetParams,
     TaskUpdateParams,
@@ -261,6 +264,9 @@ class BoardScreen(Screen[None]):
     dense: reactive[bool] = reactive(False)
     """True when cards are collapsed to single-line summaries."""
 
+    show_task_id: reactive[bool] = reactive(False)
+    """True when cards lead with the task's id, as `tui.task-id` asks."""
+
 
     def __init__(self, svc: KanbanService) -> None:
         """Create a board screen backed by `svc`."""
@@ -322,6 +328,9 @@ class BoardScreen(Screen[None]):
         """Attach the completers and histories, load the board, and ask which board to show if none is active."""
         self._install_completers()
         self._install_histories()
+        # Read before the cards are built, so the first board drawn already
+        # carries — or leaves off — the ids rather than being redrawn for them.
+        self.set_reactive(BoardScreen.show_task_id, self._configured_task_id())
         await self.reload()
 
         # Without a working board the screen falls back to the first one, which
@@ -515,7 +524,9 @@ class BoardScreen(Screen[None]):
                     self._tasks[slug] = self.svc.get_tasks(Path(f"/{board.slug}/{slug}"))
 
             for slug in targets:
-                await views[slug].set_tasks(self._visible(slug), dense=self.dense)
+                await views[slug].set_tasks(
+                    self._visible(slug), dense=self.dense, show_id=self.show_task_id
+                )
 
             self._select_task(select)
 
@@ -614,7 +625,11 @@ class BoardScreen(Screen[None]):
         await container.mount_all(panels)
 
         for panel in panels:
-            await panel.view.set_tasks(self._visible(panel.column.slug), dense=self.dense)
+            await panel.view.set_tasks(
+                self._visible(panel.column.slug),
+                dense=self.dense,
+                show_id=self.show_task_id,
+            )
 
         self._restore_focus(
             panels, select=select, focus_column=focus_column, focus_header=focus_header
@@ -1400,7 +1415,9 @@ class BoardScreen(Screen[None]):
             else:
                 await container.mount(panel)
 
-            await panel.view.set_tasks(self._visible(archive.slug), dense=self.dense)
+            await panel.view.set_tasks(
+                self._visible(archive.slug), dense=self.dense, show_id=self.show_task_id
+            )
 
         panel.scroll_visible()
         self._sync_subtitle()
@@ -2102,7 +2119,7 @@ class BoardScreen(Screen[None]):
         # Staging can arrive at the arrangement already on screen — entering and
         # leaving a column without reordering, say.  Redrawing would be a no-op.
         if [task.slug for task in desired] != [task.slug for task in view.tasks]:
-            await view.set_tasks(desired, dense=self.dense)
+            await view.set_tasks(desired, dense=self.dense, show_id=self.show_task_id)
 
         if select is not None and view.select_task(select):
             # Focus follows the card so it keeps the highlight of a live
@@ -2265,6 +2282,44 @@ class BoardScreen(Screen[None]):
         """Propagate the density change to every column."""
         for view in self.column_views:
             view.set_dense(dense)
+
+    def sync_settings(self) -> None:
+        """
+        Re-read the settings the board draws from, after they may have changed.
+
+        Called when the configuration screen closes.  Density is the user's own
+        toggle and is deliberately left alone: only what config decides is read
+        back here, and a setting that has not changed redraws nothing, since the
+        reactive is only watched when its value is different.
+        """
+        self.show_task_id = self._configured_task_id()
+
+    def _configured_task_id(self) -> bool:
+        """
+        Report whether `tui.task-id` asks for the id on cards.
+
+        An unreadable or unrecognised setting leaves the ids off: a card without
+        one is the plainer of the two, and the setting is a preference — worth a
+        line in the log, never worth interrupting the person using the board.
+        """
+        setting: str | None = None
+        try:
+            setting = self.svc.get_config(CONFIG_TUI_TASK_ID)
+        except Exception as exc:
+            description = str(exc) or exc.__class__.__name__
+            logging.warning("TUI could not read the task id setting: %s", description)
+            return False
+
+        if setting is not None and setting not in (TASK_ID_SHOW, TASK_ID_HIDE):
+            logging.warning(
+                "Configured task id setting %r is not recognised; hiding ids", setting
+            )
+        return setting == TASK_ID_SHOW
+
+    def watch_show_task_id(self, show_task_id: bool) -> None:
+        """Propagate the change to every column, so the ids appear without a reload."""
+        for view in self.column_views:
+            view.set_show_id(show_task_id)
 
     def action_reload_board(self) -> None:
         """Re-read the board from the filesystem."""
@@ -2540,6 +2595,12 @@ class BoardScreen(Screen[None]):
 
         if request is None:
             self._refresh_after_command(renderer.take_effect())
+            # `config set` changes nothing the renderer can point at a column,
+            # so it is recorded as having changed nothing — but a display
+            # setting changes how the cards are drawn.  Re-reading after every
+            # command is a single config lookup and redraws nothing unless a
+            # value differs.
+            self.sync_settings()
         else:
             self._ask(line, request)
 

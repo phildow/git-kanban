@@ -45,11 +45,20 @@ NOTIFICATIONS_ERRORS = "errors"
 """Show none of them."""
 NOTIFICATIONS_NONE = "none"
 
+"""Whether a card in the TUI shows the task's id."""
+CONFIG_TUI_TASK_ID = "tui.task-id"
+
+"""Show the id on a card that is not collapsed."""
+TASK_ID_SHOW = "show"
+"""Never show the id on a card."""
+TASK_ID_HIDE = "hide"
+
 CONFIG_KEYS: frozenset[str] = frozenset({
     CONFIG_USER_NAME,
     CONFIG_NEW_TASK_INSERT,
     CONFIG_TUI_THEME,
     CONFIG_TUI_NOTIFICATIONS,
+    CONFIG_TUI_TASK_ID,
 })
 
 # Keys whose value is drawn from a fixed set.  A key with no entry here takes
@@ -63,6 +72,7 @@ CONFIG_VALUES: dict[str, frozenset[str]] = {
     CONFIG_TUI_NOTIFICATIONS: frozenset({
         NOTIFICATIONS_ALL, NOTIFICATIONS_ERRORS, NOTIFICATIONS_NONE
     }),
+    CONFIG_TUI_TASK_ID: frozenset({TASK_ID_SHOW, TASK_ID_HIDE}),
 }
 
 # What a new configuration file is written with.  A key with no default here is
@@ -71,6 +81,7 @@ CONFIG_DEFAULTS: dict[str, str] = {
     CONFIG_NEW_TASK_INSERT: INSERT_BOTTOM,
     CONFIG_TUI_THEME: DEFAULT_THEME,
     CONFIG_TUI_NOTIFICATIONS: NOTIFICATIONS_ALL,
+    CONFIG_TUI_TASK_ID: TASK_ID_HIDE,
 }
 
 

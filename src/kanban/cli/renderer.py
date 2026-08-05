@@ -198,7 +198,7 @@ class Renderer(CommandRenderer):
 
 	def render_task_view(self, args: argparse.Namespace, result: Task) -> None:
 		"""Render a task's metadata followed by its body."""
-		self.render_task(args, result, spacing=0)
+		self.render_task(args, result)
 
 		body: str | Text | KanbanMarkdown = ""
 

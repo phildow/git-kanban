@@ -177,7 +177,21 @@ class KanbanApp(App[None]):
     def action_configuration(self) -> None:
         """Show the configuration values, and edit one."""
         if not isinstance(self.screen, ConfigScreen):
-            self.push_screen(ConfigScreen(self.svc))
+            self.push_screen(ConfigScreen(self.svc), self._configuration_closed)
+
+    def _configuration_closed(self, _: None) -> None:
+        """
+        Let the board pick up any setting it draws from that has just changed.
+
+        The screen the settings were written from is the app's, not the board's,
+        so the board has no other way of hearing about them.  Nothing is redrawn
+        unless a value it holds actually differs, so closing the screen having
+        changed nothing — or having changed a setting the board does not draw
+        from — leaves the cards alone.
+        """
+        for screen in self.screen_stack:
+            if isinstance(screen, BoardScreen):
+                screen.sync_settings()
 
     def search_themes(self) -> None:
         """

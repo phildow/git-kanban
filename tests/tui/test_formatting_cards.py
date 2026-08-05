@@ -45,6 +45,38 @@ class TestCardText(unittest.TestCase):
         self.assertEqual(card_text(task).plain, "Fix login bug")
 
 
+class TestCardTextTaskId(unittest.TestCase):
+    """card_text leads with the task's id only when it is asked for."""
+
+    def test_omits_the_id_by_default(self) -> None:
+        """Without `show_id` the card is the title and its metadata alone."""
+        self.assertNotIn("#a3f9c2d1", card_text(make_task()).plain)
+
+    def test_leads_the_title_with_the_id(self) -> None:
+        """The id opens the first line, ahead of the title."""
+        lines = card_text(make_task(), show_id=True).plain.splitlines()
+        self.assertEqual(lines[0], "#a3f9c2d1 Fix login bug")
+
+    def test_leaves_the_metadata_lines_alone(self) -> None:
+        """The id joins the title's line rather than taking one of its own."""
+        with_id = card_text(make_task(), show_id=True).plain.splitlines()
+        without = card_text(make_task()).plain.splitlines()
+        self.assertEqual(with_id[1:], without[1:])
+
+    def test_is_dimmed(self) -> None:
+        """The id is dimmed so the title still reads first."""
+        text = card_text(make_task(), show_id=True)
+        span = text.spans[0]
+
+        self.assertEqual(text.plain[span.start:span.end], "#a3f9c2d1")
+        self.assertEqual(str(span.style), "dim")
+
+    def test_a_dense_card_never_carries_it(self) -> None:
+        """A collapsed card keeps its one line for the title, whatever the setting."""
+        text = card_text(make_task(), dense=True, show_id=True).plain
+        self.assertEqual(text, "Fix login bug !HIGH @alice")
+
+
 class TestDenseCardText(unittest.TestCase):
     """card_text collapses to one line in dense mode."""
 

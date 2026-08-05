@@ -23,11 +23,22 @@ class CardWidget(Static):
     dense: reactive[bool] = reactive(False)
     """Collapse the card to a single line when True."""
 
-    def __init__(self, task: Task, *, dense: bool = False, id: str | None = None) -> None:
+    show_id: reactive[bool] = reactive(False)
+    """Lead the card with the task's `#id` sigil when True, and it is not dense."""
+
+    def __init__(
+        self,
+        task: Task,
+        *,
+        dense: bool = False,
+        show_id: bool = False,
+        id: str | None = None,
+    ) -> None:
         """Create a card for `task`, optionally collapsed to dense mode."""
         super().__init__(id=id)
         self._card_task = task
         self.set_reactive(CardWidget.dense, dense)
+        self.set_reactive(CardWidget.show_id, show_id)
 
     @property
     def card_task(self) -> Task:
@@ -41,11 +52,16 @@ class CardWidget(Static):
 
     def render(self) -> Text:
         """Return the card's body text for the current density."""
-        return card_text(self.card_task, dense=self.dense)
+        return card_text(self.card_task, dense=self.dense, show_id=self.show_id)
 
     def watch_dense(self, dense: bool) -> None:
         """Toggle the dense CSS class and redraw when the density changes."""
         self.set_class(dense, "-dense")
+        self.refresh(layout=True)
+
+    def watch_show_id(self, show_id: bool) -> None:
+        """Redraw when the id is turned on or off, which can wrap the title onto a second line."""
+        _ = show_id
         self.refresh(layout=True)
 
     def set_moving(self, moving: bool) -> None:
