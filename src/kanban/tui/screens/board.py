@@ -42,7 +42,7 @@ from ...services.kanban import (
 )
 from ...utils.field_renderer import for_fields
 from ...repl.completion_engine import CompletionEngine
-from ...repl.parser import build_parser as build_repl_parser
+from ...repl.parser import EXIT_COMMANDS, build_parser as build_repl_parser
 from ..filter_query import FilterQuery, build_filter_parser, parse_filter
 from ..formatting import board_subtitle
 from ..history import CommandHistory
@@ -2496,6 +2496,12 @@ class BoardScreen(Screen[None]):
             tokens = shlex.split(line)
         except ValueError as exc:
             self.notify(str(exc), title="command", severity="error")
+            return
+
+        # The exit commands end the session rather than reaching a handler, as
+        # they do in the REPL; here that means quitting the app.
+        if len(tokens) == 1 and tokens[0] in EXIT_COMMANDS:
+            self.app.exit()
             return
 
         buffer = StringIO()

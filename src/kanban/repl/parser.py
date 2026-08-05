@@ -48,6 +48,11 @@ PRIORITY_CHOICES = [p.value for p in Priority]
 TASK_DESTINATION_METAVAR = "COLUMN | /BOARD/COLUMN"
 _CONFIG_KEYS_HELP = ", ".join(sorted(CONFIG_KEYS))
 
+# The commands that end the session.  They are handled by the consumer — the
+# REPL leaves its loop, the TUI's command bar quits the app — rather than by a
+# handler, so the names live here where both can read them.
+EXIT_COMMANDS = {"exit", "quit", ":q"}
+
 class CustomFormatter(argparse.RawDescriptionHelpFormatter):
     @staticmethod
     def _customize_help_text(text: str | None) -> str:

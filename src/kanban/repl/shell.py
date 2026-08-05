@@ -13,7 +13,7 @@ from contextlib import contextmanager
 import readline
 
 from ..repl.completion_engine import CompletionEngine
-from ..repl.parser import build_parser
+from ..repl.parser import EXIT_COMMANDS, build_parser
 from ..repl.readline_completer import ReplCompleter
 from ..services.kanban import KanbanService
 from ..storage.base import (
@@ -33,7 +33,7 @@ class _ReplExit(Exception):
 
 def _is_exit_command(line: str) -> bool:
     """Return True when input matches a REPL exit command."""
-    return line in {"quit", "exit", ":q"}
+    return line in EXIT_COMMANDS
 
 
 def _is_help_command(line: str) -> bool:
