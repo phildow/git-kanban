@@ -503,7 +503,7 @@ kanban task create <board>/<column> <title>
     [--description <text>]
 
 kanban task update <board>/<column>/<task>
-    [--column <column>]
+    [--column <column> | /<board>/<column>]
     [--assigned-to <name>]
     [--priority <low|medium|high>]
     [--tag <tag>]
@@ -520,7 +520,7 @@ kanban task unset <board>/<column>/<task>
     [--description]
 
 kanban task move <board>/<column>/<task>
-    [<column>]
+    [<column> | /<board>/<column>]
     [--top]
     [--bottom]
     [--up]
@@ -642,7 +642,7 @@ info <task> | --column <column> | --board
 edit <task>
 
 update <task>
-    [--column <column>]
+    [--column <column> | /<board>/<column>]
     [--assigned-to <name>]
     [--priority <low|medium|high>]
     [--tag <tag>]
@@ -658,7 +658,7 @@ unset <task>
     [--created-by]
     [--description]
 
-move <task> [<column>]
+move <task> [<column> | /<board>/<column>]
     [--top]
     [--bottom]
     [--up]

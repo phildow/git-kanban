@@ -101,7 +101,7 @@ def _add_task_update_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("-w", "--assigned-to", dest="assigned_to", metavar="NAME", help="Assign task to a user")
     parser.add_argument("-p", "--priority", choices=PRIORITY_CHOICES, metavar="LEVEL", help="Task priority")
     parser.add_argument("-t", "--tag", metavar="TAG", action="append", dest="tags", help="Add a tag (repeatable)")
-    parser.add_argument("-c", "--column", dest="column", metavar="COLUMN", help="Move the task to this column")
+    parser.add_argument("-c", "--column", dest="column", metavar="COLUMN | /BOARD/COLUMN", help="Move the task to this column, or to a column of another board")
     parser.add_argument("-d", "--due-date", dest="due_date", metavar="DATE", help="Due date (YYYY-MM-DD)")
     parser.add_argument("-b", "--created-by", dest="created_by", metavar="NAME", help="Creator name")
     parser.add_argument("--description", dest="description", metavar="TEXT", help="Description text (replaces the Description section of the task body)")
@@ -324,10 +324,10 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     p.set_defaults(func=handle_task_rename)
 
     # task move
-    p = task_sub.add_parser("move", help="Move task to another column")
+    p = task_sub.add_parser("move", help="Move task to another column or board")
     p.add_argument("path", metavar="BOARD/COLUMN/TASK", help="Fully qualified /board/column/task path")
     group = p.add_mutually_exclusive_group()
-    group.add_argument("column", type=str, nargs="?", help="The destination column")
+    group.add_argument("column", metavar="COLUMN | /BOARD/COLUMN", type=str, nargs="?", help="The destination column, or a /board/column path to move the task to another board")
     group.add_argument("--top", action="store_true", default=False, help="The top of the current column")
     group.add_argument("--bottom", action="store_true", default=False, help="The bottom of the current column")
     group.add_argument("--up", action="store_true", default=False, help="Move the task up within the current column")

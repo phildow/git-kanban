@@ -767,6 +767,21 @@ class TestTaskCLI(_InitializedBase):
         fm = self._read_frontmatter("proj", "done", "fix-login")
         self.assertEqual(fm.get("assigned_to"), "alice")
 
+    def test_task_update_column_board_path_moves_task_to_other_board(self) -> None:
+        """task update --column /board/column moves the task to that board's column."""
+        self.repo.create_board("other", slug="other")
+        self.repo.create_column("other", "todo", slug="todo")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
+        self.run_cli(
+            "task", "update", "proj/todo/fix-login",
+            "--assigned-to", "alice",
+            "--column", "/other/todo",
+        )
+        self.assertTrue((self.boards_dir / "other" / "todo" / "fix-login.md").is_file())
+        self.assertFalse((self.boards_dir / "proj" / "todo" / "fix-login.md").exists())
+        fm = self._read_frontmatter("other", "todo", "fix-login")
+        self.assertEqual(fm.get("assigned_to"), "alice")
+
     def test_task_update_description_writes_to_body(self) -> None:
         """task update --description writes the text into the task body."""
         self.run_cli("task", "create", "/proj/todo", "fix-login")
@@ -851,6 +866,31 @@ class TestTaskCLI(_InitializedBase):
         self.run_cli("task", "create", "/proj/todo", "fix-login")
         out = self.run_cli("task", "move", "proj/todo/fix-login", "done")
         self.assertIn("/proj/done/fix-login", out)
+
+    def test_task_move_to_board_path_creates_file_on_other_board(self) -> None:
+        """task move with a /board/column destination moves the task to that board."""
+        self.repo.create_board("other", slug="other")
+        self.repo.create_column("other", "todo", slug="todo")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
+        self.run_cli("task", "move", "proj/todo/fix-login", "/other/todo")
+        self.assertTrue((self.boards_dir / "other" / "todo" / "fix-login.md").is_file())
+        self.assertFalse((self.boards_dir / "proj" / "todo" / "fix-login.md").exists())
+
+    def test_task_move_to_board_path_emits_path(self) -> None:
+        """task move to another board reports the task's path on that board."""
+        self.repo.create_board("other", slug="other")
+        self.repo.create_column("other", "todo", slug="todo")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
+        out = self.run_cli("task", "move", "proj/todo/fix-login", "/other/todo")
+        self.assertIn("/other/todo/fix-login", out)
+
+    def test_task_move_to_board_path_without_leading_slash(self) -> None:
+        """task move accepts a board/column destination without a leading slash."""
+        self.repo.create_board("other", slug="other")
+        self.repo.create_column("other", "todo", slug="todo")
+        self.run_cli("task", "create", "/proj/todo", "fix-login")
+        self.run_cli("task", "move", "proj/todo/fix-login", "other/todo")
+        self.assertTrue((self.boards_dir / "other" / "todo" / "fix-login.md").is_file())
 
     # -- move reorder (within column) -----------------------------------------
 

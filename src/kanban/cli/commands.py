@@ -19,6 +19,7 @@ from ..storage.seeds import BOOTSTRAP_CONFIG
 from ..models import Priority, Slug, TaskFilter
 from ..protocols.command_renderer import CommandRenderer
 from ..utils.field_renderer import for_fields
+from ..utils.str import parse_destination
 from ..services.kanban import KanbanService, TaskCreateParams, TaskUnsetParams, TaskUpdateParams
 
 
@@ -224,10 +225,14 @@ def handle_task_update(args: argparse.Namespace, svc: KanbanService, renderer: C
 		description=args.description,
 	)
 
+	# parse the destination before the update so an invalid one writes nothing
+	destination = parse_destination(args.column) if args.column is not None else None
+
 	result = svc.update_task(args.path, updates=updates)
 
-	if args.column is not None:
-		result = svc.move_task(Path(result.path), Slug(args.column))
+	if destination is not None:
+		column, board = destination
+		result = svc.move_task(Path(result.path), column, board)
 
 	_pick(args, renderer, json_renderer).render_task_update(args, result)
 
@@ -250,7 +255,8 @@ def handle_task_unset(args: argparse.Namespace, svc: KanbanService, renderer: Co
 @with_absolute_path
 def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:
 	if args.column is not None:
-		result = svc.move_task(args.path, Slug(args.column))
+		column, board = parse_destination(args.column)
+		result = svc.move_task(args.path, column, board)
 		_pick(args, renderer, json_renderer).render_task_move(args, result)
 	else:
 		op = "top" if args.top else "bottom" if args.bottom else "up" if args.up else "down" if args.down else None

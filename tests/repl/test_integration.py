@@ -775,6 +775,18 @@ class TestReplUpdate(_InitializedReplBase):
         fm = self._read_frontmatter("proj", "done", "fix-login")
         self.assertEqual(fm.get("assigned_to"), "alice")
 
+    def test_update_task_column_board_path_moves_task_to_other_board(self) -> None:
+        """update task --column /board/column moves the task to that board's column."""
+        self.repo.create_board("other", slug="other")
+        self.repo.create_column("other", "todo", slug="todo")
+        self.run_repl("update", "fix-login",
+                      "--assigned-to", "alice",
+                      "--column", "/other/todo")
+        self.assertTrue((self.boards_dir / "other" / "todo" / "fix-login.md").is_file())
+        self.assertFalse((self.boards_dir / "proj" / "todo" / "fix-login.md").exists())
+        fm = self._read_frontmatter("other", "todo", "fix-login")
+        self.assertEqual(fm.get("assigned_to"), "alice")
+
     def test_update_task_description_writes_to_body(self) -> None:
         """update task --description writes the text into the task body."""
         self.run_repl("update", "fix-login",
@@ -832,6 +844,25 @@ class TestReplMove(_InitializedReplBase):
         self.assertTrue(
             (self.boards_dir / "proj" / "done" / "fix-login.md").is_file()
         )
+
+    def test_move_to_board_path_places_file_on_other_board(self) -> None:
+        """move with a /board/column destination moves the task to that board."""
+        self.repo.create_board("other", slug="other")
+        self.repo.create_column("other", "todo", slug="todo")
+        self.run_repl("move", "fix-login", "/other/todo")
+        self.assertTrue(
+            (self.boards_dir / "other" / "todo" / "fix-login.md").is_file()
+        )
+        self.assertFalse(
+            (self.boards_dir / "proj" / "todo" / "fix-login.md").exists()
+        )
+
+    def test_move_to_board_path_leaves_active_board_unchanged(self) -> None:
+        """move to another board does not switch the active board."""
+        self.repo.create_board("other", slug="other")
+        self.repo.create_column("other", "todo", slug="todo")
+        self.run_repl("move", "fix-login", "/other/todo")
+        self.assertEqual(self.svc.working_board, Slug("proj"))
 
 
 class TestReplMoveReorder(_InitializedReplBase):

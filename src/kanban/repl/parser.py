@@ -245,7 +245,7 @@ def _add_update_parser(subparsers: argparse._SubParsersAction) -> None:
     update_parser = subparsers.add_parser("update", help="Update a task")
     _add_global_flags(update_parser)
     update_parser.add_argument("path", metavar="TASK", help="The task to update")
-    update_parser.add_argument("-c", "--column", dest="column", metavar="COLUMN", help="Move the task to this column")
+    update_parser.add_argument("-c", "--column", dest="column", metavar="COLUMN | /BOARD/COLUMN", help="Move the task to this column of the active board, or to an absolute /board/column path on another board")
     _add_task_create_args(update_parser)
     _add_field_args(update_parser)
     update_parser.set_defaults(func=handle_task_update)
@@ -261,10 +261,10 @@ def _add_unset_parser(subparsers: argparse._SubParsersAction) -> None:
 
 
 def _add_move_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser("move", aliases=["mv"], help="Move a task to another column or within its column")
+    p = subparsers.add_parser("move", aliases=["mv"], help="Move a task to another column or board, or within its column")
     p.add_argument("path", metavar="TASK", type=str, help="The task to move")
     group = p.add_mutually_exclusive_group()
-    group.add_argument("column", metavar="COLUMN", type=str, nargs="?", help="The destination column")
+    group.add_argument("column", metavar="COLUMN | /BOARD/COLUMN", type=str, nargs="?", help="The destination column in the active board, or an absolute /board/column path to move the task to another board")
     group.add_argument("--top", action="store_true", default=False, help="The top of the current column")
     group.add_argument("--bottom", action="store_true", default=False, help="The bottom of the current column")
     group.add_argument("--up", action="store_true", default=False, help="Move the task up within the current column")
@@ -381,6 +381,8 @@ Examples:
                        Add the 'urgent' tag to the 'fix-login' task
     move fix-login done
                        Move the 'fix-login' task to the 'done' column
+    move fix-login /other/todo
+                       Move the 'fix-login' task to the 'todo' column of the 'other' board
     view fix-login     View the details and body of the 'fix-login' task
     tasks --help       Show help for the 'tasks' command
 

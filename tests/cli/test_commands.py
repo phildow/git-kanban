@@ -415,8 +415,27 @@ class TestCommandHandlers(unittest.TestCase):
                 created_by="mark",
             ),
         )
-        self.svc.move_task.assert_called_once_with(Path("/board-a/todo/fix-parser"), Slug("done"))
+        self.svc.move_task.assert_called_once_with(Path("/board-a/todo/fix-parser"), Slug("done"), None)
         self.renderer.render_task_update.assert_called_once_with(args, moved)
+
+    def test_handle_task_update_with_board_column_moves_to_that_board(self):
+        """`task update --column /board/column` moves the updated task to that board's column."""
+        args = self._args(
+            path="board-a/todo/fix-parser",
+            assigned_to=None,
+            priority=None,
+            tags=None,
+            due_date=None,
+            created_by=None,
+            column="/board-b/done",
+            description=None,
+        )
+        self.svc.update_task.return_value = SimpleNamespace(path="/board-a/todo/fix-parser")
+        self.svc.move_task.return_value = object()
+
+        commands.handle_task_update(args, self.svc, self.renderer, self.json_renderer)
+
+        self.svc.move_task.assert_called_once_with(Path("/board-a/todo/fix-parser"), Slug("done"), Slug("board-b"))
 
     def test_handle_task_update_with_explicit_empty_tags(self):
         """`task edit` preserves an explicit empty tags list."""
@@ -560,15 +579,44 @@ class TestCommandHandlers(unittest.TestCase):
         self.renderer.render_task_rename.assert_called_once_with(args, result)
 
     def test_handle_task_move(self):
-        """`task move` forwards the task path and destination column name."""
+        """`task move` forwards the task path and destination column name, with no board."""
         args = self._args(path="board-a/todo/fix-parser", column="done")
         result = object()
         self.svc.move_task.return_value = result
 
         commands.handle_task_move(args, self.svc, self.renderer, self.json_renderer)
 
-        self.svc.move_task.assert_called_once_with(Path("/board-a/todo/fix-parser"), Slug("done"))
+        self.svc.move_task.assert_called_once_with(Path("/board-a/todo/fix-parser"), Slug("done"), None)
         self.renderer.render_task_move.assert_called_once_with(args, result)
+
+    def test_handle_task_move_to_board(self):
+        """`task move` with a /board/column destination forwards both board and column."""
+        args = self._args(path="board-a/todo/fix-parser", column="/board-b/done")
+        result = object()
+        self.svc.move_task.return_value = result
+
+        commands.handle_task_move(args, self.svc, self.renderer, self.json_renderer)
+
+        self.svc.move_task.assert_called_once_with(Path("/board-a/todo/fix-parser"), Slug("done"), Slug("board-b"))
+        self.renderer.render_task_move.assert_called_once_with(args, result)
+
+    def test_handle_task_move_to_board_without_leading_slash(self):
+        """`task move` treats a bare board/column destination as an absolute path."""
+        args = self._args(path="board-a/todo/fix-parser", column="board-b/done")
+        self.svc.move_task.return_value = object()
+
+        commands.handle_task_move(args, self.svc, self.renderer, self.json_renderer)
+
+        self.svc.move_task.assert_called_once_with(Path("/board-a/todo/fix-parser"), Slug("done"), Slug("board-b"))
+
+    def test_handle_task_move_rejects_deeper_destination(self):
+        """`task move` raises for a destination with more than a board and column."""
+        args = self._args(path="board-a/todo/fix-parser", column="/board-b/done/extra")
+
+        with self.assertRaises(ValueError):
+            commands.handle_task_move(args, self.svc, self.renderer, self.json_renderer)
+
+        self.svc.move_task.assert_not_called()
 
     def test_handle_task_move_top(self):
         """`task move --top` calls reorder_task with "top" and renders via render_task_reorder."""

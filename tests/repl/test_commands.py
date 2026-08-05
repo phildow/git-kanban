@@ -441,8 +441,30 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_task_update(args, self.svc, self.renderer)
 
-        self.svc.move_task.assert_called_once_with(Path("fix-parser"), Slug("done"))
+        self.svc.move_task.assert_called_once_with(Path("fix-parser"), Slug("done"), None)
         self.renderer.render_task_update.assert_called_once_with(args, moved)
+
+    def test_handle_task_update_with_board_column_moves_task_to_board(self):
+        """`update --column /board/column` moves the updated task to that board's column."""
+        args = self._args(path="fix-parser", column="/board-b/done", assigned_to=None, priority=None, tags=None, due_date=None, created_by=None, description=None)
+        updated = MagicMock()
+        updated.path = "fix-parser"
+        self.svc.update_task.return_value = updated
+        self.svc.move_task.return_value = object()
+
+        commands.handle_task_update(args, self.svc, self.renderer)
+
+        self.svc.move_task.assert_called_once_with(Path("fix-parser"), Slug("done"), Slug("board-b"))
+
+    def test_handle_task_update_rejects_relative_board_column(self):
+        """`update --column` requires a leading slash to name another board, and writes nothing when it is missing."""
+        args = self._args(path="fix-parser", column="board-b/done", assigned_to=None, priority=None, tags=None, due_date=None, created_by=None, description=None)
+
+        with self.assertRaises(ValueError):
+            commands.handle_task_update(args, self.svc, self.renderer)
+
+        self.svc.update_task.assert_not_called()
+        self.svc.move_task.assert_not_called()
 
     def test_handle_task_update_forwards_description(self):
         """`update --description TEXT` forwards description into `TaskUpdateParams`."""
@@ -560,8 +582,37 @@ class TestReplCommandHandlers(unittest.TestCase):
 
         commands.handle_task_move(args, self.svc, self.renderer)
 
-        self.svc.move_task.assert_called_once_with(Slug("fix-parser"), Slug("done"))
+        self.svc.move_task.assert_called_once_with(Slug("fix-parser"), Slug("done"), None)
         self.renderer.render_task_move.assert_called_once_with(args, result)
+
+    def test_handle_task_move_to_board(self):
+        """`move` with a /board/column destination forwards both board and column."""
+        args = self._args(path="fix-parser", column="/board-b/done")
+        result = object()
+        self.svc.move_task.return_value = result
+
+        commands.handle_task_move(args, self.svc, self.renderer)
+
+        self.svc.move_task.assert_called_once_with(Slug("fix-parser"), Slug("done"), Slug("board-b"))
+        self.renderer.render_task_move.assert_called_once_with(args, result)
+
+    def test_handle_task_move_rejects_deeper_destination(self):
+        """`move` raises for a destination with more than a board and column."""
+        args = self._args(path="fix-parser", column="/board-b/done/extra")
+
+        with self.assertRaises(ValueError):
+            commands.handle_task_move(args, self.svc, self.renderer)
+
+        self.svc.move_task.assert_not_called()
+
+    def test_handle_task_move_rejects_relative_board_destination(self):
+        """`move` requires a leading slash to name another board: a relative path is an error."""
+        args = self._args(path="fix-parser", column="board-b/done")
+
+        with self.assertRaises(ValueError):
+            commands.handle_task_move(args, self.svc, self.renderer)
+
+        self.svc.move_task.assert_not_called()
 
     def test_handle_task_move_top(self):
         """`move --top` calls reorder_task with "top" and renders via render_task_reorder."""
