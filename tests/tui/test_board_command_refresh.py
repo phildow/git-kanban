@@ -144,6 +144,51 @@ class TestTaskCommands(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(len(_cards(pilot, "todo")), 1)
             self.assertEqual(done, _cards(pilot, "done"))
 
+    async def test_move_to_another_board_redraws_the_column_it_left(self) -> None:
+        """The card sent away comes off the column it was sitting in."""
+        service = _make_service()
+        service.repository.create_board("beta", slug=Slug("beta"))
+        service.repository.create_column(Slug("beta"), "To Do", slug=Slug("todo"))
+
+        async with KanbanApp(service).run_test() as pilot:
+            await pilot.pause()
+
+            await _run(pilot, "move first-task /beta/todo")
+
+            drawn = [card.card_task.slug for card in _cards(pilot, "todo")]
+            self.assertNotIn(Slug("first-task"), drawn)
+            self.assertEqual(len(drawn), 1)
+
+    async def test_move_to_another_board_leaves_the_other_columns_alone(self) -> None:
+        """Only the column the card left is redrawn; the rest keep their widgets."""
+        service = _make_service()
+        service.repository.create_board("beta", slug=Slug("beta"))
+        service.repository.create_column(Slug("beta"), "To Do", slug=Slug("todo"))
+
+        async with KanbanApp(service).run_test() as pilot:
+            await pilot.pause()
+            done = _cards(pilot, "done")
+            later = _cards(pilot, "later")
+
+            await _run(pilot, "move first-task /beta/todo")
+
+            self.assertEqual(done, _cards(pilot, "done"))
+            self.assertEqual(later, _cards(pilot, "later"))
+
+    async def test_move_to_another_board_writes_the_task_there(self) -> None:
+        """The redraw follows a move that did reach the other board."""
+        service = _make_service()
+        service.repository.create_board("beta", slug=Slug("beta"))
+        service.repository.create_column(Slug("beta"), "To Do", slug=Slug("todo"))
+
+        async with KanbanApp(service).run_test() as pilot:
+            await pilot.pause()
+
+            await _run(pilot, "move first-task /beta/todo")
+
+            written = service.repository.get_tasks(Slug("beta"), Slug("todo"))
+            self.assertEqual([task.slug for task in written], [Slug("first-task")])
+
     async def test_a_task_written_to_another_board_redraws_nothing(self) -> None:
         """A command naming a board that is not on screen changes nothing drawn."""
         service = _make_service()

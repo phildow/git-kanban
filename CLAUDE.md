@@ -821,6 +821,20 @@ kanban (/my-project) > tasks todo
 
 As with commands and other arguments, if there is more than one option for a slug prefix tabbing quickly in succession cycles through them.
 
+#### For Move Destinations
+
+The arguments that move a task — `move`'s destination and `update --column` — complete a column of the active board, or, once a forward slash opens the token, a board and then a column of that board:
+
+```
+kanban (/my-project) > move fix-login-bug /<TAB>
+my-project/     ops/
+
+kanban (/my-project) > move fix-login-bug /ops/<TAB>
+backlog     done     in-progress     todo
+```
+
+Those two arguments are marked in the parser with a shared metavar; every other column argument completes columns of the active board alone.
+
 ## The TUI
 
 The Text User Interface (TUI) provides a visual but still text based user interface to the underlying kanban service. Kanban means "signboard" or "visual card" in Japanese, so providing a visual, card based system is requisite.

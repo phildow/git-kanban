@@ -624,5 +624,37 @@ class TestParserAliases(unittest.TestCase):
         self.assertIs(args.func, handle_set_board)
 
 
+class TestDestinationMetavar(unittest.TestCase):
+    """The arguments that move a task carry the metavar completion keys off."""
+
+    @staticmethod
+    def _action(command: str, dest: str):
+        """Return the action for `dest` on the named subcommand's parser."""
+        parser = repl_parser.build_parser()
+        subparsers = next(
+            action for action in parser._actions if hasattr(action, "choices") and action.choices
+        )
+        subcommand = subparsers.choices[command]
+        return next(action for action in subcommand._actions if action.dest == dest)
+
+    def test_move_destination_carries_the_metavar(self):
+        """`move`'s destination positional is a destination, not a plain column."""
+        self.assertEqual(
+            self._action("move", "column").metavar, repl_parser.TASK_DESTINATION_METAVAR
+        )
+
+    def test_update_column_carries_the_metavar(self):
+        """`update --column` is a destination too."""
+        self.assertEqual(
+            self._action("update", "column").metavar, repl_parser.TASK_DESTINATION_METAVAR
+        )
+
+    def test_delete_column_does_not_carry_the_metavar(self):
+        """`delete --column` only ever names a column of the active board."""
+        self.assertNotEqual(
+            self._action("delete", "column").metavar, repl_parser.TASK_DESTINATION_METAVAR
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

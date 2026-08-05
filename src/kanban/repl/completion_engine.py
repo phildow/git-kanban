@@ -16,7 +16,10 @@ Convention (matches the parser's own naming):
       and ``get_boards/get_columns/get_tasks`` methods.
     - ``dest == "board"`` completes against existing board names.
     - ``dest == "column"`` completes against columns of the active
-      board.
+      board, except where the argument carries the parser's
+      ``TASK_DESTINATION_METAVAR`` (``move`` and ``update --column``, which
+      also move a task to another board): there a token beginning with
+      ``/`` completes as a ``/board/column`` path instead.
     - An action with ``choices`` set (e.g. ``--priority``) completes
       against those choices directly from the parser.
     - ``dest == "key"`` with metavar ``KEY`` (the ``config`` command's
@@ -37,6 +40,7 @@ import shlex
 from ..models import Slug, TaskFilter
 from ..protocols.sluggable import Sluggable
 from ..protocols.completion_data_source import CompletionDataSource
+from ..repl.parser import TASK_DESTINATION_METAVAR
 from ..services.kanban import CONFIG_KEYS
 
 # Positional/flag dest names that complete as a full board/column/task
@@ -97,15 +101,22 @@ class CompletionEngine:
         return self._leaf_completions(parser, remaining, partial)
 
     def partial_at(self, line: str, cursor: int) -> str:
-        """Return the partial token the cursor sits in.
+        """Return the fragment the cursor sits in, which a candidate replaces.
 
         Callers that splice a candidate back into the line need to know
         how much of it the candidate replaces. Readline works this out
         for itself; the TUI has to ask.
+
+        A candidate for a path-shaped token is a bare segment name, since
+        ``/`` is a readline word-break character and readline only ever
+        replaces what follows the last one. So the fragment after the last
+        ``/`` is what is reported, leaving the path already typed -- and
+        the leading ``/`` of an absolute one -- standing.
         """
 
         _, partial = self._split_for_completion(line[:cursor])
-        return partial
+        _, _, fragment = partial.rpartition("/")
+        return fragment
 
     def _descend(
         self, parser: argparse.ArgumentParser, tokens: list[str]
@@ -227,12 +238,10 @@ class CompletionEngine:
             return self._complete_path(partial)
         if action.dest == "board":
             return self._matching([b.slug for b in self._service.get_boards()], partial)
+        if action.dest in COL_LIKE_DESTS and action.metavar == TASK_DESTINATION_METAVAR:
+            return self._complete_destination(partial)
         if action.dest in COL_LIKE_DESTS:
-            if self._service.working_board is None:
-                return []
-            return self._matching(
-                [c.slug for c in self._service.get_columns(self._service.working_board)], partial
-            )
+            return self._complete_column(self._service.working_board, partial)
         if action.dest == "tags" or action.metavar == "TAG":
             return self._matching(self._service.get_tags(self._service.working_board), partial)
         if action.dest == "assigned_to":
@@ -298,6 +307,43 @@ class CompletionEngine:
             for t in self._service.get_tasks(Path(f"/{board}"), TaskFilter(include_archived=True))
         }
         return self._matching(list(slugs), token)
+
+    def _complete_destination(self, token: str) -> list[str]:
+        """Complete where a task is moved to: a column, or a /board/column path.
+
+        A token without a leading ``/`` names a column of the active board, so
+        it completes exactly as any other column argument does.  A token with
+        one is absolute — the only form that crosses boards in the REPL — and
+        completes a board name first, then a column of the board named.
+
+        Returns bare segment names for the same reason ``_complete_path``
+        does: ``/`` is a readline word-break character, so only the fragment
+        after the last one is ever replaced.
+        """
+
+        if not token.startswith("/"):
+            return self._complete_column(self._service.working_board, token)
+
+        parts = token[1:].split("/")
+
+        if len(parts) == 1:
+            boards = [str(b.slug) for b in self._service.get_boards()]
+            return [f"{name}/" for name in self._matching(boards, parts[0])]
+
+        if len(parts) == 2:
+            board = Slug(parts[0])
+            if board not in {b.slug for b in self._service.get_boards()}:
+                return []  # a board that does not exist has no columns to offer
+            return self._complete_column(board, parts[1])
+
+        return []  # deeper than a board and a column: not a destination
+
+    def _complete_column(self, board: Slug | None, partial: str) -> list[str]:
+        """Complete a column slug of ``board``, or nothing when no board is named."""
+
+        if board is None:
+            return []
+        return self._matching([str(c.slug) for c in self._service.get_columns(board)], partial)
 
     def _complete_path(self, token: str) -> list[str]:
         """Complete a board/column/task path token.

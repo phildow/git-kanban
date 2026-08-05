@@ -18,5 +18,9 @@ class Completer(Protocol):
         ...
 
     def partial_at(self, line: str, cursor: int) -> str:
-        """Return the partial token at `cursor`, which a candidate replaces."""
+        """Return the fragment at `cursor` that a candidate replaces.
+
+        Not always the whole token: a candidate for a path completes one
+        segment of it, so the fragment stops at the last `/`.
+        """
         ...

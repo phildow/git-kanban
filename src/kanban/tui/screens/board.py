@@ -2596,7 +2596,7 @@ class BoardScreen(Screen[None]):
             self._reload_sidebar()
             return
 
-        self._refresh_columns_soon(columns, self._selection_after(effect.tasks))
+        self._refresh_columns_soon(columns, self._selection_after(effect.tasks, board.slug))
 
     def _touched_columns(self, tasks: Iterable[Task], board: Slug) -> list[Slug]:
         """
@@ -2606,14 +2606,17 @@ class BoardScreen(Screen[None]):
         board already knows, since it is the one that has been drawing it.
         Columns not on screen are left out rather than forcing a rebuild: a card
         arriving in the hidden archive changes only the column it left.
+
+        A task that ended up on another board landed nowhere this screen draws,
+        but the column it left is still one of them: a card sent to another
+        board has to come off the column it was sitting in.
         """
         drawn = {view.column.slug for view in self.column_views}
         columns: list[Slug] = []
 
         for task in tasks:
-            if task.board != board:
-                continue
-            for slug in (task.column, self._column_showing(task)):
+            landed = task.column if task.board == board else None
+            for slug in (landed, self._column_showing(task)):
                 if slug is not None and slug in drawn and slug not in columns:
                     columns.append(slug)
 
@@ -2631,7 +2634,7 @@ class BoardScreen(Screen[None]):
                 return slug
         return None
 
-    def _selection_after(self, tasks: tuple[Task, ...]) -> Slug | None:
+    def _selection_after(self, tasks: tuple[Task, ...], board: Slug) -> Slug | None:
         """
         Return the task to highlight once the redrawn columns have been refilled.
 
@@ -2641,13 +2644,14 @@ class BoardScreen(Screen[None]):
         task the command wrote takes the highlight, which is where the board's
         own create and edit leave the user.
 
-        A command that took that card off the board — deleted it, or archived it
-        while the archive is hidden — leaves the highlight to the card below it,
-        or the one above when it was last, rather than to the top of the column.
+        A command that took that card off the board — deleted it, archived it
+        while the archive is hidden, or sent it to another board — leaves the
+        highlight to the card below it, or the one above when it was last,
+        rather than to the top of the column.
         """
         selected = self.svc.selection.task
         if selected is None:
-            return tasks[-1].slug
+            return tasks[-1].slug if tasks[-1].board == board else None
 
         held = next(
             (
@@ -2662,7 +2666,7 @@ class BoardScreen(Screen[None]):
             drawn = {view.column.slug for view in self.column_views}
             for task in tasks:
                 if task.id == held.id:
-                    if task.deleted or task.column not in drawn:
+                    if task.deleted or task.board != board or task.column not in drawn:
                         return self._neighbor_slug(held)
                     return task.slug
 

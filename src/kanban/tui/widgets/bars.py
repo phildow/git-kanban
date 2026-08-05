@@ -113,8 +113,11 @@ class CompletingInput(TextInput):
         partial = completer.partial_at(line, cursor)
 
         if len(candidates) == 1:
-            # A settled token: leave a space ready for the next one.
-            self._replace(partial, f"{candidates[0]} ")
+            # A settled token: leave a space ready for the next one.  A
+            # candidate ending in `/` settles one segment of a path, not the
+            # token, so the next thing typed belongs against that slash.
+            candidate = candidates[0]
+            self._replace(partial, candidate if candidate.endswith("/") else f"{candidate} ")
             return
 
         shared = commonprefix(candidates)

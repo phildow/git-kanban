@@ -4,7 +4,10 @@ The fixture parser mirrors the dest-naming conventions and nested
 subcommand shape of the real ``repl.parser`` module (path/board/column
 dests, nested "subject" subparsers, aliases, and choice-restricted
 flags) without depending on its command-handler imports, so these
-tests stay hermetic.
+tests stay hermetic. The one thing taken from the real module is
+``TASK_DESTINATION_METAVAR``, which the engine reads to tell a move
+destination from a plain column argument; sharing the constant is what
+keeps the two from drifting apart.
 
 The fake service models the same example layout used throughout the
 design discussion:
@@ -24,6 +27,7 @@ from pathlib import Path
 
 from kanban.models import TaskFilter
 from kanban.repl.completion_engine import CompletionEngine
+from kanban.repl.parser import TASK_DESTINATION_METAVAR
 from kanban.services.kanban import CONFIG_KEYS
 
 _NOOP = lambda args: None  # noqa: E731 - trivial stand-in for real handlers
@@ -92,10 +96,22 @@ def _build_fixture_parser() -> argparse.ArgumentParser:
     p.add_argument("path", metavar="TASK")
     p.set_defaults(func=_NOOP)
 
-    # move: task path + ambiguous destination (path-like per dest=="column")
+    # move: task path + a destination (a column, or a /board/column path per
+    # the destination metavar)
     p = subparsers.add_parser("move", aliases=["mv"])
     p.add_argument("path")
-    p.add_argument("column")
+    p.add_argument("column", metavar=TASK_DESTINATION_METAVAR)
+    p.set_defaults(func=_NOOP)
+
+    # update: task by bare slug + the same destination on a flag
+    p = subparsers.add_parser("update")
+    p.add_argument("path", metavar="TASK")
+    p.add_argument("-c", "--column", dest="column", metavar=TASK_DESTINATION_METAVAR)
+    p.set_defaults(func=_NOOP)
+
+    # delete: a column of the active board alone, with no destination metavar
+    p = subparsers.add_parser("delete")
+    p.add_argument("-c", "--column", dest="column", metavar="COLUMN")
     p.set_defaults(func=_NOOP)
 
     # tag: positional whose dest is "tags" and metavar is "TAG"
@@ -378,6 +394,99 @@ class MoveDestCompletionTests(EngineTestCase):
             ["done", "in-progress", "in-review", "todo"],
         )
 
+    def test_destination_filters_columns_by_prefix(self) -> None:
+        """A partial column completes against the active board's columns."""
+        context = _Context(board="my-project")
+        self.assertEqual(
+            self.complete("move fix-login-bug in-", context),
+            ["in-progress", "in-review"],
+        )
+
+
+class MoveDestinationBoardCompletionTests(EngineTestCase):
+    """A destination beginning with `/` completes as a board, then a column."""
+
+    def test_slash_lists_boards(self) -> None:
+        """A lone slash offers every board, each ready for a column."""
+        context = _Context(board="my-project")
+        self.assertEqual(
+            self.complete("move fix-login-bug /", context),
+            ["my-project/", "ops/"],
+        )
+
+    def test_filters_boards_by_prefix(self) -> None:
+        """A partial board name narrows the boards offered."""
+        context = _Context(board="my-project")
+        self.assertEqual(self.complete("move fix-login-bug /op", context), ["ops/"])
+
+    def test_lists_columns_of_the_named_board(self) -> None:
+        """Past the board's slash the columns are that board's, not the active one's."""
+        context = _Context(board="my-project")
+        self.assertEqual(
+            self.complete("move fix-login-bug /ops/", context),
+            ["backlog", "done", "in-progress", "todo"],
+        )
+
+    def test_filters_columns_of_the_named_board_by_prefix(self) -> None:
+        """A partial column narrows the named board's columns."""
+        context = _Context(board="my-project")
+        self.assertEqual(
+            self.complete("move fix-login-bug /ops/b", context),
+            ["backlog"],
+        )
+
+    def test_boards_are_offered_without_an_active_board(self) -> None:
+        """An absolute destination names its own board, so no context is needed."""
+        self.assertEqual(self.complete("move fix-login-bug /"), ["my-project/", "ops/"])
+
+    def test_unknown_board_offers_nothing(self) -> None:
+        """A board that does not exist has no columns to offer."""
+        context = _Context(board="my-project")
+        self.assertEqual(self.complete("move fix-login-bug /nope/", context), [])
+
+    def test_deeper_than_a_column_offers_nothing(self) -> None:
+        """A destination is a board and a column at most."""
+        context = _Context(board="my-project")
+        self.assertEqual(self.complete("move fix-login-bug /ops/todo/x", context), [])
+
+    def test_mv_alias_completes_the_same_way(self) -> None:
+        """The alias reaches the same parser and so the same destination."""
+        context = _Context(board="my-project")
+        self.assertEqual(self.complete("mv fix-login-bug /op", context), ["ops/"])
+
+
+class UpdateColumnCompletionTests(EngineTestCase):
+    """`update --column` completes as a destination; other column flags do not."""
+
+    def test_completes_columns_of_the_active_board(self) -> None:
+        """Without a slash the flag names a column of the active board."""
+        context = _Context(board="my-project")
+        self.assertEqual(
+            self.complete("update fix-login-bug --column in-", context),
+            ["in-progress", "in-review"],
+        )
+
+    def test_short_flag_lists_boards_after_a_slash(self) -> None:
+        """The short flag completes a board the same as the long one."""
+        context = _Context(board="my-project")
+        self.assertEqual(
+            self.complete("update fix-login-bug -c /", context),
+            ["my-project/", "ops/"],
+        )
+
+    def test_lists_columns_of_the_named_board(self) -> None:
+        """Past the board's slash the flag offers that board's columns."""
+        context = _Context(board="my-project")
+        self.assertEqual(
+            self.complete("update fix-login-bug --column /ops/", context),
+            ["backlog", "done", "in-progress", "todo"],
+        )
+
+    def test_a_plain_column_flag_does_not_complete_boards(self) -> None:
+        """A column argument that is not a destination stays a bare column."""
+        context = _Context(board="my-project")
+        self.assertEqual(self.complete("delete --column /", context), [])
+
 
 class BoardAndColumnDestCompletionTests(EngineTestCase):
     """dest="board"/"column" single-segment completion (non-path commands)."""
@@ -533,6 +642,38 @@ class FreeTextCompletionTests(EngineTestCase):
 
     def test_rename_new_name_has_no_suggestions(self) -> None:
         self.assertEqual(self.complete("rename board my-project "), [])
+
+
+class PartialAtTests(EngineTestCase):
+    """partial_at reports the fragment a candidate replaces, not the whole token."""
+
+    def _partial(self, line: str) -> str:
+        """Return the fragment at the end of `line`."""
+        return self.engine.partial_at(line, len(line))
+
+    def test_token_without_a_slash_is_reported_whole(self) -> None:
+        """A plain token is replaced entirely, so all of it is reported."""
+        self.assertEqual(self._partial("move fix-log"), "fix-log")
+
+    def test_empty_token_reports_nothing(self) -> None:
+        """A cursor past a space is starting a token, with nothing to replace."""
+        self.assertEqual(self._partial("move "), "")
+
+    def test_absolute_destination_reports_the_segment_alone(self) -> None:
+        """The leading `/` stays in the line: only the board fragment is replaced."""
+        self.assertEqual(self._partial("move fix-login-bug /op"), "op")
+
+    def test_a_lone_slash_reports_nothing(self) -> None:
+        """A slash with nothing after it leaves nothing to replace."""
+        self.assertEqual(self._partial("move fix-login-bug /"), "")
+
+    def test_column_segment_of_a_path(self) -> None:
+        """Past the board's slash the column fragment alone is replaced."""
+        self.assertEqual(self._partial("move fix-login-bug /ops/back"), "back")
+
+    def test_path_argument_reports_its_last_segment(self) -> None:
+        """A board/column/task path completes a segment at a time, as it always has."""
+        self.assertEqual(self._partial("show my-project/in-p"), "in-p")
 
 
 if __name__ == "__main__":
