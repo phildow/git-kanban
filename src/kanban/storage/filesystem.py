@@ -602,21 +602,29 @@ class FilesystemRepository(KanbanRepository):
 
         return self._parse_task_file(new_path)
 
-    def move_task(self, task: Task, column: Slug) -> Task:
-        board_slug = task.board
+    def move_task(self, task: Task, column: Slug, board: Slug | None = None) -> Task:
+        src_board_slug = task.board
         src_column_slug = task.column
+        dest_board_slug = board if board is not None else task.board
         dest_column_slug = column
         filename = f"{task.slug}.md"
 
-        src_file = self.boards_dir / board_slug / src_column_slug / filename
-        dest_file = self.boards_dir / board_slug / dest_column_slug / filename
-    
+        src_file = self.boards_dir / src_board_slug / src_column_slug / filename
+        dest_file = self.boards_dir / dest_board_slug / dest_column_slug / filename
+
         if not src_file.is_file():
             raise TaskNotFound(f"{task.board}/{task.column}/{task.slug}")
-        if not self.column_exists(task.board, column):
-            raise ColumnNotFound(task.board, column)
-        if src_column_slug != dest_column_slug and dest_file.exists():
-            raise TaskAlreadyExists(task.board, column, task.slug)
+        # Raises BoardNotFound of its own when the destination board is not there.
+        if not self.column_exists(dest_board_slug, column):
+            raise ColumnNotFound(dest_board_slug, column)
+
+        # The board is part of where a task sits, so a task staying in a column
+        # of the same name on another board is still moving.
+        src_place = (src_board_slug, src_column_slug)
+        dest_place = (dest_board_slug, dest_column_slug)
+
+        if src_place != dest_place and dest_file.exists():
+            raise TaskAlreadyExists(dest_board_slug, column, task.slug)
 
         now = datetime.now(timezone.utc)
         lines = src_file.read_text(encoding="utf-8").splitlines(keepends=True)
@@ -624,21 +632,21 @@ class FilesystemRepository(KanbanRepository):
             if line.startswith("updated_at:"):
                 lines[i] = f"updated_at: {now.isoformat()}\n"
 
-        if src_column_slug == dest_column_slug:
+        if src_place == dest_place:
             src_file.write_text("".join(lines), encoding="utf-8")
         else:
             dest_file.write_text("".join(lines), encoding="utf-8")
             src_file.unlink()
 
-            src_order = self._get_task_order(board_slug, src_column_slug)
+            src_order = self._get_task_order(src_board_slug, src_column_slug)
             if filename in src_order:
                 src_order.remove(filename)
-            self._set_task_order(board_slug, src_column_slug, src_order)
+            self._set_task_order(src_board_slug, src_column_slug, src_order)
 
-            dest_order = self._get_task_order(board_slug, dest_column_slug)
+            dest_order = self._get_task_order(dest_board_slug, dest_column_slug)
             if filename not in dest_order:
                 dest_order.append(filename)
-            self._set_task_order(board_slug, dest_column_slug, dest_order)
+            self._set_task_order(dest_board_slug, dest_column_slug, dest_order)
 
         return self._parse_task_file(dest_file)
 

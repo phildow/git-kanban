@@ -74,6 +74,7 @@ MOVE_BINDINGS: list[tuple[str, str]] = [
     ("shift + H/L/J/K", "the same, without reaching for the arrows"),
     ("page up/down", "stage it a screenful at a time"),
     ("tab", "choose the column by name"),
+    ("b", "send the card to another board"),
     ("enter", "commit the staged position"),
     ("esc", "cancel — nothing is written"),
 ]

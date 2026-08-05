@@ -560,7 +560,7 @@ kanban config list
 
 # Most commands take a `--format` argument with options `plain|json` (default: `plain`)
 # Subcommands that returns an object also accepts --path and --id.
-# Every subcommand accepts -h/--help.
+# Every subcommand accepts --help.
 ```
 
 Note the following default behaviors:
@@ -582,16 +582,16 @@ Absolute paths are implied by the CLI. When executing a command the CLI adds a f
 For example:
 
 ```
-$ kanban board list
+$ kanban board list --path
 /main
 
-$ kanban colum list /main
+$ kanban colum list /main --path
 /todo
 /in-progress
 /in-review
 /done
 
-$ kanban task create /main/todo "Ensure the CLI outputs paths"
+$ kanban task create /main/todo "Ensure the CLI outputs paths" --path
 /main/todo/ensure-the-cli-outputs-paths
 ```
 
@@ -637,7 +637,7 @@ rename <task> | --column <column> | --board <new-name>
 delete <task> | --column <column> | --board
     [--force]
 
-view <task> [-p|--plain]
+view <task> [--plain]
 info <task> | --column <column> | --board
 edit <task>
 
@@ -916,7 +916,9 @@ KanbanApp(App)
 │   └── Static — the key hints, swapped for the field's while naming
 │       `N` appends a row and names a new board in it, as "+ New board…" does;
 │       `R` renames the highlighted board on its row; `D` deletes it after a
-│       ConfirmScreen.
+│       ConfirmScreen.  Opened to ask which board rather than to manage them —
+│       mid-move — it offers the boards alone: no management keys, no
+│       "+ New board…" row, and Enter and Esc for the two answers.
 │
 ├── ConfigScreen (modal, pushed from the command palette's "Configuration")
 │   ├── PrefixList of KanbanService.list_config() — every supported keypath and
@@ -1011,6 +1013,7 @@ q / Ctrl+Q = quit
 ↑/↓ or j/k = reorder card within current column
      Enter = commit — single move_task/reorder call
        Tab = show column list
+         b = show the board list and send card to the chosed board
        Esc = cancel — discard, no calls made
 ```
 

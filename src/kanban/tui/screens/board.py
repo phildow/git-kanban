@@ -75,6 +75,7 @@ MOVE_KEYS: list[tuple[str, str]] = [
     ("←/→ h/l", "Column"),
     ("↑/↓ j/k", "Position"),
     ("⇧", "To the end"),
+    ("b", "Board"),
     ("↵", "Commit"),
     ("esc", "Cancel"),
 ]
@@ -113,6 +114,8 @@ FILTER_HISTORY_FILE = "tui-filter-history"
 # What the board still answers to while a card is staged for a move: staging
 # keys, and the two ways out.  A move is a mode — editing the card being moved,
 # or refreshing the board out from under it, has no meaning half way through.
+# `switch_board` is here for the destination it names rather than the board it
+# would switch to: mid-move it sends the card to another board.
 MOVE_MODE_ACTIONS = frozenset(
     {
         "nav_left",
@@ -129,6 +132,7 @@ MOVE_MODE_ACTIONS = frozenset(
         "nav_page_right",
         "activate",
         "move_task",
+        "switch_board",
         "step_focus",
         "cancel",
     }
@@ -1784,6 +1788,120 @@ class BoardScreen(Screen[None]):
         move.position = min(move.position, self._staged_limit(move))
         self._commit_move()
 
+    def _move_to_board(self, choice: BoardChoice | None) -> None:
+        """
+        Send the card being moved to the board the switcher came back with.
+
+        Choosing a board commits the move outright, as naming a column does, and
+        the board on screen is the board the user stays on — a toast is what says
+        where the card went.  Closing the switcher without choosing leaves the
+        move staged exactly as it was, so `esc` is a way out of the switcher and
+        not out of the move.
+
+        A list that manages nothing has nothing else to report, but an altered
+        list is handled as a switch handles it, so a board changing under a
+        staged move can never leave the two disagreeing.
+        """
+        if choice is None:
+            return
+
+        if not isinstance(choice, SwitchToBoard):
+            self._cancel_move()
+            self._reload_soon()
+            return
+
+        board = self._board
+        if board is not None and choice.slug == board.slug:
+            # The card is already here: nothing to write, and the staged move
+            # stands so the user can carry on placing it.
+            return
+
+        self._commit_move_to_board(choice.slug)
+
+    def _commit_move_to_board(self, slug: Slug) -> None:
+        """
+        Write the move to the board `slug`, and refresh the column the card left.
+
+        Only the source board is on screen, so the destination is never drawn —
+        which is why the card lands at the end of its new column rather than at
+        a staged position: there is nothing to stage against.
+        """
+        move = self._move
+        if move is None:
+            return
+
+        task = move.task
+        source = task.column
+        preview = self._preview
+        # Read before the move, for the reason `_delete_task` gives: the card is
+        # leaving the board, so the highlight goes to the one closing the gap.
+        neighbor = self._neighbor_slug(task)
+
+        destination: Board | None = None
+        column: Column | None = None
+        moved: Task | None = None
+
+        with self._service_errors("move"):
+            destination = self.svc.get_board(slug)
+            column = self._destination_column(slug, task.column)
+
+            if column is None:
+                self.notify(
+                    f"{_place_name(destination.name)} has no column to move to",
+                    severity="warning",
+                )
+            else:
+                moved = self.svc.move_task(task.path, column.slug, slug)
+
+        # Nothing was written — a board with no columns, or a service that
+        # refused — so the move stays staged and another board can be tried.
+        if moved is None or column is None or destination is None:
+            return
+
+        self.move_mode = False
+        self._move = None
+        self._preview = None
+
+        self._announce(
+            f"Moved {_task_name(moved.title)} to "
+            f"{_place_name(destination.name)} / {_place_name(column.name)}"
+        )
+
+        # The card left the board, so only the columns that were drawing it are
+        # disturbed: the one it lived in, and any it was staged in on the way.
+        drawn = {view.column.slug for view in self.column_views}
+        disturbed = [source] + ([preview[0]] if preview is not None else [])
+        self._refresh_columns_soon(
+            [column_slug for column_slug in disturbed if column_slug in drawn], neighbor
+        )
+
+    def _destination_column(self, board: Slug, column: Slug) -> Column | None:
+        """
+        Return the column of `board` a card moved off another board should land in.
+
+        The column of the same name when that board has one, so a card keeps its
+        place in the workflow, and the first column of the board otherwise.  The
+        archive is never landed in by that fallback — a task is archived by
+        archiving it — though an archived card that finds an archive on the
+        destination board stays archived, which is the name matching as any
+        other column's would.
+
+        None when the board has no column to land in at all.
+        """
+        # Named as a path rather than a bare slug: a slug on its own is read
+        # against the board in context, which is the board being moved off.
+        columns = self.svc.get_columns(Path(f"/{board}"))
+
+        named = next(
+            (candidate for candidate in columns if candidate.slug == column), None
+        )
+        if named is not None:
+            return named
+
+        return next(
+            (candidate for candidate in columns if not candidate.is_archive), None
+        )
+
     def _stage_column(self, delta: int) -> None:
         """Stage the card `delta` columns away."""
         move = self._move
@@ -2075,7 +2193,15 @@ class BoardScreen(Screen[None]):
             self._clear_preview(move)
 
     def watch_move_mode(self, move_mode: bool) -> None:
-        """Lock the columns and swap the footer for the move-mode hints."""
+        """
+        Lock the columns and swap the footer for the move-mode hints.
+
+        `check_action` answers differently in each mode, so the bindings are
+        refreshed as the mode changes: a modal opened mid-move — the board
+        switcher, the column prompt — recomposes the footer under the staged
+        card when it hands the focus back, and nothing else would tell the
+        footer that leaving the move mode restored the keys it dropped.
+        """
         for view in self.column_views:
             view.locked = move_mode
             if not move_mode:
@@ -2088,13 +2214,24 @@ class BoardScreen(Screen[None]):
         else:
             self._hide_hints()
 
+        self.refresh_bindings()
+
     # ── Board, sidebar, density ───────────────────────────────────────────────
 
     def action_switch_board(self) -> None:
-        """Open the board switcher, which also creates, renames, and deletes boards."""
+        """
+        Open the board switcher, which also creates, renames, and deletes boards.
+
+        Mid-move the same list means the other thing a board can be: not the
+        board to show, but the board to send the card to.  It is a question
+        then, so it manages nothing: a board named or deleted from under a
+        staged card is not an answer to where the card goes.
+        """
         active = self._board.slug if self._board is not None else None
+        moving = self.move_mode
         self.app.push_screen(
-            BoardSwitcherScreen(self.svc, active=active), self._switch_board
+            BoardSwitcherScreen(self.svc, active=active, manage=not moving),
+            self._move_to_board if moving else self._switch_board,
         )
 
     def _switch_board(self, choice: BoardChoice | None) -> None:

@@ -10,7 +10,12 @@ from uuid import uuid4
 
 from kanban.models import Task
 from kanban.storage.filesystem import FilesystemRepository
-from kanban.storage.base import ColumnNotFound, TaskNotFound, TaskAlreadyExists
+from kanban.storage.base import (
+    BoardNotFound,
+    ColumnNotFound,
+    TaskNotFound,
+    TaskAlreadyExists,
+)
 
 
 def _now() -> datetime:
@@ -146,6 +151,97 @@ class TestFilesystemMoveTask(unittest.TestCase):
 
         self.assertEqual(moved.board, "my-project")
         self.assertEqual(moved.column, "done")
+
+
+class TestFilesystemMoveTaskAcrossBoards(unittest.TestCase):
+    """move_task with a board relocates the file to a column of that board."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        self.repo = FilesystemRepository(root=self.root)
+        self.repo.init_storage()
+        self.repo.create_board("proj", slug="proj")
+        self.repo.create_column("proj", "todo", slug="todo")
+        self.repo.create_board("other", slug="other")
+        self.repo.create_column("other", "todo", slug="todo")
+        self.repo.create_column("other", "done", slug="done")
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def _task(self, title: str, slug: str, board: str = "proj", column: str = "todo") -> Task:
+        now = _now()
+        return Task(id=uuid4(),
+                    title=title,
+                    slug=slug,
+                    board=board,
+                    column=column,
+                    created_at=now,
+                    updated_at=now)
+
+    def test_file_appears_on_destination_board(self) -> None:
+        """The task file exists under the destination board's column."""
+        task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
+        self.repo.move_task(task, "done", "other")
+        dest = self.repo.boards_dir / "other" / "done" / "alpha.md"
+        self.assertTrue(dest.is_file())
+
+    def test_file_removed_from_source_board(self) -> None:
+        """The task file is gone from the board it left."""
+        task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
+        self.repo.move_task(task, "done", "other")
+        src = self.repo.boards_dir / "proj" / "todo" / "alpha.md"
+        self.assertFalse(src.exists())
+
+    def test_returns_task_with_updated_board_and_column(self) -> None:
+        """The returned task reports where it landed; its slug is unchanged."""
+        task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
+        moved = self.repo.move_task(task, "done", "other")
+        self.assertEqual(moved.board, "other")
+        self.assertEqual(moved.column, "done")
+        self.assertEqual(moved.slug, "alpha")
+
+    def test_removed_from_source_order(self) -> None:
+        """The source column's task order no longer names the task."""
+        task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
+        self.repo.move_task(task, "done", "other")
+        self.assertEqual(self.repo.get_tasks(board="proj", column="todo"), [])
+
+    def test_added_to_destination_order(self) -> None:
+        """The destination column lists the task after the move."""
+        task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
+        self.repo.move_task(task, "done", "other")
+        titles = [t.title for t in self.repo.get_tasks(board="other", column="done")]
+        self.assertEqual(titles, ["Alpha"])
+
+    def test_same_column_name_on_another_board_still_moves(self) -> None:
+        """A column of the same name on another board is a different place."""
+        task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
+        moved = self.repo.move_task(task, "todo", "other")
+        self.assertEqual(moved.board, "other")
+        self.assertFalse((self.repo.boards_dir / "proj" / "todo" / "alpha.md").exists())
+
+    def test_raises_board_not_found(self) -> None:
+        """Raises BoardNotFound when the destination board does not exist."""
+        task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
+        with self.assertRaises(BoardNotFound):
+            self.repo.move_task(task, "todo", "no-such-board")
+
+    def test_raises_column_not_found_on_destination_board(self) -> None:
+        """Raises ColumnNotFound when the destination board has no such column."""
+        task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
+        with self.assertRaises(ColumnNotFound):
+            self.repo.move_task(task, "no-such-column", "other")
+
+    def test_raises_task_already_exists_on_destination_board(self) -> None:
+        """Raises TaskAlreadyExists when the destination column holds that slug."""
+        task = self.repo.create_task(self._task("Alpha", "alpha"), "alpha")
+        self.repo.create_task(
+            self._task("Alpha copy", "alpha", board="other", column="done"), "alpha"
+        )
+        with self.assertRaises(TaskAlreadyExists):
+            self.repo.move_task(task, "done", "other")
 
 
 if __name__ == "__main__":

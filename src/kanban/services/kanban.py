@@ -793,7 +793,10 @@ class KanbanService(CompletionDataSource):
         positions: dict[tuple[Slug, Slug, Slug], tuple[int, int]] = {}
         boards = {t.board for t in tasks if t.board}
         for board in boards:
-            for col in self.get_columns(board):
+            # Asked of the repository rather than of get_columns: the boards
+            # here come off the tasks and are already absolute, while a bare
+            # slug handed to get_columns is read against the board in context.
+            for col in self.repository.get_columns(board):
                 col_tasks = self.repository.get_tasks(board=board, column=col.slug)
                 for idx, task in enumerate(col_tasks):
                     positions[(board, col.slug, task.slug)] = (col.position, idx)
@@ -1111,11 +1114,14 @@ class KanbanService(CompletionDataSource):
         self,
         path:   Path | Slug,
         column: Slug,
+        board:  Slug | None = None,
     ) -> Task:
         """
-        Move a task's .md file to a new column within the same board.  Accepts a
-        fully-qualified Path (from the CLI) or a bare task Slug (from the REPL).
-        Validates that the destination column exists before moving.
+        Move a task's .md file to a new column.  Accepts a fully-qualified Path
+        (from the CLI) or a bare task Slug (from the REPL).  The destination is
+        a column of the task's own board unless `board` names another one, which
+        is how a task crosses boards.  Validates that the destination board and
+        column exist before moving.
         Raises TaskNotFound, BoardNotFound, or ColumnNotFound as appropriate.
 
         Moving into the archive column is what archives a task, and moving it
@@ -1123,7 +1129,7 @@ class KanbanService(CompletionDataSource):
         Updates the index and commits.
         """
         task = self.get_task(path)
-        result = self.repository.move_task(task, column)
+        result = self.repository.move_task(task, column, board)
         self.index_service.upsert_task(result)
         return result
 

@@ -423,18 +423,21 @@ class KanbanRepository(ABC):
         """
 
     @abstractmethod
-    def move_task(self, task: Task, column: Slug) -> Task:
+    def move_task(self, task: Task, column: Slug, board: Slug | None = None) -> Task:
         """
-        Move a task to a different column within the same board
-        and return the updated Task.
+        Move a task to a different column and return the updated Task.
 
-        Moving to the same column the task is already in is a no-op for the
-        file; only ``updated_at`` is refreshed.
+        The destination is a column of the task's own board, or of `board` when
+        one is given — which is how a task crosses from one board to another.
+
+        Moving to the place the task is already in is a no-op for the file; only
+        ``updated_at`` is refreshed.
 
         The task's UUID, slug, and all other metadata are preserved.
         ``updated_at`` is always refreshed.
 
         Raises TaskNotFound if the task does not exist.
+        Raises BoardNotFound if the destination board does not exist.
         Raises ColumnNotFound if the destination column does not exist.
         Raises TaskAlreadyExists if a task with the same slug already
         exists in the destination column.

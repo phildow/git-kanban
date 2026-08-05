@@ -11,7 +11,7 @@ from uuid import uuid4
 from kanban.models import Slug, Task
 from kanban.services.git import GitService
 from kanban.services.kanban import KanbanService, TaskCreateParams
-from kanban.storage.base import ColumnNotFound, TaskNotFound
+from kanban.storage.base import BoardNotFound, ColumnNotFound, TaskNotFound
 from kanban.storage.memory import InMemoryRepository
 
 
@@ -116,6 +116,79 @@ class TestKanbanServiceMoveTaskActiveBoard(unittest.TestCase):
         result = self.svc.move_task(Slug("fix-login"), Slug("done"))
 
         self.assertEqual(result.column, "done")
+
+
+class TestKanbanServiceMoveTaskBoard(unittest.TestCase):
+    """move_task sends a task to another board when one is named."""
+
+    def setUp(self) -> None:
+        self.svc, self.repo = _make_service()
+        self.repo.create_board("beta", slug="beta")
+        self.repo.create_column("beta", "todo", slug="todo")
+        self.created = self.svc.create_task(
+            "alpha/todo",
+            TaskCreateParams(title="fix-login"),
+        )
+
+    def test_board_field_is_updated(self) -> None:
+        """The returned task reports the destination board."""
+        result = self.svc.move_task(
+            "alpha/todo/fix-login", Slug("todo"), Slug("beta")
+        )
+
+        self.assertEqual(result.board, "beta")
+
+    def test_column_field_is_updated(self) -> None:
+        """The returned task reports the destination column on that board."""
+        result = self.svc.move_task(
+            "alpha/todo/fix-login", Slug("todo"), Slug("beta")
+        )
+
+        self.assertEqual(result.column, "todo")
+
+    def test_preserves_task_id(self) -> None:
+        """Crossing boards keeps the task's UUID unchanged."""
+        result = self.svc.move_task(
+            "alpha/todo/fix-login", Slug("todo"), Slug("beta")
+        )
+
+        self.assertEqual(result.id, self.created.id)
+
+    def test_task_is_retrievable_on_destination_board(self) -> None:
+        """After the move the task is retrievable from the destination board."""
+        self.svc.move_task("alpha/todo/fix-login", Slug("todo"), Slug("beta"))
+
+        fetched = self.repo.get_task("beta", "todo", "fix-login")
+        self.assertEqual(fetched.slug, "fix-login")
+
+    def test_task_is_no_longer_on_source_board(self) -> None:
+        """After the move the task is gone from the column it left."""
+        self.svc.move_task("alpha/todo/fix-login", Slug("todo"), Slug("beta"))
+
+        with self.assertRaises(TaskNotFound):
+            self.repo.get_task("alpha", "todo", "fix-login")
+
+    def test_updates_index(self) -> None:
+        """Crossing boards refreshes the task's index entry."""
+        result = self.svc.move_task(
+            "alpha/todo/fix-login", Slug("todo"), Slug("beta")
+        )
+
+        self.svc.index_service.upsert_task.assert_called_with(result)
+
+    def test_raises_for_missing_destination_board(self) -> None:
+        """move_task raises BoardNotFound when the destination board does not exist."""
+        with self.assertRaises(BoardNotFound):
+            self.svc.move_task(
+                "alpha/todo/fix-login", Slug("todo"), Slug("missing")
+            )
+
+    def test_raises_for_column_missing_on_destination_board(self) -> None:
+        """move_task raises ColumnNotFound when the destination board has no such column."""
+        with self.assertRaises(ColumnNotFound):
+            self.svc.move_task(
+                "alpha/todo/fix-login", Slug("done"), Slug("beta")
+            )
 
 
 class TestKanbanServiceMoveTaskErrors(unittest.TestCase):

@@ -396,29 +396,35 @@ class InMemoryRepository(KanbanRepository):
 
         return task
 
-    def move_task(self, task: Task, column: Slug) -> Task:
+    def move_task(self, task: Task, column: Slug, board: Slug | None = None) -> Task:
         stored = self._tasks_by_id.get(task.id)
         if stored is None:
             raise TaskNotFound(str(task.id))
 
-        self.get_column(task.board, column)
+        dest_board = board if board is not None else task.board
+        self.get_column(dest_board, column)
 
-        if stored.column != column:
+        # The board is part of where a task sits, so a task staying in a column
+        # of the same name on another board is still moving.
+        if (stored.board, stored.column) != (dest_board, column):
             slug = self._task_filenames.get(task.id, task.slug)
             for other_id, other_task in self._tasks_by_id.items():
                 if other_id == task.id:
                     continue
-                other_column = self._task_locations.get(other_id, (None, other_task.column))[1]
-                if other_task.board == task.board and other_column == column and self._task_filenames.get(other_id) == slug:
-                    raise TaskAlreadyExists(task.board, column, slug)
+                other_board, other_column = self._task_locations.get(
+                    other_id, (other_task.board, other_task.column)
+                )
+                if other_board == dest_board and other_column == column and self._task_filenames.get(other_id) == slug:
+                    raise TaskAlreadyExists(dest_board, column, slug)
 
-            src_order = self._task_order.get((task.board, stored.column), [])
+            src_order = self._task_order.get((stored.board, stored.column), [])
             if slug in src_order:
                 src_order.remove(slug)
-            self._task_order.setdefault((task.board, column), []).append(slug)
+            self._task_order.setdefault((dest_board, column), []).append(slug)
 
+            stored.board = dest_board
             stored.column = column
-            self._task_locations[task.id] = (task.board, column)
+            self._task_locations[task.id] = (dest_board, column)
 
         stored.updated_at = datetime.now(UTC)
         return stored

@@ -58,6 +58,13 @@ EDIT_HINTS: list[tuple[str, str]] = [
     ("esc", "Cancel"),
 ]
 
+# What it answers to when it is only being asked which board, with none of the
+# management keys — the two ways a list of boards can be answered.
+CHOOSE_HINTS: list[tuple[str, str]] = [
+    ("↵", "Choose"),
+    ("esc", "Close"),
+]
+
 
 @dataclass(frozen=True)
 class SwitchToBoard:
@@ -93,6 +100,11 @@ class BoardSwitcherScreen(ModalScreen[BoardChoice | None]):
     still left to the board screen — it dismisses with the chosen board, with
     `BoardsChanged` when boards were altered but none chosen, or None when
     nothing happened at all.
+
+    `manage` off leaves the list as a question and nothing else: the management
+    keys are inert, the new-board row is not offered, and the only answers are a
+    board and `esc`.  That is what a caller asking where something should go
+    wants — a board being renamed part way through is not an answer to it.
     """
 
     BINDINGS = [
@@ -102,11 +114,18 @@ class BoardSwitcherScreen(ModalScreen[BoardChoice | None]):
         Binding("escape", "cancel", "Close", show=True),
     ]
 
-    def __init__(self, svc: KanbanService, *, active: Slug | None = None) -> None:
+    def __init__(
+        self,
+        svc: KanbanService,
+        *,
+        active: Slug | None = None,
+        manage: bool = True,
+    ) -> None:
         """Create a switcher backed by `svc`, highlighting `active` if it is present."""
         super().__init__()
         self.svc = svc
         self.active = active
+        self.manage = manage
 
         self._boards: list[Board] = []
         # The board the open field is renaming.  None while the field is naming
@@ -126,11 +145,17 @@ class BoardSwitcherScreen(ModalScreen[BoardChoice | None]):
         # Full width rather than `-narrow`: rows carry a name, a path, and counts.
         with Vertical(id="dialog"):
             yield Static("Boards", id="form-heading")
+            # The management keys are only held back from the list's own search
+            # while something is bound to them; unmanaged, they jump like any
+            # other letter.
             rows = PrefixList(
-                self._entries(), show_search=False, reserved=MANAGE_KEYS, id="board-list"
+                self._entries(),
+                show_search=False,
+                reserved=MANAGE_KEYS if self.manage else (),
+                id="board-list",
             )
             yield rows
-            yield Static(format_hints(MANAGE_HINTS), id="board-hint")
+            yield Static(format_hints(self._hints()), id="board-hint")
             yield RowField(rows, id="board-name")
 
     def on_mount(self) -> None:
@@ -158,6 +183,9 @@ class BoardSwitcherScreen(ModalScreen[BoardChoice | None]):
 
         The draft row is the blank one a new board is being named in.  It is
         drawn empty because the field covers it for as long as it exists.
+
+        Unmanaged, the boards are all there is: a row that creates one is the
+        management keys by another route.
         """
         # Widths come from the widest entry, so the rows line up as columns.
         name_width = max((len(board.name) for board in self._boards), default=0)
@@ -170,7 +198,8 @@ class BoardSwitcherScreen(ModalScreen[BoardChoice | None]):
             (str(board.slug), board_label(board, name_width, path_width, count_width))
             for board in self._boards
         ]
-        entries.append((NEW_BOARD_KEY, Text(NEW_BOARD_LABEL)))
+        if self.manage:
+            entries.append((NEW_BOARD_KEY, Text(NEW_BOARD_LABEL)))
 
         if draft:
             entries.append((DRAFT_KEY, Text("")))
@@ -220,7 +249,7 @@ class BoardSwitcherScreen(ModalScreen[BoardChoice | None]):
         """Switch to the selected board, or start naming a new one."""
         index = event.option_index
 
-        if index == len(self._boards):
+        if self.manage and index == len(self._boards):
             self.action_new_board()
             return
 
@@ -228,6 +257,21 @@ class BoardSwitcherScreen(ModalScreen[BoardChoice | None]):
             return
 
         self.dismiss(SwitchToBoard(self._boards[index].slug))
+
+    def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
+        """
+        Refuse the management actions when the modal is only asking which board.
+
+        A disabled binding is not matched, so the key bubbles past the modal
+        rather than doing something that was not asked for.  `cancel` is never
+        refused: closing is always an answer.
+        """
+        _ = parameters
+
+        if self.manage:
+            return True
+
+        return action == "cancel"
 
     def action_cancel(self) -> None:
         """Close the field if one is open, otherwise close the modal."""
@@ -270,10 +314,15 @@ class BoardSwitcherScreen(ModalScreen[BoardChoice | None]):
         self._editing = False
         self._show_hints()
 
+    def _hints(self) -> list[tuple[str, str]]:
+        """Return the hints belonging to whichever mode the modal is in."""
+        if self._editing:
+            return EDIT_HINTS
+        return MANAGE_HINTS if self.manage else CHOOSE_HINTS
+
     def _show_hints(self) -> None:
         """Show the hints belonging to whichever mode the modal is in."""
-        hints = EDIT_HINTS if self._editing else MANAGE_HINTS
-        self.query_one("#board-hint", Static).update(format_hints(hints))
+        self.query_one("#board-hint", Static).update(format_hints(self._hints()))
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         """Create or rename the board with the name the field holds."""
