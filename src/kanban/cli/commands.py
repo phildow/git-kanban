@@ -16,9 +16,10 @@ from datetime import datetime, timezone
 from functools import wraps
 
 from ..storage.seeds import BOOTSTRAP_CONFIG
-from ..models import Priority, ReorderOp, Slug, TaskFilter
+from ..models import ReorderOp, Slug, TaskFilter
 from ..protocols.command_renderer import CommandRenderer
 from ..utils.field_renderer import for_fields
+from ..utils.args import parse_priority
 from ..utils.str import parse_destination
 from ..services.kanban import KanbanService, TaskCreateParams, TaskUnsetParams, TaskUpdateParams
 
@@ -55,13 +56,6 @@ def _pick(args: argparse.Namespace, renderer: CommandRenderer, json_renderer: Co
     """
     base = json_renderer if args.format == "json" else renderer
     return for_fields(args, base)
-
-
-# TODO: REMOVE duplicate (in command_helpers.py)
-def parse_priority(args: argparse.Namespace) -> Priority | None:
-    """Return the --priority argument as a Priority, or None if not provided."""
-    priority = args.priority
-    return Priority(priority) if priority else None
 
 
 # ---------------------------------------------------------------------------

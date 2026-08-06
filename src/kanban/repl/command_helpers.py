@@ -11,19 +11,14 @@ import argparse
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ..models import Board, Column, Priority, Slug, Task, TaskFilter
+from ..models import Board, Column, Slug, Task, TaskFilter
 from ..services.kanban import KanbanService, TaskCreateParams
+from ..utils.args import parse_priority
 
 
 # ---------------------------------------------------------------------------
 # Private helpers
 # ---------------------------------------------------------------------------
-
-def parse_priority(args: argparse.Namespace) -> Priority | None:
-    """Return the --priority argument as a Priority, or None if not provided."""
-    priority = args.priority
-    return Priority(priority) if priority else None
-
 
 def build_task_filter(args: argparse.Namespace) -> TaskFilter:
     """Build a TaskFilter from parsed CLI/REPL filter arguments."""

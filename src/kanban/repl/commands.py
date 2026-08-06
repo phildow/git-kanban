@@ -18,7 +18,6 @@ from ..models import Board, Column, ReorderOp, Slug, Task
 from ..protocols.command_renderer import CommandRenderer
 from ..repl.command_helpers import (
     build_task_filter,
-    parse_priority,
     handle_task_list_helper,
     handle_create_helper,
     handle_delete_helper,
@@ -26,6 +25,7 @@ from ..repl.command_helpers import (
     handle_rename_helper
 )
 from ..services.kanban import KanbanService, TaskCreateParams, TaskUnsetParams, TaskUpdateParams
+from ..utils.args import parse_priority
 from ..utils.str import parse_destination
 from ..storage.seeds import BOOTSTRAP_CONFIG
 

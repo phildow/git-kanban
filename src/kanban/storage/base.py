@@ -373,7 +373,6 @@ class KanbanRepository(ABC):
         Raises TaskNotFound if no task with this filename exists in that column.
         """
 
-    # TODO: unused
     @abstractmethod
     def task_exists(self, board: Slug, column: Slug, slug: Slug) -> bool:
         """
