@@ -6,7 +6,7 @@ from os import name
 from pathlib import Path
 from uuid import UUID, uuid4
 
-from ..models import Slug, Task, Board, Column
+from ..models import RELATIVE_OPS, ReorderOp, Slug, Task, Board, Column
 from ..models.config import CONFIG_DEFAULTS
 from ..storage.base import (
     KanbanRepository,
@@ -429,7 +429,7 @@ class InMemoryRepository(KanbanRepository):
         stored.updated_at = datetime.now(UTC)
         return stored
 
-    def reorder_task(self, task: Task, op: str, relative_to: Slug | None = None) -> Task:
+    def reorder_task(self, task: Task, op: ReorderOp, relative_to: Slug | None = None) -> Task:
         stored = self._tasks_by_id.get(task.id)
         if stored is None:
             raise TaskNotFound(str(task.id))
@@ -447,22 +447,22 @@ class InMemoryRepository(KanbanRepository):
 
         current_index = order.index(slug)
 
-        if op == "up":
+        if op == ReorderOp.UP:
             new_index = max(0, current_index - 1)
-        elif op == "down":
+        elif op == ReorderOp.DOWN:
             new_index = min(len(order) - 1, current_index + 1)
-        elif op == "top":
+        elif op == ReorderOp.TOP:
             new_index = 0
-        elif op == "bottom":
+        elif op == ReorderOp.BOTTOM:
             new_index = len(order) - 1
-        elif op in ("above", "below"):
+        elif op in RELATIVE_OPS:
             new_index = relative_task_index(
                 order, current_index, op, relative_to, f"{board}/{column}/{relative_to}"
             )
         else:
             raise ValueError(
                 f"Invalid operation '{op}': must be one of "
-                "'up', 'down', 'top', 'bottom', 'above', 'below'"
+                f"{', '.join(repr(str(member)) for member in ReorderOp)}"
             )
 
         if new_index != current_index:

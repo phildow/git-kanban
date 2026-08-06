@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from functools import wraps
 
 from ..storage.seeds import BOOTSTRAP_CONFIG
-from ..models import Priority, Slug, TaskFilter
+from ..models import Priority, ReorderOp, Slug, TaskFilter
 from ..protocols.command_renderer import CommandRenderer
 from ..utils.field_renderer import for_fields
 from ..utils.str import parse_destination
@@ -259,7 +259,7 @@ def handle_task_move(args: argparse.Namespace, svc: KanbanService, renderer: Com
 		result = svc.move_task(args.path, column, board)
 		_pick(args, renderer, json_renderer).render_task_move(args, result)
 	else:
-		op = "top" if args.top else "bottom" if args.bottom else "up" if args.up else "down" if args.down else None
+		op = ReorderOp.from_flags(vars(args))
 		if op is None:
 			raise ValueError("Must specify one of --top, --bottom, --up, or --down")
 		result = svc.reorder_task(args.path, op)

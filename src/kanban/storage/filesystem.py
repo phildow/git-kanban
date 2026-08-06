@@ -11,7 +11,16 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import UUID, uuid4
 
-from ..models import Priority, ROLE_ARCHIVE, Slug, Task, Board, Column
+from ..models import (
+    Priority,
+    RELATIVE_OPS,
+    ReorderOp,
+    ROLE_ARCHIVE,
+    Slug,
+    Task,
+    Board,
+    Column,
+)
 from ..models.config import CONFIG_DEFAULTS
 from ..storage.base import (
     KanbanRepository,
@@ -266,7 +275,7 @@ class FilesystemRepository(KanbanRepository):
     # Columns operations
     # ------------------------------------------------------------------
 
-    # TODO: fail gracefully from corrupt metadta files (e.g. missing column in order file) instead of crashing, 
+    # TODO: fail gracefully from corrupt metadata files (e.g. missing column in order file) instead of crashing, 
     #       and log warnings to help users fix them
     # TODO: verify that the files listed in the sort order match the actual column directories and log warnings 
     #       if not, and handle missing columns by appending them to the end of the list rather than crashing
@@ -650,7 +659,7 @@ class FilesystemRepository(KanbanRepository):
 
         return self._parse_task_file(dest_file)
 
-    def reorder_task(self, task: Task, op: str, relative_to: Slug | None = None) -> Task:
+    def reorder_task(self, task: Task, op: ReorderOp, relative_to: Slug | None = None) -> Task:
         board_slug = task.board
         column_slug = task.column
         filename = f"{task.slug}.md"
@@ -662,16 +671,15 @@ class FilesystemRepository(KanbanRepository):
         current_index = order.index(filename)
         new_index = current_index
 
-        # TODO: type the op parameter as an enum instead of a string to avoid this check
-        if op == "up":
+        if op == ReorderOp.UP:
             new_index = max(0, current_index - 1)
-        elif op == "down":
+        elif op == ReorderOp.DOWN:
             new_index = min(len(order) - 1, current_index + 1)
-        elif op == "top":
+        elif op == ReorderOp.TOP:
             new_index = 0
-        elif op == "bottom":
+        elif op == ReorderOp.BOTTOM:
             new_index = len(order) - 1
-        elif op in ("above", "below"):
+        elif op in RELATIVE_OPS:
             new_index = relative_task_index(
                 order,
                 current_index,
@@ -682,7 +690,7 @@ class FilesystemRepository(KanbanRepository):
         else:
             raise ValueError(
                 f"Invalid operation '{op}': must be one of "
-                "'up', 'down', 'top', 'bottom', 'above', 'below'"
+                f"{', '.join(repr(str(member)) for member in ReorderOp)}"
             )
 
         if new_index != current_index:

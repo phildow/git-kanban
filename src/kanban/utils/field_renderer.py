@@ -21,7 +21,7 @@ import argparse
 from collections.abc import Callable, Sequence
 from typing import Any
 
-from ..models import Board, Column, Task, UserContext
+from ..models import Board, Column, ReorderOp, Task, UserContext
 from ..protocols.command_renderer import FIELD_ORDER, CommandRenderer, ObjectField
 from ..services.kanban import GitCommit, KanbanStatus
 
@@ -161,7 +161,7 @@ class FieldRenderer(CommandRenderer):
         """Report the fields of a moved task, in the column it landed in."""
         self._object(self.base.render_task_move, args, result)
 
-    def render_task_reorder(self, args: argparse.Namespace, task_op: tuple[Task, str]) -> None:
+    def render_task_reorder(self, args: argparse.Namespace, task_op: tuple[Task, ReorderOp]) -> None:
         """Report the fields of a task moved within its column."""
         with self.base.silenced():
             self.base.render_task_reorder(args, task_op)

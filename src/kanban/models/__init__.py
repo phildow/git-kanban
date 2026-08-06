@@ -2,6 +2,7 @@
 from .board import Board
 from .column import ARCHIVE_COLUMN_NAME, ARCHIVE_COLUMN_SLUG, Column, ROLE_ARCHIVE
 from .priority import Priority
+from .reorder import RELATIVE_OPS, ReorderOp
 from .selection import Selection
 from .slug import Slug
 from .task import Task
@@ -14,6 +15,8 @@ __all__ = [
     "Board",
     "Column",
     "Priority",
+    "RELATIVE_OPS",
+    "ReorderOp",
     "ROLE_ARCHIVE",
     "Selection",
     "Slug",

@@ -9,7 +9,7 @@ from typing import Any
 
 from rich.console import Console
 
-from ..models import Board, Column, Task, UserContext
+from ..models import Board, Column, ReorderOp, Task, UserContext
 from ..repl.rich_renderer import RichRenderer
 from ..services.render_service import RenderService
 
@@ -202,7 +202,7 @@ class TUIRenderer(RichRenderer):
         self._record_task(result)
 
     def render_task_reorder(
-        self, args: argparse.Namespace, task_op: tuple[Task, str]
+        self, args: argparse.Namespace, task_op: tuple[Task, ReorderOp]
     ) -> None:
         """Report a task moved within its column."""
         super().render_task_reorder(args, task_op)

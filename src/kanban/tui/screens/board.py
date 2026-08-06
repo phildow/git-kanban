@@ -28,7 +28,7 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.widgets import Footer, Header, Input, ListView, Static
 
-from ...models import Board, Column, Slug, Task, TaskFilter
+from ...models import Board, Column, ReorderOp, Slug, Task, TaskFilter
 from ...protocols.interaction import (
     ConfirmationRequired,
     EditRequired,
@@ -2195,13 +2195,13 @@ class BoardScreen(Screen[None]):
         if position == current:
             return
         if position == 0:
-            self.svc.reorder_task(task.path, "top")
+            self.svc.reorder_task(task.path, ReorderOp.TOP)
             return
         if position == len(order) - 1:
-            self.svc.reorder_task(task.path, "bottom")
+            self.svc.reorder_task(task.path, ReorderOp.BOTTOM)
             return
 
-        op = "up" if position < current else "down"
+        op = ReorderOp.UP if position < current else ReorderOp.DOWN
         for _ in range(abs(position - current)):
             self.svc.reorder_task(task.path, op)
 

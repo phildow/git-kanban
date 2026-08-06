@@ -16,7 +16,7 @@ from rich.table import Table
 from rich.text import Text
 from rich import box, print
 
-from ..models import UserContext, Board, Column, Slug, Task
+from ..models import UserContext, Board, Column, ReorderOp, Slug, Task
 from ..protocols.command_renderer import CommandRenderer, ObjectField, field_value
 from ..services.render_service import RenderService
 from ..services.kanban import GitCommit, KanbanStatus
@@ -430,11 +430,11 @@ class RichRenderer(CommandRenderer):
 		self._emit(args, f"Renamed: {result.title}")
 		self._emit(args, f"Slug: {result.slug}")
 
-	def render_task_reorder(self, args: argparse.Namespace, task_op: tuple[Task, str]) -> None:
+	def render_task_reorder(self, args: argparse.Namespace, task_op: tuple[Task, ReorderOp]) -> None:
 		result, op = task_op
-		if result.column and op in ["top", "bottom"]:
+		if result.column and op in [ReorderOp.TOP, ReorderOp.BOTTOM]:
 			msg = f"Task moved to {op} in {result.column}"
-		elif result.column and op in ["up", "down"]:
+		elif result.column and op in [ReorderOp.UP, ReorderOp.DOWN]:
 			msg = f"Task moved {op} in {result.column}"
 		else:
 			msg = f"Task reordered: {result.slug} ({op})"

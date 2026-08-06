@@ -10,7 +10,7 @@ from rich.console import Console, ConsoleOptions, RenderResult
 from rich.markdown import Heading, Markdown
 from rich.text import Text
 
-from ..models import Board, Column, Slug, Task, UserContext
+from ..models import Board, Column, ReorderOp, Slug, Task, UserContext
 from ..protocols.command_renderer import CommandRenderer, ObjectField, field_value
 from ..services.kanban import GitCommit, KanbanStatus
 from ..services.render_service import RenderService
@@ -229,7 +229,7 @@ class Renderer(CommandRenderer):
 	def render_task_move(self, args: argparse.Namespace, result: Task) -> None:
 		self.render_task(args, result)
 
-	def render_task_reorder(self, args: argparse.Namespace, task_op: tuple[Task, str]) -> None:
+	def render_task_reorder(self, args: argparse.Namespace, task_op: tuple[Task, ReorderOp]) -> None:
 		result, _op = task_op
 		self.render_task(args, result)
 

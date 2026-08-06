@@ -10,7 +10,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..models import Board, Column, Task, UserContext
+    from ..models import Board, Column, ReorderOp, Task, UserContext
     from ..services.kanban import GitCommit, KanbanStatus
 
 
@@ -141,7 +141,7 @@ class CommandRenderer(ABC):
         ...
 
     @abstractmethod
-    def render_task_reorder(self, args: argparse.Namespace, task_op: tuple[Task, str]) -> None:
+    def render_task_reorder(self, args: argparse.Namespace, task_op: tuple[Task, ReorderOp]) -> None:
         ...
 
     @abstractmethod

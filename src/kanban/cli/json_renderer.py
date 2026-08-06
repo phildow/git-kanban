@@ -7,7 +7,7 @@ import json
 from collections.abc import Sequence
 from pathlib import Path
 
-from ..models import Board, Column, Task, UserContext
+from ..models import Board, Column, ReorderOp, Task, UserContext
 from ..protocols.command_renderer import CommandRenderer, ObjectField, field_value
 from ..services.kanban import GitCommit, KanbanStatus
 from ..services.render_service import RenderService
@@ -187,7 +187,7 @@ class JsonRenderer(CommandRenderer):
     def render_task_move(self, args: argparse.Namespace, result: Task) -> None:
         self._emit(args, json.dumps(self._task_detail_dict(result), indent=2))
 
-    def render_task_reorder(self, args: argparse.Namespace, task_op: tuple[Task, str]) -> None:
+    def render_task_reorder(self, args: argparse.Namespace, task_op: tuple[Task, ReorderOp]) -> None:
         result, _ = task_op
         self._emit(args, json.dumps(self._task_detail_dict(result), indent=2))
 

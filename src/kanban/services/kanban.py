@@ -13,6 +13,7 @@ from ..models import (
     Board,
     Column,
     Priority,
+    ReorderOp,
     ROLE_ARCHIVE,
     Selection,
     Slug,
@@ -368,12 +369,9 @@ class KanbanService(CompletionDataSource):
 
     # ── Boards ────────────────────────────────────────────────────────────────
 
-    # TODO: References to .metadata leak implementation details from the filesystem storage layer.
-
     def get_boards(self) -> list[Board]:
         """
-        Return all boards in the repository, in the order recorded in
-        .kanban-store/boards/.metadata.)
+        Return all boards in the repository ordered however storage returns them.
         """
         return self.repository.get_boards()
     
@@ -947,15 +945,15 @@ class KanbanService(CompletionDataSource):
         created_task = self.repository.create_task(task, filename)
 
         insert = self.get_config(CONFIG_NEW_TASK_INSERT)
-        op: str | None = None
+        op: ReorderOp | None = None
 
         if insert == INSERT_ABOVE:
-            op = INSERT_ABOVE if reference is not None else INSERT_TOP
+            op = ReorderOp.ABOVE if reference is not None else ReorderOp.TOP
         elif insert == INSERT_BELOW:
             # Bottom is where the repository already put it.
-            op = INSERT_BELOW if reference is not None else None
+            op = ReorderOp.BELOW if reference is not None else None
         elif insert == INSERT_TOP:
-            op = INSERT_TOP
+            op = ReorderOp.TOP
         else:
             op = None
 
@@ -1139,7 +1137,7 @@ class KanbanService(CompletionDataSource):
     def reorder_task(
         self,
         path:        Path | Slug,
-        op:          str,
+        op:          ReorderOp,
         relative_to: Slug | None = None,
     ) -> Task:
         """

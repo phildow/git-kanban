@@ -111,8 +111,6 @@ class TestReplCompletion(unittest.TestCase):
         self.svc.create_board("beta", columns=[])
         self.svc.create_column(Path("beta"), "backlog")
 
-    # TODO: Add partial command completions tests for the repl
-
 class TestReplInterruptBehavior(unittest.TestCase):
     def test_ctrl_c_reprompts_instead_of_exiting(self):
         svc = _FakeSvc()

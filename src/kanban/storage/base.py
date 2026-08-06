@@ -27,7 +27,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from ..models import Board, Column, Slug, Task
+from ..models import Board, Column, ReorderOp, Slug, Task
 
 
 # ---------------------------------------------------------------------------
@@ -94,7 +94,7 @@ class TaskAlreadyExists(RepositoryError):
 def relative_task_index(
     order:         list[str],
     current_index: int,
-    op:            str,
+    op:            ReorderOp,
     entry:         str | None,
     identifier:    str,
 ) -> int:
@@ -124,7 +124,7 @@ def relative_task_index(
     if index > current_index:
         index -= 1
 
-    return index if op == "above" else index + 1
+    return index if op == ReorderOp.ABOVE else index + 1
 
 
 # ---------------------------------------------------------------------------
@@ -444,7 +444,7 @@ class KanbanRepository(ABC):
         """
 
     @abstractmethod
-    def reorder_task(self, task: Task, op: str, relative_to: Slug | None = None) -> Task:
+    def reorder_task(self, task: Task, op: ReorderOp, relative_to: Slug | None = None) -> Task:
         """
         Move a task within its column: `up`, `down`, `top`, `bottom`, or
         `above`/`below` the task named by `relative_to`.
