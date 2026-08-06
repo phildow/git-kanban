@@ -334,17 +334,21 @@ ModalScreen {
    themes, which reads as a link beside the body it heads, and underlines H2.
    A heading is the body's own colour, bold and underlined instead: weight and
    rule separate it, and the accent colour is left to mean focus. */
+
+/*
 MarkdownH1 {
     color: $text;
     text-style: bold underline;
     content-align: left top;
 }
-
+*/
+/*
 MarkdownH2, MarkdownH3,
 MarkdownH4, MarkdownH5, MarkdownH6 {
     color: $text;
     text-style: bold;
 }
+*/
 
 #form-heading {
     width: 1fr;
