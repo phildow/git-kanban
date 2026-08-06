@@ -8,34 +8,16 @@ which call into this service as needed to perform more complex operations.
 """
 
 import argparse
-from datetime import datetime, timezone
 from pathlib import Path
 
-from ..models import Board, Column, Slug, Task, TaskFilter
+from ..models import Board, Column, Slug, Task
 from ..services.kanban import KanbanService, TaskCreateParams
-from ..utils.args import parse_priority
+from ..utils.args import build_task_filter, parse_priority
 
 
 # ---------------------------------------------------------------------------
 # Private helpers
 # ---------------------------------------------------------------------------
-
-def build_task_filter(args: argparse.Namespace) -> TaskFilter:
-    """Build a TaskFilter from parsed CLI/REPL filter arguments."""
-    def _parse_date(s: str | None) -> datetime | None:
-        return datetime.strptime(s, "%Y-%m-%d").replace(tzinfo=timezone.utc) if s else None
-
-    return TaskFilter(
-        assigned_to=args.assigned_to,
-        priority=parse_priority(args),
-        tags=args.tags or [],
-        due_before=_parse_date(args.due_before),
-        due_after=_parse_date(args.due_after),
-        created_by=args.created_by,
-        exclude_columns=[Slug(column) for column in args.exclude_columns or []],
-        include_archived=args.include_archived,
-    )
-
 
 def handle_task_list_helper(args: argparse.Namespace, svc: KanbanService) -> list[Task]:
     """

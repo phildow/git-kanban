@@ -317,7 +317,8 @@ class KanbanService(CompletionDataSource):
         """Return True if the given column exists in the repository, False if not."""
         return self.repository.column_exists(board, column)
 
-    # TODO: Revisit -- if we have an active board always preface the path with it
+    # TODO: Revisit -- if we have an active board always preface the path with it unless the path is absolute.  
+    # If we don't have an active board, require the path to be absolute.
 
     def resolve_path(self, path: str | None = None) -> Path:
         """

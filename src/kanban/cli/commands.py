@@ -12,14 +12,13 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from datetime import datetime, timezone
 from functools import wraps
 
 from ..storage.seeds import BOOTSTRAP_CONFIG
-from ..models import ReorderOp, Slug, TaskFilter
+from ..models import ReorderOp
 from ..protocols.command_renderer import CommandRenderer
 from ..utils.field_renderer import for_fields
-from ..utils.args import parse_priority
+from ..utils.args import build_task_filter, parse_priority
 from ..utils.str import parse_destination
 from ..services.kanban import KanbanService, TaskCreateParams, TaskUnsetParams, TaskUpdateParams
 
@@ -144,24 +143,6 @@ def handle_column_delete(args: argparse.Namespace, svc: KanbanService, renderer:
 # -----------------------------------get_tasks----------------------------------------
 # Task subcommands
 # ---------------------------------------------------------------------------
-
-# TODO: REMOVE duplicate (in command_helpers.py)
-def build_task_filter(args: argparse.Namespace) -> TaskFilter:
-	"""Build a TaskFilter from parsed CLI/REPL filter arguments."""
-	def _parse_date(s: str | None) -> datetime | None:
-		return datetime.strptime(s, "%Y-%m-%d").replace(tzinfo=timezone.utc) if s else None
-
-	return TaskFilter(
-		assigned_to=args.assigned_to,
-		priority=parse_priority(args),
-		tags=args.tags or [],
-		due_before=_parse_date(args.due_before),
-		due_after=_parse_date(args.due_after),
-		created_by=args.created_by,
-		exclude_columns=[Slug(column) for column in args.column or []],
-		include_archived=args.include_archived,
-	)
-
 
 @with_absolute_path
 def handle_task_list(args: argparse.Namespace, svc: KanbanService, renderer: CommandRenderer, json_renderer: CommandRenderer) -> None:

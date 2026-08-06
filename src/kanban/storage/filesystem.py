@@ -279,8 +279,6 @@ class FilesystemRepository(KanbanRepository):
     #       and log warnings to help users fix them
     # TODO: verify that the files listed in the sort order match the actual column directories and log warnings 
     #       if not, and handle missing columns by appending them to the end of the list rather than crashing
-    
-    # TODO: move these methods
 
     def _get_task_order(self, board: Slug, column: Slug) -> list[str]:
         """Return the stored task order for a column, falling back to filesystem sort."""
@@ -851,8 +849,6 @@ class FilesystemRepository(KanbanRepository):
     def set_column_metadata(self, board: Slug, column: Slug, keypath: str, value: str | None) -> None:
         """Write a value to a column's .metadata INI file using a 'section.key' keypath."""
         self._set_ini_value(self._column_metadata_file(board, column), keypath, value)
-
-    # TODO: kanban service also does task parsing move to a utility module to avoid duplication between service and repository layers
 
     # ------------------------------------------------------------------
     # Task file parsing and utilities

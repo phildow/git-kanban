@@ -154,7 +154,7 @@ class TestCommandHandlers(unittest.TestCase):
 
     def test_handle_task_list(self):
         """`task list` handler forwards path/sort options and renders output."""
-        args = self._args(path="board-a/todo", sort="title", reverse=True, priority=None, assigned_to=None, tags=None, due_before=None, due_after=None, created_by=None, column=None, include_archived=False)
+        args = self._args(path="board-a/todo", sort="title", reverse=True, priority=None, assigned_to=None, tags=None, due_before=None, due_after=None, created_by=None, exclude_columns=None, include_archived=False)
         result = object()
         self.svc.get_tasks.return_value = result
 
@@ -166,7 +166,7 @@ class TestCommandHandlers(unittest.TestCase):
 
     def test_handle_task_list_with_exclude_columns(self):
         """`task list -x/--exclude` maps to TaskFilter.exclude_columns."""
-        args = self._args(path="board-a/todo", sort=None, reverse=False, priority=None, assigned_to=None, tags=None, due_before=None, due_after=None, created_by=None, column=["done", "archive"], include_archived=False)
+        args = self._args(path="board-a/todo", sort=None, reverse=False, priority=None, assigned_to=None, tags=None, due_before=None, due_after=None, created_by=None, exclude_columns=["done", "archive"], include_archived=False)
         result = object()
         self.svc.get_tasks.return_value = result
 
@@ -183,7 +183,7 @@ class TestCommandHandlers(unittest.TestCase):
 
     def test_handle_task_list_with_include_archived(self):
         """`task list --include-archived` maps to TaskFilter.include_archived."""
-        args = self._args(path="board-a", sort=None, reverse=False, priority=None, assigned_to=None, tags=None, due_before=None, due_after=None, created_by=None, column=None, include_archived=True)
+        args = self._args(path="board-a", sort=None, reverse=False, priority=None, assigned_to=None, tags=None, due_before=None, due_after=None, created_by=None, exclude_columns=None, include_archived=True)
         result = object()
         self.svc.get_tasks.return_value = result
 
@@ -200,7 +200,7 @@ class TestCommandHandlers(unittest.TestCase):
 
     def test_handle_search_with_include_archived(self):
         """`search --include-archived` maps to TaskFilter.include_archived."""
-        args = self._args(query="query", board=None, sort=None, reverse=False, priority=None, assigned_to=None, tags=None, due_before=None, due_after=None, created_by=None, column=None, include_archived=True)
+        args = self._args(query="query", board=None, sort=None, reverse=False, priority=None, assigned_to=None, tags=None, due_before=None, due_after=None, created_by=None, exclude_columns=None, include_archived=True)
         self.svc.search.return_value = object()
 
         commands.handle_search(args, self.svc, self.renderer, self.json_renderer)
@@ -757,7 +757,7 @@ class TestCommandHandlers(unittest.TestCase):
             due_before=None,
             due_after=None,
             created_by=None,
-            column=None,
+            exclude_columns=None,
             include_archived=False,
         )
         result = object()
@@ -783,7 +783,7 @@ class TestCommandHandlers(unittest.TestCase):
             due_before=None,
             due_after=None,
             created_by=None,
-            column=["archive"],
+            exclude_columns=["archive"],
             include_archived=False,
         )
         self.svc.search.return_value = object()

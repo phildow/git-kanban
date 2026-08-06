@@ -244,7 +244,7 @@ def _add_task_parser(subparsers: argparse._SubParsersAction) -> None:
     # task list
     p = task_sub.add_parser("list", help="List tasks")
     p.add_argument("path", metavar="BOARD[/COLUMN]", help="Fuly qualifed /board or /board/column path")
-    p.add_argument("-x", "--exclude", metavar="COLUMN", action="append", dest="column", help="Exclude tasks in this column (repeatable)")
+    p.add_argument("-x", "--exclude", metavar="COLUMN", action="append", dest="exclude_columns", help="Exclude tasks in this column (repeatable)")
     p.add_argument("--include-archived", action="store_true", default=False, dest="include_archived", help="Include archived tasks when listing a whole board")
     _add_list_format_and_sort_args(p, SORT_TASK_CHOICES)
     _add_task_filter_args(p)
@@ -412,9 +412,7 @@ Use the CLI directly with `kanban board list`, `kanban task create`, etc.
     # search
     p = subparsers.add_parser("search", help="Full-text search across tasks")
     p.add_argument("query", metavar="QUERY", help="Search query")
-    # Named `column` for the same reason `task list` is: it is the same filter,
-    # built by the same helper.
-    p.add_argument("-x", "--exclude", metavar="COLUMN", action="append", dest="column", help="Exclude tasks in this column (repeatable)")
+    p.add_argument("-x", "--exclude", metavar="COLUMN", action="append", dest="exclude_columns", help="Exclude tasks in this column (repeatable)")
     p.add_argument("--include-archived", action="store_true", default=False, dest="include_archived", help="Search the archived tasks too")
     _add_list_format_and_sort_args(p, SORT_TASK_CHOICES)
     _add_task_filter_args(p)

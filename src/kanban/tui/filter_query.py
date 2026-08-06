@@ -21,8 +21,8 @@ from dataclasses import dataclass, field
 from io import StringIO
 
 from ..models import Task, TaskFilter
-from ..repl.command_helpers import build_task_filter
 from ..repl.parser import add_task_filter_args
+from ..utils.args import build_task_filter
 
 
 @dataclass

@@ -169,7 +169,7 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
             "--reverse",
         ])
         self.assertEqual(args.path, "board-a/todo")
-        self.assertEqual(args.column, ["done", "archive"])
+        self.assertEqual(args.exclude_columns, ["done", "archive"])
         self.assertEqual(args.assigned_to, "philip")
         self.assertEqual(args.priority, "high")
         self.assertEqual(args.tags, ["bug", "urgent"])
@@ -178,7 +178,7 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         self.assertIs(args.func, handle_task_list)
 
         args = cli_parser.parse_args(["task", "list", "board-a/todo"])
-        self.assertIsNone(args.column)
+        self.assertIsNone(args.exclude_columns)
         self.assertFalse(args.include_archived)
 
         args = cli_parser.parse_args(["task", "list", "board-a", "--include-archived"])
@@ -335,11 +335,11 @@ class TestParserArgumentsAndDefaults(unittest.TestCase):
         self.assertEqual(args.board, "board-a")
         self.assertEqual(args.sort, "title")
         self.assertIs(args.func, handle_search)
-        self.assertIsNone(args.column)
+        self.assertIsNone(args.exclude_columns)
         self.assertFalse(args.include_archived)
 
         args = cli_parser.parse_args(["search", "query", "-x", "archive", "--exclude", "done"])
-        self.assertEqual(args.column, ["archive", "done"])
+        self.assertEqual(args.exclude_columns, ["archive", "done"])
 
         # The archive is left out of a search until it is asked for.
         args = cli_parser.parse_args(["search", "query", "--include-archived"])
