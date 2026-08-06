@@ -96,7 +96,7 @@ class RichRenderer(CommandRenderer):
 	def render_init(self, args: argparse.Namespace, result: bool) -> None:
 		"""Render a message indicating that the Kanban system has been initialized."""
 		if result:
-			self._emit(args, "Kanban system initialized successfully. See KANBAN.md for more info or get started with `kanban tui`.")
+			self._emit(args, "Kanban system successfully initialized. See KANBAN.md for more info or get started with `kanban tui`.")
 		else:
 			self._emit(args, "Failed to initialize Kanban system.")
 

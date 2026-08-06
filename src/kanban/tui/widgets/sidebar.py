@@ -104,9 +104,11 @@ class SidebarPanel(VerticalScroll):
     board screen decides when a reload is needed.
     """
 
-    def __init__(self, svc: KanbanService, *, id: str | None = None) -> None:
-        """Create a sidebar backed by `svc`."""
-        super().__init__(id=id)
+    def __init__(
+        self, svc: KanbanService, *, collapsed: bool = False, id: str | None = None
+    ) -> None:
+        """Create a sidebar backed by `svc`, collapsed from the start when asked."""
+        super().__init__(id=id, classes="-collapsed" if collapsed else None)
         self.svc = svc
 
     def compose(self) -> ComposeResult:

@@ -114,6 +114,13 @@ COMPLETION_HINTS = 12
 COMMAND_HISTORY_FILE = "tui-history"
 FILTER_HISTORY_FILE = "tui-filter-history"
 
+# Whether the sidebar — the panel carrying status and log — is on screen.
+# Userdata rather than config: it is not a setting the user edits but a toggle
+# the board writes as `s` is pressed, remembered for the next session.
+USERDATA_TUI_SIDEBAR = "tui.sidebar"
+SIDEBAR_VISIBLE = "visible"
+SIDEBAR_HIDDEN = "hidden"
+
 # What the board still answers to while a card is staged for a move: staging
 # keys, and the two ways out.  A move is a mode — editing the card being moved,
 # or refreshing the board out from under it, has no meaning half way through.
@@ -313,7 +320,9 @@ class BoardScreen(Screen[None]):
         yield Header()
         with Horizontal(id="board-body"):
             yield Horizontal(id="columns")
-            yield SidebarPanel(self.svc, id="sidebar")
+            yield SidebarPanel(
+                self.svc, collapsed=not self._sidebar_visible(), id="sidebar"
+            )
         yield FilterBar(id="filter-bar")
         yield CommandBar(id="command-bar")
         # Docked after the command bar, so it takes the strip directly above it
@@ -2279,10 +2288,47 @@ class BoardScreen(Screen[None]):
         self._reload_soon()
 
     def action_toggle_sidebar(self) -> None:
-        """Collapse or expand the sidebar."""
+        """Collapse or expand the sidebar, and remember which for the next session."""
         sidebar = self.sidebar
         if sidebar is not None:
-            sidebar.toggle()
+            self._save_sidebar_visible(sidebar.toggle())
+
+    def _sidebar_visible(self) -> bool:
+        """
+        Report whether `tui.sidebar` asks for the sidebar on screen.
+
+        Hidden is the default and what anything unreadable or unrecognised
+        falls back to: the board is what the screen is for, and the sidebar is
+        asked for with `s`.
+        """
+        setting: str | None = None
+        try:
+            setting = self.svc.get_userdata(USERDATA_TUI_SIDEBAR)
+        except Exception as exc:
+            description = str(exc) or exc.__class__.__name__
+            logging.warning("TUI could not read the sidebar setting: %s", description)
+            return False
+
+        if setting is not None and setting not in (SIDEBAR_VISIBLE, SIDEBAR_HIDDEN):
+            logging.warning(
+                "Stored sidebar setting %r is not recognised; hiding the sidebar", setting
+            )
+        return setting == SIDEBAR_VISIBLE
+
+    def _save_sidebar_visible(self, visible: bool) -> None:
+        """
+        Record whether the sidebar is on screen, for the next session.
+
+        A write that fails is logged and passed over: where a panel sits is a
+        preference, never worth interrupting the person using the board.
+        """
+        try:
+            self.svc.set_userdata(
+                USERDATA_TUI_SIDEBAR, SIDEBAR_VISIBLE if visible else SIDEBAR_HIDDEN
+            )
+        except Exception as exc:
+            description = str(exc) or exc.__class__.__name__
+            logging.warning("TUI could not save the sidebar setting: %s", description)
 
     def action_toggle_density(self) -> None:
         """Collapse cards to one line, or expand them again."""

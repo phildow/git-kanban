@@ -1123,4 +1123,9 @@ User data contains settings that cannot be changed by the user and which are gen
 [user-context]
     # the currently selected board
     board = main
+
+[tui]
+    # whether the sidebar — the status and log panel — is on screen
+    # values: visible | hidden, default: hidden
+    sidebar = hidden
 ```

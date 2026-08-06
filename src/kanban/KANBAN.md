@@ -17,9 +17,7 @@ repository was initialized. It is yours — edit or delete it.
 .kanban/                          # local machine state — config, history, search index
 ```
 
-A task's fields are frontmatter in its markdown file; its description and
-comments are the body. Board and column settings — display names, column order,
-task order — live in a hidden `.metadata` file in each directory.
+## Git Integration
 
 `.kanban-store/` is a git worktree checked out on the `kanban` branch, so board
 history is tracked separately from your project's history. `.kanban/` is
@@ -33,8 +31,8 @@ files directly:
 
 - Every task carries a UUID and timestamps that kanban maintains
 - A task's filename is a slug of its title — renaming the file does not rename the task
-- Column and task order is recorded in `.metadata`, not by the filesystem
-- Kanban keeps a search index in sync with each write, and commits changes to git
+- Column and task order is recorded in `.metadata` files, not by the filesystem
+- Kanban keeps a search index in sync with each write and commits changes to git
 - Markdown is formatted for metadata and to distinguish content
 
 Reading files, grepping them, and viewing them in your editor are all fine.
@@ -81,6 +79,8 @@ Paths are absolute: `/board/column/task`. Add `--format json` to script against
 the output.
 
 ## Configuration
+
+You can customize an increasing number of behaviors through built-in `config` commands:
 
 ```
 $ kanban config list
