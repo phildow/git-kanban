@@ -476,6 +476,12 @@ TaskHeading .-task-path {
     max-height: 24;
 }
 
+/* Textual gives H1 and H2 two rows above them, where a body read in a modal
+   this short wants the one row H3 and below already take. */
+#task-detail-body MarkdownH1, #task-detail-body MarkdownH2 {
+    margin: 1 0 1 0;
+}
+
 /* Stands under the Description heading of a task with nothing written in it,
    dimmed so it reads as an absence rather than as body text. */
 #task-detail-empty {

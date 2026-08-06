@@ -10,6 +10,7 @@ from uuid import uuid4
 
 from textual.pilot import Pilot
 from textual.widgets import Static
+from textual.widgets._markdown import MarkdownH1, MarkdownH2
 
 from kanban.models import Slug
 from kanban.services.git import GitService
@@ -38,6 +39,29 @@ def _make_service() -> KanbanService:
     svc.create_task(
         "/alpha/todo", TaskCreateParams(title="written", description="something")
     )
+
+    return svc
+
+
+def _make_commented_service() -> KanbanService:
+    """Return a service holding one described task carrying a comment."""
+    temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
+    temp_dir.mkdir()
+    repo = InMemoryRepository(root=temp_dir)
+    svc = KanbanService(
+        repository=repo,
+        index_service=MagicMock(),
+        git_service=GitService(),
+    )
+
+    repo.create_board("alpha", slug="alpha")
+    repo.create_column("alpha", "todo", slug="todo")
+    svc.set_board(Slug("alpha"))
+
+    svc.create_task(
+        "/alpha/todo", TaskCreateParams(title="written", description="something")
+    )
+    svc.comment_task("/alpha/todo/written", "looking into it")
 
     return svc
 
@@ -101,3 +125,36 @@ class TestDetailEmptyBody(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(detail.detail_task.slug, "written")
             placeholder = detail.query_one("#task-detail-empty", Static)
             self.assertFalse(placeholder.display)
+
+
+class TestDetailHeadingSpacing(unittest.IsolatedAsyncioTestCase):
+    """A heading in the body sits one row below what comes before it."""
+
+    async def asyncSetUp(self) -> None:
+        self.app = KanbanApp(_make_commented_service())
+
+    async def test_description_heading_takes_one_row_above(self) -> None:
+        """The `# Description` heading is not given Textual's two rows."""
+        async with self.app.run_test() as pilot:
+            detail = await _open_detail(pilot)
+
+            heading = detail.query_one(MarkdownH1)
+            self.assertEqual(heading.styles.margin.top, 1)
+
+    async def test_comment_headings_take_one_row_above(self) -> None:
+        """The `# Comments` and dated `##` headings are tightened alike."""
+        async with self.app.run_test() as pilot:
+            detail = await _open_detail(pilot)
+
+            headings = [*detail.query(MarkdownH1), *detail.query(MarkdownH2)]
+            self.assertGreater(len(headings), 1)
+            for heading in headings:
+                self.assertEqual(heading.styles.margin.top, 1)
+
+    async def test_the_row_below_a_heading_is_kept(self) -> None:
+        """Tightening the top leaves the row that separates a heading from its text."""
+        async with self.app.run_test() as pilot:
+            detail = await _open_detail(pilot)
+
+            heading = detail.query_one(MarkdownH1)
+            self.assertEqual(heading.styles.margin.bottom, 1)
