@@ -77,7 +77,7 @@ class _ReplBase(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            git_service=MagicMock(),
+            change_tracking=MagicMock(),
         )
         self.renderer = REPLRenderer(render_service=RenderService(service=self.svc))
 

@@ -16,7 +16,7 @@ from unittest.mock import MagicMock
 from uuid import UUID, uuid4
 
 from kanban.models import Board, Column, Task, UserContext
-from kanban.services.kanban import GitCommit, KanbanStatus
+from kanban.services.kanban import Commit, KanbanStatus
 from kanban.cli.json_renderer import JsonRenderer
 
 
@@ -553,13 +553,13 @@ class TestJsonRendererLog(unittest.TestCase):
 
     def test_log_is_array(self) -> None:
         """render_log emits a JSON array."""
-        commits = [GitCommit(sha="abc123"), GitCommit(sha="def456")]
+        commits = [Commit(sha="abc123"), Commit(sha="def456")]
         out = _capture(lambda: self.r.render_log(_args(), commits))
         self.assertIsInstance(json.loads(out), list)
 
     def test_log_sha_field(self) -> None:
         """Each log entry contains the commit SHA."""
-        commits = [GitCommit(sha="abc123")]
+        commits = [Commit(sha="abc123")]
         out = _capture(lambda: self.r.render_log(_args(), commits))
         self.assertEqual(json.loads(out)[0]["sha"], "abc123")
 

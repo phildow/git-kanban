@@ -23,7 +23,7 @@ from typing import Any
 
 from ..models import Board, Column, ReorderOp, Task, UserContext
 from ..protocols.command_renderer import FIELD_ORDER, CommandRenderer, ObjectField
-from ..services.kanban import GitCommit, KanbanStatus
+from ..services.kanban import Commit, KanbanStatus
 
 # A renderer's rendering method, as this one calls it: the parsed arguments and
 # whatever the command returned.  The second is `Any` because every one of them
@@ -197,7 +197,7 @@ class FieldRenderer(CommandRenderer):
         """Report the fields of every task found."""
         self._objects(self.base.render_search, args, result)
 
-    def render_log(self, args: argparse.Namespace, result: list[GitCommit]) -> None:
+    def render_log(self, args: argparse.Namespace, result: list[Commit]) -> None:
         """Pass a log through untouched; commits have neither field."""
         self.base.render_log(args, result)
 

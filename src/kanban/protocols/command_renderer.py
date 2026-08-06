@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..models import Board, Column, ReorderOp, Task, UserContext
-    from ..services.kanban import GitCommit, KanbanStatus
+    from ..services.kanban import Commit, KanbanStatus
 
 
 class ObjectField(StrEnum):
@@ -173,7 +173,7 @@ class CommandRenderer(ABC):
         ...
 
     @abstractmethod
-    def render_log(self, args: argparse.Namespace, result: list[GitCommit]) -> None:
+    def render_log(self, args: argparse.Namespace, result: list[Commit]) -> None:
         ...
 
     @abstractmethod

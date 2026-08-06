@@ -9,7 +9,8 @@ from pathlib import Path
 from uuid import uuid4
 
 from kanban.services.kanban import KanbanService
-from kanban.services.git import GitService
+from kanban.services.change_tracking import ChangeTrackingService
+from kanban.tracking import GitChangeTracker
 from kanban.services.index import IndexService
 from kanban.index.memory import InMemoryIndex
 from kanban.storage.memory import InMemoryRepository
@@ -23,7 +24,7 @@ class TestKanbanServiceResolvePath(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=IndexService(index_base=InMemoryIndex(), repository=self.repo),
-            git_service=GitService(),
+            change_tracking=ChangeTrackingService(GitChangeTracker()),
         )
 
     def test_resolve_path_relative_with_board_and_column_context(self):
@@ -65,7 +66,7 @@ class TestKanbanServiceWorkingContextSetters(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=IndexService(index_base=InMemoryIndex(), repository=self.repo),
-            git_service=GitService(),
+            change_tracking=ChangeTrackingService(GitChangeTracker()),
         )
 
     def test_working_board_setter_updates_board(self) -> None:

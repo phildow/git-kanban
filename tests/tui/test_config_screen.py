@@ -13,7 +13,8 @@ from textual.widgets import Button, Static
 
 from kanban.models import Slug
 from kanban.models.config import CONFIG_TUI_NOTIFICATIONS, CONFIG_VALUES
-from kanban.services.git import GitService
+from kanban.services.change_tracking import ChangeTrackingService
+from kanban.tracking import GitChangeTracker
 from kanban.services.kanban import (
     CONFIG_KEYS,
     CONFIG_NEW_TASK_INSERT,
@@ -42,7 +43,7 @@ def _make_service() -> KanbanService:
     svc = KanbanService(
         repository=repo,
         index_service=MagicMock(),
-        git_service=GitService(),
+        change_tracking=ChangeTrackingService(GitChangeTracker()),
     )
 
     repo.create_board("Alpha", slug=Slug("alpha"))

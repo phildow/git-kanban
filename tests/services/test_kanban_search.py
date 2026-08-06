@@ -10,7 +10,8 @@ from uuid import uuid4
 
 from kanban.index.memory import InMemoryIndex
 from kanban.models import Priority, TaskFilter
-from kanban.services.git import GitService
+from kanban.services.change_tracking import ChangeTrackingService
+from kanban.tracking import GitChangeTracker
 from kanban.services.index import IndexService
 from kanban.services.kanban import KanbanService, TaskCreateParams
 from kanban.storage.memory import InMemoryRepository
@@ -27,7 +28,7 @@ class TestKanbanServiceSearch(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=self.index_service,
-            git_service=GitService(),
+            change_tracking=ChangeTrackingService(GitChangeTracker()),
         )
         self.repo.create_board("alpha", slug="alpha")
         self.repo.create_column("alpha", "todo", slug="todo")

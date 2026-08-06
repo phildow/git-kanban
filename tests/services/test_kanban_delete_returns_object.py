@@ -9,7 +9,8 @@ from unittest.mock import MagicMock
 from uuid import uuid4
 
 from kanban.models import Board, Column, Task
-from kanban.services.git import GitService
+from kanban.services.change_tracking import ChangeTrackingService
+from kanban.tracking import GitChangeTracker
 from kanban.services.kanban import KanbanService, TaskCreateParams
 from kanban.storage.memory import InMemoryRepository
 
@@ -24,7 +25,7 @@ class TestKanbanServiceDeleteReturnsObject(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            git_service=GitService(),
+            change_tracking=ChangeTrackingService(GitChangeTracker()),
         )
         self.repo.create_board("My Project", slug="my-project")
         self.repo.create_column("my-project", "To Do", slug="todo")
@@ -86,7 +87,7 @@ class TestKanbanServiceDeleteFlag(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            git_service=GitService(),
+            change_tracking=ChangeTrackingService(GitChangeTracker()),
         )
         self.repo.create_board("My Project", slug="my-project")
         self.repo.create_column("my-project", "To Do", slug="todo")

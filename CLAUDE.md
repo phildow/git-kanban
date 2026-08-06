@@ -84,14 +84,6 @@ The index does cache data from the filesystem for search and to ensure consisten
 - A REPL for interactive commands in a loop (e.g. `kanban repl`)
 - A lightweight TUI (e.g. `kanban tui`)
 
-**Coordinating Facade (KanbanService)**
-
-- Single object called by the CLI/REPL/TUI
-- Orchestrates across domain services, storage, the index, and git
-- Sequences operations, handles cross-domain validation, manages partial failure
-- Only orchestrates — never contains domain logic
-- Raises exceptions if conditions required to call into domain services or repository layer are missing
-
 **Interaction**
 
 - How anything below the consumer layer asks the user a question: a confirmation, or an edit
@@ -101,9 +93,17 @@ The index does cache data from the filesystem for search and to ensure consisten
 - A command therefore abandons whatever it was doing at the point it asked, so nothing may be written before a question
 - Nothing below the consumer layer reads stdin or launches a program by any other route
 
+**Coordinating Facade (KanbanService)**
+
+- Single object called by the CLI/REPL/TUI
+- Orchestrates across domain services, storage, the index, and git
+- Sequences operations, handles cross-domain validation, manages partial failure
+- Only orchestrates — never contains domain logic
+- Raises exceptions if conditions required to call into domain services or repository layer are missing
+
 **Domain Services**
 
-- One class per domain: `BoardService`, `TaskService`, `SearchService`, `GitService`, `IndexService`. 
+- One class per domain: `BoardService`, `TaskService`, `SearchService`, `ChangeTrackingService`, `IndexService`. 
 - In practice the datamodel services are handled by the `KanbanService`.
 - Return rich domain dataclasses (`Task`, `Board`, `Column`) never formatted strings
 - Raise domain exceptions (`TaskNotFound`, `BoardAlreadyExists`) never storage exceptions
@@ -133,10 +133,15 @@ The index does cache data from the filesystem for search and to ensure consisten
 - Introduce SQLite + FTS5 later as a performance cache once data model is stable
 - Index is always a cache — markdown is always the source of truth
 
-**Git**
+**Change Tracking**
 
 - Automatic commit per operation with structured messages composed by the facade
-- `kanban squash` command to collapse commits before pushing
+- `ChangeTracker` is an abstract base class in `kanban.tracking`, beside the index and storage layers
+- Two concrete implementations: `GitChangeTracker` and `InMemoryChangeTracker` (for testing)
+- Commits, squashes, reads history, and syncs with the remote; the facade composes the commit message
+- A path argument is always relative to the worktree root, and None means the whole store
+- `ChangeTrackingService` is the domain service over it, as `IndexService` is over `IndexBase`: it holds a concrete `ChangeTracker` and forwards to it
+- The facade holds the `ChangeTrackingService`, never an implementation; the implementation is injected at startup
 - Use `pygit2` or `subprocess` — avoid `GitPython`
 
 ### Directory Structure

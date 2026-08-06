@@ -35,7 +35,7 @@ class TestKanbanServiceLazyLocalData(unittest.TestCase):
         return KanbanService(
             repository=self.repo,
             index_service=IndexService(index_base=InMemoryIndex(), repository=self.repo),
-            git_service=MagicMock(),
+            change_tracking=MagicMock(),
         )
 
     def test_local_data_created_for_store_without_it(self) -> None:
@@ -83,7 +83,7 @@ class TestKanbanServiceLocalDataInMemory(unittest.TestCase):
         """The in-memory repository's no-op init_local_data does not break construction."""
         repo = InMemoryRepository(root=Path("."))
         repo.init_storage()
-        svc = KanbanService(repository=repo, index_service=MagicMock(), git_service=MagicMock())
+        svc = KanbanService(repository=repo, index_service=MagicMock(), change_tracking=MagicMock())
 
         self.assertFalse(svc.has_local_data)
 

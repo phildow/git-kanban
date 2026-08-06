@@ -20,7 +20,7 @@ from rich import box, print
 from ..models import UserContext, Board, Column, ReorderOp, Slug, Task
 from ..protocols.command_renderer import CommandRenderer, ObjectField, field_value
 from ..services.render_service import RenderService
-from ..services.kanban import GitCommit, KanbanStatus
+from ..services.kanban import Commit, KanbanStatus
 
 # Box style options:
 # https://rich.readthedocs.io/en/stable/appendix/box.html#appendix-box
@@ -494,7 +494,7 @@ class RichRenderer(CommandRenderer):
 		"""Render search results the same way `render_task_list` renders a task list."""
 		self.render_task_list(args, result)
 
-	def render_log(self, args: argparse.Namespace, result: list[GitCommit]) -> None:
+	def render_log(self, args: argparse.Namespace, result: list[Commit]) -> None:
 		self._emit(args, result)
 
 	def render_status(self, args: argparse.Namespace, result: KanbanStatus) -> None:

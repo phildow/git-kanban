@@ -7,7 +7,8 @@ from .cli.parser import parse_args
 from .cli.renderer import Renderer
 from .cli.json_renderer import JsonRenderer
 
-from .services.git import GitService
+from .tracking import GitChangeTracker
+from .services.change_tracking import ChangeTrackingService
 from .services.index import IndexService
 from .services.kanban import KanbanService
 from .index.memory import InMemoryIndex
@@ -24,8 +25,8 @@ def main() -> None:
     repository = get_repository(FILESYSTEM)
     index_base = InMemoryIndex()
     index_service = IndexService(index_base=index_base, repository=repository)
-    git_service = GitService()
-    svc = KanbanService(repository=repository, index_service=index_service, git_service=git_service)
+    change_tracking = ChangeTrackingService(change_tracker=GitChangeTracker())
+    svc = KanbanService(repository=repository, index_service=index_service, change_tracking=change_tracking)
     render_service = RenderService(service=svc)
     renderer = Renderer(render_service=render_service)
     json_renderer = JsonRenderer(render_service=render_service)

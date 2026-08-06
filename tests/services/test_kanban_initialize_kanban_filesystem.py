@@ -28,7 +28,7 @@ class TestKanbanInitializeKanbanFilesystem(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=IndexService(index_base=InMemoryIndex(), repository=self.repo),
-            git_service=MagicMock(),
+            change_tracking=MagicMock(),
         )
 
     def tearDown(self) -> None:
@@ -145,7 +145,7 @@ class TestKanbanInitializeKanbanFilesystemCustomBoard(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=IndexService(index_base=InMemoryIndex(), repository=self.repo),
-            git_service=MagicMock(),
+            change_tracking=MagicMock(),
         )
         self.config = {
             "usercontext": {

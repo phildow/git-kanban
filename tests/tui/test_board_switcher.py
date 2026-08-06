@@ -12,7 +12,8 @@ from textual.pilot import Pilot
 from textual.widgets import Input, Static
 
 from kanban.models import Slug
-from kanban.services.git import GitService
+from kanban.services.change_tracking import ChangeTrackingService
+from kanban.tracking import GitChangeTracker
 from kanban.services.kanban import KanbanService
 from kanban.storage.memory import InMemoryRepository
 from kanban.tui.app import KanbanApp
@@ -36,7 +37,7 @@ def _make_service(*, boards: list[str] = BOARDS, active: str | None = "alpha") -
     svc = KanbanService(
         repository=repo,
         index_service=MagicMock(),
-        git_service=GitService(),
+        change_tracking=ChangeTrackingService(GitChangeTracker()),
     )
 
     for slug in boards:

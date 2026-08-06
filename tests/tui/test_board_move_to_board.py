@@ -13,7 +13,8 @@ from textual.widgets import Input, Static
 from textual.widgets._footer import FooterKey
 
 from kanban.models import Slug
-from kanban.services.git import GitService
+from kanban.services.change_tracking import ChangeTrackingService
+from kanban.tracking import GitChangeTracker
 from kanban.services.kanban import KanbanService, TaskCreateParams
 from kanban.storage.memory import InMemoryRepository
 from kanban.tui.app import KanbanApp
@@ -37,7 +38,7 @@ def _make_service(*, shared_column: bool = True) -> KanbanService:
     svc = KanbanService(
         repository=repo,
         index_service=MagicMock(),
-        git_service=GitService(),
+        change_tracking=ChangeTrackingService(GitChangeTracker()),
     )
 
     repo.create_board("alpha", slug="alpha")

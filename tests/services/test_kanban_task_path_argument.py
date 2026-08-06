@@ -9,7 +9,8 @@ from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 from kanban.models import Slug
-from kanban.services.git import GitService
+from kanban.services.change_tracking import ChangeTrackingService
+from kanban.tracking import GitChangeTracker
 from kanban.services.kanban import KanbanService, TaskCreateParams, TaskUpdateParams
 from kanban.storage.base import TaskAlreadyExists, TaskNotFound
 from kanban.storage.memory import InMemoryRepository
@@ -25,7 +26,7 @@ class TestKanbanServiceTaskPathArgument(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            git_service=GitService(),
+            change_tracking=ChangeTrackingService(GitChangeTracker()),
         )
         self.repo.create_board("alpha", slug="alpha")
         self.repo.create_column("alpha", "todo", slug="todo")
@@ -150,7 +151,7 @@ class TestKanbanServiceBareTaskSlug(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            git_service=GitService(),
+            change_tracking=ChangeTrackingService(GitChangeTracker()),
         )
         self.repo.create_board("alpha", slug="alpha")
         self.repo.create_column("alpha", "todo", slug="todo")

@@ -9,7 +9,8 @@ from unittest.mock import MagicMock
 from uuid import uuid4
 
 from kanban.models import Slug
-from kanban.services.git import GitService
+from kanban.services.change_tracking import ChangeTrackingService
+from kanban.tracking import GitChangeTracker
 from kanban.services.kanban import KanbanService
 from kanban.storage.memory import InMemoryRepository
 
@@ -21,7 +22,7 @@ def _make_service() -> KanbanService:
     return KanbanService(
         repository=InMemoryRepository(root=temp_dir),
         index_service=MagicMock(),
-        git_service=GitService(),
+        change_tracking=ChangeTrackingService(GitChangeTracker()),
     )
 
 
@@ -65,7 +66,7 @@ class TestKanbanServiceSelection(unittest.TestCase):
         reread = KanbanService(
             repository=self.svc.repository,
             index_service=MagicMock(),
-            git_service=GitService(),
+            change_tracking=ChangeTrackingService(GitChangeTracker()),
         )
         self.assertTrue(reread.selection.is_empty)
 

@@ -9,7 +9,7 @@ from pathlib import Path
 
 from ..models import Board, Column, ReorderOp, Task, UserContext
 from ..protocols.command_renderer import CommandRenderer, ObjectField, field_value
-from ..services.kanban import GitCommit, KanbanStatus
+from ..services.kanban import Commit, KanbanStatus
 from ..services.render_service import RenderService
 
 
@@ -216,7 +216,7 @@ class JsonRenderer(CommandRenderer):
     def render_search(self, args: argparse.Namespace, result: list[Task]) -> None:
         self._emit(args, json.dumps([self._task_dict(t) for t in result], indent=2))
 
-    def render_log(self, args: argparse.Namespace, result: list[GitCommit]) -> None:
+    def render_log(self, args: argparse.Namespace, result: list[Commit]) -> None:
         self._emit(args, json.dumps([{"sha": c.sha} for c in result], indent=2))
 
     def render_status(self, args: argparse.Namespace, result: KanbanStatus) -> None:

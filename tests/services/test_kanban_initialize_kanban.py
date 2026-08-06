@@ -13,7 +13,8 @@ from uuid import uuid4
 
 from kanban.storage.seeds import BOOTSTRAP_CONFIG
 from kanban.services.kanban import KanbanService
-from kanban.services.git import GitService
+from kanban.services.change_tracking import ChangeTrackingService
+from kanban.tracking import GitChangeTracker
 from kanban.services.index import IndexService
 from kanban.index.memory import InMemoryIndex
 from kanban.storage.memory import InMemoryRepository
@@ -30,7 +31,7 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         svc = KanbanService(
             repository=repo,
             index_service=IndexService(index_base=InMemoryIndex(), repository=repo),
-            git_service=GitService(),
+            change_tracking=ChangeTrackingService(GitChangeTracker()),
         )
 
         result = svc.initialize_kanban(Path("."), config=BOOTSTRAP_CONFIG)
@@ -60,7 +61,7 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         svc = KanbanService(
             repository=repo,
             index_service=IndexService(index_base=InMemoryIndex(), repository=repo),
-            git_service=GitService(),
+            change_tracking=ChangeTrackingService(GitChangeTracker()),
         )
 
         svc.initialize_kanban(Path("."))
@@ -80,7 +81,7 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         svc = KanbanService(
             repository=repo,
             index_service=IndexService(index_base=InMemoryIndex(), repository=repo),
-            git_service=GitService(),
+            change_tracking=ChangeTrackingService(GitChangeTracker()),
         )
 
         svc.initialize_kanban(Path("."))
@@ -95,7 +96,7 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         svc = KanbanService(
             repository=repo,
             index_service=IndexService(index_base=InMemoryIndex(), repository=repo),
-            git_service=GitService(),
+            change_tracking=ChangeTrackingService(GitChangeTracker()),
         )
 
         svc.initialize_kanban(Path("."), config=BOOTSTRAP_CONFIG)
@@ -110,7 +111,7 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         svc = KanbanService(
             repository=repo,
             index_service=IndexService(index_base=InMemoryIndex(), repository=repo),
-            git_service=GitService(),
+            change_tracking=ChangeTrackingService(GitChangeTracker()),
         )
 
         svc.initialize_kanban(Path("."), config=BOOTSTRAP_CONFIG)
@@ -132,7 +133,7 @@ class TestKanbanServiceInitKanban(unittest.TestCase):
         svc = KanbanService(
             repository=repo,
             index_service=IndexService(index_base=InMemoryIndex(), repository=repo),
-            git_service=GitService(),
+            change_tracking=ChangeTrackingService(GitChangeTracker()),
         )
         custom: BootstrapConfig = {
             "boards": [

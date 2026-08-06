@@ -12,7 +12,7 @@ from rich.text import Text
 
 from ..models import Board, Column, ReorderOp, Slug, Task, UserContext
 from ..protocols.command_renderer import CommandRenderer, ObjectField, field_value
-from ..services.kanban import GitCommit, KanbanStatus
+from ..services.kanban import Commit, KanbanStatus
 from ..services.render_service import RenderService
 
 # Box style options:
@@ -265,7 +265,7 @@ class Renderer(CommandRenderer):
 			result = []
 		self.render_task_list(args, result)
 
-	def render_log(self, args: argparse.Namespace, result: list[GitCommit]) -> None:
+	def render_log(self, args: argparse.Namespace, result: list[Commit]) -> None:
 		# TODO: implement
 		self._emit(args, result)
 

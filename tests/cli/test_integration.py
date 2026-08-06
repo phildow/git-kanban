@@ -65,7 +65,7 @@ class _CLIBase(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            git_service=MagicMock(),
+            change_tracking=MagicMock(),
         )
         self.renderer = Renderer(render_service=RenderService(service=self.svc))
         self.json_renderer = JsonRenderer(render_service=RenderService(service=self.svc))

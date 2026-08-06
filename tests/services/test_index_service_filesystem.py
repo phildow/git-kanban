@@ -14,7 +14,8 @@ from pathlib import Path
 from uuid import uuid4
 
 from kanban.index.memory import InMemoryIndex
-from kanban.services.git import GitService
+from kanban.services.change_tracking import ChangeTrackingService
+from kanban.tracking import GitChangeTracker
 from kanban.services.index import IndexDiff, IndexService
 from kanban.services.kanban import KanbanService, TaskCreateParams
 from kanban.storage.filesystem import FilesystemRepository
@@ -34,7 +35,7 @@ class TestIndexServiceDiffFilesystem(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=self.index_service,
-            git_service=GitService(),
+            change_tracking=ChangeTrackingService(GitChangeTracker()),
         )
 
         self.svc.create_board("main", columns=[("To Do", "todo"), ("Backlog", "backlog")])

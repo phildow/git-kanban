@@ -18,7 +18,8 @@ from kanban.repl.command_helpers import (
     handle_info_helper,
     handle_task_list_helper,
 )
-from kanban.services.git import GitService
+from kanban.services.change_tracking import ChangeTrackingService
+from kanban.tracking import GitChangeTracker
 from kanban.services.kanban import KanbanService, TaskCreateParams
 from kanban.storage.memory import InMemoryRepository
 
@@ -33,7 +34,7 @@ class TestHandleTaskListHelper(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            git_service=GitService(),
+            change_tracking=ChangeTrackingService(GitChangeTracker()),
         )
         self.repo.create_board("alpha", slug="alpha")
         self.repo.create_column("alpha", "todo", slug="todo")
@@ -118,7 +119,7 @@ class TestHandleInfoHelper(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            git_service=GitService(),
+            change_tracking=ChangeTrackingService(GitChangeTracker()),
         )
         self.repo.create_board("alpha", slug="alpha")
         self.repo.create_column("alpha", "todo", slug="todo")
@@ -174,7 +175,7 @@ class TestHandleCreateHelperSelection(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            git_service=GitService(),
+            change_tracking=ChangeTrackingService(GitChangeTracker()),
         )
         self.repo.create_board("alpha", slug="alpha")
         self.repo.create_column("alpha", "todo", slug="todo")

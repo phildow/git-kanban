@@ -51,8 +51,9 @@ from ..protocols.completion_data_source import CompletionDataSource
 from ..protocols.interaction import Interaction
 from ..storage.base import KanbanRepository, ColumnNotFound, BoardNotFound, TaskNotFound, TaskAlreadyExists
 from ..storage.seeds import ARCHIVE_COLUMN, BootstrapConfig, DEFAULT_COLUMNS, DEFAULT_CONFIG
-from ..services.git import GitService
+from ..services.change_tracking import ChangeTrackingService
 from ..services.index import IndexService
+from ..tracking import Commit
 from ..utils.interaction import TerminalInteraction
 from ..utils.str import slug_it
 
@@ -96,9 +97,8 @@ class TaskUnsetParams:
 
 # ── Return types ──────────────────────────────────────────────────────────────
 
-@dataclass
-class GitCommit:
-    sha:         str
+# `Commit` is defined by the change tracking layer and re-exported here so
+# renderers take every return type of the facade from the facade.
 
 @dataclass
 class KanbanStatus:
@@ -109,18 +109,16 @@ class KanbanStatus:
     index_fresh: bool
     uncommitted_changes: bool
 
-# ── Private Utilities ─────────────────────────────────────────────────────────
-
 # ── KanbanService ─────────────────────────────────────────────────────────────
 
 class KanbanService(CompletionDataSource):
 
     def __init__(
         self,
-        repository:    KanbanRepository,
-        index_service: IndexService,
-        git_service:   GitService,
-        interaction:   Interaction | None = None,
+        repository:      KanbanRepository,
+        index_service:   IndexService,
+        change_tracking: ChangeTrackingService,
+        interaction:     Interaction | None = None,
     ) -> None:
         """
         Assemble the facade from its domain services.  All services are
@@ -134,7 +132,7 @@ class KanbanService(CompletionDataSource):
         """
         self.repository = repository
         self.index_service = index_service
-        self.git_service = git_service
+        self.change_tracking = change_tracking
         self.interaction = interaction or TerminalInteraction()
         self._user_context = UserContext()
         # Live screen state, not a setting: it starts empty every session and
@@ -1302,22 +1300,22 @@ class KanbanService(CompletionDataSource):
 
         return tasks
 
-    # ── Git ───────────────────────────────────────────────────────────────────
+    # ── Change Tracking ───────────────────────────────────────────────────────
 
     def log(
         self,
         path:   Path = Path("/"),
         limit:  int = 20,
-    ) -> list[GitCommit]:
+    ) -> list[Commit]:
         """
         Return structured commit history, optionally scoped to a board, column,
         or specific task by UUID.  When title is provided, resolves the
         task first via _resolve_path_into_parts so that history follows the file
-        through any renames.  Delegates path filtering to GitService.
+        through any renames.  Delegates path filtering to GitChangeTracker.
         """
         raise NotImplementedError()
 
-    def squash(self, board: Slug | None = None) -> GitCommit:
+    def squash(self, board: Slug | None = None) -> Commit:
         """
         Collapse all commits since the last squash (or since init) into one.
         Scoped to a single board if provided.  Returns the new squash commit.
@@ -1394,5 +1392,5 @@ class KanbanService(CompletionDataSource):
     # ── Internal helpers ──────────────────────────────────────────────────────
 
     def _commit(self, type: str, scope: str, description: str) -> None:
-        """Compose a structured commit message and delegate to GitService."""
+        """Compose a structured commit message and delegate to GitChangeTracker."""
         raise NotImplementedError()
