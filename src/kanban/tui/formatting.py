@@ -73,10 +73,10 @@ def format_date(value: datetime | None) -> str:
 
 
 def format_timestamp(value: datetime | None) -> str:
-    """Return an ISO-ish `2026-06-15 10:00` timestamp, or an em dash when unset."""
+    """Return an ISO `2026-06-15` date, or an em dash when unset."""
     if value is None:
         return "—"
-    return value.strftime("%Y-%m-%d %H:%M")
+    return value.strftime("%Y-%m-%d")
 
 
 def column_title(column: Column, task_count: int) -> str:

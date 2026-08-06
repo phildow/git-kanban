@@ -58,7 +58,7 @@ class TestPriorityStyle(unittest.TestCase):
 
 
 class TestDateFormatting(unittest.TestCase):
-    """Dates render compactly on cards and fully in the detail view."""
+    """Dates render compactly on cards and in full in the detail view, never with a time."""
 
     def test_format_date(self) -> None:
         """Card dates use a short month and day."""
@@ -69,10 +69,8 @@ class TestDateFormatting(unittest.TestCase):
         self.assertEqual(format_date(None), "")
 
     def test_format_timestamp(self) -> None:
-        """Detail timestamps include the date and the time."""
-        self.assertEqual(
-            format_timestamp(datetime(2026, 6, 15, 10, 0)), "2026-06-15 10:00"
-        )
+        """Detail timestamps give the date alone, dropping the time."""
+        self.assertEqual(format_timestamp(datetime(2026, 6, 15, 10, 0)), "2026-06-15")
 
     def test_format_timestamp_none(self) -> None:
         """An unset timestamp renders as an em dash."""

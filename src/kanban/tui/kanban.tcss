@@ -329,6 +329,23 @@ ModalScreen {
     width: 52;
 }
 
+/* Rendered markdown — the task detail body and the comments on the form.
+   Textual colours headings with the theme's primary colour, blue in most
+   themes, which reads as a link beside the body it heads, and underlines H2.
+   A heading is the body's own colour, bold and underlined instead: weight and
+   rule separate it, and the accent colour is left to mean focus. */
+MarkdownH1 {
+    color: $text;
+    text-style: bold underline;
+    content-align: left top;
+}
+
+MarkdownH2, MarkdownH3,
+MarkdownH4, MarkdownH5, MarkdownH6 {
+    color: $text;
+    text-style: bold;
+}
+
 #form-heading {
     width: 1fr;
     margin: 0 0 1 0;
@@ -480,6 +497,12 @@ TaskHeading .-task-path {
    this short wants the one row H3 and below already take. */
 #task-detail-body MarkdownH1, #task-detail-body MarkdownH2 {
     margin: 1 0 1 0;
+}
+
+/* The body opens on a heading, whose own row above would sit on top of the row
+   the metadata block already leaves.  The metadata's row is the separator. */
+#task-detail-body Markdown > *:first-child {
+    margin: 0 0 1 0;
 }
 
 /* Stands under the Description heading of a task with nothing written in it,

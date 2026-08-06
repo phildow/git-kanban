@@ -133,21 +133,21 @@ class TestDetailHeadingSpacing(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self) -> None:
         self.app = KanbanApp(_make_commented_service())
 
-    async def test_description_heading_takes_one_row_above(self) -> None:
-        """The `# Description` heading is not given Textual's two rows."""
+    async def test_description_heading_takes_no_row_above(self) -> None:
+        """The `# Description` heading sits on the row the metadata already left."""
         async with self.app.run_test() as pilot:
             detail = await _open_detail(pilot)
 
             heading = detail.query_one(MarkdownH1)
-            self.assertEqual(heading.styles.margin.top, 1)
+            self.assertEqual(heading.styles.margin.top, 0)
 
     async def test_comment_headings_take_one_row_above(self) -> None:
-        """The `# Comments` and dated `##` headings are tightened alike."""
+        """The `# Comments` and dated `##` headings, below the first, take one row."""
         async with self.app.run_test() as pilot:
             detail = await _open_detail(pilot)
 
-            headings = [*detail.query(MarkdownH1), *detail.query(MarkdownH2)]
-            self.assertGreater(len(headings), 1)
+            headings = [*detail.query(MarkdownH1), *detail.query(MarkdownH2)][1:]
+            self.assertGreater(len(headings), 0)
             for heading in headings:
                 self.assertEqual(heading.styles.margin.top, 1)
 

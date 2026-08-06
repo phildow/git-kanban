@@ -14,6 +14,7 @@ from rich.console import Console, ConsoleOptions, RenderResult
 from rich.markdown import Heading, Markdown
 from rich.table import Table
 from rich.text import Text
+from rich.theme import Theme
 from rich import box, print
 
 from ..models import UserContext, Board, Column, ReorderOp, Slug, Task
@@ -42,10 +43,26 @@ class KanbanMarkdown(Markdown):
 		"heading_open": LeftJustifiedHeading,
 	}
 
+# Rich colours markdown headings — magenta from H2 down — and underlines only
+# some of them.  Headings are rendered in the body's own colour instead, so
+# colour keeps the meaning it carries elsewhere in the output, with weight
+# marking a heading and the rule under H1 marking where a section starts.
+# Matches the TUI, which styles its own headings the same way.
+
+MARKDOWN_THEME = Theme({
+	"markdown.h1": "bold underline",
+	"markdown.h2": "bold",
+	"markdown.h3": "bold",
+	"markdown.h4": "bold",
+	"markdown.h5": "bold",
+	"markdown.h6": "bold",
+	"markdown.h7": "bold",
+})
+
 # The class responsible for rendering output to the console in a rich format.
 
 class RichRenderer(CommandRenderer):
-	console = Console(color_system="auto", highlight=False)
+	console = Console(color_system="auto", highlight=False, theme=MARKDOWN_THEME)
 
 	def __init__(self, render_service: RenderService):
 		self.render_service = render_service
