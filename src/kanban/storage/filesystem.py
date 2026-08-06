@@ -723,32 +723,68 @@ class FilesystemRepository(KanbanRepository):
     # Config, user data, and metadata
     # ------------------------------------------------------------------
 
-    # TODO: Refactor all this shared code, rename config to avoid ambiguity with the configparser module
+    # Every store of settings here is an INI file addressed by a 'section.key'
+    # keypath — the config file, the userdata file, and each board's and column's
+    # .metadata file — so reading and writing one is a single pair of operations
+    # differing only in which file they are pointed at.
 
-    # Config
-    
-    def get_config(self, keypath: str) -> str | None:
-        """Read a value from the config INI file using a 'section.key' keypath."""
+    @staticmethod
+    def _split_keypath(keypath: str) -> tuple[str, str]:
+        """Split a 'section.key' keypath into its two parts.
+
+        Raises KeyError if the keypath does not carry a section.
+        """
         if "." not in keypath:
             raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
 
         section, key = keypath.split(".", 1)
+        return section, key
+
+    @staticmethod
+    def _write_ini(cfg: configparser.ConfigParser) -> str:
+        """
+        Serialise a ConfigParser to a string with tab-indented key-value pairs.
+        
+        Extends the INI format to support multi-line values by allowing newlines
+        in values and indenting continuation lines with tabs. This allows us to 
+        store lists (e.g. column order) and other complex data structures more
+        naturally than trying to encode them as single-line strings.
+        """
+        import io
+        buf = io.StringIO()
+        cfg.write(buf)
+        lines = []
+        for line in buf.getvalue().splitlines(keepends=True):
+            stripped = line.lstrip()
+            if stripped and not stripped.startswith("["):
+                line = "\t" + line  # preserve existing indentation (continuation lines)
+            lines.append(line)
+        return "".join(lines)
+
+    def _get_ini_value(self, file: Path, keypath: str) -> str | None:
+        """Read a value from an INI file using a 'section.key' keypath.
+
+        Returns None when the file, the section, or the key is absent.
+        """
+        section, key = self._split_keypath(keypath)
         cfg = configparser.ConfigParser()
-        cfg.read(self.config_file, encoding="utf-8")
+        cfg.read(file, encoding="utf-8")
 
         if section not in cfg or key not in cfg[section]:
             return None
 
         return cfg[section][key]
 
-    def set_config(self, keypath: str, value: str | None) -> None:
-        """Write a value to the config INI file using a 'section.key' keypath."""
-        if "." not in keypath:
-            raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
+    def _set_ini_value(self, file: Path, keypath: str, value: str | None) -> None:
+        """Write a value to an INI file using a 'section.key' keypath.
 
-        section, key = keypath.split(".", 1)
+        A value of None removes the key, leaving its section in place.  The
+        section is created if it does not yet exist, and the file is rewritten
+        whether or not anything changed.
+        """
+        section, key = self._split_keypath(keypath)
         cfg = configparser.ConfigParser()
-        cfg.read(self.config_file, encoding="utf-8")
+        cfg.read(file, encoding="utf-8")
 
         if value is None:
             if section in cfg and key in cfg[section]:
@@ -758,42 +794,27 @@ class FilesystemRepository(KanbanRepository):
                 cfg[section] = {}
             cfg[section][key] = value
 
-        self.config_file.write_text(self._write_ini(cfg), encoding="utf-8")
+        file.write_text(self._write_ini(cfg), encoding="utf-8")
+
+    # Config
+
+    def get_config(self, keypath: str) -> str | None:
+        """Read a value from the config INI file using a 'section.key' keypath."""
+        return self._get_ini_value(self.config_file, keypath)
+
+    def set_config(self, keypath: str, value: str | None) -> None:
+        """Write a value to the config INI file using a 'section.key' keypath."""
+        self._set_ini_value(self.config_file, keypath, value)
 
     # User data
 
     def get_userdata(self, keypath: str) -> str | None:
         """Read a value from the userdata INI file using a 'section.key' keypath."""
-        if "." not in keypath:
-            raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
-
-        section, key = keypath.split(".", 1)
-        cfg = configparser.ConfigParser()
-        cfg.read(self.userdata_file, encoding="utf-8")
-
-        if section not in cfg or key not in cfg[section]:
-            return None
-
-        return cfg[section][key]
+        return self._get_ini_value(self.userdata_file, keypath)
 
     def set_userdata(self, keypath: str, value: str | None) -> None:
         """Write a value to the userdata INI file using a 'section.key' keypath."""
-        if "." not in keypath:
-            raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
-
-        section, key = keypath.split(".", 1)
-        cfg = configparser.ConfigParser()
-        cfg.read(self.userdata_file, encoding="utf-8")
-
-        if value is None:
-            if section in cfg and key in cfg[section]:
-                del cfg[section][key]
-        else:
-            if section not in cfg:
-                cfg[section] = {}
-            cfg[section][key] = value
-
-        self.userdata_file.write_text(self._write_ini(cfg), encoding="utf-8")
+        self._set_ini_value(self.userdata_file, keypath, value)
 
     # Board metadata
     
@@ -811,37 +832,11 @@ class FilesystemRepository(KanbanRepository):
 
     def get_board_metadata(self, board: Slug, keypath: str) -> str | None:
         """Read a value from a board's .metadata INI file using a 'section.key' keypath."""
-        if "." not in keypath:
-            raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
-
-        section, key = keypath.split(".", 1)
-        cfg = configparser.ConfigParser()
-        cfg.read(self._board_metadata_file(board), encoding="utf-8")
-
-        if section not in cfg or key not in cfg[section]:
-            return None
-
-        return cfg[section][key]
+        return self._get_ini_value(self._board_metadata_file(board), keypath)
 
     def set_board_metadata(self, board: Slug, keypath: str, value: str | None) -> None:
         """Write a value to a board's .metadata INI file using a 'section.key' keypath."""
-        if "." not in keypath:
-            raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
-        
-        section, key = keypath.split(".", 1)
-        metadata_file = self._board_metadata_file(board)
-        cfg = configparser.ConfigParser()
-        cfg.read(metadata_file, encoding="utf-8")
-
-        if value is None:
-            if section in cfg and key in cfg[section]:
-                del cfg[section][key]
-        else:
-            if section not in cfg:
-                cfg[section] = {}
-            cfg[section][key] = value
-
-        metadata_file.write_text(self._write_ini(cfg), encoding="utf-8")
+        self._set_ini_value(self._board_metadata_file(board), keypath, value)
 
     # Column metadata
 
@@ -851,36 +846,11 @@ class FilesystemRepository(KanbanRepository):
 
     def get_column_metadata(self, board: Slug, column: Slug, keypath: str) -> str | None:
         """Read a value from a column's .metadata INI file using a 'section.key' keypath."""
-        if "." not in keypath:
-            raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
-        
-        section, key = keypath.split(".", 1)
-        cfg = configparser.ConfigParser()
-        cfg.read(self._column_metadata_file(board, column), encoding="utf-8")
-        
-        if section not in cfg or key not in cfg[section]:
-            return None
-        
-        return cfg[section][key]
+        return self._get_ini_value(self._column_metadata_file(board, column), keypath)
 
     def set_column_metadata(self, board: Slug, column: Slug, keypath: str, value: str | None) -> None:
         """Write a value to a column's .metadata INI file using a 'section.key' keypath."""
-        if "." not in keypath:
-            raise KeyError(f"Invalid keypath '{keypath}': expected 'section.key' format")
-        section, key = keypath.split(".", 1)
-        metadata_file = self._column_metadata_file(board, column)
-        cfg = configparser.ConfigParser()
-        cfg.read(metadata_file, encoding="utf-8")
-        
-        if value is None:
-            if section in cfg and key in cfg[section]:
-                del cfg[section][key]
-        else:
-            if section not in cfg:
-                cfg[section] = {}
-            cfg[section][key] = value
-        
-        metadata_file.write_text(self._write_ini(cfg), encoding="utf-8")
+        self._set_ini_value(self._column_metadata_file(board, column), keypath, value)
 
     # TODO: kanban service also does task parsing move to a utility module to avoid duplication between service and repository layers
 
@@ -956,25 +926,3 @@ class FilesystemRepository(KanbanRepository):
             updated_at=updated_at,
             body=body,
         )
-
-    @staticmethod
-    def _write_ini(cfg: configparser.ConfigParser) -> str:
-        """
-        Serialise a ConfigParser to a string with tab-indented key-value pairs.
-        
-        Extens the INI format to support multi-line values by allowing newlines 
-        in values and indenting continuation lines with tabs. This allows us to 
-        store lists (e.g. column order) and other complex data structures more
-        naturally than trying to encode them as single-line strings.
-        """
-        import io
-        buf = io.StringIO()
-        cfg.write(buf)
-        lines = []
-        for line in buf.getvalue().splitlines(keepends=True):
-            stripped = line.lstrip()
-            if stripped and not stripped.startswith("["):
-                line = "\t" + line  # preserve existing indentation (continuation lines)
-            lines.append(line)
-        return "".join(lines)
-
