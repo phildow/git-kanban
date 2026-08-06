@@ -507,6 +507,10 @@ class BoardScreen(Screen[None]):
         already knows, such as a committed move.  Falls back to a full reload
         when the board or a named column is not on screen, since then the
         assumption that nothing else changed no longer holds.
+
+        A named column is re-queried whole, but redrawn card by card: the column
+        reconciles what it is handed against the cards it is already showing, so
+        only the cards that changed are touched.
         """
         board = self._board
         views = {view.column.slug: view for view in self.column_views}
@@ -2117,16 +2121,17 @@ class BoardScreen(Screen[None]):
         desired = self._visible(column) if order is None else order
 
         # Staging can arrive at the arrangement already on screen — entering and
-        # leaving a column without reordering, say.  Redrawing would be a no-op.
-        if [task.slug for task in desired] != [task.slug for task in view.tasks]:
-            await view.set_tasks(desired, dense=self.dense, show_id=self.show_task_id)
+        # leaving a column without reordering, say — and the column reconciles
+        # its cards, so a draw that changes nothing costs nothing.
+        await view.set_tasks(desired, dense=self.dense, show_id=self.show_task_id)
 
         if select is not None and view.select_task(select):
             # Focus follows the card so it keeps the highlight of a live
             # selection rather than the dimmer blurred one.
             view.focus()
 
-        # set_tasks builds fresh cards, so the moving card needs marking again.
+        # A card the draw had to build carries none of the marks the cards
+        # around it kept, so the moving card is named again.
         self._set_moving_card(self.move_mode)
 
     def _commit_move(self) -> None:

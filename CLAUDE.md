@@ -1065,27 +1065,11 @@ In addition the TUI will refresh whenever a git sync is executed from within the
 
 #### Refresh Only What Changed
 
-A refresh is scoped to the components the operation could actually have affected. Never re-render a component to pick up a change that cannot have reached it — redrawing the whole screen for a local change costs the user a visible flicker and loses scroll position, selection, and focus.
+A refresh is scoped to what the operation could have affected: the board redraws only the columns an operation touches, and a column only the cards that changed. Every widget follows the rule: only redraw what has changed.
 
-For the board this means **column refreshes are limited to the columns an operation touches**:
+A command from the bar cannot be scoped from its text, so `TUIRenderer` records a `CommandEffect` beside its output: a read changes nothing, a task written redraws the columns it left and joined, a board or column structure change rebuilds.
 
-- creating a task re-queries and redraws only the column it was created in
-- deleting a task, only the column it was deleted from
-- editing a task, only the column it is in
-- moving a task, only the source and destination columns — and only one when the task is reordered within a column
-- archiving a task, only the columns on screen it left and joined — with the archive hidden, only the one it left
-
-While a move is being staged the same rule applies to the preview: only the column the card is leaving and the column it is joining are redrawn as it travels, never the intervening ones.
-
-Reordering a column redraws nothing at all: where two columns sit is the only thing that changed, so the panel is moved within its container with `move_child` and the two are handed their new `Column` records. Every card, scroll position, and the focused header survive because none of them is built again.
-
-Showing or hiding the archive column follows the same rule from the other direction: one panel is mounted at the column's place on the board, or removed from it, and the columns beside it are never rebuilt. Focus only moves when the column it was on is the one leaving.
-
-A command run from the command bar is scoped the same way, which means the board must be told what the command did: a line of text and a parsed command line do not say which column a task ended up in. The renderer is where the two are still together — every handler hands it the object the service returned — so `TUIRenderer` records a `CommandEffect` alongside the output it captures, and the board drains both. A command that only read leaves the board alone; one that wrote a task redraws the columns it left and joined; a board or column created, renamed, reordered, or removed rebuilds. Every renderer call is classified one way or the other, and a test holds the two halves together so a command cannot be added to one without the other.
-
-Rebuilding the entire board is reserved for changes whose effects are not confined to known columns — switching boards, a column being added, renamed, or removed — and for the manual refresh key, which exists precisely to re-read everything. A targeted refresh should fall back to a full reload when it cannot establish that its assumption holds, such as when a named column is not on screen.
-
-The same principle governs everything else the TUI draws: a widget is handed new data only when its own data changed, and a redraw is skipped altogether when the new data matches what is already displayed.
+Rebuilding the whole board is reserved for changes not confined to known columns — switching boards, a column added, renamed, or removed — and for the manual refresh key. A targeted refresh falls back to it when it cannot establish that its assumption holds.
 
 ## Config and Userdata
 

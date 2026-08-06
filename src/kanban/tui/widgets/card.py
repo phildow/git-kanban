@@ -54,6 +54,19 @@ class CardWidget(Static):
         """Return the card's body text for the current density."""
         return card_text(self.card_task, dense=self.dense, show_id=self.show_id)
 
+    def set_task(self, task: Task) -> None:
+        """
+        Show `task` on this card, redrawing only when the record differs.
+
+        A card outlives the refreshes that pass over its column, so this is how
+        an edit reaches it.  The redraw asks for layout because the card is
+        `height: auto` and the lines it draws vary with what the task carries.
+        """
+        if task == self._card_task:
+            return
+        self._card_task = task
+        self.refresh(layout=True)
+
     def watch_dense(self, dense: bool) -> None:
         """Toggle the dense CSS class and redraw when the density changes."""
         self.set_class(dense, "-dense")

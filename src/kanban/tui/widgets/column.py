@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any, cast
+from uuid import UUID
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -94,16 +95,149 @@ class ColumnView(ListView):
     async def set_tasks(
         self, tasks: list[Task], *, dense: bool = False, show_id: bool = False
     ) -> None:
-        """Replace the column's contents with `tasks` and update the header count."""
-        self._tasks = list(tasks)
-        self.header.set_count(len(tasks))
+        """
+        Bring the column's cards into line with `tasks`, touching only what changed.
 
-        await self.clear()
-        await self.extend(
-            ListItem(CardWidget(task, dense=dense, show_id=show_id))
-            for task in self._tasks
+        The cards are reconciled against what is already mounted rather than
+        rebuilt: a card whose task is unchanged is left alone, one whose task
+        changed is handed the new record, one that changed places is moved, and
+        only a task with no card of its own has one built for it.  A card that
+        survives keeps its scroll position, its highlight, and its focus.
+
+        Matched on `id` rather than slug, since a rename changes the slug and a
+        renamed task is still the same card.
+        """
+        # Read off what is on screen before anything is handed the new list:
+        # the highlight belongs to the task the column is showing at the index,
+        # not to whichever task the new list happens to put there.
+        held = self.selected_task
+        held_id = held.id if held is not None else None
+
+        desired = list(tasks)
+        self._tasks = desired
+        self.header.set_count(len(desired))
+
+        drawn = self.cards
+        items = {card.card_task.id: cast(ListItem, card.parent) for card in drawn}
+        wanted = {task.id for task in desired}
+
+        gone = [
+            index
+            for index, card in enumerate(drawn)
+            if card.card_task.id not in wanted
+        ]
+        if gone:
+            await self.remove_items(gone)
+
+        for task in desired:
+            item = items.get(task.id)
+            if item is None:
+                continue
+            card = item.query_one(CardWidget)
+            card.set_task(task)
+            card.dense = dense
+            card.show_id = show_id
+
+        placed = await self._place_cards(desired, items, dense=dense, show_id=show_id)
+        self._restore_highlight(desired, held_id)
+
+        # Cards that changed places carry the region they had before the move
+        # until the next layout, and `ListView.watch_index` scrolls to whatever
+        # region it is shown — so a scroll it did here would land on where the
+        # card was.  The one that counts is taken once the layout has caught up.
+        if placed or gone:
+            self.call_after_refresh(self._scroll_highlight_into_view)
+
+    async def _place_cards(
+        self,
+        desired: list[Task],
+        items: dict[UUID, ListItem],
+        *,
+        dense: bool,
+        show_id: bool,
+    ) -> bool:
+        """
+        Put every card at its place in `desired`, building the ones that are new.
+
+        Walked front to back holding the invariant that the children up to the
+        index reached are already the ones `desired` asks for, so a card that is
+        out of place is always further back and can be moved before whichever
+        card stands at the index now.  Cards that have to be built accumulate
+        into a run and are mounted together, which is one mount for a column
+        being filled from empty and one for the single card a create adds.
+
+        Returns whether any card was built or moved, which is what says the
+        column's layout — and so where a card is on screen — has changed.
+        """
+        pending: list[ListItem] = []
+        start = 0
+        placed = False
+
+        for index, task in enumerate(desired):
+            item = items.get(task.id)
+
+            if item is None:
+                if not pending:
+                    start = index
+                pending.append(
+                    ListItem(CardWidget(task, dense=dense, show_id=show_id))
+                )
+                continue
+
+            if pending:
+                await self.mount(*pending, before=start)
+                pending = []
+                placed = True
+
+            if self.children[index] is not item:
+                self.move_child(item, before=index)
+                placed = True
+
+        if pending:
+            await self.mount(*pending, before=start)
+            placed = True
+
+        return placed
+
+    def _scroll_highlight_into_view(self) -> None:
+        """
+        Bring the highlighted card into view, against the layout as it now stands.
+
+        Run after a refresh rather than during the reconcile, so the regions it
+        reads are the ones the cards ended up with.
+        """
+        index = self.index
+        if index is None or not (0 <= index < len(self.children)):
+            return
+        self.scroll_to_widget(self.children[index], animate=False)
+
+    def _restore_highlight(self, desired: list[Task], held_id: UUID | None) -> None:
+        """
+        Leave the highlight on the task that held it, or on the card that took its place.
+
+        A task still on the column keeps the highlight wherever it has ended up.
+        One that left the column leaves it where `remove_items` put it, which is
+        the card that closed the gap — the neighbour the board expects.
+
+        The flags are squared up whether or not the index moved: a card can
+        change places under an index that does not change, and then the flag is
+        on the wrong card.
+        """
+        if not desired:
+            self.index = None
+            return
+
+        position = next(
+            (index for index, task in enumerate(desired) if task.id == held_id), None
         )
-        self.index = 0 if self._tasks else None
+        if position is None:
+            position = self.index if self.index is not None else 0
+
+        if self.index != position:
+            self.index = position
+
+        for index, item in enumerate(self.children):
+            cast(ListItem, item).highlighted = index == position
 
     def set_dense(self, dense: bool) -> None:
         """Propagate a density change to every card in the column."""
@@ -170,10 +304,10 @@ class ColumnView(ListView):
         """
         Keep the scrollbar in step with the offset, even while it is hidden.
 
-        The base watcher moves the scrollbar only when it is showing.  Emptying
-        a column to repopulate it hides the scrollbar for a moment, and the
+        The base watcher moves the scrollbar only when it is showing.  A column
+        that loses enough cards to stop scrolling hides the scrollbar, and the
         offset is clamped to zero in that moment — so without this the thumb is
-        left stranded wherever it was when the cards come back.
+        left stranded wherever it was should the cards come back.
         """
         super().watch_scroll_y(old_value, new_value)
         self.vertical_scrollbar.position = new_value
