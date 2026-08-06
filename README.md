@@ -113,6 +113,8 @@ $ (.venv) $ kanban repl
 - Comment headings
 - Task archiving 
 - Delete flag
+- Add KANBAN.md
+- Migrate to pytest
 
 ## Tests
 
