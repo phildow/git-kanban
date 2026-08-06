@@ -982,6 +982,7 @@ own. **Configuration** opens `ConfigScreen`; **Theme** opens `ThemePalette`.
 ```
 ←/→ or h/l = move focus between columns
 ↑/↓ or j/k = move focus between cards within a column
+ ⌥ + those = jump to the end of the column or the board
          c = focus the header of the column in focus
        Tab = step through the columns — headers are skipped
      Enter = open TaskDetailScreen for focused card
@@ -1008,7 +1009,7 @@ q / Ctrl+Q = quit
 ```
 ←/→ or h/l = show the card selected in the adjacent column
 ↑/↓ or j/k = show the next or previous card in this column
- ⇧ + those = scroll the body of the task shown
+ ⌥ + those = scroll the body of the task shown
          e = edit the task shown
  q/Esc/Ent = close
 ```
@@ -1019,7 +1020,7 @@ q / Ctrl+Q = quit
          r = rename this column, in a field that replaces its label
          n = new column, named in a draft drawn to the right of this one
          d = delete this column (confirm modal)
-      ⇧←/→ = move this column along the board
+      ⌥←/→ = move this column along the board
 ←/→ or h/l = move along the header strip
     c, Esc = return focus to the cards below — `c` both enters and leaves
        Tab = on to the next column's header
@@ -1030,6 +1031,7 @@ q / Ctrl+Q = quit
 ```
 ←/→ or h/l = move card to adjacent column
 ↑/↓ or j/k = reorder card within current column
+ ⌥ + those = stage the card as far as it will go that way
      Enter = commit — single move_task/reorder call
        Tab = show column list
          b = show the board list and send card to the chosed board

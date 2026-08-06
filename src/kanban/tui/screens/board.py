@@ -77,7 +77,7 @@ if TYPE_CHECKING:
 MOVE_KEYS: list[tuple[str, str]] = [
     ("←/→ h/l", "Column"),
     ("↑/↓ j/k", "Position"),
-    ("⇧", "To the end"),
+    ("⌥", "To the end"),
     ("b", "Board"),
     ("↵", "Commit"),
     ("esc", "Cancel"),
@@ -222,13 +222,14 @@ class BoardScreen(Screen[None]):
         # entries above already name all four keys.
         Binding("right,l", "nav_right", "Column", show=False, system=True),
         Binding("down,j", "nav_down", "Card", show=False, system=True),
-        # Shift goes as far as it will go — the end of a column, the end of the
-        # board — whether moving focus or a staged card.  Terminals report the
-        # shifted arrows by name and the shifted letters as capitals.
-        Binding("shift+left,H", "nav_far_left", "Move to end", show=False),
-        Binding("shift+right,L", "nav_far_right", "Move to end", show=False),
-        Binding("shift+up,K", "nav_far_up", "Move to end", show=False),
-        Binding("shift+down,J", "nav_far_down", "Move to end", show=False),
+        # Alt goes as far as it will go — the end of a column, the end of the
+        # board — whether moving focus or a staged card.  Alt over shift because
+        # it holds the arrows and the letters in one shape: shifting a letter
+        # produces a capital, which is a key of its own and already spoken for.
+        Binding("alt+left,alt+h", "nav_far_left", "Move to end", show=False),
+        Binding("alt+right,alt+l", "nav_far_right", "Move to end", show=False),
+        Binding("alt+up,alt+k", "nav_far_up", "Move to end", show=False),
+        Binding("alt+down,alt+j", "nav_far_down", "Move to end", show=False),
         # Paging: within a column, and — as terminals spell "page left/right" —
         # across columns with ctrl.
         Binding("pageup", "nav_page_up", "Page cards", show=False),
@@ -2866,7 +2867,7 @@ class BoardScreen(Screen[None]):
         keeps only what moves between columns and back to the cards, so that the
         column's own actions are all it answers to; a column being named gives up
         everything to the field.  An open input bar gives up the navigation keys
-        the bar itself does not bind — the shifted arrows and the paging keys —
+        the bar itself does not bind — the alt arrows and the paging keys —
         so nothing moves under a user who is typing; escape still reaches the
         board, which is what closes the bar.
 

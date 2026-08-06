@@ -303,13 +303,13 @@ class TestStagedCardStaysInView(unittest.IsolatedAsyncioTestCase):
                 self.assertTrue(self._moving_in_view(pilot), f"out of view after {step + 1} steps")
 
     async def test_staging_to_the_bottom_scrolls_all_the_way(self) -> None:
-        """Shift+down jumps the card to the end, and the column follows it there."""
+        """Alt+down jumps the card to the end, and the column follows it there."""
         async with KanbanApp(self._make_tall_service()).run_test(size=(120, 24)) as pilot:
             await pilot.pause()
             await pilot.press("m")
             await pilot.pause()
 
-            await pilot.press("shift+down")
+            await pilot.press("alt+down")
             await pilot.pause()
 
             view = _view(pilot, "todo")
@@ -318,15 +318,15 @@ class TestStagedCardStaysInView(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(self._moving_in_view(pilot))
 
     async def test_staging_back_to_the_top_scrolls_back(self) -> None:
-        """And shift+up brings the column back with it."""
+        """And alt+up brings the column back with it."""
         async with KanbanApp(self._make_tall_service()).run_test(size=(120, 24)) as pilot:
             await pilot.pause()
             await pilot.press("m")
             await pilot.pause()
-            await pilot.press("shift+down")
+            await pilot.press("alt+down")
             await pilot.pause()
 
-            await pilot.press("shift+up")
+            await pilot.press("alt+up")
             await pilot.pause()
 
             view = _view(pilot, "todo")

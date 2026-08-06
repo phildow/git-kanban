@@ -171,8 +171,8 @@ class TestDetailNavigation(unittest.IsolatedAsyncioTestCase):
 
             self.assertIs(board.focused, panels[1].view)
 
-    async def test_shifted_keys_scroll_the_body(self) -> None:
-        """`shift+down` and `K` scroll the body without moving the selection."""
+    async def test_alt_keys_scroll_the_body(self) -> None:
+        """`alt+down` and `alt+k` scroll the body without moving the selection."""
         from kanban.tui.screens.task_detail import DetailBody
 
         self.svc.update_task(
@@ -184,14 +184,14 @@ class TestDetailNavigation(unittest.IsolatedAsyncioTestCase):
             body = detail.query_one(DetailBody)
             self.assertEqual(body.scroll_offset.y, 0)
 
-            await pilot.press("shift+down", "shift+down")
+            await pilot.press("alt+down", "alt+down")
             await pilot.pause()
 
             self.assertGreater(body.scroll_offset.y, 0)
             self.assertEqual(detail.detail_task.slug, "first")
 
             scrolled = body.scroll_offset.y
-            await pilot.press("K")
+            await pilot.press("alt+k")
             await pilot.pause()
 
             self.assertLess(body.scroll_offset.y, scrolled)
@@ -209,7 +209,7 @@ class TestDetailNavigation(unittest.IsolatedAsyncioTestCase):
             detail = await _open_detail(pilot)
             body = detail.query_one(DetailBody)
 
-            await pilot.press("shift+down", "shift+down")
+            await pilot.press("alt+down", "alt+down")
             await pilot.pause()
             self.assertGreater(body.scroll_offset.y, 0)
 
