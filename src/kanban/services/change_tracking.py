@@ -10,6 +10,7 @@ commit covers, deciding when one is worth making — will go.
 from __future__ import annotations
 
 from pathlib import Path
+from warnings import deprecated
 
 from ..tracking.base import ChangeTracker, Commit
 
@@ -41,8 +42,14 @@ class ChangeTrackingService:
         """Stage what has changed and commit it, returning the new commit."""
         return self.change_tracker.add_commit(message, path)
 
+    @deprecated("Squashing is out of scope; nothing in the facade calls squash_commits().")
     def squash_commits(self, message: str, path: Path | None = None) -> Commit:
-        """Collapse the commits since the last squash into a single commit."""
+        """
+        Collapse the commits since the last squash into a single commit.
+
+        Deprecated: squashing is out of scope for now.  Nothing in the facade
+        calls this and the git tracker does not implement it.
+        """
         return self.change_tracker.squash_commits(message, path)
 
     def get_history(self, path: Path | None = None, limit: int = 20) -> list[Commit]:

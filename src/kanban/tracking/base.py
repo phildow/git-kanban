@@ -30,6 +30,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from warnings import deprecated
 
 
 # ---------------------------------------------------------------------------
@@ -80,7 +81,7 @@ class Commit:
 # ---------------------------------------------------------------------------
 
 class ChangeTracker(ABC):
-    """Commit, squash, log, and sync the kanban store."""
+    """Commit, log, and sync the kanban store."""
 
     # ------------------------------------------------------------------
     # Initialization
@@ -132,9 +133,14 @@ class ChangeTracker(ABC):
         """
 
     @abstractmethod
+    @deprecated("Squashing is out of scope; nothing calls squash_commits().")
     def squash_commits(self, message: str, path: Path | None = None) -> Commit:
         """
         Collapse the commits since the last squash into a single commit.
+
+        Deprecated: squashing is out of scope for now.  The method stays on the
+        interface so the shape is not lost, but nothing calls it and no work is
+        planned on it.  `GitChangeTracker` will not implement it.
 
         Args:
             message: The message the squashed commit carries.

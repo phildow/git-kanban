@@ -10,12 +10,13 @@ Scaffolding: the interface is settled, the implementation is not written yet.
 from __future__ import annotations
 
 from pathlib import Path
+from warnings import deprecated
 
 from .base import ChangeTracker, Commit
 
 
 class GitChangeTracker(ChangeTracker):
-    """Coordinates git commit, squash, log, and sync operations."""
+    """Coordinates git commit, log, and sync operations."""
 
     def __init__(self) -> None:
         """Create a git service scaffold with no backing implementation yet."""
@@ -51,8 +52,14 @@ class GitChangeTracker(ChangeTracker):
         _ = message, path
         raise NotImplementedError("GitChangeTracker.add_commit() is not implemented yet")
 
+    @deprecated("Squashing is out of scope; squash_commits() will not be implemented.")
     def squash_commits(self, message: str, path: Path | None = None) -> Commit:
-        """Squash commits in scope and return the newly created squash commit."""
+        """
+        Squash commits in scope and return the newly created squash commit.
+
+        Deprecated: squashing is out of scope for now and this is not going to
+        be implemented alongside the rest of the tracker.
+        """
         _ = message, path
         raise NotImplementedError("GitChangeTracker.squash_commits() is not implemented yet")
 

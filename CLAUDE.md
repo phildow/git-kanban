@@ -138,8 +138,9 @@ The index does cache data from the filesystem for search and to ensure consisten
 - Automatic commit per operation with structured messages composed by the facade
 - `ChangeTracker` is an abstract base class in `kanban.tracking`, beside the index and storage layers
 - Two concrete implementations: `GitChangeTracker` and `InMemoryChangeTracker` (for testing)
-- Commits, squashes, reads history, and syncs with the remote; the facade composes the commit message
+- Commits, reads history, and syncs with the remote; the facade composes the commit message
 - A path argument is always relative to the worktree root, and None means the whole store
+- Squashing (`squash_commits`, `KanbanService.squash`) is deprecated and out of scope; the methods remain, marked deprecated, and git does not implement them
 - `ChangeTrackingService` is the domain service over it, as `IndexService` is over `IndexBase`: it holds a concrete `ChangeTracker` and forwards to it
 - The facade holds the `ChangeTrackingService`, never an implementation; the implementation is injected at startup
 - Use `pygit2` or `subprocess` — avoid `GitPython`
@@ -275,6 +276,8 @@ The worktree and branch are stored in the .kanban/config file:
   worktree = ".kanban-store"
   branch = "kanban"
 ```
+
+See below for additional information about change tracking.
 
 ### The Data Model
 
@@ -1077,6 +1080,101 @@ A refresh is scoped to what the operation could have affected: the board redraws
 A command from the bar cannot be scoped from its text, so `TUIRenderer` records a `CommandEffect` beside its output: a read changes nothing, a task written redraws the columns it left and joined, a board or column structure change rebuilds.
 
 Rebuilding the whole board is reserved for changes not confined to known columns — switching boards, a column added, renamed, or removed — and for the manual refresh key. A targeted refresh falls back to it when it cannot establish that its assumption holds.
+
+## Change Tracking
+
+Change tracking uses Git by default but the interface is defined by an abstract base class `ChangeTracker` with an in memory implementation as well. A concrete implementation is provided to the `ChangeTrackingService`, which is injected into the `KanbanService` during initialization.
+
+Changes are tracked on a per-operation basis with commit messages and key-value pairs provided to the tracking service as follows. The key-value pairs, stored as trailers in the commit message by the Git change tracker, contain a high level overview of the changes only. The diff can be inspected if more information is needed.
+
+### Commit Messages
+
+#### Board
+
+```
+board(create) My Project
+board(rename) My Project → Main Project
+board(delete) My Project
+```
+
+#### Column
+
+```
+column(create) Backlog
+column(rename) To Do → Todo
+column(reorder) In Review → position 2
+column(delete) Backlog
+```
+
+#### Task
+
+```
+task(create) Fix login bug
+task(update) Fix login bug
+task(unset) Fix login bug
+task(rename) Fix login bug → Fix the login bug
+task(move) Fix login bug — Todo → In Progress
+task(move) Fix login bug — Todo → Ops/In Progress
+task(assign) Fix login bug → alice
+task(unassign) Fix login bug
+task(tag) Fix login bug → bug
+task(untag) Fix login bug → bug
+task(comment) Fix login bug
+task(archive) Fix login bug
+task(unarchive) Fix login bug
+task(delete) Write API docs
+```
+
+### Trailers (Key-Value Pairs)
+
+#### Board
+
+`create`, `rename`, `delete`
+
+```
+Entity: board
+Action: <action>
+Id: <board-id>
+Path: <path>
+```
+
+#### Column
+
+`create`, `rename`, `reorder`, `delete`
+
+```
+Entity: column
+Action: <action>
+Id: <column-id>
+Path: <path>
+Board: <board-name>
+```
+
+#### Task, no destination reference
+
+`create`, `update`, `unset`, `rename`, `assign`, `unassign`, `tag`, `untag`, `comment`, `delete`
+
+```
+Entity: task
+Action: <action>
+Id: <task-id>
+Path: <path>
+Board: <board-name>
+Column: <column-name>
+```
+
+#### Task move (includes archive/unarchive)
+
+`move`
+
+```
+Entity: task
+Action: move
+Id: <task-id>
+Path: <path>
+From: <source-column-path>
+To: <destination-column-path>
+```
 
 ## Config and Userdata
 

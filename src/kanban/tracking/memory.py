@@ -17,6 +17,7 @@ import hashlib
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from warnings import deprecated
 
 from .base import ChangeTracker, Commit, NothingToCommit
 
@@ -126,12 +127,16 @@ class InMemoryChangeTracker(ChangeTracker):
         self._pending = [p for p in self._pending if not _matches(p, path)]
         return self._append(message, path)
 
+    @deprecated("Squashing is out of scope; nothing calls squash_commits().")
     def squash_commits(self, message: str, path: Path | None = None) -> Commit:
         """
         Replace every commit in scope with a single commit carrying message.
 
         The squashed commit takes the position of the last commit it replaced,
         so commits outside the scope keep their order around it.
+
+        Deprecated: squashing is out of scope for now.  The implementation is
+        kept because it costs nothing to keep, but nothing calls it.
         """
         squashed = [entry for entry in self._entries if _matches(entry.path, path)]
         if not squashed:

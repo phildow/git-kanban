@@ -1315,10 +1315,14 @@ class KanbanService(CompletionDataSource):
         """
         raise NotImplementedError()
 
+    @deprecated("Squashing is out of scope; no consumer exposes squash().")
     def squash(self, board: Slug | None = None) -> Commit:
         """
         Collapse all commits since the last squash (or since init) into one.
         Scoped to a single board if provided.  Returns the new squash commit.
+
+        Deprecated: squashing is out of scope for now.  No consumer exposes it
+        and the git tracker does not implement it.
         """
         raise NotImplementedError()
 
