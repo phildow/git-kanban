@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 from uuid import uuid4
 
 from kanban.services.change_tracking import ChangeTrackingService
-from kanban.tracking import GitChangeTracker
+from kanban.tracking import InMemoryChangeTracker
 from kanban.services.kanban import (
     CONFIG_DEFAULTS,
     CONFIG_KEYS,
@@ -34,7 +34,7 @@ class TestKanbanServiceConfig(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            change_tracking=ChangeTrackingService(GitChangeTracker()),
+            change_tracking=ChangeTrackingService(InMemoryChangeTracker(), self.repo),
         )
 
     def test_get_config_returns_none_for_unset_key(self) -> None:
@@ -71,7 +71,7 @@ class TestKanbanServiceListConfig(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            change_tracking=ChangeTrackingService(GitChangeTracker()),
+            change_tracking=ChangeTrackingService(InMemoryChangeTracker(), self.repo),
         )
 
     def test_lists_every_supported_key(self) -> None:
@@ -105,7 +105,7 @@ class TestKanbanServiceConfigKeys(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            change_tracking=ChangeTrackingService(GitChangeTracker()),
+            change_tracking=ChangeTrackingService(InMemoryChangeTracker(), self.repo),
         )
 
     def test_user_name_is_a_supported_key(self) -> None:
@@ -144,7 +144,7 @@ class TestKanbanServiceConfigValues(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            change_tracking=ChangeTrackingService(GitChangeTracker()),
+            change_tracking=ChangeTrackingService(InMemoryChangeTracker(), self.repo),
         )
 
     def test_top_is_accepted(self) -> None:
@@ -191,7 +191,7 @@ class TestKanbanServiceUserdata(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            change_tracking=ChangeTrackingService(GitChangeTracker()),
+            change_tracking=ChangeTrackingService(InMemoryChangeTracker(), self.repo),
         )
 
     def test_get_userdata_returns_none_for_unset_key(self) -> None:

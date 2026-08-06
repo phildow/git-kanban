@@ -25,7 +25,7 @@ def main() -> None:
     repository = get_repository(FILESYSTEM)
     index_base = InMemoryIndex()
     index_service = IndexService(index_base=index_base, repository=repository)
-    change_tracking = ChangeTrackingService(change_tracker=GitChangeTracker())
+    change_tracking = ChangeTrackingService(change_tracker=GitChangeTracker(), repository=repository)
     svc = KanbanService(repository=repository, index_service=index_service, change_tracking=change_tracking)
     render_service = RenderService(service=svc)
     renderer = Renderer(render_service=render_service)

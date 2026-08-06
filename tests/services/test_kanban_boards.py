@@ -10,7 +10,7 @@ from uuid import uuid4
 
 from kanban.models import Board
 from kanban.services.change_tracking import ChangeTrackingService
-from kanban.tracking import GitChangeTracker
+from kanban.tracking import InMemoryChangeTracker
 from kanban.services.kanban import KanbanService
 from kanban.storage.base import BoardAlreadyExists, BoardNotFound
 from kanban.storage.memory import InMemoryRepository
@@ -26,7 +26,7 @@ class TestKanbanServiceGetBoards(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            change_tracking=ChangeTrackingService(GitChangeTracker()),
+            change_tracking=ChangeTrackingService(InMemoryChangeTracker(), self.repo),
         )
 
     def test_get_boards_returns_empty_list_when_no_boards(self) -> None:
@@ -62,7 +62,7 @@ class TestKanbanServiceGetBoard(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            change_tracking=ChangeTrackingService(GitChangeTracker()),
+            change_tracking=ChangeTrackingService(InMemoryChangeTracker(), self.repo),
         )
         self.repo.create_board("alpha", slug="alpha")
 
@@ -103,7 +103,7 @@ class TestKanbanServiceCreateBoard(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            change_tracking=ChangeTrackingService(GitChangeTracker()),
+            change_tracking=ChangeTrackingService(InMemoryChangeTracker(), self.repo),
         )
 
     def test_default_columns_are_created_when_none_passed(self) -> None:
@@ -163,7 +163,7 @@ class TestKanbanServiceRenameBoard(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            change_tracking=ChangeTrackingService(GitChangeTracker()),
+            change_tracking=ChangeTrackingService(InMemoryChangeTracker(), self.repo),
         )
         self.repo.create_board("alpha", slug="alpha")
 
@@ -223,7 +223,7 @@ class TestKanbanServiceDeleteBoard(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            change_tracking=ChangeTrackingService(GitChangeTracker()),
+            change_tracking=ChangeTrackingService(InMemoryChangeTracker(), self.repo),
         )
         self.repo.create_board("alpha", slug="alpha")
 

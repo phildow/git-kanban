@@ -10,7 +10,7 @@ from uuid import uuid4
 
 from kanban.models import Slug, Task, TaskFilter, UserContext
 from kanban.services.change_tracking import ChangeTrackingService
-from kanban.tracking import GitChangeTracker
+from kanban.tracking import InMemoryChangeTracker
 from kanban.services.index import IndexService
 from kanban.index.memory import InMemoryIndex
 from kanban.services.kanban import KanbanService
@@ -58,7 +58,7 @@ class TestKanbanServiceGetTasksFilter(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=IndexService(index_base=InMemoryIndex(), repository=self.repo),
-            change_tracking=ChangeTrackingService(GitChangeTracker()),
+            change_tracking=ChangeTrackingService(InMemoryChangeTracker(), self.repo),
         )
         self.svc.create_board("main", columns=[("To Do", "todo"), ("Done", "done")])
 
@@ -174,7 +174,7 @@ class TestKanbanServiceGetTasksFilterNullValues(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=IndexService(index_base=InMemoryIndex(), repository=self.repo),
-            change_tracking=ChangeTrackingService(GitChangeTracker()),
+            change_tracking=ChangeTrackingService(InMemoryChangeTracker(), self.repo),
         )
         self.svc.create_board("main", columns=[("To Do", "todo")])
 
@@ -240,7 +240,7 @@ class TestKanbanServiceGetTasksExcludeColumns(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=IndexService(index_base=InMemoryIndex(), repository=self.repo),
-            change_tracking=ChangeTrackingService(GitChangeTracker()),
+            change_tracking=ChangeTrackingService(InMemoryChangeTracker(), self.repo),
         )
         # "Later" rather than "Archive": this suite is about excluding an
         # ordinary column, and a column slugged `archive` is the board's archive,

@@ -12,7 +12,7 @@ from textual.pilot import Pilot
 
 from kanban.models import Slug
 from kanban.services.change_tracking import ChangeTrackingService
-from kanban.tracking import GitChangeTracker
+from kanban.tracking import InMemoryChangeTracker
 from kanban.services.kanban import KanbanService, TaskCreateParams
 from kanban.storage.memory import InMemoryRepository
 from kanban.tui.app import KanbanApp
@@ -41,7 +41,7 @@ def _make_service(root: Path) -> KanbanService:
     svc = KanbanService(
         repository=repo,
         index_service=MagicMock(),
-        change_tracking=ChangeTrackingService(GitChangeTracker()),
+        change_tracking=ChangeTrackingService(InMemoryChangeTracker(), repo),
     )
 
     repo.create_board("alpha", slug=Slug("alpha"))

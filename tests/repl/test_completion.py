@@ -19,7 +19,7 @@ from kanban.services.kanban import KanbanService
 from kanban.services.index import IndexService
 from kanban.index.memory import InMemoryIndex
 from kanban.services.change_tracking import ChangeTrackingService
-from kanban.tracking import GitChangeTracker
+from kanban.tracking import InMemoryChangeTracker
 from kanban.storage.memory import InMemoryRepository
 
 
@@ -104,7 +104,7 @@ class TestReplCompletion(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=IndexService(index_base=InMemoryIndex(), repository=self.repo),
-            change_tracking=ChangeTrackingService(GitChangeTracker()),
+            change_tracking=ChangeTrackingService(InMemoryChangeTracker(), self.repo),
         )
         self.svc.create_board("alpha", columns=[])
         self.svc.create_column(Path("alpha"), "todo")

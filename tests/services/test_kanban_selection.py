@@ -10,7 +10,7 @@ from uuid import uuid4
 
 from kanban.models import Slug
 from kanban.services.change_tracking import ChangeTrackingService
-from kanban.tracking import GitChangeTracker
+from kanban.tracking import InMemoryChangeTracker
 from kanban.services.kanban import KanbanService
 from kanban.storage.memory import InMemoryRepository
 
@@ -19,10 +19,11 @@ def _make_service() -> KanbanService:
     """Return a service over an empty in-memory repository."""
     temp_dir = Path(tempfile.gettempdir()) / f"kanban-{uuid4()}"
     temp_dir.mkdir()
+    repo = InMemoryRepository(root=temp_dir)
     return KanbanService(
-        repository=InMemoryRepository(root=temp_dir),
+        repository=repo,
         index_service=MagicMock(),
-        change_tracking=ChangeTrackingService(GitChangeTracker()),
+        change_tracking=ChangeTrackingService(InMemoryChangeTracker(), repo),
     )
 
 
@@ -66,7 +67,7 @@ class TestKanbanServiceSelection(unittest.TestCase):
         reread = KanbanService(
             repository=self.svc.repository,
             index_service=MagicMock(),
-            change_tracking=ChangeTrackingService(GitChangeTracker()),
+            change_tracking=ChangeTrackingService(InMemoryChangeTracker(), self.svc.repository),
         )
         self.assertTrue(reread.selection.is_empty)
 

@@ -13,6 +13,7 @@ from pathlib import Path
 from warnings import deprecated
 
 from .base import ChangeTracker, Commit
+from .message import CommitMessage
 
 
 class GitChangeTracker(ChangeTracker):
@@ -47,8 +48,14 @@ class GitChangeTracker(ChangeTracker):
     # Writing
     # ------------------------------------------------------------------
 
-    def add_commit(self, message: str, path: Path | None = None) -> Commit:
-        """Create a commit and return the resulting commit metadata."""
+    def add_commit(self, message: CommitMessage, path: Path | None = None) -> Commit:
+        """
+        Create a commit and return the resulting commit metadata.
+
+        Git carries the trailers in the message body, so the commit is written
+        with `message.text` — the subject, a blank line, and the trailer block
+        git reads back with `--format=%(trailers)`.
+        """
         _ = message, path
         raise NotImplementedError("GitChangeTracker.add_commit() is not implemented yet")
 

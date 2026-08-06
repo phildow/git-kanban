@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 from uuid import uuid4
 
 from kanban.services.change_tracking import ChangeTrackingService
-from kanban.tracking import GitChangeTracker
+from kanban.tracking import InMemoryChangeTracker
 from kanban.services.kanban import KanbanService, TaskCreateParams
 from kanban.storage.memory import InMemoryRepository
 
@@ -24,7 +24,7 @@ class TestKanbanServiceAssignTask(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            change_tracking=ChangeTrackingService(GitChangeTracker()),
+            change_tracking=ChangeTrackingService(InMemoryChangeTracker(), self.repo),
         )
         self.repo.create_board("alpha", slug="alpha")
         self.repo.create_column("alpha", "todo", slug="todo")

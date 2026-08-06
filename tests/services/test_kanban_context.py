@@ -11,7 +11,7 @@ from unittest.mock import MagicMock
 from uuid import uuid4
 
 from kanban.services.change_tracking import ChangeTrackingService
-from kanban.tracking import GitChangeTracker
+from kanban.tracking import InMemoryChangeTracker
 from kanban.services.kanban import KanbanService
 from kanban.storage.base import BoardNotFound
 from kanban.storage.memory import InMemoryRepository
@@ -25,7 +25,7 @@ def _make_service() -> tuple[InMemoryRepository, KanbanService]:
     svc = KanbanService(
         repository=repo,
         index_service=MagicMock(),
-        change_tracking=ChangeTrackingService(GitChangeTracker()),
+        change_tracking=ChangeTrackingService(InMemoryChangeTracker(), repo),
     )
     return repo, svc
 

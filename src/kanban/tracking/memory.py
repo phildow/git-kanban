@@ -20,14 +20,17 @@ from pathlib import Path
 from warnings import deprecated
 
 from .base import ChangeTracker, Commit, NothingToCommit
+from .message import CommitMessage
 
 
 @dataclass
 class _Entry:
     """A commit as recorded, alongside the path it was scoped to."""
 
-    commit: Commit
-    path:   Path | None = None
+    commit:  Commit
+    path:    Path | None = None
+    message: CommitMessage | None = None
+    """The structured message the commit was asked for, when there was one."""
 
 
 def _matches(entry_path: Path | None, query: Path | None) -> bool:
@@ -77,6 +80,21 @@ class InMemoryChangeTracker(ChangeTracker):
         return [entry.commit.message for entry in self._entries]
 
     @property
+    def paths(self) -> list[Path | None]:
+        """Return the path every commit was scoped to, oldest first."""
+        return [entry.path for entry in self._entries]
+
+    @property
+    def commit_messages(self) -> list[CommitMessage | None]:
+        """
+        Return the structured message of every commit, oldest first.
+
+        None where a commit was made without one — the init commit the double
+        opens its history with.
+        """
+        return [entry.message for entry in self._entries]
+
+    @property
     def branch(self) -> str:
         """Return the branch the store was initialized on."""
         return self._branch
@@ -122,10 +140,16 @@ class InMemoryChangeTracker(ChangeTracker):
     # Writing
     # ------------------------------------------------------------------
 
-    def add_commit(self, message: str, path: Path | None = None) -> Commit:
-        """Record a commit and clear the pending changes it covers."""
+    def add_commit(self, message: CommitMessage, path: Path | None = None) -> Commit:
+        """
+        Record a commit and clear the pending changes it covers.
+
+        The message is kept whole, so a test can read the subject and trailers
+        back through `commit_messages` rather than parse them out of the text
+        the commit carries.
+        """
         self._pending = [p for p in self._pending if not _matches(p, path)]
-        return self._append(message, path)
+        return self._append(message.text, path, message)
 
     @deprecated("Squashing is out of scope; nothing calls squash_commits().")
     def squash_commits(self, message: str, path: Path | None = None) -> Commit:
@@ -190,9 +214,16 @@ class InMemoryChangeTracker(ChangeTracker):
     # Internal helpers
     # ------------------------------------------------------------------
 
-    def _append(self, message: str, path: Path | None) -> Commit:
+    def _append(
+        self,
+        message:   str,
+        path:      Path | None,
+        structured: CommitMessage | None = None,
+    ) -> Commit:
         """Append a commit for message scoped to path and return it."""
-        entry = _Entry(self._make_commit(message, len(self._entries)), path)
+        entry = _Entry(
+            self._make_commit(message, len(self._entries)), path, structured
+        )
         self._entries.append(entry)
         return entry.commit
 

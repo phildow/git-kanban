@@ -10,7 +10,7 @@ from uuid import uuid4
 
 from kanban.index.memory import InMemoryIndex
 from kanban.models import Priority
-from kanban.tracking import GitChangeTracker
+from kanban.tracking import InMemoryChangeTracker
 from kanban.services.index import IndexService
 from kanban.services.kanban import KanbanService, TaskCreateParams
 from kanban.storage.memory import InMemoryRepository

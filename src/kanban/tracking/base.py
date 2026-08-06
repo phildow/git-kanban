@@ -11,9 +11,13 @@ Conventions
 -----------
 - A `path` argument is always relative to the worktree root — a board
   directory, a column directory, or a task file.  None means the whole store.
-- Methods return `Commit`, never formatted strings.  Composing a commit
-  message is the facade's job; an implementation writes the message it is
-  given.
+- A commit is asked for with a `CommitMessage` — a subject line and the
+  trailers that describe the operation — not with text.  How that becomes a
+  commit is the implementation's business: the git tracker writes the rendered
+  message, and a tracker backed by something other than git is free to keep
+  the trailers as fields.
+- Methods return `Commit`.  Composing the message belongs to the layer above;
+  an implementation records the message it is given.
 - Implementations raise `ChangeTrackingError` or a subclass.  Errors from the
   underlying tool (a subprocess failure, a pygit2 exception) are wrapped, never
   surfaced.
@@ -31,6 +35,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from warnings import deprecated
+
+from .message import CommitMessage
 
 
 # ---------------------------------------------------------------------------
@@ -119,12 +125,16 @@ class ChangeTracker(ABC):
     # ------------------------------------------------------------------
 
     @abstractmethod
-    def add_commit(self, message: str, path: Path | None = None) -> Commit:
+    def add_commit(self, message: CommitMessage, path: Path | None = None) -> Commit:
         """
         Stage what has changed and commit it, returning the new commit.
 
         Args:
-            message: The commit message, already composed by the facade.
+            message: The subject line and trailers describing the operation.
+                     An implementation renders them however its backend wants
+                     them — `message.text` is the rendered form the git
+                     tracker writes, and `message.trailers` is the same
+                     information as fields.
             path:    Restrict the commit to this path within the store, or None
                      to commit everything outstanding.
 

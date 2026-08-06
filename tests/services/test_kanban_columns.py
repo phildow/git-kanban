@@ -10,7 +10,7 @@ from uuid import uuid4
 
 from kanban.models import Column
 from kanban.services.change_tracking import ChangeTrackingService
-from kanban.tracking import GitChangeTracker
+from kanban.tracking import InMemoryChangeTracker
 from kanban.services.kanban import KanbanService
 from kanban.storage.base import BoardNotFound, ColumnAlreadyExists, ColumnNotFound
 from kanban.storage.memory import InMemoryRepository
@@ -26,7 +26,7 @@ class TestKanbanServiceGetColumns(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            change_tracking=ChangeTrackingService(GitChangeTracker()),
+            change_tracking=ChangeTrackingService(InMemoryChangeTracker(), self.repo),
         )
         self.repo.create_board("alpha", slug="alpha")
         self.repo.create_column("alpha", "todo", slug="todo")
@@ -69,7 +69,7 @@ class TestKanbanServiceGetColumn(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            change_tracking=ChangeTrackingService(GitChangeTracker()),
+            change_tracking=ChangeTrackingService(InMemoryChangeTracker(), self.repo),
         )
         self.repo.create_board("alpha", slug="alpha")
         self.repo.create_column("alpha", "todo", slug="todo")
@@ -108,7 +108,7 @@ class TestKanbanServiceReorderColumn(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            change_tracking=ChangeTrackingService(GitChangeTracker()),
+            change_tracking=ChangeTrackingService(InMemoryChangeTracker(), self.repo),
         )
         self.repo.create_board("alpha", slug="alpha")
         self.repo.create_column("alpha", "todo", slug="todo")
@@ -146,7 +146,7 @@ class TestKanbanServiceCreateColumn(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            change_tracking=ChangeTrackingService(GitChangeTracker()),
+            change_tracking=ChangeTrackingService(InMemoryChangeTracker(), self.repo),
         )
         self.repo.create_board("alpha", slug="alpha")
 
@@ -202,7 +202,7 @@ class TestKanbanServiceRenameColumn(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            change_tracking=ChangeTrackingService(GitChangeTracker()),
+            change_tracking=ChangeTrackingService(InMemoryChangeTracker(), self.repo),
         )
         self.repo.create_board("alpha", slug="alpha")
         self.repo.create_column("alpha", "todo", slug="todo")
@@ -257,7 +257,7 @@ class TestKanbanServiceDeleteColumn(unittest.TestCase):
         self.svc = KanbanService(
             repository=self.repo,
             index_service=MagicMock(),
-            change_tracking=ChangeTrackingService(GitChangeTracker()),
+            change_tracking=ChangeTrackingService(InMemoryChangeTracker(), self.repo),
         )
         self.repo.create_board("alpha", slug="alpha")
         self.repo.create_column("alpha", "todo", slug="todo")

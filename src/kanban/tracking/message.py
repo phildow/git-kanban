@@ -104,6 +104,9 @@ class CommitMessage:
     @property
     def text(self) -> str:
         """Return the full message: subject, a blank line, then the trailers."""
+        if not self.trailers:
+            return self.subject
+
         block = "\n".join(f"{key}: {value}" for key, value in self.trailers.items())
         return f"{self.subject}\n\n{block}"
 

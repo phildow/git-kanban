@@ -6,10 +6,16 @@ import unittest
 from pathlib import Path
 
 from kanban.tracking import (
+    CommitMessage,
     InMemoryChangeTracker,
     NothingToCommit,
     ChangeTracker,
 )
+
+
+def message(subject: str) -> CommitMessage:
+    """Return a commit message with subject alone; these tests assert on subjects."""
+    return CommitMessage(subject=subject, trailers={})
 
 
 class TestInMemoryInitialization(unittest.TestCase):
@@ -50,23 +56,38 @@ class TestInMemoryCommits(unittest.TestCase):
 
     def test_add_commit_returns_the_recorded_commit(self):
         """The returned commit carries the message and an author."""
-        commit = self.service.add_commit("feat(task): add", Path("main/todo"))
+        commit = self.service.add_commit(message("feat(task): add"), Path("main/todo"))
 
         self.assertEqual(commit.message, "feat(task): add")
         self.assertEqual(commit.author, "kanban")
         self.assertEqual(self.service.commits, [commit])
 
+    def test_commit_records_the_message_whole(self):
+        """The structured message is kept, not only the text it renders to."""
+        asked = CommitMessage("task(create) Fix login bug", {"Entity": "task"})
+
+        self.service.add_commit(asked)
+
+        self.assertEqual(self.service.commit_messages, [asked])
+        self.assertEqual(self.service.messages, [asked.text])
+
+    def test_init_commit_has_no_structured_message(self):
+        """The commit opening the history was not asked for with one."""
+        self.service.initialize(Path("/tmp/project"))
+
+        self.assertEqual(self.service.commit_messages, [None])
+
     def test_commits_are_recorded_oldest_first(self):
         """`commits` replays the order the commits were made in."""
-        self.service.add_commit("first")
-        self.service.add_commit("second")
+        self.service.add_commit(message("first"))
+        self.service.add_commit(message("second"))
 
         self.assertEqual(self.service.messages, ["first", "second"])
 
     def test_shas_are_distinct(self):
         """Two commits of the same message at different positions differ."""
-        first = self.service.add_commit("same")
-        second = self.service.add_commit("same")
+        first = self.service.add_commit(message("same"))
+        second = self.service.add_commit(message("same"))
 
         self.assertNotEqual(first.sha, second.sha)
 
@@ -75,8 +96,8 @@ class TestInMemoryCommits(unittest.TestCase):
         other = InMemoryChangeTracker()
 
         self.assertEqual(
-            self.service.add_commit("feat(board): create").sha,
-            other.add_commit("feat(board): create").sha,
+            self.service.add_commit(message("feat(board): create")).sha,
+            other.add_commit(message("feat(board): create")).sha,
         )
 
 
@@ -85,9 +106,9 @@ class TestInMemoryHistory(unittest.TestCase):
 
     def setUp(self) -> None:
         self.service = InMemoryChangeTracker()
-        self.service.add_commit("todo one", Path("main/todo"))
-        self.service.add_commit("done one", Path("main/done"))
-        self.service.add_commit("todo two", Path("main/todo/a-task.md"))
+        self.service.add_commit(message("todo one"), Path("main/todo"))
+        self.service.add_commit(message("done one"), Path("main/done"))
+        self.service.add_commit(message("todo two"), Path("main/todo/a-task.md"))
 
     def test_history_is_most_recent_first(self):
         """The newest commit leads the list."""
@@ -115,7 +136,7 @@ class TestInMemoryHistory(unittest.TestCase):
 
     def test_storewide_commit_answers_every_scope(self):
         """A commit made with no path touched the whole store."""
-        self.service.add_commit("squash")
+        self.service.add_commit(message("squash"))
 
         self.assertIn("squash", [c.message for c in self.service.get_history(Path("main/done"))])
 
@@ -148,7 +169,7 @@ class TestInMemoryUncommittedChanges(unittest.TestCase):
         self.service.record_change(Path("main/todo/a-task.md"))
         self.service.record_change(Path("main/done/other.md"))
 
-        self.service.add_commit("feat(task): update", Path("main/todo"))
+        self.service.add_commit(message("feat(task): update"), Path("main/todo"))
 
         self.assertFalse(self.service.has_uncommitted_changes(Path("main/todo")))
         self.assertTrue(self.service.has_uncommitted_changes(Path("main/done")))
@@ -162,8 +183,8 @@ class TestInMemorySquash(unittest.TestCase):
 
     def test_squash_collapses_the_whole_history(self):
         """With no path every commit becomes one."""
-        self.service.add_commit("first")
-        self.service.add_commit("second")
+        self.service.add_commit(message("first"))
+        self.service.add_commit(message("second"))
 
         commit = self.service.squash_commits("squash: all")
 
@@ -172,9 +193,9 @@ class TestInMemorySquash(unittest.TestCase):
 
     def test_squash_leaves_commits_outside_the_scope(self):
         """Commits on another path survive, and the squash takes the last one's place."""
-        self.service.add_commit("todo one", Path("main/todo"))
-        self.service.add_commit("done one", Path("main/done"))
-        self.service.add_commit("todo two", Path("main/todo"))
+        self.service.add_commit(message("todo one"), Path("main/todo"))
+        self.service.add_commit(message("done one"), Path("main/done"))
+        self.service.add_commit(message("todo two"), Path("main/todo"))
 
         self.service.squash_commits("squash: todo", Path("main/todo"))
 
@@ -182,7 +203,7 @@ class TestInMemorySquash(unittest.TestCase):
 
     def test_squash_with_nothing_in_scope_raises(self):
         """A path no commit touched has nothing to collapse."""
-        self.service.add_commit("todo one", Path("main/todo"))
+        self.service.add_commit(message("todo one"), Path("main/todo"))
 
         with self.assertRaises(NothingToCommit):
             self.service.squash_commits("squash: done", Path("main/done"))

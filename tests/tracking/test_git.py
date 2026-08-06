@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from kanban.tracking import Commit, GitChangeTracker, ChangeTracker
+from kanban.tracking import Commit, CommitMessage, GitChangeTracker, ChangeTracker
 
 
 class TestGitChangeTracker(unittest.TestCase):
@@ -31,8 +31,10 @@ class TestGitChangeTracker(unittest.TestCase):
 
     def test_add_commit_raises_not_implemented(self):
         """`add_commit()` raises until git backend wiring is implemented."""
+        message = CommitMessage("task(create) Fix login bug", {"Entity": "task"})
+
         with self.assertRaises(NotImplementedError):
-            self.service.add_commit("feat(task): add", Path("main/todo"))
+            self.service.add_commit(message, Path("main/todo"))
 
     def test_squash_commits_raises_not_implemented(self):
         """`squash_commits()` raises until git backend wiring is implemented."""

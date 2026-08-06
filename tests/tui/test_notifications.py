@@ -10,7 +10,7 @@ from uuid import uuid4
 
 from kanban.models import Slug
 from kanban.services.change_tracking import ChangeTrackingService
-from kanban.tracking import GitChangeTracker
+from kanban.tracking import InMemoryChangeTracker
 from kanban.services.kanban import (
     CONFIG_TUI_NOTIFICATIONS,
     KanbanService,
@@ -30,7 +30,7 @@ def _make_service(setting: str | None = None) -> KanbanService:
     svc = KanbanService(
         repository=repo,
         index_service=MagicMock(),
-        change_tracking=ChangeTrackingService(GitChangeTracker()),
+        change_tracking=ChangeTrackingService(InMemoryChangeTracker(), repo),
     )
 
     repo.create_board("Alpha", slug=Slug("alpha"))

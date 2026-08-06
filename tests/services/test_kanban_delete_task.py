@@ -10,7 +10,7 @@ from uuid import uuid4
 
 from kanban.models import Slug, Task
 from kanban.services.change_tracking import ChangeTrackingService
-from kanban.tracking import GitChangeTracker
+from kanban.tracking import InMemoryChangeTracker
 from kanban.services.kanban import KanbanService, TaskCreateParams
 from kanban.storage.base import TaskNotFound
 from kanban.storage.memory import InMemoryRepository
@@ -24,7 +24,7 @@ def _make_service() -> tuple[KanbanService, InMemoryRepository]:
     svc = KanbanService(
         repository=repo,
         index_service=MagicMock(),
-        change_tracking=ChangeTrackingService(GitChangeTracker()),
+        change_tracking=ChangeTrackingService(InMemoryChangeTracker(), repo),
     )
     repo.create_board("alpha", slug="alpha")
     repo.create_column("alpha", "todo", slug="todo")

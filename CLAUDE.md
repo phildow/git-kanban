@@ -135,11 +135,13 @@ The index does cache data from the filesystem for search and to ensure consisten
 
 **Change Tracking**
 
-- Automatic commit per operation with structured messages composed by the facade
+- Automatic commit per operation, one method per operation on the tracking service
 - `ChangeTracker` is an abstract base class in `kanban.tracking`
 - Two concrete implementations: `GitChangeTracker` and `InMemoryChangeTracker` (for testing)
 - Commits, reads history, and syncs with the remote
 - `ChangeTrackingService` is the domain service over change tracking.
+- The facade calls it with the domain object an operation produced; the service composes the message
+- It holds the repository as well, to resolve the board and column names a message spells out
 - The facade holds the `ChangeTrackingService`, never an implementation; the implementation is injected at startup
 - Use `pygit2` or `subprocess` — avoid `GitPython`
 
@@ -1090,17 +1092,19 @@ Changes are tracked on a per-operation basis with commit messages and key-value 
 
 ```
 KanbanService
-  ↓ (structured commit data: entity, action, id, path, board, column, from, to)
+  ↓ (commit_task_move(task, from_board, from_column) — the domain object, nothing more)
 ChangeTrackingService
-  ↓ (delegates formatting)
+  ↓ (builds structured commit data: entity, action, id, path, board, column, from, to)
 CommitMessageBuilder  — pure formatter, no git knowledge
-  ↑ (returns formatted string: subject + trailers)
+  ↑ (returns subject + trailers)
 ChangeTrackingService
-  ↓ (forwards formatted string)
+  ↓ (forwards the CommitMessage — subject and trailers, not text)
 ChangeTracker (ABC)
-  ↓
+  ↓ (each implementation renders it as its backend wants)
 GitChangeTracker / InMemoryChangeTracker
 ```
+
+One method per operation — `commit_board_rename`, `commit_column_reorder`, `commit_task_move`, and so on — each taking the domain object the operation produced.  The commit data types are internal to change tracking and the facade never builds one.  A commit covers the whole store: an operation writes the task file and the `.metadata` files ordering it, and a move across boards touches two boards.
 
 ### Commit Messages
 
