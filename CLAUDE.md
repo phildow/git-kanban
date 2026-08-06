@@ -136,14 +136,13 @@ The index does cache data from the filesystem for search and to ensure consisten
 **Change Tracking**
 
 - Automatic commit per operation with structured messages composed by the facade
-- `ChangeTracker` is an abstract base class in `kanban.tracking`, beside the index and storage layers
+- `ChangeTracker` is an abstract base class in `kanban.tracking`
 - Two concrete implementations: `GitChangeTracker` and `InMemoryChangeTracker` (for testing)
-- Commits, reads history, and syncs with the remote; the facade composes the commit message
-- A path argument is always relative to the worktree root, and None means the whole store
-- Squashing (`squash_commits`, `KanbanService.squash`) is deprecated and out of scope; the methods remain, marked deprecated, and git does not implement them
-- `ChangeTrackingService` is the domain service over it, as `IndexService` is over `IndexBase`: it holds a concrete `ChangeTracker` and forwards to it
+- Commits, reads history, and syncs with the remote
+- `ChangeTrackingService` is the domain service over change tracking.
 - The facade holds the `ChangeTrackingService`, never an implementation; the implementation is injected at startup
 - Use `pygit2` or `subprocess` — avoid `GitPython`
+
 
 ### Directory Structure
 
@@ -1085,7 +1084,23 @@ Rebuilding the whole board is reserved for changes not confined to known columns
 
 Change tracking uses Git by default but the interface is defined by an abstract base class `ChangeTracker` with an in memory implementation as well. A concrete implementation is provided to the `ChangeTrackingService`, which is injected into the `KanbanService` during initialization.
 
-Changes are tracked on a per-operation basis with commit messages and key-value pairs provided to the tracking service as follows. The key-value pairs, stored as trailers in the commit message by the Git change tracker, contain a high level overview of the changes only. The diff can be inspected if more information is needed.
+Changes are tracked on a per-operation basis with commit messages and key-value pairs provided to the tracking service follow. The key-value pairs, stored as trailers in the commit message by the Git change tracker, contain a high level overview of the changes only. The diff can be inspected if more information is needed.
+
+### Architecture
+
+```
+KanbanService
+  ↓ (structured commit data: entity, action, id, path, board, column, from, to)
+ChangeTrackingService
+  ↓ (delegates formatting)
+CommitMessageBuilder  — pure formatter, no git knowledge
+  ↑ (returns formatted string: subject + trailers)
+ChangeTrackingService
+  ↓ (forwards formatted string)
+ChangeTracker (ABC)
+  ↓
+GitChangeTracker / InMemoryChangeTracker
+```
 
 ### Commit Messages
 
@@ -1120,8 +1135,6 @@ task(unassign) Fix login bug
 task(tag) Fix login bug → bug
 task(untag) Fix login bug → bug
 task(comment) Fix login bug
-task(archive) Fix login bug
-task(unarchive) Fix login bug
 task(delete) Write API docs
 ```
 
@@ -1163,9 +1176,9 @@ Board: <board-name>
 Column: <column-name>
 ```
 
-#### Task move (includes archive/unarchive)
+#### Task move
 
-`move`
+`move` — archiving and unarchiving are moves and commit as one
 
 ```
 Entity: task
