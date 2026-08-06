@@ -28,6 +28,7 @@ NORMAL_BINDINGS: list[tuple[str, str]] = [
     ("/", "command bar (REPL syntax)"),
     (":", "filter cards as you type — text or flags"),
     ("tab", "tab complete in filter and command bar"),
+    ("tab tab in the command bar", "fill an empty task in with the selected card"),
     ("↑/↓ in a bar", "cycle what has been typed there before"),
     ("s", "collapse or expand the sidebar"),
     ("x", "collapse or expand the cards"),

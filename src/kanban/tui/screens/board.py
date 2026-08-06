@@ -346,13 +346,18 @@ class BoardScreen(Screen[None]):
         Both reuse the REPL's completion engine, so Tab completes the same
         commands, flags, tags, and names it does there.  The filter bar is
         walked against its own parser, the command bar against the REPL's.
+
+        The command bar is given the selection as well, so Tab pressed twice on
+        a task it has been given nothing for fills in the selected card — read
+        when the key is pressed, not now.
         """
         self.query_one(FilterBar).completer = CompletionEngine(
             self.svc, build_filter_parser()
         )
-        self.query_one(CommandBar).completer = CompletionEngine(
-            self.svc, build_repl_parser()
-        )
+
+        command_bar = self.query_one(CommandBar)
+        command_bar.completer = CompletionEngine(self.svc, build_repl_parser())
+        command_bar.selected_task = lambda: self.svc.selection.task
 
     def _install_histories(self) -> None:
         """
