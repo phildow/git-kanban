@@ -5,15 +5,22 @@
 
 [tasks]
 	order = 
+		simplify-cli-output.md
+		delete-field-true-that-shows-up-in-json.md
+		add-kanbanmd-readme-when-initializing.md
+		archive-tasks.md
+		scaffold-tui.md
+		veryify-that-default-config-values-are-created-at-init.md
+		add-path-flag-to-cli-commands-to-output-only-paths.md
+		add-path-and-id-commands-to-the-repl.md
 		test-with-pytest.md
 		reconsider-cli-output-on-all-commands-to-show-slugs.md
 		remove-support-for-absoulte-paths-from-repl.md
 		config-option-for-creating-task-at-top-or-bottom-of-column.md
+		add-a-comment-delimiter-to-the-markdown-body.md
 		add-remaining-claude-conversations.md
 		repl-help-shows-path-and-explains-what-it-contains.md
 		move-title-and-slug-back-out-of-details-table.md
-		add-a-comment-delimiter-to-the-markdown-body.md
-		update-kanban-service-to-use-slugs-and-paths.md
 		move-path-typing-to-with-absolute-path.md
 		remove-fully-qualified-paths-from-the-repl.md
 		revisit-all-path-arguments-in-repl.md
@@ -70,4 +77,5 @@
 		new-creates-a-task-by-default.md
 		add-missing-kanban-service-and-integration-tests.md
 		add-claude-conversations-to-repo.md
+		veryify-that-the-new-taskinsert-value-works-in-the-cli-and-repl.md
 

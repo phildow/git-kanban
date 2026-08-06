@@ -5,8 +5,5 @@
 
 [tasks]
 	order = 
-		change-how-repl-output-is-shown.md
-		ensure-that-repl-command-result-in-card-and-column-updates.md
-		visually-indicate-that-a-filter-has-been-kept.md
-		only-refresh-affected-objects-after-executing-command.md
+	
 

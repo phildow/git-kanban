@@ -7,7 +7,6 @@
 	order = 
 		base-class-for-change-tracking.md
 		url-handlers.md
-		bulk-and-cross-board-operations.md
 		archiving-boards.md
 		slug-to-do-todo.md
 		remove-default-columns-from-service-layer.md
@@ -24,4 +23,7 @@
 		implement-status.md
 		consider-pycases-for-kebab-conversion.md
 		support-for-kanban-schema.md
+		globbing-for-paths.md
+		bulk-operations-and-a-longer-name.md
+		agent-kanban.md
 

@@ -5,6 +5,15 @@
 
 [tasks]
 	order = 
+		slug-completion-uses-the-selected-task-on-first-tab.md
+		refresh-ganularity-to-card.md
+		reduce-the-amount-of-space-above-markdown-headings.md
+		stage-configuration-changes-and-require-a-save.md
+		maintain-selected-index-when-deleting-or-archiving.md
+		move-task-to-a-board-with-b.md
+		visually-indicate-that-a-filter-has-been-kept.md
+		ensure-that-repl-command-result-in-card-and-column-updates.md
+		change-how-repl-output-is-shown.md
 		line-up-key-bindings-across-modes-in-help-panel.md
 		maintain-commmand-and-filter-histories.md
 		tabbing-should-not-focus-on-the-column-headers.md

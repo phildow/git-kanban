@@ -3,3 +3,8 @@
 	slug = done
 	id = 634a2cfc-fe2f-40ea-a986-37d2cef867e4
 
+[tasks]
+	order = 
+		add-username-config.md
+		show-the-task-id-in-the-card.md
+

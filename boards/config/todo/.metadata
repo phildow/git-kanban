@@ -5,5 +5,11 @@
 
 [tasks]
 	order = 
-	
+		option-to-show-id-prefix.md
+		alias-repl-commands.md
+		automatically-assign-task-to-creator.md
+		configure-rich-layout-options.md
+		colorset-in-repl.md
+		what-task-list-columns-are-visisble.md
+		custom-default-columns-for-new-board.md
 

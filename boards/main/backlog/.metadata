@@ -5,8 +5,8 @@
 
 [tasks]
 	order = 
-		ensure-memory-store-supports-same-features-as-filesystem.md
-		make-the-working-path-methods-in-kanban-service-private.md
-		autocomplete-tabs-via-index.md
 		add-utility-to-filter-for-invisible-files.md
+		autocomplete-tabs-via-index.md
+		make-the-working-path-methods-in-kanban-service-private.md
+		ensure-memory-store-supports-same-features-as-filesystem.md
 

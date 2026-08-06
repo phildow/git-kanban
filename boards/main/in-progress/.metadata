@@ -5,9 +5,5 @@
 
 [tasks]
 	order = 
-		add-path-flag-to-cli-commands-to-output-only-paths.md
-		veryify-that-default-config-values-are-created-at-init.md
-		add-kanbanmd-readme-when-initializing.md
-		veryify-that-the-new-taskinsert-value-works-in-the-cli-and-repl.md
-		simplify-cli-output.md
+	
 

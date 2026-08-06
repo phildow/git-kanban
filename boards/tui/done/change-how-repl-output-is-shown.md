@@ -3,7 +3,7 @@ id: 34463d8c-01c1-4bb6-a6ac-fee4f43d5eb5
 title: Change how repl output is shown
 slug: change-how-repl-output-is-shown
 created_at: 2026-07-31T08:46:20.393330+00:00
-updated_at: 2026-08-04T05:41:06.294442+00:00
+updated_at: 2026-08-04T20:58:15.086792+00:00
 priority: medium
 tags: [v0.7]
 ---
@@ -25,3 +25,7 @@ Or show output in a different way, with improved formatting
 ## 2026-08-04 @phildow
 
 What about a panel that is placed over the command bar and which prints the results there
+
+## 2026-08-04 @phildow
+
+Settled on an output panel that appears immediately above the command bar and in the same style, looks great.

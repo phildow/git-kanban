@@ -7,4 +7,5 @@
 [tasks]
 	order = 
 		generating-svg-on-macos-not-quite-right.md
+		only-refresh-affected-objects-after-executing-command.md
 

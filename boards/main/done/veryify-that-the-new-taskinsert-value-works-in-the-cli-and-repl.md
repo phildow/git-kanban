@@ -3,7 +3,7 @@ id: 29c138c7-f695-45b4-927e-4f3f07db91e4
 title: Veryify that the new-task.insert value works in the cli and repl
 slug: veryify-that-the-new-taskinsert-value-works-in-the-cli-and-repl
 created_at: 2026-08-01T09:25:41.727689+00:00
-updated_at: 2026-08-03T23:41:57.946383+00:00
+updated_at: 2026-08-05T20:36:04.353961+00:00
 tags: [v0.7]
 created_by: phildow
 ---

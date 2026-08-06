@@ -6,7 +6,4 @@
 [tasks]
 	order = 
 		first-run-on-downloaded-repo-reports-not-initialized.md
-		scaffold-tui.md
-		archive-tasks.md
-		delete-field-true-that-shows-up-in-json.md
 

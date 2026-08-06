@@ -6,7 +6,7 @@
 [tasks]
 	order = 
 		way-to-edit-and-delete-individual-comments.md
-		slug-completion-uses-the-selected-task-on-first-tab.md
+		bulk-selection-of-tasks-for-in-board-operations.md
 		drop-down-for-due-date-calendar.md
 		option-to-collapse-the-description-and-comments.md
 
