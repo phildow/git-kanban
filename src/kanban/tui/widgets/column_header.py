@@ -45,7 +45,7 @@ class ColumnHeader(Vertical, can_focus=True):
 
     It is a focus target of its own, and the column-level actions hang off it:
     `r` renames the column, `d` deletes it, `n` starts a new one to its right,
-    and shift + ←/→ move it through the board.  `c` and `esc` hand focus back
+    and alt + ←/→ move it through the board.  `c` and `esc` hand focus back
     to the cards below.
 
     A name is typed into a one-line field that replaces the label, so a column
@@ -59,9 +59,9 @@ class ColumnHeader(Vertical, can_focus=True):
         Binding("n", "new_column", "New", show=True),
         Binding("d", "delete", "Delete", show=True),
         # The header owns these rather than leaving them to the board's
-        # jump-to-the-end bindings: a focused header is what shift + ←/→ moves.
-        Binding("shift+left,H", "reorder(-1)", "Reorder", show=True, key_display="⇧←/→"),
-        Binding("shift+right,L", "reorder(1)", "Reorder", show=False),
+        # jump-to-the-end bindings: a focused header is what alt + ←/→ moves.
+        Binding("alt+left,alt+h", "reorder(-1)", "Reorder", show=True, key_display="⌥←/→"),
+        Binding("alt+right,alt+l", "reorder(1)", "Reorder", show=False),
         # `c` is what reached the header from the cards, and it is what leaves
         # it again — the same key both ways, so it is the one hinted.
         Binding("c", "leave", "Cards", show=True),
@@ -75,7 +75,7 @@ class ColumnHeader(Vertical, can_focus=True):
         """`d`: this column should be deleted."""
 
     class ReorderRequested(HeaderRequest):
-        """Shift + ←/→: this column should move `delta` places along the board."""
+        """Alt + ←/→: this column should move `delta` places along the board."""
 
         def __init__(self, header: ColumnHeader, delta: int) -> None:
             """Record which way the column should move."""

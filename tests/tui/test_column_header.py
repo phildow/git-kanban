@@ -426,18 +426,18 @@ class TestDeletingAColumn(unittest.IsolatedAsyncioTestCase):
 
 
 class TestReorderingAColumn(unittest.IsolatedAsyncioTestCase):
-    """Shift + ←/→ move the focused column along the board."""
+    """Alt + ←/→ move the focused column along the board."""
 
     async def asyncSetUp(self) -> None:
         self.svc = _make_service()
         self.app = KanbanApp(self.svc)
 
-    async def test_shift_right_moves_the_column_along(self) -> None:
+    async def test_alt_right_moves_the_column_along(self) -> None:
         """The column swaps with the one to its right, and focus follows it."""
         async with self.app.run_test() as pilot:
             screen = await _board_screen(pilot)
 
-            await pilot.press("c", "shift+right")
+            await pilot.press("c", "alt+right")
             await pilot.pause()
 
             self.assertEqual(_columns(self.svc), ["doing", "todo", "done"])
@@ -457,7 +457,7 @@ class TestReorderingAColumn(unittest.IsolatedAsyncioTestCase):
             before = {id(panel) for panel in screen.query(ColumnPanel)}
             cards = {id(card) for card in screen.column_views[0].cards}
 
-            await pilot.press("c", "shift+right")
+            await pilot.press("c", "alt+right")
             await pilot.pause()
 
             panels = list(screen.query(ColumnPanel))
@@ -473,7 +473,7 @@ class TestReorderingAColumn(unittest.IsolatedAsyncioTestCase):
         async with self.app.run_test() as pilot:
             screen = await _board_screen(pilot)
 
-            await pilot.press("c", "shift+right")
+            await pilot.press("c", "alt+right")
             await pilot.pause()
 
             panels = list(screen.query(ColumnPanel))
@@ -481,12 +481,12 @@ class TestReorderingAColumn(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(panels[1].view.column.position, 1)
             self.assertEqual(panels[1].header.column.position, 1)
 
-    async def test_shift_left_at_the_end_does_nothing(self) -> None:
+    async def test_alt_left_at_the_end_does_nothing(self) -> None:
         """The leftmost column has nowhere to go."""
         async with self.app.run_test() as pilot:
             await _board_screen(pilot)
 
-            await pilot.press("c", "shift+left")
+            await pilot.press("c", "alt+left")
             await pilot.pause()
 
             self.assertEqual(_columns(self.svc), ["todo", "doing", "done"])

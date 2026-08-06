@@ -148,7 +148,7 @@ class TestBoardSelection(unittest.IsolatedAsyncioTestCase):
             await pilot.press("down")  # select "second"
             await pilot.press("slash")
             await pilot.pause()
-            await pilot.press("pagedown", "shift+down", "shift+up")
+            await pilot.press("pagedown", "alt+down", "alt+up")
             await pilot.pause()
 
             self.assertEqual(svc.selection.task, "second")
