@@ -937,11 +937,6 @@ KanbanApp(App)
 │   │   switches BoardScreen's active board; plus a "+ New board…" row
 │   ├── RowField — a board named in place, laid over the row it belongs to
 │   └── Static — the key hints, swapped for the field's while naming
-│       `N` appends a row and names a new board in it, as "+ New board…" does;
-│       `R` renames the highlighted board on its row; `D` deletes it after a
-│       ConfirmScreen.  Opened to ask which board rather than to manage them —
-│       mid-move — it offers the boards alone: no management keys, no
-│       "+ New board…" row, and Enter and Esc for the two answers.
 │
 ├── ConfigScreen (modal, pushed from the command palette's "Configuration")
 │   ├── PrefixList of KanbanService.list_config() — every supported keypath and
@@ -952,14 +947,6 @@ KanbanApp(App)
 │   ├── RowField — a value typed on its own row, laid over the value alone so
 │   │   the name beside it stays legible
 │   └── Button row: Save / Cancel
-│       Enter or `e` edits the highlighted setting, on the row either way: a key
-│       drawn from a fixed set steps to the next value it permits, so nothing
-│       out of the set can be entered; anything else opens the field.  Edits are
-│       staged, marked in the row's gutter, and written only on save, one
-│       set_config per staged key; Shift+Enter saves as the button does, taking
-│       an open field with it, and Esc closes the field if one is open and
-│       otherwise discards the lot.  A write the service refuses leaves the
-│       screen up with the change still staged.
 │
 └── CommandBar (overlay, toggled by `/`)
     ├── Input — free text, parsed with the same parser as the REPL, and run

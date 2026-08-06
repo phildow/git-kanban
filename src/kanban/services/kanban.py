@@ -21,6 +21,8 @@ from ..models import (
     TaskFilter,
     UserContext,
 )
+
+# TODO: remove unused imports
 # Imported rather than defined here so both this layer and the repository — which
 # seeds a new config file with the defaults — work from the same definitions.
 # Callers keep reaching them through the facade they already talk to.
